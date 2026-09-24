@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mend joint session (local prototype)</title>
+<style>
+  :root{
+    --ink:#1B2B2A; --ink-soft:#3C4C49; --paper:#F2F3EE; --card:#FFFFFF;
+    --accent:#3D6B62; --accent-soft:#E6EDE9; --border:#DADFD9;
+    --a:#3D6B62; --b:#8C5B3D;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
+  .wrap{max-width:760px; margin:0 auto; padding:20px 16px; display:flex; flex-direction:column; height:100vh;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
+  .signal{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:10px; white-space:pre-wrap;}
+  .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-bottom:16px;}
+  .msg{max-width:82%; padding:10px 13px; border-radius:12px; line-height:1.5; font-size:14px; white-space:pre-wrap;}
+  .msg .who{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.03em; opacity:.7; display:block; margin-bottom:3px;}
+  .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:center; max-width:92%;}
+  .msg.a{background:var(--a); color:#fff; align-self:flex-start;}
+  .msg.b{background:var(--b); color:#fff; align-self:flex-end;}
+  .msg.private{border:1.5px dashed var(--ink-soft); background:transparent; align-self:center; max-width:92%; font-style:italic;}
+  .composer{display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:10px;}
+  .row{display:flex; gap:8px; align-items:flex-end;}
+  .row .label{font-family:'IBM Plex Mono',monospace; font-size:11px; width:78px; padding-bottom:10px;}
+  .row.a .label{color:var(--a); font-weight:600;}
+  .row.b .label{color:var(--b); font-weight:600;}
+  textarea{flex:1; resize:none; border:1.5px solid var(--border); border-radius:10px; padding:8px 10px; font:inherit; font-size:14px; background:var(--card); color:var(--ink);}
+  button{border:1.5px solid var(--border); background:var(--card); color:var(--ink); border-radius:10px; padding:8px 12px; font:inherit; font-weight:600; cursor:pointer; font-size:13px;}
+  button.a{background:var(--a); color:#fff; border-color:var(--a);}
+  button.b{background:var(--b); color:#fff; border-color:var(--b);}
+  button:disabled{opacity:.5; cursor:default;}
+  .status{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:4px;}
+  .reset{align-self:flex-end; margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Mend &middot; joint session (local prototype, you play both employees)</div>
+  <div class="signal" id="signal">no signal yet</div>
+  <button class="reset" id="resetBtn">reset session</button>
+  <div class="thread" id="thread"></div>
+  <div class="composer">
+    <div class="row a">
+      <div class="label">Employee A</div>
+      <textarea id="inputA" rows="2" placeholder="Type as Employee A..."></textarea>
+      <button class="a" id="sendA">Send</button>
+    </div>
+    <div class="row b">
+      <div class="label">Employee B</div>
+      <textarea id="inputB" rows="2" placeholder="Type as Employee B..."></textarea>
+      <button class="b" id="sendB">Send</button>
+    </div>
+  </div>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+const thread = document.getElementById('thread');
+const signalEl = document.getElementById('signal');
+const statusEl = document.getElementById('status');
+const inputA = document.getElementById('inputA');
+const inputB = document.getElementById('inputB');
+const sendA = document.getElementById('sendA');
+const sendB = document.getElementById('sendB');
+const resetBtn = document.getElementById('resetBtn');
+const audioEl = new Audio();
+
+function addMessage(text, cls, who) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + cls;
+  if (who) {
+    const label = document.createElement('span');
+    label.className = 'who';
+    label.textContent = who;
+    div.appendChild(label);
+  }
+  div.appendChild(document.createTextNode(text));
+  thread.appendChild(div);
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function playReplyAudio(url) {
+  if (!url) return;
+  audioEl.src = url;
+  audioEl.play().catch(() => {});
+}
+
+function renderSignal(signal) {
+  if (!signal) { signalEl.textContent = 'no signal yet'; return; }
+  try {
+    const s = JSON.parse(signal);
+    signalEl.textContent = JSON.stringify(s, null, 0);
+  } catch (e) {
+    signalEl.textContent = signal;
+  }
+}
+
+function facilitatorClass(signal) {
+  try {
+    const s = JSON.parse(signal);
+    if (s.session_state === 'paused_checkin') return 'private';
+  } catch (e) {}
+  return 'facilitator';
+}
+
+function setBusy(busy) {
+  sendA.disabled = busy;
+  sendB.disabled = busy;
+  inputA.disabled = busy;
+  inputB.disabled = busy;
+  statusEl.textContent = busy ? 'facilitator is responding...' : '';
+}
+
+async function sendAs(speaker, input) {
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMessage(text, speaker === 'Employee A' ? 'a' : 'b', speaker);
+  setBusy(true);
+  try {
+    const res = await fetch('/api/message', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({speaker, text}),
+    });
+    const data = await res.json();
+    if (data.reply) addMessage(data.reply, facilitatorClass(data.signal), 'Facilitator' + (facilitatorClass(data.signal) === 'private' ? ' (private aside)' : ''));
+    renderSignal(data.signal);
+    playReplyAudio(data.audio_url);
+  } catch (e) {
+    statusEl.textContent = 'error: ' + e.message;
+  } finally {
+    setBusy(false);
+  }
+}
+
+sendA.addEventListener('click', () => sendAs('Employee A', inputA));
+sendB.addEventListener('click', () => sendAs('Employee B', inputB));
+inputA.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAs('Employee A', inputA); } });
+inputB.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAs('Employee B', inputB); } });
+
+resetBtn.addEventListener('click', async () => {
+  await fetch('/api/reset', {method: 'POST'});
+  thread.innerHTML = '';
+  signalEl.textContent = 'no signal yet';
+  await start();
+});
+
+async function start() {
+  setBusy(true);
+  try {
+    const res = await fetch('/api/start', {method: 'POST'});
+    const data = await res.json();
+    if (data.reply) addMessage(data.reply, 'facilitator', 'Facilitator');
+    if (data.signal) renderSignal(data.signal);
+    playReplyAudio(data.audio_url);
+  } finally {
+    setBusy(false);
+  }
+}
+
+start();
+</script>
+</body>
+</html>

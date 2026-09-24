@@ -1,7 +1,6 @@
 .DS_Store
-classifier/.venv/
+__pycache__/
+.venv/
+.env
 classifier/output/
 classifier/data/gen_stderr.txt
-intake-app/.venv/
-intake-app/.env
-__pycache__/

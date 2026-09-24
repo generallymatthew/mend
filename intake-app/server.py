@@ -105,7 +105,7 @@ def facilitator_reply() -> dict:
     try:
         response = client.messages.create(
             model=MODEL,
-            max_tokens=1024,
+            max_tokens=4096,
             system=SYSTEM_PROMPT,
             messages=conversation,
         )
@@ -113,6 +113,13 @@ def facilitator_reply() -> dict:
         conversation.pop()
         return {"reply": f"(server error calling Claude: {e})", "signal": None}
     raw = "".join(block.text for block in response.content if block.type == "text")
+    if not raw:
+        conversation.pop()
+        return {
+            "reply": f"(server error: no text in response, stop_reason={response.stop_reason} -- "
+                     f"likely ran out of max_tokens mid-thinking; try again or raise the limit)",
+            "signal": None,
+        }
     visible, signal = strip_signal(raw)
     conversation.append({"role": "assistant", "content": raw})
     return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible)}

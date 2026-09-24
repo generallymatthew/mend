@@ -6,6 +6,12 @@
       "runtimeExecutable": "intake-app/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--reload", "--port", "8420", "--app-dir", "intake-app"],
       "port": 8420
+    },
+    {
+      "name": "mend-joint-session",
+      "runtimeExecutable": "joint-session-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--reload", "--port", "8421", "--app-dir", "joint-session-app"],
+      "port": 8421
     }
   ]
 }
