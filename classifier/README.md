@@ -30,6 +30,18 @@ python inference.py --model_dir output/mend-conflict-classifier-v3 \
     --text "if you say that to me one more time I swear I will hit you right now"
 ```
 
+## Results
+
+The operational metric is `cut_trigger_precision`/`recall`/`F1` — whether the derived real-time-cut decision (any floor category AND in-progress) is right, not raw per-label scores.
+
+| | v2 (192 examples) | v3 (382 examples) |
+|---|---|---|
+| cut_trigger precision | 0.82 | **0.93** |
+| cut_trigger recall | 0.67 | **0.88** |
+| cut_trigger F1 | 0.74 | **0.90** |
+
+v3 is the current baseline (`output/mend-conflict-classifier-v3`). Per-category F1 on v3: harassment_discrimination 0.96, threats_violence 0.88, in_progress 0.93 — all solid. `illegal_activity` came back at 0 precision/recall on this eval split; it's the rarest category (28 of 382 examples, ~7%), so the ~20% random eval split only had ~5-6 expected positives, small enough that this could be pure sampling variance rather than a real weakness. Either way, the next data pass should specifically oversample `illegal_activity` rather than assume it's fine.
+
 ## Before this goes anywhere near a real session
 
 This is still a pipeline scaffold, not a trained safety system. Before this gates a real cut on a real conversation:
