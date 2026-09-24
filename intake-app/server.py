@@ -22,11 +22,13 @@ import uuid
 from pathlib import Path
 
 from anthropic import Anthropic
+from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).parent
+load_dotenv(ROOT / ".env")
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 MODEL = "claude-sonnet-5"
 AUDIO_DIR = Path(tempfile.mkdtemp(prefix="mend-intake-audio-"))

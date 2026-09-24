@@ -3,4 +3,5 @@ classifier/.venv/
 classifier/output/
 classifier/data/gen_stderr.txt
 intake-app/.venv/
+intake-app/.env
 __pycache__/

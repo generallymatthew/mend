@@ -11,10 +11,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-You need your own Anthropic API key (from console.anthropic.com). Set it in your shell, don't paste it into any chat or commit it:
+You need your own Anthropic API key (from console.anthropic.com). Create a file called `.env` in this directory (it's git-ignored, never commit it or paste it anywhere else) containing:
 
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+```
+ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ## Run
