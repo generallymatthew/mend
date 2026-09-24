@@ -12,6 +12,12 @@
       "runtimeExecutable": "joint-session-app/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--reload", "--port", "8421", "--app-dir", "joint-session-app"],
       "port": 8421
+    },
+    {
+      "name": "mend-post-session",
+      "runtimeExecutable": "post-session-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--reload", "--port", "8422", "--app-dir", "post-session-app"],
+      "port": 8422
     }
   ]
 }
