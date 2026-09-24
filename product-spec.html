@@ -585,6 +585,24 @@ flowchart TD
       <li><strong>Session ends. Nothing is saved.</strong> No transcript, no summary of what was said, by design (Section 7).</li>
       <li><strong>Separate, individual follow-up.</strong> Away from the room and from each other, the facilitator has a private 1:1 with each person. This is where an actual resolution gets proposed and where real, unpressured agreement, or an escalation disclosure, actually happens. See Section 8.</li>
     </ol>
+
+    <h3>Coaching debrief follow-up</h3>
+    <p>The coaching and rehearsal from step one has a natural gap: someone practices the conversation with the bot, then goes and has the real one entirely outside Mend, with no way for the facilitator to know how it went unless they come back and say so on their own. Rather than leave that open, the facilitator can offer, at the end of a coaching conversation, a follow-up check-in once the real conversation has actually happened: does the employee want that, and roughly when do they think it'll happen. Purely opt-in, nothing scheduled unless they ask for it.</p>
+
+    <div class="callout">
+      <span class="label">Why this one is different</span>
+      <p>Every other touchpoint in this flow stays inside the app, is never recorded, and leaves no external trace (Section 7). A follow-up needs a way to reach someone who isn't in the app right now, and email is the obvious channel, but it's also the first place this product creates something outside its own architecture: an email sitting on a mail server, in the employee's inbox, in whatever backup and e-discovery process the company's email already runs. That's a real cost, not a rounding error, worth stating plainly rather than glossing over.</p>
+    </div>
+
+    <p>The mitigation: the email itself carries no content, not the topic, not "conflict," not who it's about, nothing beyond a generic nudge, something like "you asked Mend to check in, come back when you're ready," the same way any ordinary account notification would read. The actual debrief only happens inside the app, same as everything else. This narrows the exposure to "this employee has a Mend account and got an email from it on this date," which a company already knows since it bought the product, but it doesn't eliminate a timing signal entirely: someone specifically watching for a pattern between a stressful meeting and a follow-up email could still infer something happened. That residual risk isn't solved here, only reduced, which is exactly why this stays opt-in rather than becoming a default nudge appended to every coaching conversation.</p>
+
+    <h3>What the debrief itself does</h3>
+    <ul>
+      <li>Asks how the real conversation actually went, open-ended, not a survey.</li>
+      <li>If it went well, helps them close the loop. If it didn't, keeps working with them, more coaching, or surfacing the option of a facilitated session (step two above) if that seems like the actual next step now.</li>
+      <li>Same trigger monitoring as everywhere else. If what the employee describes from the real conversation meets the mandatory floor, the other person threatened them in response, say, it escalates through the same mechanism as any other conversation (Section 6). It doesn't matter that the triggering conversation happened outside Mend entirely.</li>
+      <li>Same firewall as private processing. No manager ever learns this exchange happened; this is an extension of step one, not of the manager-mandated flow in Section 5.</li>
+    </ul>
   </section>
 
   <section id="initial-caucus">
@@ -807,6 +825,7 @@ flowchart LR
       <div class="risk-item"><span class="mark">＋</span><p>Enterprise buyers often expect more analytics and visibility than this product can honestly offer, the privacy promise is the pitch and also the sales friction.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>Proving the product works, without any content to show, is a genuine go-to-market problem, not just a legal one.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>Whether generic hostile bullying, with no protected-characteristic basis, belongs on the configurable ceiling (Section 6) as its own category isn't decided. It doesn't meet the floor's legal-duty bar, most jurisdictions don't treat equal-opportunity rudeness as unlawful, but it's squarely the kind of conflict the product exists to catch, and it's exactly the sort of thing a buyer will ask about. Needs a real answer before it comes up in a sales conversation.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>The coaching debrief's email nudge (Section 3) is the first touchpoint that leaves a trace outside Mend's own no-recording architecture (Section 7). Keeping the email content generic narrows the exposure but doesn't eliminate a timing-correlation risk, someone watching for a pattern between a stressful meeting and a follow-up email could still infer something happened. Worth real scrutiny before this ships, not just the content-scrubbing mitigation already in place.</p></div>
     </div>
 
     <h3>A proposed answer to that last one: a public pilot</h3>
