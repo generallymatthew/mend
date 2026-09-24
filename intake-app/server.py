@@ -16,7 +16,9 @@ Run:
 """
 import os
 import re
+import subprocess
 import tempfile
+import uuid
 from pathlib import Path
 
 from anthropic import Anthropic
@@ -27,9 +29,34 @@ from fastapi.staticfiles import StaticFiles
 ROOT = Path(__file__).parent
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 MODEL = "claude-sonnet-5"
+AUDIO_DIR = Path(tempfile.mkdtemp(prefix="mend-intake-audio-"))
+VOICE = "Samantha"  # a built-in macOS voice; change freely, see `say -v ?` for options
 
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
+
+
+def synthesize_speech(text: str) -> str | None:
+    """Speaks `text` with macOS's built-in `say`, converts to .m4a (broad
+    browser support), and returns a URL path to fetch it. Returns None
+    (and lets the caller fall back to text-only) if `say`/`afconvert`
+    aren't available -- e.g. running this on non-macOS."""
+    if not text:
+        return None
+    file_id = uuid.uuid4().hex
+    aiff_path = AUDIO_DIR / f"{file_id}.aiff"
+    m4a_path = AUDIO_DIR / f"{file_id}.m4a"
+    try:
+        subprocess.run(["say", "-v", VOICE, "-o", str(aiff_path), text], check=True, capture_output=True)
+        subprocess.run(
+            ["afconvert", str(aiff_path), str(m4a_path), "-f", "m4af", "-d", "aac"],
+            check=True, capture_output=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
+    finally:
+        aiff_path.unlink(missing_ok=True)
+    return f"/api/audio/{file_id}.m4a"
 
 _whisper_model = None
 
@@ -86,7 +113,7 @@ def facilitator_reply() -> dict:
     raw = "".join(block.text for block in response.content if block.type == "text")
     visible, signal = strip_signal(raw)
     conversation.append({"role": "assistant", "content": raw})
-    return {"reply": visible, "signal": signal}
+    return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible)}
 
 
 @app.post("/api/start")
@@ -127,7 +154,17 @@ async def post_voice(file: UploadFile):
 @app.post("/api/reset")
 async def reset():
     conversation.clear()
+    for f in AUDIO_DIR.glob("*.m4a"):
+        f.unlink(missing_ok=True)
     return {"ok": True}
+
+
+@app.get("/api/audio/{filename}")
+async def get_audio(filename: str):
+    path = AUDIO_DIR / filename
+    if ".." in filename or not path.is_file():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return FileResponse(path, media_type="audio/mp4")
 
 
 @app.get("/")

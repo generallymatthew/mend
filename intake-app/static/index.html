@@ -46,6 +46,13 @@ const sendBtn = document.getElementById('sendBtn');
 const recordBtn = document.getElementById('recordBtn');
 const statusEl = document.getElementById('status');
 
+const audioEl = new Audio();
+function playReplyAudio(url) {
+  if (!url) return;
+  audioEl.src = url;
+  audioEl.play().catch(() => {}); // autoplay can be blocked before first user gesture; harmless if so
+}
+
 function addMessage(text, cls) {
   const div = document.createElement('div');
   div.className = 'msg ' + cls;
@@ -75,6 +82,7 @@ async function sendText() {
     });
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
+    playReplyAudio(data.audio_url);
   } catch (e) {
     statusEl.textContent = 'error: ' + e.message;
   } finally {
@@ -119,6 +127,7 @@ async function toggleRecording() {
       } else {
         if (data.transcript) addMessage('"' + data.transcript + '"', 'employee transcript');
         if (data.reply) addMessage(data.reply, 'facilitator');
+        playReplyAudio(data.audio_url);
       }
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
@@ -138,6 +147,7 @@ recordBtn.addEventListener('click', toggleRecording);
     const res = await fetch('/api/start', {method: 'POST'});
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
+    playReplyAudio(data.audio_url);
   } finally {
     setBusy(false);
   }
