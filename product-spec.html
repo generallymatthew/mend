@@ -1,0 +1,907 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mend</title>
+<style>
+  :root{
+    --ink:#1B2B2A;
+    --ink-soft:#3C4C49;
+    --muted:#6E7268;
+    --paper:#F2F3EE;
+    --surface:#FBFAF6;
+    --line:#DAD8CB;
+    --accent:#3D6B62;
+    --accent-soft:#E6EDE9;
+    --warm:#A9702F;
+    --warm-soft:#F6E9D4;
+    --warm-text:#6B4A1C;
+    --mono-bg:#EAE9DF;
+    --good:#2F6B4F;
+    --good-soft:#E3EFE7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#EDEEE7;
+      --ink-soft:#C7CBC1;
+      --muted:#93968B;
+      --paper:#151E1C;
+      --surface:#1B2523;
+      --line:#33403C;
+      --accent:#7CB0A4;
+      --accent-soft:#22322C;
+      --warm:#D9A85B;
+      --warm-soft:#3A2E17;
+      --warm-text:#E9C88A;
+      --mono-bg:#202B27;
+      --good:#7FC49E;
+      --good-soft:#1E3227;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#EDEEE7;
+    --ink-soft:#C7CBC1;
+    --muted:#93968B;
+    --paper:#151E1C;
+    --surface:#1B2523;
+    --line:#33403C;
+    --accent:#7CB0A4;
+    --accent-soft:#22322C;
+    --warm:#D9A85B;
+    --warm-soft:#3A2E17;
+    --warm-text:#E9C88A;
+    --mono-bg:#202B27;
+    --good:#7FC49E;
+    --good-soft:#1E3227;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Public Sans', system-ui, sans-serif;
+    padding-left:20px;
+    padding-right:20px;
+    padding-block:48px;
+  }
+  * { box-sizing:border-box; }
+
+  .page{
+    max-width:760px;
+    margin:0 auto;
+  }
+
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, serif;
+    color:var(--ink);
+    text-wrap:balance;
+    font-weight:600;
+    margin:0;
+  }
+
+  header.cover{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:28px;
+    margin-bottom:40px;
+  }
+  .wordmark{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .wordmark h1{
+    font-size:clamp(2.2rem, 6vw, 3rem);
+    letter-spacing:-0.01em;
+  }
+  .status-pill{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    background:var(--accent-soft);
+    color:var(--accent);
+    border:1px solid var(--accent);
+    border-radius:999px;
+    padding:3px 10px;
+  }
+  .tagline{
+    font-size:1.05rem;
+    color:var(--ink-soft);
+    margin-top:10px;
+    max-width:46ch;
+  }
+  .meta-row{
+    display:flex;
+    gap:24px;
+    flex-wrap:wrap;
+    margin-top:18px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    color:var(--muted);
+    letter-spacing:0.02em;
+  }
+
+  nav.toc{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 22px;
+    margin-bottom:44px;
+  }
+  nav.toc p{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 10px 0;
+  }
+  nav.toc ol{
+    margin:0;
+    padding:0;
+    list-style:none;
+    columns:2;
+    column-gap:24px;
+  }
+  nav.toc li{ break-inside:avoid; margin-bottom:6px; }
+  nav.toc a{
+    color:var(--ink-soft);
+    text-decoration:none;
+    font-size:0.88rem;
+  }
+  nav.toc a:hover{ color:var(--accent); }
+  nav.toc .num{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--accent);
+    margin-right:6px;
+  }
+
+  section{
+    margin-bottom:52px;
+    scroll-margin-top:20px;
+  }
+  section > .num-heading{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    border-top:2px solid var(--ink);
+    padding-top:16px;
+    margin-bottom:20px;
+  }
+  section > .num-heading .num{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--accent);
+    font-size:1rem;
+    font-weight:500;
+    min-width:1.6em;
+  }
+  section > .num-heading h2{
+    font-size:1.7rem;
+    letter-spacing:-0.005em;
+  }
+
+  p{
+    line-height:1.65;
+    color:var(--ink-soft);
+    margin:0 0 14px 0;
+    max-width:65ch;
+  }
+  p:last-child{ margin-bottom:0; }
+  strong{ color:var(--ink); }
+
+  h3{
+    font-size:1.05rem;
+    color:var(--ink);
+    margin:22px 0 8px 0;
+  }
+
+  ul, ol.steps{
+    margin:0 0 14px 0;
+    padding-left:0;
+    list-style:none;
+    max-width:65ch;
+  }
+  ul li, ol.steps li{
+    position:relative;
+    padding-left:22px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  ul li::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0.55em;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--accent);
+  }
+  ol.steps{ counter-reset:step; }
+  ol.steps li{ counter-increment:step; padding-left:30px; }
+  ol.steps li::before{
+    content:counter(step);
+    position:absolute;
+    left:0;
+    top:-1px;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:none;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .principles{
+    display:grid;
+    gap:12px;
+  }
+  .principle{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:3px solid var(--accent);
+    border-radius:6px;
+    padding:14px 18px;
+  }
+  .principle .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:block;
+    margin-bottom:4px;
+  }
+  .principle p{ margin:0; color:var(--ink-soft); }
+
+  .pitch{
+    border-left:3px solid var(--accent);
+    padding:4px 0 4px 20px;
+    margin:22px 0 36px 0;
+  }
+  .pitch p{
+    font-family:'Fraunces', Georgia, serif;
+    font-size:1.25rem;
+    line-height:1.5;
+    color:var(--ink);
+    font-weight:500;
+    max-width:60ch;
+  }
+
+  .summary-grid{
+    display:grid;
+    gap:10px;
+    margin-bottom:40px;
+  }
+  .summary-item{
+    display:grid;
+    grid-template-columns:2.4em 1fr;
+    gap:14px;
+    align-items:baseline;
+  }
+  .summary-item .num{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--accent);
+    font-size:0.85rem;
+  }
+  .summary-item p{
+    margin:0;
+    font-size:0.94rem;
+    color:var(--ink-soft);
+  }
+  .summary-item strong{ color:var(--ink); }
+
+  .callout{
+    background:var(--warm-soft);
+    border:1px solid var(--warm);
+    border-radius:8px;
+    padding:16px 20px;
+    margin:18px 0;
+    max-width:65ch;
+  }
+  .callout .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--warm-text);
+    display:block;
+    margin-bottom:6px;
+  }
+  .callout p{ color:var(--warm-text); margin:0; }
+  .callout p + p{ margin-top:8px; }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:8px 0 18px 0;
+    font-size:0.92rem;
+  }
+  th, td{
+    text-align:left;
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+    color:var(--ink-soft);
+  }
+  th{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:500;
+  }
+  .table-wrap{ overflow-x:auto; max-width:100%; }
+
+  .tier{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:18px 20px;
+    margin-bottom:14px;
+  }
+  .tier .tier-label{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:3px 10px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .tier.floor .tier-label{ background:var(--warm-soft); color:var(--warm-text); }
+  .tier.ceiling .tier-label{ background:var(--accent-soft); color:var(--accent); }
+  .tier .tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    background:var(--mono-bg);
+    color:var(--ink-soft);
+    border-radius:5px;
+    padding:4px 9px;
+  }
+
+  .stored-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:520px){ .stored-grid{ grid-template-columns:1fr; } }
+  .stored-card{
+    border-radius:8px;
+    padding:16px 18px;
+    border:1px solid var(--line);
+  }
+  .stored-card.yes{ background:var(--good-soft); border-color:var(--good); }
+  .stored-card.no{ background:var(--warm-soft); border-color:var(--warm); }
+  .stored-card .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    display:block;
+    margin-bottom:8px;
+  }
+  .stored-card.yes .label{ color:var(--good); }
+  .stored-card.no .label{ color:var(--warm-text); }
+  .stored-card ul{ margin:0; }
+  .stored-card li{ color:var(--ink-soft); font-size:0.92rem; margin-bottom:6px; }
+  .stored-card li::before{ background:currentColor; opacity:0.6; }
+  .stored-card.yes li::before{ background:var(--good); opacity:1; }
+  .stored-card.no li::before{ background:var(--warm); opacity:1; }
+
+  .risk-list{ display:grid; gap:10px; }
+  .risk-item{
+    display:flex;
+    gap:12px;
+    padding:12px 14px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+  }
+  .risk-item .mark{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--warm);
+    flex-shrink:0;
+  }
+  .risk-item p{ margin:0; }
+
+  .stitch{
+    height:26px;
+    width:100%;
+    background:
+      repeating-linear-gradient(115deg, var(--accent) 0 2.5px, transparent 2.5px 17px) center / 17px 26px repeat-x,
+      linear-gradient(var(--line) 0 0) center / 100% 1.5px no-repeat;
+    opacity:0.9;
+  }
+  .stitch.large{ height:34px; background-size:22px 34px, 100% 1.5px; }
+  .stitch.small{ height:18px; opacity:0.55; background-size:13px 18px, 100% 1px; }
+
+  header.cover{ border-bottom:none; }
+  .wordmark h1{
+    font-size:clamp(3rem, 9vw, 5rem);
+    letter-spacing:-0.02em;
+  }
+  .hero-sub{
+    margin-top:22px;
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    margin-top:56px;
+    padding-top:20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:var(--muted);
+    letter-spacing:0.02em;
+  }
+</style>
+
+<div class="page">
+
+  <header class="cover">
+    <div class="wordmark">
+      <h1>Mend</h1>
+      <span class="status-pill">Draft spec · v0.1</span>
+    </div>
+    <p class="tagline">Confidential, AI-facilitated conflict resolution for teams — private by default, with a narrow, disclosed, legally-grounded exception, never a marketing fiction.</p>
+    <div class="meta-row">
+      <span>STATUS: PRE-LEGAL-REVIEW</span>
+      <span>AUDIENCE: FOUNDING TEAM</span>
+      <span>NOT LEGAL ADVICE</span>
+    </div>
+  </header>
+
+  <div class="stitch large" role="presentation"></div>
+
+  <div class="pitch" style="margin-top:32px;">
+    <span class="label" style="font-family:'IBM Plex Mono', monospace; font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:8px;">Elevator pitch</span>
+    <p>Mend is a confidential AI mediator for workplace conflict. Employees can privately process a conflict, or request a facilitated session with a coworker, entirely digital, nothing ever recorded, nothing about what was said ever reaching a manager, except a narrow, legally-required safety floor for things like threats or harassment. It only works if employees trust it's genuinely on their side, not the company's, so that trust is the product, not a feature of it. What the company gets in return: fewer festering conflicts and a more focused, collaborative team, without ever watching how anyone got there.</p>
+  </div>
+
+  <div class="callout" style="background:var(--accent-soft); border-color:var(--accent);">
+    <span class="label" style="color:var(--accent);">On the name</span>
+    <p style="color:var(--ink-soft);">Mend, like a suture: it closes something that's actually wounded, holds it together long enough to heal, then dissolves. No permanent stitch left behind, no scar tissue of a database record, no trace once the job is done. That's the architecture in Section 7 stated as an image instead of a spec: nothing recorded, because a suture that never dissolved wouldn't be healing anymore, it'd just be one more thing permanently embedded in you.</p>
+    <div class="stitch small" role="presentation" style="margin-top:14px;"></div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-item"><span class="num">01</span><p><strong>Overview</strong> — the contract with the buyer: a company pays for outcomes, not visibility, because visibility is exactly what would stop employees from using this at all.</p></div>
+    <div class="summary-item"><span class="num">02</span><p><strong>Core principles</strong> — employee-first, nothing recorded, one disclosed exception, transparent when escalated, agreement only happens alone, safety for everyone including whoever's at fault, anyone can leave anytime, never feels like punishment.</p></div>
+    <div class="summary-item"><span class="num">03</span><p><strong>Employee-initiated flow</strong> — private processing, optional joint session, pre-screen, caucus, a digital-only session that never ends in live agreement, nothing saved, then a private follow-up where resolution actually happens.</p></div>
+    <div class="summary-item"><span class="num">04</span><p><strong>The initial caucus</strong> — the facilitator meets each person alone before they meet each other: hears their side, checks real willingness, screens for the floor before anyone's connected.</p></div>
+    <div class="summary-item"><span class="num">05</span><p><strong>Manager-initiated flow</strong> — a manager can require a session and sees only resolved or not resolved, never content, and only for sessions they themselves required, never wider.</p></div>
+    <div class="summary-item"><span class="num">06</span><p><strong>The trigger system</strong> — a fixed legal floor no company can weaken, plus a company-defined ceiling on top, with three real-time tiers from a caring pause to a broadcast-delay-style cut for active threats.</p></div>
+    <div class="summary-item"><span class="num">07</span><p><strong>Data &amp; privacy architecture</strong> — nothing is ever recorded, not recorded then deleted; trigger records are tamper-evident; proof comes in tiers from a SOC 2 audit up to confidential computing.</p></div>
+    <div class="summary-item"><span class="num">08</span><p><strong>Post-session</strong> — resolution and real agreement happen privately, one person at a time, after the room, never live.</p></div>
+    <div class="summary-item"><span class="num">09</span><p><strong>Power-imbalance safeguards</strong> — the bot advocates for both employees, not the company, and specifically for whoever has less power in the relationship.</p></div>
+    <div class="summary-item"><span class="num">10</span><p><strong>Legal &amp; compliance</strong> — open items flagged for real employment counsel, not resolved by this document.</p></div>
+    <div class="summary-item"><span class="num">11</span><p><strong>Competitive landscape</strong> — adjacent to EAPs, whistleblower tools, and mediation services, but none combine AI-facilitated peer resolution with a legally-grounded HR firewall.</p></div>
+    <div class="summary-item"><span class="num">12</span><p><strong>IP &amp; defensibility</strong> — copyright and trade secret now, patents genuinely uncertain, the real moat is the trust track record itself.</p></div>
+    <div class="summary-item"><span class="num">13</span><p><strong>Open risks</strong> — what's honestly unproven: the wind-down language, real-time detection accuracy, trust in an AI-only facilitator, and ROI evidence before a real deployment exists.</p></div>
+  </div>
+
+  <nav class="toc">
+    <p>Contents</p>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>Overview &amp; the contract with the buyer</a></li>
+      <li><a href="#principles"><span class="num">02</span>Core principles</a></li>
+      <li><a href="#employee-flow"><span class="num">03</span>Employee-initiated flow</a></li>
+      <li><a href="#initial-caucus"><span class="num">04</span>The initial caucus</a></li>
+      <li><a href="#manager-flow"><span class="num">05</span>Manager-initiated flow</a></li>
+      <li><a href="#triggers"><span class="num">06</span>The trigger system</a></li>
+      <li><a href="#data"><span class="num">07</span>Data &amp; privacy architecture</a></li>
+      <li><a href="#confirmation"><span class="num">08</span>Post-session: where agreement happens</a></li>
+      <li><a href="#power"><span class="num">09</span>Power-imbalance safeguards</a></li>
+      <li><a href="#legal"><span class="num">10</span>Legal &amp; compliance — open items</a></li>
+      <li><a href="#landscape"><span class="num">11</span>Competitive landscape</a></li>
+      <li><a href="#ip"><span class="num">12</span>IP &amp; defensibility</a></li>
+      <li><a href="#risks"><span class="num">13</span>Open risks, not yet solved</a></li>
+    </ol>
+  </nav>
+
+  <section id="overview">
+    <div class="num-heading"><span class="num">01</span><h2>Overview &amp; the contract with the buyer</h2></div>
+    <p>Most workplace friction never becomes a formal HR case, and never gets resolved either. It sits between two people who mostly just need to understand what happened, what part they each played, and why the other person did what they did. Existing channels don't cover that middle ground: informal venting fixes nothing, and a formal complaint is adversarial and carries real career risk, which keeps most people from using it for anything short of a real emergency.</p>
+    <p>Mend is that middle layer. Employees get a private space to process a conflict, understand it, and optionally request a facilitated session with the other person. The bot runs the session; nothing is recorded.</p>
+    <p><strong>The contract with the company:</strong> you pay for a product that puts your employees' needs ahead of the company's, because that's the only way they feel safe enough to actually use it. If they feel safe, there's a real chance the conflict gets genuinely resolved. A resolved conflict means a more focused, more collaborative workforce, and that return isn't limited to the two people involved: whoever's present for an argument absorbs the atmosphere, and whoever isn't spends real time backchanneling about it afterward, so the wasted focus was already spreading across the team before Mend ever entered the picture, and the recovered focus does too. In exchange, the company gives up visibility into conversation content, except a narrow, non-negotiable, legally-grounded set of triggers defined in Section 6. That exception has to be real and small, or the chain above collapses at its first link.</p>
+
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Giving every participant some kind of incentive for using the product, regardless of fault, specifically to remove stigma. The instinct is right, the mechanism isn't: a reward tied to participation creates real moral hazard, people manufacturing or exaggerating conflicts to collect it. The stigma risk isn't evenly distributed in the first place: employee-initiated use is already completely invisible to management (Section 3), nothing to destigmatize where no one else ever knows it happened. The actual risk concentrates entirely in manager-mandated sessions (Section 5), and the fix there isn't a payment, it's consistent framing, in every touchpoint, as a resource offered rather than a consequence assigned. See "Never feels like punishment" in Section 2.</p>
+    </div>
+
+    <div class="callout">
+      <span class="label">The actual bet this business makes</span>
+      <p>The buyer and the beneficiary aren't the same person. A company pays for this, but it only produces value if the employees using it trust it enough to be honest, and a company can't assert that trust on employees' behalf, no matter how sincerely it believes in the product. That's the real dependency underneath everything else in this spec: the floor triggers, the no-recording architecture, the proving-it tiers in Section 7, giving employees standing to sue over it. None of that is hardening added on top of the product, it's the mechanism by which "trust us" becomes something closer to verifiable. The wall between what stays private and what a company ever sees has to be non-porous, not mostly sealed, not sealed except for convenience, and that's a feature, not a limitation to be traded away for a richer report whenever one seems useful. There's also a bootstrapping problem worth naming plainly: the ROI case a company needs to believe in only gets proven by data that only exists once employees already trust the tool enough to use it honestly, which is exactly what the public pilot in Section 13 is trying to produce evidence for, ahead of asking any company to take it on faith.</p>
+      <p>One more honest limit, not a flaw to engineer around: this only works between people acting in good faith, who genuinely want to understand what happened. Someone acting in bad faith can use the caucusing, the pause-and-check-in, all of it, to perform rather than engage, and no version of this design fixes that. That's not unique to Mend, though, no process fixes bad faith, not mediation, not an HR investigation, not a courtroom. The goal isn't to make the process bad-faith-proof, it's to make it genuinely worth engaging with for everyone who'd actually use it as intended, which is most people, most of the time.</p>
+      <p>Also honestly: being AI-facilitated instead of human isn't a neutral detail. Someone skeptical of AI, or just not bought into talking through a real personal conflict with a bot, is going to find this awkward, maybe genuinely embarrassing, and that's a real adoption barrier worth naming plainly, not talking around. But the comparison that matters isn't "AI vs. some better human process," it's AI vs. what people actually do today: stay quiet, or go through a well-meaning human process that isn't built to stay contained. A real, common failure mode: someone resolves a conflict the "right" way, talks to the other person's manager, then the coworker directly, actually fixes it, and the mere fact that a conflict happened, with no detail, sometimes not even the topic, shows up against them in a performance review months later. Awkward and genuinely private beats effective and quietly exposed.</p>
+    </div>
+
+    <h3>The ROI chain: prove your own link, borrow the rest</h3>
+    <p>Rather than proving the full path end to end, resolved conflict all the way through to a specific dollar figure, split it into two links. Mend only has to prove the first one itself: conflicts get resolved to both parties' satisfaction, which is exactly what the stored outcome data in Section 7 and the proxy questions in Section 13 (focus, avoidance behavior, relationship-quality delta) already produce. The second link, what restored focus and collaboration is actually worth once distraction and avoidance lift, doesn't need to be proven from scratch, it can be borrowed from existing, credible third-party research.</p>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Source</th><th>Finding</th></tr>
+        <tr><td>CPP Inc. (2008, dated, still the primary citation)</td><td>US employees average 2.8 hrs/week on workplace conflict, ~$359B in paid hours at the wage data used then</td></tr>
+        <tr><td>Gallup, State of the Global Workplace</td><td>Each actively disengaged employee costs $3,400–$10,000/yr; 18% less productive, 37% higher absenteeism; $450–550B US, $8.8T global</td></tr>
+        <tr><td>Gallup Q12 meta-analysis</td><td>Top-quartile-engagement business units: 23% more profitable, 18% more productive, 78% lower absenteeism, 32% fewer defects than bottom quartile</td></tr>
+      </table>
+    </div>
+    <div class="callout">
+      <span class="label">Real, but read the caveats before it goes in a deck</span>
+      <p>These are sourced, not remembered, verify the current version of each report before quoting a number publicly, reports get revised. One thing to be precise about: the CPP figure is from 2008, an "$870B" figure sometimes cited alongside it is explicitly a 2026 illustrative recalculation, not a new study, don't present it as primary research.</p>
+      <p>The "workforce-wide averages, not two people" gap is real but weaker than it first looks, and worth stating why rather than just hedging around it: a two-person conflict was never actually contained to two people. Whoever's present for it absorbs the atmosphere, and whoever isn't spends real time backchanneling about it afterward, comparing notes, taking sides, processing it. The relevant population for "cost of this conflict" is closer to the whole team than the two participants, which is a better match for what workforce-wide averages actually measure, not a stretch to reach them. Still an inference, not a study built to isolate this exact mechanism, say it that way, but a stronger one than "these two people are probably above average."</p>
+    </div>
+  </section>
+
+  <section id="principles">
+    <div class="num-heading"><span class="num">02</span><h2>Core principles</h2></div>
+    <div class="principles">
+      <div class="principle"><span class="label">Employee-first</span><p>The bot represents the interests of the employees in the room, not the company's, except where an employee's own conduct trips the mandatory floor (Section 6).</p></div>
+      <div class="principle"><span class="label">Nothing recorded</span><p>There is no transcript to ever hand over, subpoena, or leak, because none is created past the live session. See Section 7.</p></div>
+      <div class="principle"><span class="label">One honest exception</span><p>Confidentiality holds except for a small, legally-grounded, non-configurable floor. Not "trust us", a fixed list the company cannot weaken.</p></div>
+      <div class="principle"><span class="label">Transparency over secrecy</span><p>If something is escalated, the people involved are told. Never a silent report.</p></div>
+      <div class="principle"><span class="label">Agreement only happens alone</span><p>The joint session surfaces the conflict, it never produces a resolution. What gets agreed to gets worked out afterward, one person at a time, away from the room and from each other, so nothing is said under live pressure, and a session that ends in escalation looks the same in the room as one that doesn't. See Section 8.</p></div>
+      <div class="principle"><span class="label">Safety for everyone in the room</span><p>The goal is safety, not punishment, for both people, including whoever did something wrong. They may still face real consequences through HR's own process, but the bot never treats anyone as guilty in the moment, and never creates a dangerous or humiliating scene to make a point.</p></div>
+      <div class="principle"><span class="label">Anyone can end it, anytime</span><p>Either person can end the joint session at any point, for any reason, no floor violation required. Ending early isn't treated as a resolution and isn't treated as a failure either, a manager, if one's involved, only ever sees "not resolved," never who ended it or why (Section 5).</p></div>
+      <div class="principle"><span class="label">Never feels like punishment</span><p>Whether someone opens this on their own or a manager requires it, using it can't read as an admission of guilt. Employee-initiated use is already invisible to management entirely (Section 3), nothing to destigmatize there. Manager-mandated use needs the same care applied deliberately: a resource being offered, in every touchpoint, never a consequence being assigned.</p></div>
+    </div>
+  </section>
+
+  <section id="employee-flow">
+    <div class="num-heading"><span class="num">03</span><h2>Employee-initiated flow</h2></div>
+    <div class="callout" style="background:var(--accent-soft); border-color:var(--accent);">
+      <span class="label" style="color:var(--accent);">The actual opening line</span>
+      <p style="color:var(--ink-soft);">"Welcome to Mend. This might feel a little strange, talking through a conflict with an AI instead of a person, and that's fair. It's built this way on purpose: so you can get this resolved without becoming vulnerable to retaliation, for having had the conflict at all, or for how you chose to handle it." Names the cringe factor from Section 1 directly instead of pretending it isn't there, then gives the actual reason to stay anyway.</p>
+    </div>
+    <p>Every step below stays entirely off a manager's radar, not just the first one, from the initial processing through a full facilitated session to its outcome. A manager only ever sees anything (Section 5) when they were the one who required the session in the first place.</p>
+    <pre class="mermaid">
+flowchart TD
+    A["Private processing<br/>any time"] --> B{"Wants a joint<br/>session?"}
+    B -- No --> A
+    B -- Yes --> C["Pre-session<br/>summary screen"]
+    C -- "Meets the floor" --> D["Reroute to HR<br/>Section 6"]
+    C -- Clears --> E["Initial caucus<br/>one on one, Section 4"]
+    E --> F["Facilitated session<br/>digital only"]
+    F --> G["Session ends<br/>same routine close either way"]
+    G --> H["Private individual<br/>follow-up"]
+    H --> I["Resolution + real<br/>agreement happen here"]
+    </pre>
+    <ol class="steps">
+      <li><strong>Private processing, any time.</strong> An employee opens a 1:1 conversation with their own bot, no case number, no manager involved, just to work through what happened, their own part in it, and a genuine read on why the other person might have acted the way they did.</li>
+      <li><strong>Optional: request a facilitated session.</strong> If the employee wants an actual resolution conversation rather than just processing, they can request a joint session. The other party gets the same option, independently.</li>
+      <li><strong>Pre-session summary screen.</strong> Before any session is scheduled, both parties independently give a broad summary of the conflict. See Section 6 for what happens next.</li>
+      <li><strong>Initial caucus, one on one.</strong> If the screen clears, the facilitator meets each person privately before they ever meet each other. See Section 4.</li>
+      <li><strong>Facilitated session, digital only, never in person.</strong> The bot runs a real-time joint session over a digital bridge, video, voice, or text, manages turn-taking, keeps things constructive, doesn't take sides. Going digital-only is deliberate: it gives the facilitator full control over who's connected to whom, and the ability to pull either person into a private side-conversation, caucusing, in mediation terms, to help them process a reaction or think through what to say, before bringing them back into the joint room.</li>
+      <li><strong>The joint session never ends in agreement.</strong> It surfaces the conflict, it doesn't resolve it live. The session always closes the same routine-sounding way regardless of outcome, so there's no visible difference in the room between an ordinary close and one where escalation was just triggered (see Section 6).</li>
+      <li><strong>Session ends. Nothing is saved.</strong> No transcript, no summary of what was said, by design (Section 7).</li>
+      <li><strong>Separate, individual follow-up.</strong> Away from the room and from each other, the facilitator has a private 1:1 with each person. This is where an actual resolution gets proposed and where real, unpressured agreement, or an escalation disclosure, actually happens. See Section 8.</li>
+    </ol>
+  </section>
+
+  <section id="initial-caucus">
+    <div class="num-heading"><span class="num">04</span><h2>The initial caucus</h2></div>
+    <p>Before the two people are ever brought into the same session, the facilitator meets with each of them privately, separately, one at a time. This is standard practice in professional mediation, done here for the same reasons: let each person speak freely before having to face the other, gauge whether they're actually ready for a joint conversation, and make sure participation is genuinely voluntary, not just compliant. It's a deeper conversation than the brief pre-session screen in Section 6, that screen is a lightweight routing check; this is where the facilitator actually gets to know each side.</p>
+    <h3>What the initial caucus does</h3>
+    <ul>
+      <li>Hears each person's account of what happened, privately, without the other party present or aware of the specifics.</li>
+      <li>Sets expectations for the joint session: what it's for (mutual understanding, not adjudicating who's right), and what it isn't, there's no live resolution or agreement in that room (Section 8).</li>
+      <li>Checks for genuine willingness to proceed. This matters most in manager-mandated cases (Section 5): a "yes" said because a manager told them to isn't the same as real consent, and the facilitator treats it differently, see the advocacy stance in Section 9.</li>
+      <li>Same trigger monitoring as everywhere else. If what surfaces in an initial caucus meets the mandatory floor, the flow reroutes to HR before the two people are ever connected at all, the earliest and safest point this can be caught.</li>
+    </ul>
+    <h3>If someone isn't ready</h3>
+    <p>The facilitator can pause or delay rather than push two people together on a schedule. For a manager-mandated case, the manager is only ever told that scheduling isn't complete yet, never why, same content firewall as the rest of this spec.</p>
+    <p>The two initial caucuses happen independently, before either person knows what the other said. The facilitator doesn't carry anything from one person's caucus into the other's, and doesn't carry anything from either caucus into the joint session as content, only as its own private read on whether the joint session should happen at all.</p>
+  </section>
+
+  <section id="manager-flow">
+    <div class="num-heading"><span class="num">05</span><h2>Manager-initiated flow</h2></div>
+    <p>A manager can require two employees whose conflict is affecting work to schedule a facilitated session. The manager's visibility stops at scheduling status and, once both parties have separately reconfirmed, a single outcome: resolved or not resolved. No content, no summary, no read on who was "right," not even a coarse one. This outcome only ever reaches a manager when that manager is the one who required the session. For anything employee-initiated (Section 3), no manager, at any company, ever learns a session took place at all, not the outcome, not the fact of it, nothing. The scope of what a manager can see is exactly as wide as the sessions they themselves required, never wider.</p>
+    <p>The same pre-session screen applies here too. A manager-mandated session is still routed through Section 6 before it's treated as an informal peer matter, a conflict that meets the mandatory floor doesn't get quietly handled as a scheduling problem just because a manager initiated it.</p>
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>A richer manager-facing summary: mutual ownership vs. one-sided, plus a training recommendation. Rejected on reflection: even a coarse fault read is still a fault read, and it's the facilitator's own take on one mediated conversation, not an investigation with due process. The wall between what's private and what a manager sees needs to be non-porous, and that's a feature, not a limitation to work around, it's the entire reason employees would trust this enough to be honest in the first place. If the facilitator has a genuine read that some kind of skill-building would help, that goes to the person themselves, privately, in their own post-session follow-up (Section 8), theirs to act on or not, never a report about them that crosses the wall.</p>
+    </div>
+    <div class="callout">
+      <span class="label">Why even "resolved: yes/no" isn't automatically safe</span>
+      <p>A real, common failure mode: someone resolves a conflict through a normal human process, talking to the other person's manager, then the coworker directly, actually fixes it, and months later "you had a conflict" shows up against them in a performance review, with the manager not even knowing what it was about. The mere fact that a session happened, resolved or not, can become exactly this kind of mark if a company's culture conflates having a conflict with being a problem, and the technical wall above can't fix that on its own, it limits what data crosses it, not what a manager does with the one bit that does. That has to be a policy commitment the buying company makes, not just a data limitation: the existence of a session is never referenced in a performance review, and that commitment needs the same real teeth as the no-recording promise, the third-party-beneficiary standing in Section 12, not just an assertion in a sales deck.</p>
+    </div>
+  </section>
+
+  <section id="triggers">
+    <div class="num-heading"><span class="num">06</span><h2>The trigger system</h2></div>
+    <p>Two tiers, deliberately asymmetric: a floor the company can't lower, and a ceiling it can raise.</p>
+
+    <div class="tier floor">
+      <span class="tier-label">Mandatory floor — not configurable</span>
+      <p>A fixed, legally-grounded minimum. Escalates to HR regardless of how the customer configures the product. Illustrative categories only, pending real legal review (see the callout below):</p>
+      <div class="tags">
+        <span class="tag">harassment / discrimination, protected characteristic</span>
+        <span class="tag">threats or violence</span>
+        <span class="tag">illegal activity</span>
+        <span class="tag">immediate safety risk</span>
+      </div>
+    </div>
+    <div class="tier ceiling">
+      <span class="tier-label">Configurable ceiling — company-defined</span>
+      <p>A company may add categories on top of the floor, e.g. specific policy or financial-conduct concerns, but cannot remove or weaken anything in the floor tier.</p>
+    </div>
+
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Letting the buying company fully define what triggers HR notification, no fixed floor, entirely their own configuration. Rejected: a company could configure it to almost never fire, and that doesn't reduce their liability, it can increase it. "We built a tool capable of catching this and configured it not to" reads as willful blindness, arguably worse than not having the tool at all. The floor/ceiling split above exists specifically because of this.</p>
+    </div>
+
+    <div class="callout">
+      <span class="label">Not legal advice</span>
+      <p>The floor categories above are illustrative, not a finished legal standard. The actual trigger definition, what "constructive knowledge" means, and when a duty to act attaches, has to be worked out jurisdiction by jurisdiction with real employment counsel before this ships. Getting this wrong doesn't just weaken the product, it can increase the buyer's legal exposure rather than reduce it.</p>
+    </div>
+
+    <h3>How the pre-session screen works</h3>
+    <p>Before any session is scheduled, each party independently describes the conflict in a few sentences. If <strong>either</strong> summary alone meets the floor criteria, the flow reroutes to HR notification instead of scheduling a peer session, agreement between the two parties isn't required to trigger, since requiring both to agree would let a minimized or denied account block a legitimate escalation. The summary text itself is processed to make the routing decision, then discarded, only the outcome (which category, if any, fired) is kept.</p>
+
+    <h3>If something escalates during a live session</h3>
+    <p>Three response tiers. The first isn't part of the trigger system at all, the other two are gated by the same severity level introduced in Section 7:</p>
+    <pre class="mermaid">
+flowchart LR
+    M["Something happens<br/>mid-session"] --> T{"Severity<br/>read"}
+    T -- "Rising tension" --> P["Pause + private<br/>check-in"]
+    T -- "Serious, not acute" --> W["Silent, routine<br/>wind-down"]
+    T -- "Active, escalating" --> Q["Broadcast-delay<br/>style cut"]
+    P --> R["Person decides:<br/>continue or end"]
+    W --> N["Both told,<br/>once apart"]
+    Q --> N
+    </pre>
+    <div class="tier ceiling">
+      <span class="tier-label">Rising tension, not a violation</span>
+      <p>The facilitator doesn't need a floor trigger to act. If it senses things escalating, tone sharpening, either person pulling back, real distress building, it can pause the joint session and check in with either person privately, over the same caucusing channel used before the session starts (Section 4). That person decides whether to continue or end it, not the bot. This is ordinary good facilitation, not an escalation, most pauses here won't come anywhere near a floor violation, and the right to end at that point belongs to the person, not a rule (see "Anyone can end it, anytime" in Section 2).</p>
+    </div>
+    <div class="tier ceiling">
+      <span class="tier-label">Serious, not acute</span>
+      <p>Most floor-tripping content that the pre-session screen missed: a disclosed past incident, discriminatory remarks, illegal activity already described. Nothing is actively escalating in the room right now. The bot doesn't announce it live, doesn't accuse or confront, it calmly steers to the same routine-sounding close every session gets (Section 3), escalated or not. Only once the two people are no longer together does the bot tell each of them, individually and separately, what's being escalated and why, at the category level. Neither party finds out from the other, or is left sensing something's wrong without being told what.</p>
+    </div>
+    <div class="tier floor">
+      <span class="tier-label">Active, escalating, imminent</span>
+      <p>A narrower, higher bar: something happening and getting worse in real time. Here the goal shifts from staying invisible to stopping the other person from ever receiving it. A short delay, the same buffering technique as broadcast delay on live TV and radio, sits between what's said and what the other party actually receives, giving the real-time classifier a window to evaluate content before delivery. Content that crosses this threshold is cut before the recipient hears or reads any of it, not interrupted mid-delivery after the fact. This protects the recipient from receiving the threat, it doesn't erase that the speaker said it, that's exactly what the tamper-evident trigger record (Section 7) is for.</p>
+    </div>
+    <div class="callout" style="background:var(--accent-soft); border-color:var(--accent);">
+      <span class="label" style="color:var(--accent);">Why digital-only</span>
+      <p style="color:var(--ink-soft);">Sessions are never in person, only over a digital bridge. That's what makes both tiers above actually work: ending the bridge for both parties at once is the same moment as them being fully separated, no one lingering in a shared physical room afterward, and a delivery buffer is only possible on a digital channel the facilitator controls. Going digital-only isn't a limitation here, it's what makes silent separation and real-time interception both possible at all.</p>
+    </div>
+    <div class="callout">
+      <span class="label">Real limits, not solved</span>
+      <p>There's always some irreducible latency, speech-to-text, classification, and the cut itself all take real time, so the delay buffer shrinks the window, it doesn't erase it to zero. It also adds a small amount of lag to the whole conversation, not just the risky moments, the same tradeoff real broadcast delay accepts. And judging a partial, still-arriving utterance is harder than judging a complete one: this tier needs a much higher, narrower bar than the general floor triggers, or false positives, cutting a session when nothing acute was actually happening, will cost real trust.</p>
+    </div>
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Using AI-generated video of the removed person, sitting quietly, so the other party doesn't realize the session changed. Rejected: that's a non-consensual synthetic likeness of a real, identifiable person, generated to deceive someone about what's currently happening, a deepfake by definition regardless of protective intent. It's also a different category of thing than the silence this section already relies on: not saying something is an omission, fabricating video of someone who isn't there is an affirmative deception, and it likely fails under any real interaction anyway, a static or looping fake falls apart the moment the other person tries to actually engage it, which could alarm them more than an ordinary-looking end would. The graceful wind-down and the delivery buffer above already achieve the legitimate goal, not alarming the other party, without fabricating anything.</p>
+    </div>
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Ending the session with a fake technical error, "connection issue," rather than the routine close described above. Milder than the video idea, no synthetic likeness involved, but still rejected: it's a specific, checkable false claim about system status, not just an unremarkable ending, and specific false claims are the ones that cause real damage later. If the aggressor is eventually told the truth, per the transparency principle in Section 2, "so there wasn't actually a technical error, you lied to me" is worse than just learning the session ended and finding out why afterward. It also doesn't add anything: the routine, identical-either-way close already achieves the goal, nothing to distinguish an escalation from an ordinary end, without inventing a claim that can later be shown false.</p>
+    </div>
+  </section>
+
+  <section id="data">
+    <div class="num-heading"><span class="num">07</span><h2>Data &amp; privacy architecture</h2></div>
+    <p>The private-by-default promise is enforced architecturally, not by a retention policy. Nothing is ever recorded in the first place, rather than being recorded and deleted later.</p>
+
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Recording sessions and auto-deleting them once both parties confirmed resolution, specifically so they couldn't be subpoenaed later. Rejected: that's spoliation of evidence, not a privacy feature. Once litigation is reasonably anticipated, which can attach well before anyone actually sues, a company has a duty to preserve related records, and deliberately destroying them to defeat discovery is treated worse than never having a record at all, it signals intent. Never creating the record in the first place sidesteps this entirely: nothing to subpoena because nothing was made, a completely ordinary business practice, not evidence destruction.</p>
+    </div>
+    <div class="stored-grid">
+      <div class="stored-card yes">
+        <span class="label">Stored</span>
+        <ul>
+          <li>Date, participants, session type</li>
+          <li>Resolved: yes / no, per person</li>
+          <li>Reconfirmed: yes / no, per person</li>
+          <li>Which floor category fired, if any, and its severity level within a defined scale, category and level only, never the words that produced it</li>
+        </ul>
+      </div>
+      <div class="stored-card no">
+        <span class="label">Never stored</span>
+        <ul>
+          <li>Session transcript or audio</li>
+          <li>Pre-session summary text</li>
+          <li>Anything said in private processing conversations</li>
+        </ul>
+      </div>
+    </div>
+
+    <p>That trigger record is deliberately built to function as evidence in itself: HR can be told "this met harassment, level 3" and treat that determination as established, while conducting its own independent investigation into what actually happened (Section 5). That only works if the record can't quietly be altered afterward, so it needs to be tamper-evident, cryptographically signed or append-only logged, not just a row in an ordinary database Mend's own engineers could edit. See the transparency-log tier below.</p>
+
+    <div class="callout">
+      <span class="label">Not invented from scratch</span>
+      <p>The severity scale itself (what makes something "level 3" vs. "level 2") is a real specialized discipline, workplace threat assessment, with its own professional body (the Association of Threat Assessment Professionals). This needs an actual practitioner to define, the same way the legal trigger definitions need real employment counsel, not product intuition standing in for either.</p>
+    </div>
+
+    <h3>Proving it, not just claiming it</h3>
+    <p>"Trust us, we don't log it" is a weak claim on its own, and it's the first thing a buyer's security team will push on. There's a real hierarchy of ways to back it up, roughly in order of rigor:</p>
+    <div class="tier ceiling">
+      <span class="tier-label">Table stakes</span>
+      <p>A SOC 2 Type II or ISO 27001 audit, an independent auditor reviewing the real architecture and logging config over months and attesting there's no persistence path for conversation content. Plus published architecture diagrams showing what's ephemeral vs. what's actually stored (the table above), and a contractual warranty with audit rights and real penalties. Most enterprise buyers stop here. Worth going one step further: give employees themselves standing to enforce the no-recording promise, a third-party beneficiary clause, not just the employer. A company suing itself over its own vendor's failure is a weak deterrent, an individual employee with real standing is a much stronger one, and it's an established contract mechanism, not an exotic one.</p>
+    </div>
+    <div class="tier ceiling">
+      <span class="tier-label">Verifiable, not just attested</span>
+      <p>Third-party code review or code escrow, a security firm or the customer's own team, under NDA, confirming there's no code path that writes conversation content anywhere durable. The implementation, not a description of it. An open "prove it leaked" bug bounty adds an adversarial check on top.</p>
+    </div>
+    <div class="tier floor">
+      <span class="tier-label">Strongest available today</span>
+      <p>Confidential computing: run the live session processing inside a hardware-isolated Trusted Execution Environment, so even Mend's own engineers can't access memory contents during processing, combined with cryptographic attestation that the enclave is running exactly the audited code. This isn't speculative, Apple's Private Cloud Compute is a real, shipped example of this pattern, built for the same reason: to make "we architecturally cannot see your data" true, not just promised. The same mechanism covers the trigger record above: a cryptographically signed, append-only transparency log, so a category-and-severity determination is provable and tamper-evident without ever logging the words behind it.</p>
+    </div>
+    <p>Realistic path: table stakes is what closes early deals. Confidential computing is a genuine, achievable differentiator, not vaporware, worth treating as a roadmap item once "provably private" becomes central to the pitch rather than a day-one requirement.</p>
+  </section>
+
+  <section id="confirmation">
+    <div class="num-heading"><span class="num">08</span><h2>Post-session: where agreement actually happens</h2></div>
+    <p>The joint session's job is to surface the conflict and let each person be heard, not to produce a resolution. The actual resolution, and each person's real, unpressured agreement to it, happens afterward, in a private 1:1 between the facilitator and each person, alone, away from the other party and any pressure of the room they were just in.</p>
+    <p>Even after that, either party can later say the resolution didn't actually hold. That reopens the case rather than treating the earlier "yes" as final. The manager, if one was involved, only ever sees the final state, resolved or not, never the back-and-forth or who changed their mind.</p>
+    <p>If the facilitator has a genuine read that some kind of skill-building would help, communication, handling disagreement, whatever it is, that goes here too, said directly to the person, privately, as part of this same follow-up. Theirs to act on, ignore, or bring to their own manager if they choose to, never something the manager learns about them from the system (Section 5).</p>
+
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Letting a spontaneous in-session apology and acceptance, "I realize what I did was unfair, I apologize," carry binding weight in the moment, with real actions tied to whether it's accepted right there. Rejected as a special case, though not the moment itself: a genuine apology happening naturally in the room is fine, even good, and the facilitator shouldn't suppress it. But rejecting an apology to someone's face, live, in front of the facilitator, is if anything more pressured than being asked to agree in the abstract, exactly the dynamic the post-session gate exists to remove. The moment can happen; whether it counts still waits until both people are alone.</p>
+    </div>
+  </section>
+
+  <section id="power">
+    <div class="num-heading"><span class="num">09</span><h2>Power-imbalance safeguards</h2></div>
+    <p>The bot is not neutral toward the company, it's an advocate for both employees' own interests. Where a real power imbalance exists between the two parties, seniority, tenure, a reporting relationship, the bot proactively advises the more vulnerable party on how to protect themselves, not just how to smooth things over.</p>
+    <p>This advocacy stance has exactly one limit: it yields when an employee's own conduct meets the mandatory floor. The bot being "on your side" was never meant to mean illegal conduct gets a pass.</p>
+  </section>
+
+  <section id="legal">
+    <div class="num-heading"><span class="num">10</span><h2>Legal &amp; compliance — open items</h2></div>
+    <div class="callout">
+      <span class="label">Not legal advice · pending counsel</span>
+      <p>Everything in this section is a flag for review, not a decision.</p>
+    </div>
+    <ul>
+      <li>Exact trigger definitions and "constructive knowledge" standards, these vary meaningfully by country and by US state.</li>
+      <li>Data retention requirements that may directly conflict with the "store almost nothing" architecture in some jurisdictions or industries.</li>
+      <li>Whether any part of this is protected from discovery, and under what conditions. Likely not privileged the way attorney-client communications are, this needs a real answer before the privacy promise is marketed as a hard guarantee.</li>
+      <li>Multi-jurisdiction handling for companies with employees across state or national borders.</li>
+    </ul>
+  </section>
+
+  <section id="landscape">
+    <div class="num-heading"><span class="num">11</span><h2>Competitive landscape</h2></div>
+    <p>Adjacent categories already exist: EAP platforms, anonymous reporting and whistleblower tools (NAVEX, Lighthouse and similar), traditional workplace mediation services, AI coaching platforms in the BetterUp mold. None of them combine structured, AI-facilitated peer resolution with a strict, legally-grounded HR firewall, that specific combination is the actual bet here, not the general category.</p>
+  </section>
+
+  <section id="ip">
+    <div class="num-heading"><span class="num">12</span><h2>IP &amp; defensibility</h2></div>
+    <p>Three tiers, from immediate and automatic to genuinely uncertain.</p>
+    <div class="tier ceiling">
+      <span class="tier-label">Cheap, do this regardless</span>
+      <p>Copyright covers the code, the facilitator prompts, and this spec itself, automatic on creation. Trade secret protection, via NDAs and access control, not a filing, covers the accumulated know-how that isn't the architecture: the exact severity taxonomy, the specific facilitation language, the classifier prompts. Trademark the name once a clearance search confirms it's actually available.</p>
+    </div>
+    <div class="tier ceiling">
+      <span class="tier-label">Real, but genuinely uncertain</span>
+      <p>Software and business-method patents got harder to obtain post-<em>Alice v. CLS Bank</em>, an abstract idea on a generic computer usually isn't patentable alone. The parts of this spec with the most concrete technical mechanism, the real-time streaming classification combined with the broadcast-delay interception buffer (Section 6), and the tamper-evident, cryptographically-signed trigger record (Section 7), are the more plausible candidates. The more process-flavored pieces, the floor/ceiling split, the caucusing flow, never-agree-live, are likely harder to patent and better protected as trade secret. Needs a real patent attorney to assess claim by claim, not product intuition, same caution as the legal trigger definitions elsewhere in this spec.</p>
+    </div>
+    <div class="tier floor">
+      <span class="tier-label">Probably the strongest moat, and it isn't legal IP</span>
+      <p>The trust infrastructure itself, the audits, the confidential-computing attestation, the actual track record of honoring the third-party-beneficiary clause if it's ever tested, can't be fast-followed by reading a patent or cloning the repo. A competitor can copy the feature list in a month. They can't copy two years of SOC 2 reports and a public record of never once breaking the no-recording promise. For a product whose entire pitch is "verifiably not the others," that accumulated, demonstrated trust is the real moat, tied directly to "the actual bet this business makes" in Section 1.</p>
+    </div>
+  </section>
+
+  <section id="risks">
+    <div class="num-heading"><span class="num">13</span><h2>Open risks, not yet solved</h2></div>
+    <div class="risk-list">
+      <div class="risk-item"><span class="mark">＋</span><p>Full trigger taxonomy is pending legal review, this is the single highest-risk open item in the whole spec.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>How "puts the company at risk" is scoped beyond the floor categories isn't defined yet, likely the same list framed two ways rather than a separate one.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>The mid-session wind-down (Section 6) is designed but untested, the actual language and timing needs real scenario testing before this ships.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>Real-time interception during a live, streaming conversation is a harder detection problem than the async pre-screen, telling apart an active threat from someone recounting a past one, from a partial, still-arriving utterance, needs real calibration before it's trusted to cut anything.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>Going digital-only solves the separation problem, but it's untested whether employees trust a facilitator that's never in person for something this sensitive, worth validating rather than assuming.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>Enterprise buyers often expect more analytics and visibility than this product can honestly offer, the privacy promise is the pitch and also the sales friction.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>Proving the product works, without any content to show, is a genuine go-to-market problem, not just a legal one.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>Whether generic hostile bullying, with no protected-characteristic basis, belongs on the configurable ceiling (Section 6) as its own category isn't decided. It doesn't meet the floor's legal-duty bar, most jurisdictions don't treat equal-opportunity rudeness as unlawful, but it's squarely the kind of conflict the product exists to catch, and it's exactly the sort of thing a buyer will ask about. Needs a real answer before it comes up in a sales conversation.</p></div>
+    </div>
+
+    <h3>A proposed answer to that last one: a public pilot</h3>
+    <p>Build a lightweight standalone version, free, not tied to any specific paying company, but still specifically for workplace conflict, to validate the facilitation mechanics, caucusing, the pause-and-check-in, the graceful wind-down, with real users and real workplace situations, then shut it down once the evaluation period ends. Cheap, fast, avoids needing enterprise trust before proving the mechanic works at all. It's still testing the right dynamic, career risk, a real coworker relationship, just without a specific employer behind it, which changes how escalation has to work:</p>
+    <ul>
+      <li><strong>No HR to hand off to, so the pilot refers out instead of notifying in.</strong> If the AI determines a conflict is too serious to continue as peer facilitation, it ends the session (Section 6) and, in the private follow-up, gives the person who appears to need it information on real options: how to report internally through their own employer's actual channels, and external avenues, an EEOC charge or local equivalent, consulting an employment attorney, workplace safety regulators. This is information and referral, not legal advice, general guidance on how these processes work, never the AI telling someone what their case is worth or what they should do. If there's an immediate safety concern, real crisis resources, not internal HR.</li>
+      <li><strong>Deciding who gets that framing carries real misjudgment risk.</strong> Same caution as the real-time threat calibration in Section 6: determining who the advisory should be directed toward won't always be right, and getting it wrong, advising the wrong person, or advising neither, has real consequences. Worth treating as a genuinely hard open problem, not a solved one.</li>
+      <li><strong>Shutdown has to be handled responsibly too.</strong> Same no-recording story, plus clear advance notice to users, not the app just disappearing.</li>
+      <li><strong>User research, done without breaking the premise.</strong> Interview participants afterward about their experience, opt-in, separately consented. Keep it scoped to the tool itself, did it feel helpful, did it feel safe, would they use it again, not what the conflict was actually about. An interview that drifts into re-extracting conflict content is a backdoor around the no-recording principle, a researcher instead of a database, same violation either way.</li>
+      <li><strong>The same interview can proxy for the ROI case a buyer needs to believe (Section 1), if the questions stay structured.</strong> Scales, yes/no, and numeric estimates about impact, not narrative about the conflict, e.g. "before this session, how likely were you to raise this with a manager or HR" (a baseline for whether this surfaces conflicts that would otherwise go unaddressed), "how much has this affected your focus at work this week" (1-5), "had you started avoiding shared work with this person" (yes/no), "how would you rate the working relationship now vs. before." These are illustrative, not finalized, and worth being honest about what they are: self-reported, single-sample, bootstrap-stage signal, useful for making the pilot's case, not a substitute for the real longitudinal outcome data an actual company deployment would eventually produce.</li>
+      <li><strong>The pilot only needs Tier 0 from Section 7, not the proof infrastructure.</strong> Not persisting conversation content is ordinary architecture, no database write path for it, ephemeral processing, checking whether the STT/LLM/TTS vendors offer zero-data-retention on their API, none of that costs real money. The audits, code review, and confidential computing in Section 7's Tiers 1 through 3 exist to convince a skeptical enterprise buyer, a free pilot doesn't need to earn that yet, and building it before validating the product works is spending before there's a business to spend for. What the pilot does still owe participants: honesty about which tier it's actually on. "We don't record what you say" is true and fine to say. Implying it's independently audited or verified, when it isn't yet, is not, that's an easy, cheap version of Tier 0, not a shortcut around the truth.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Mend — internal draft, not for external distribution. Nothing in this document constitutes legal advice.
+  </footer>
+
+</div>
+
+<!--claude-mermaid-runtime-begin:3477-->
+<style>.mermaid-diagram{margin-block:4px}.mermaid-diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}</style>
+<script src="/_runtime/mermaid-11.16.1.min.js"></script>
+<script>(function(){
+var CFG={"palettes":{"light":{"surface":"#f4efe4","text":"#42392e","line":"#8a7f6d","border":"#7a6c52","bg":"#fffdf8"},"dark":{"surface":"#262b34","text":"#f2f3f5","line":"#a8adb8","border":"#9aa4b8","bg":"#1f232b"}}};
+if(typeof mermaid==='undefined')return;
+var pres=Array.prototype.slice.call(document.querySelectorAll('pre.mermaid')).filter(function(p){if(p.hasAttribute('data-claude-mermaid-claimed'))return false;p.setAttribute('data-claude-mermaid-claimed','1');return true;});
+if(!pres.length)return;
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+var root=document.documentElement;
+var items=pres.map(function(pre){
+var mount=document.createElement('div');mount.className='mermaid-diagram';
+return {pre:pre,mount:mount,src:pre.textContent||''};
+});
+var seq=0;
+var renderGen=0;
+var lastKey='';
+function pageBg(fallback){
+var els=[document.body,document.documentElement];
+for(var i=0;i<els.length;i++){
+var c=els[i]&&getComputedStyle(els[i]).backgroundColor;
+if(c&&c!=='transparent'&&c!=='rgba(0, 0, 0, 0)')return c;
+}
+return fallback;
+}
+function render(){
+var theme=root.getAttribute('data-theme');
+var dark=theme==='dark'||(!!(mq&&mq.matches)&&theme!=='light');
+var pal=dark?CFG.palettes.dark:CFG.palettes.light;
+var bg=pageBg(pal.bg);
+var key=(dark?'d':'l')+'|'+bg;
+if(key===lastKey)return;
+lastKey=key;
+var gen=++renderGen;
+var font=getComputedStyle(document.body).fontFamily||'sans-serif';
+var nat={useMaxWidth:false};
+mermaid.initialize({
+startOnLoad:false,securityLevel:'strict',theme:'base',
+flowchart:nat,sequence:nat,er:nat,state:nat,class:nat,pie:nat,
+gantt:nat,journey:nat,timeline:nat,gitGraph:nat,mindmap:nat,xyChart:nat,
+quadrantChart:nat,sankey:nat,c4:nat,requirement:nat,block:nat,
+packet:nat,kanban:nat,architecture:nat,radar:nat,
+themeVariables:{background:bg,mainBkg:pal.surface,primaryColor:pal.surface,
+primaryTextColor:pal.text,lineColor:pal.line,primaryBorderColor:pal.border,
+nodeBorder:pal.border,clusterBorder:pal.border,edgeLabelBackground:bg,
+clusterBkg:'rgba(127,127,127,0.07)',titleColor:pal.text,
+darkMode:dark,rowOdd:bg,rowEven:'rgba(127,127,127,0.07)',
+attributeBackgroundColorOdd:bg,attributeBackgroundColorEven:'rgba(127,127,127,0.07)',
+fontSize:'16px',fontFamily:font},
+themeCSS:'.node rect, .node circle, .node polygon, .node path, .cluster rect { stroke-width: 2px; }'
+});
+items.forEach(function(it){
+var id='claude-mermaid-'+seq++;
+mermaid.render(id,it.src).then(function(r){
+if(gen!==renderGen)return;
+var prev=it.pre.previousElementSibling;
+if(prev&&prev.className==='mermaid-diagram'&&prev!==it.mount)return;
+it.mount.innerHTML=r.svg;
+if(!it.mount.parentNode)it.pre.parentNode.insertBefore(it.mount,it.pre);
+it.pre.style.display='none';
+},function(){
+var scratch=document.getElementById(id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+scratch=document.getElementById('d'+id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+if(gen!==renderGen)return;
+if(it.mount.parentNode)it.mount.parentNode.removeChild(it.mount);
+it.pre.style.display='';
+});
+});
+}
+render();
+if(mq&&mq.addEventListener)mq.addEventListener('change',render);
+if(typeof MutationObserver!=='undefined')new MutationObserver(render).observe(root,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+<!--claude-mermaid-runtime-end-->
+
+</body></html>
