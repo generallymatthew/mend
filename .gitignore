@@ -2,3 +2,5 @@
 classifier/.venv/
 classifier/output/
 classifier/data/gen_stderr.txt
+intake-app/.venv/
+__pycache__/

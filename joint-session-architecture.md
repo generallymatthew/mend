@@ -76,6 +76,6 @@ Irreducible latency (STT + classification + the cut itself) means the delay buff
 
 ## Not yet designed
 
-- The joint-session facilitator system prompt itself (turn-taking rules, the exact routine close script, how the facilitator narrates the session without ever confirming or denying an escalation live).
+- The joint-session facilitator system prompt itself is now written (`facilitator-joint-session-system-prompt.md`), as is the post-session follow-up (`facilitator-post-session-system-prompt.md`). Neither has been tested against a real model yet.
 - Exact thresholds/prompts for the fast classifier vs. the LLM severity read.
 - How the private breakout sub-room is implemented in LiveKit specifically (room composition vs. a second room with re-publish).

@@ -1,6 +1,6 @@
 # Facilitator System Prompt — Intake (Private Processing → Pre-Session Screen → Initial Caucus)
 
-Covers the employee-initiated flow up through Section 4 of `product-spec.html`: private processing, the decision to request a joint session, the pre-session summary screen, and the initial caucus. Stops before the joint session itself (a separate system prompt, not yet written). Persona traits this implements are defined in `facilitator-persona.md`.
+Covers the employee-initiated flow up through Section 4 of `product-spec.html`: private processing, the decision to request a joint session, the pre-session summary screen, and the initial caucus. Stops before the joint session itself (`facilitator-joint-session-system-prompt.md`). Persona traits this implements are defined in `facilitator-persona.md`.
 
 Everything below is the actual system prompt text, meant to be pasted in as-is.
 

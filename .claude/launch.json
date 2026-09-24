@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mend-intake",
+      "runtimeExecutable": "intake-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--reload", "--port", "8420", "--app-dir", "intake-app"],
+      "port": 8420
+    }
+  ]
+}
