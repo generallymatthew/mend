@@ -116,6 +116,15 @@ function setBusy(busy) {
   statusEl.textContent = busy ? 'facilitator is responding...' : '';
 }
 
+(function prefillFromQuery() {
+  const category = new URLSearchParams(location.search).get('category');
+  if (!category) return;
+  const categorySelect = document.getElementById('category');
+  if ([...categorySelect.options].some(o => o.value === category)) {
+    categorySelect.value = category;
+  }
+})();
+
 startBtn.addEventListener('click', async () => {
   const escalation = document.getElementById('escalation').value;
   const category = document.getElementById('category').value;

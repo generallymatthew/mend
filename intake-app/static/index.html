@@ -25,6 +25,10 @@
   button.recording{background:#8C3B2E; color:#fff; border-color:#8C3B2E;}
   button:disabled{opacity:.5; cursor:default;}
   .status{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:6px;}
+  .banner{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:10px 14px; margin-top:10px; font-size:13.5px;}
+  .banner a{text-decoration:none;}
+  .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
+  [hidden]{display:none !important;}
 </style>
 </head>
 <body>
@@ -37,6 +41,10 @@
     <button id="sendBtn" class="primary">Send</button>
   </div>
   <div class="status" id="status"></div>
+  <div class="banner" id="banner" hidden>
+    <span>Facilitator says you're ready for a joint session.</span>
+    <a href="http://localhost:8421/" target="_blank" rel="noopener"><button>Continue &rarr;</button></a>
+  </div>
 </div>
 
 <script>
@@ -62,6 +70,16 @@ function addMessage(text, cls) {
   return div;
 }
 
+const banner = document.getElementById('banner');
+
+function handleSignal(signal) {
+  if (!signal) return;
+  try {
+    const s = JSON.parse(signal);
+    banner.hidden = !s.ready_for_joint_session;
+  } catch (e) {}
+}
+
 function setBusy(busy) {
   sendBtn.disabled = busy;
   input.disabled = busy;
@@ -83,6 +101,7 @@ async function sendText() {
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
     playReplyAudio(data.audio_url);
+    handleSignal(data.signal);
   } catch (e) {
     statusEl.textContent = 'error: ' + e.message;
   } finally {
@@ -128,6 +147,7 @@ async function toggleRecording() {
         if (data.transcript) addMessage('"' + data.transcript + '"', 'employee transcript');
         if (data.reply) addMessage(data.reply, 'facilitator');
         playReplyAudio(data.audio_url);
+    handleSignal(data.signal);
       }
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
@@ -148,6 +168,7 @@ recordBtn.addEventListener('click', toggleRecording);
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
     playReplyAudio(data.audio_url);
+    handleSignal(data.signal);
   } finally {
     setBusy(false);
   }
