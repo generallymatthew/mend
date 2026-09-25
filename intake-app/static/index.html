@@ -28,19 +28,35 @@
   .banner{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:10px 14px; margin-top:10px; font-size:13.5px;}
   .banner a{text-decoration:none;}
   .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
+  .video-toggle{display:flex; justify-content:flex-end; margin-bottom:8px;}
+  .video-toggle button{font-size:12.5px; padding:6px 10px;}
+  .video-area{flex:1; display:flex; flex-direction:column; gap:8px;}
+  .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
   [hidden]{display:none !important;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="eyebrow">Mend &middot; intake (local prototype, text + voice memo)</div>
-  <div class="thread" id="thread"></div>
-  <div class="composer">
-    <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
-    <button id="recordBtn" title="Record a voice memo">&#127908;</button>
-    <button id="sendBtn" class="primary">Send</button>
+  <div class="video-toggle" id="videoToggle" hidden>
+    <button id="videoStartBtn">Start video call</button>
   </div>
-  <div class="status" id="status"></div>
+
+  <div id="textMode" class="video-area" style="flex-direction:column;">
+    <div class="thread" id="thread"></div>
+    <div class="composer">
+      <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
+      <button id="recordBtn" title="Record a voice memo">&#127908;</button>
+      <button id="sendBtn" class="primary">Send</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div id="videoMode" class="video-area" hidden>
+    <iframe id="videoFrame" allow="camera; microphone; autoplay; display-capture" title="Mend facilitator video call"></iframe>
+    <button id="videoEndBtn">End video call</button>
+  </div>
+
   <div class="banner" id="banner" hidden>
     <span>Facilitator says you're ready for a joint session.</span>
     <a href="http://localhost:8421/" target="_blank" rel="noopener"><button>Continue &rarr;</button></a>
@@ -160,6 +176,55 @@ async function toggleRecording() {
 }
 
 recordBtn.addEventListener('click', toggleRecording);
+
+const videoToggle = document.getElementById('videoToggle');
+const videoStartBtn = document.getElementById('videoStartBtn');
+const videoEndBtn = document.getElementById('videoEndBtn');
+const textMode = document.getElementById('textMode');
+const videoMode = document.getElementById('videoMode');
+const videoFrame = document.getElementById('videoFrame');
+let videoSignalTimer = null;
+
+async function startVideoCall() {
+  videoStartBtn.disabled = true;
+  try {
+    const res = await fetch('/api/video/start', {method: 'POST'});
+    const data = await res.json();
+    if (data.error) {
+      statusEl.textContent = data.error;
+      return;
+    }
+    videoFrame.src = data.conversation_url;
+    textMode.hidden = true;
+    videoMode.hidden = false;
+    videoSignalTimer = setInterval(async () => {
+      const r = await fetch('/api/video/signal');
+      const d = await r.json();
+      handleSignal(d.signal);
+    }, 3000);
+  } finally {
+    videoStartBtn.disabled = false;
+  }
+}
+
+async function endVideoCall() {
+  clearInterval(videoSignalTimer);
+  await fetch('/api/video/end', {method: 'POST'});
+  videoFrame.src = 'about:blank';
+  videoMode.hidden = true;
+  textMode.hidden = false;
+}
+
+videoStartBtn.addEventListener('click', startVideoCall);
+videoEndBtn.addEventListener('click', endVideoCall);
+
+(async function checkVideoEnabled() {
+  try {
+    const res = await fetch('/api/video/enabled');
+    const data = await res.json();
+    videoToggle.hidden = !data.enabled;
+  } catch (e) {}
+})();
 
 (async function start() {
   setBusy(true);

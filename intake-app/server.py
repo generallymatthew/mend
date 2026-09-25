@@ -14,17 +14,20 @@ Run:
     export ANTHROPIC_API_KEY=...   # your own key, set in your shell/.env, never pasted into chat
     uvicorn server:app --reload --port 8420
 """
+import json
 import os
 import re
 import subprocess
 import tempfile
+import time
 import uuid
 from pathlib import Path
 
+import httpx
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, Request, UploadFile
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).parent
@@ -33,6 +36,15 @@ SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 MODEL = "claude-sonnet-5"
 AUDIO_DIR = Path(tempfile.mkdtemp(prefix="mend-intake-audio-"))
 VOICE = "Samantha"  # a built-in macOS voice; change freely, see `say -v ?` for options
+
+# Optional video-avatar mode (Tavus Conversational Video Interface). All four
+# must be set -- see README.md's "Optional: video avatar" section for how to
+# get them. Absent any of them, the app just runs text/voice-memo only, same
+# as before.
+TAVUS_API_KEY = os.environ.get("TAVUS_API_KEY")
+TAVUS_PAL_ID = os.environ.get("TAVUS_PAL_ID")
+LLM_SHIM_SECRET = os.environ.get("LLM_SHIM_SECRET")
+VIDEO_ENABLED = bool(TAVUS_API_KEY and TAVUS_PAL_ID and LLM_SHIM_SECRET)
 
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
@@ -123,6 +135,143 @@ def facilitator_reply() -> dict:
     visible, signal = strip_signal(raw)
     conversation.append({"role": "assistant", "content": raw})
     return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible)}
+
+
+# --- Video-avatar mode (Tavus) -------------------------------------------
+# The video call's transcript lives entirely in Tavus's own conversation, not
+# in `conversation` above -- Tavus re-sends the running history to the shim
+# below on every turn, so this process stays stateless for that path except
+# for the one thing the UI still needs: the latest mend_signal, so the
+# existing "ready for joint session" banner keeps working in video mode too.
+video_conversation_id: str | None = None
+latest_video_signal: str | None = None
+
+
+@app.get("/api/video/enabled")
+async def video_enabled():
+    return {"enabled": VIDEO_ENABLED}
+
+
+@app.post("/api/video/start")
+async def video_start():
+    global video_conversation_id, latest_video_signal
+    if not VIDEO_ENABLED:
+        return JSONResponse({"error": "video mode isn't configured -- see README.md"}, status_code=400)
+    latest_video_signal = None
+    async with httpx.AsyncClient() as http:
+        try:
+            resp = await http.post(
+                "https://tavusapi.com/v2/conversations",
+                headers={"x-api-key": TAVUS_API_KEY},
+                json={"pal_id": TAVUS_PAL_ID, "conversation_name": "Mend intake"},
+                timeout=30,
+            )
+        except httpx.HTTPError as e:
+            return JSONResponse({"error": f"couldn't reach Tavus: {e}"}, status_code=502)
+    if resp.status_code >= 400:
+        return JSONResponse({"error": f"Tavus error {resp.status_code}: {resp.text}"}, status_code=502)
+    data = resp.json()
+    video_conversation_id = data.get("conversation_id")
+    return {"conversation_url": data.get("conversation_url")}
+
+
+@app.post("/api/video/end")
+async def video_end():
+    global video_conversation_id
+    if video_conversation_id and TAVUS_API_KEY:
+        async with httpx.AsyncClient() as http:
+            try:
+                await http.post(
+                    f"https://tavusapi.com/v2/conversations/{video_conversation_id}/end",
+                    headers={"x-api-key": TAVUS_API_KEY},
+                    timeout=15,
+                )
+            except httpx.HTTPError:
+                pass  # best-effort cleanup; the conversation will also time out on its own
+        video_conversation_id = None
+    return {"ok": True}
+
+
+@app.get("/api/video/signal")
+async def video_signal():
+    return {"signal": latest_video_signal}
+
+
+def _sse(payload: dict) -> str:
+    return f"data: {json.dumps(payload)}\n\n"
+
+
+def stream_facilitator_reply(messages: list[dict]):
+    """OpenAI-chat-completions-shaped SSE stream for Tavus's custom_llm layer.
+    Tavus speaks whatever text this yields, so the <mend_signal> control
+    block must never reach it -- it's held back and parsed out instead,
+    same job strip_signal() does for the text/voice-memo path above."""
+    global latest_video_signal
+    chat_id = f"chatcmpl-{uuid.uuid4().hex}"
+    created = int(time.time())
+
+    def chunk(delta: dict, finish_reason: str | None = None) -> str:
+        return _sse({
+            "id": chat_id, "object": "chat.completion.chunk", "created": created,
+            "model": MODEL, "choices": [{"index": 0, "delta": delta, "finish_reason": finish_reason}],
+        })
+
+    yield chunk({"role": "assistant"})
+
+    if client is None:
+        yield chunk({"content": "Video mode is on, but ANTHROPIC_API_KEY isn't set on the server."})
+        yield chunk({}, finish_reason="stop")
+        yield "data: [DONE]\n\n"
+        return
+
+    marker = "<mend_signal>"
+    full_text = ""
+    flushed_len = 0
+    signal_started = False
+
+    try:
+        with client.messages.stream(
+            model=MODEL,
+            max_tokens=4096,
+            system=SYSTEM_PROMPT,
+            messages=[m for m in messages if m.get("role") in ("user", "assistant")],
+        ) as stream:
+            for delta in stream.text_stream:
+                full_text += delta
+                if signal_started:
+                    continue
+                tag_at = full_text.find(marker, flushed_len)
+                if tag_at != -1:
+                    if tag_at > flushed_len:
+                        yield chunk({"content": full_text[flushed_len:tag_at]})
+                    flushed_len = tag_at
+                    signal_started = True
+                    continue
+                safe_len = max(flushed_len, len(full_text) - (len(marker) - 1))
+                if safe_len > flushed_len:
+                    yield chunk({"content": full_text[flushed_len:safe_len]})
+                    flushed_len = safe_len
+    except Exception as e:
+        yield chunk({"content": f"(server error calling Claude: {e})"})
+        yield chunk({}, finish_reason="stop")
+        yield "data: [DONE]\n\n"
+        return
+
+    match = re.search(r"<mend_signal>(.*?)</mend_signal>", full_text, re.S)
+    latest_video_signal = match.group(1).strip() if match else None
+
+    yield chunk({}, finish_reason="stop")
+    yield "data: [DONE]\n\n"
+
+
+@app.post("/chat/completions")
+async def llm_chat_completions(request: Request):
+    auth = request.headers.get("authorization", "")
+    if not LLM_SHIM_SECRET or auth != f"Bearer {LLM_SHIM_SECRET}":
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    payload = await request.json()
+    messages = payload.get("messages", [])
+    return StreamingResponse(stream_facilitator_reply(messages), media_type="text/event-stream")
 
 
 @app.post("/api/start")
