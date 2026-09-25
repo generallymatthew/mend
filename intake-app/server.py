@@ -155,7 +155,7 @@ def facilitator_reply() -> dict:
     try:
         response = client.messages.create(
             model=MODEL,
-            max_tokens=4096,
+            max_tokens=8192,
             system=SYSTEM_PROMPT,
             messages=conversation,
         )
@@ -270,7 +270,7 @@ def stream_facilitator_reply(messages: list[dict]):
     try:
         with client.messages.stream(
             model=MODEL,
-            max_tokens=4096,
+            max_tokens=8192,
             system=SYSTEM_PROMPT,
             messages=[m for m in messages if m.get("role") in ("user", "assistant")],
         ) as stream:

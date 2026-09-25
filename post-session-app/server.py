@@ -103,7 +103,7 @@ def facilitator_reply() -> dict:
     try:
         response = client.messages.create(
             model=MODEL,
-            max_tokens=4096,
+            max_tokens=8192,
             system=SYSTEM_PROMPT,
             messages=conversation,
         )
