@@ -601,6 +601,26 @@ flowchart TD
       <p>A shared access code is a trust model, not a cryptographic guarantee, anyone holding it can sign up, including someone outside the company if the code leaks. Same exposure as a Slack invite link or a benefits-portal code, mitigated by rotating the code periodically, not eliminated. Worth flagging to a buyer's security team plainly rather than overselling it as airtight.</p>
     </div>
 
+    <h3>Peer-suggested invites</h3>
+    <p>The invite mechanism above assumes one of the two people in the conflict is the one who decides to open Mend. Often neither one does, not because it wouldn't help, but because starting it themselves means naming their own conflict first, to themselves as much as anyone. A coworker who isn't part of it, someone who's noticed the tension without being in it, can privately suggest that the two of them consider a Mend conversation. Not a report. A nudge, from a peer, not an authority.</p>
+    <p>That distinction matters more than it might look. A manager requiring a session (Section 5) comes with institutional weight attached, whatever the framing, it's an instruction from someone who writes a performance review. A suggestion from another employee, anonymous, carries none of that. Nobody's evaluating anyone. It reads as a colleague who cared enough to say something, not a case being opened.</p>
+
+    <div class="callout" style="background:var(--accent-soft); border-color:var(--accent);">
+      <span class="label" style="color:var(--accent);">The actual message, sent to each of them</span>
+      <p style="color:var(--ink-soft);">"A coworker thought a conversation between the two of you might help. Conflict is normal, especially between people who care about their work, it's not a red flag on its own. What actually costs a relationship is leaving it unresolved. Relationships that go through real friction and work it out tend to come out stronger than the ones that just stayed polite and were never tested. No one else sees this message, and nothing happens unless you want it to."</p>
+    </div>
+
+    <p>Delivered the same way an invite is: the suggesting employee already knows how to reach both people, same as any coworker does, so Mend just needs a personal contact for each, not a directory. Both get the identical message, privately, individually. Neither is told who sent it, or whether the other received it, or whether the other acted on it. Choosing to act on it just opens the normal employee-initiated flow (above) for that person, their own private processing, on their own terms, indistinguishable from having opened Mend entirely on their own.</p>
+
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Naming the suggester, the way a direct invite names who sent it. Rejected for the opposite reason that invites do name the sender: a suggester isn't a party to the conflict, so being identified only exposes them to being seen as the one who called it out, with nothing gained in return, unlike a direct invite, where knowing it's your coworker rather than a stranger is what makes the ask legible. The invite mechanism protects the company from seeing it; this one has to protect the suggester too.</p>
+    </div>
+    <div class="callout">
+      <span class="label">Real limit, not solved</span>
+      <p>Anonymity cuts both ways, a genuine, well-meant nudge and a passive-aggressive jab look identical to the two people receiving one. A modest cooldown, one suggestion per pair within some window, blunts repeated use as a weapon without pretending to eliminate a single bad-faith one. Worth surfacing to a buyer plainly, same as the shared access code's own limits above.</p>
+    </div>
+
     <h3>Coaching debrief follow-up</h3>
     <p>The coaching and rehearsal from step one has a natural gap: someone practices the conversation with the bot, then goes and has the real one entirely outside Mend, with no way for the facilitator to know how it went unless they come back and say so on their own. Rather than leave that open, the facilitator can offer, at the end of a coaching conversation, a follow-up check-in once the real conversation has actually happened: does the employee want that, and roughly when do they think it'll happen. Purely opt-in, nothing scheduled unless they ask for it.</p>
 
@@ -842,6 +862,7 @@ flowchart LR
       <div class="risk-item"><span class="mark">＋</span><p>Whether generic hostile bullying, with no protected-characteristic basis, belongs on the configurable ceiling (Section 6) as its own category isn't decided. It doesn't meet the floor's legal-duty bar, most jurisdictions don't treat equal-opportunity rudeness as unlawful, but it's squarely the kind of conflict the product exists to catch, and it's exactly the sort of thing a buyer will ask about. Needs a real answer before it comes up in a sales conversation.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>The shared access code behind anonymous invites and the coaching debrief (Section 3) is a trust model, not a cryptographic guarantee, anyone holding it can sign up. Needs a real rotation and revocation policy before this ships, not just the "same as a Slack invite link" comparison in the spec.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>Both anonymous invites and the coaching debrief (Section 3) depend on reaching someone through an in-app notification or a personal contact they opted into, not their work email. An employee who never opts in personal contact info, or doesn't have the app open, may just never see the invite or nudge in time. Worth real testing, this could quietly cap adoption in exchange for the anonymity guarantee.</p></div>
+      <div class="risk-item"><span class="mark">＋</span><p>Peer-suggested invites (Section 3) protect the suggester's anonymity the same way invites protect the requester's, but that means a genuine nudge and a passive-aggressive one look identical to whoever receives it. The per-pair cooldown in the spec blunts repeated misuse, it doesn't catch a single bad-faith one, and there's no real user testing yet on whether the positive framing actually lands or just reads as "someone's talking about you."</p></div>
     </div>
 
     <h3>A proposed answer to that last one: a public pilot</h3>
