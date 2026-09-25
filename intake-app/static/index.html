@@ -44,12 +44,12 @@
      event, full attention like a video tile; the transcript is reference
      material, docked to the side rather than the main flow. */
   .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--card);}
-  .call-main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; min-width:0; background:var(--paper);}
+  .call-main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper);}
   .call-controls{width:100%; max-width:480px; display:flex; flex-direction:column; gap:8px;}
-  .transcript-panel{width:340px; flex-shrink:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
+  .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
   .transcript-header{padding:14px 16px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
   .transcript-header button{font-size:11px; padding:5px 9px; text-transform:none; letter-spacing:normal; font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
-  .transcript-panel .thread{flex:1; overflow-y:auto; padding:16px; margin:0;}
+  .transcript-panel .thread{flex:1; min-height:0; overflow-y:auto; padding:16px; margin:0;}
   @media (max-width: 760px){
     .call-layout{flex-direction:column;}
     .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
@@ -196,10 +196,9 @@ function drawListening(level) {
   avatarCtx.beginPath();
   avatarCtx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
   avatarCtx.fill();
-  avatarCtx.fillStyle = style.getPropertyValue('--paper').trim() || '#F2F3EE';
-  avatarCtx.beginPath();
-  avatarCtx.ellipse(w / 2, h / 2 + 17, 35, 3, 0, 0, Math.PI * 2);
-  avatarCtx.fill();
+  // No mouth at all here, on purpose: listening animates by pulsing the
+  // whole shape with your mic volume, with nothing that reads as a face
+  // about to speak.
 }
 
 function drawThinking(now) {
