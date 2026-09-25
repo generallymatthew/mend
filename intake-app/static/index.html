@@ -281,7 +281,7 @@ audioEl.addEventListener('play', () => { avatarState = 'talking'; });
 audioEl.addEventListener('pause', () => { if (avatarState === 'talking') avatarState = 'idle'; });
 audioEl.addEventListener('ended', () => {
   if (avatarState === 'talking') avatarState = 'idle';
-  if (liveMode) startRecordingTurn();
+  if (liveMode) startRecordingTurnSafe();
 });
 
 function playReplyAudio(url, text) {
@@ -359,18 +359,44 @@ let liveMode = false;
 // Voice-activity detection for live mode: neither TTS backend gives us
 // real-time streaming STT, so a live "conversation" here means auto-stopping
 // the recording once the mic goes quiet, rather than an always-on stream.
-// VAD_THRESHOLD is on the same 0..1 scale rmsLevel() already produces; tune
-// it if it's cutting off too early/late for your mic and room noise.
+// VAD_THRESHOLD is a floor, on the same 0..1 scale rmsLevel() already
+// produces, not the actual threshold used: every turn starts with a brief
+// calibration window that measures your real ambient noise (fan, room echo,
+// mic self-noise) and sets the real threshold above THAT, since a fixed
+// absolute number can't tell your background hum from your voice. Without
+// this, continuous ambient noise above the fixed threshold looked like
+// nonstop speech, and once it happened to dip briefly, got sent as a memo,
+// then the whole thing repeated on the next turn -- "keeps making voice
+// memos when I'm not talking."
 const VAD_THRESHOLD = 0.06;
 const VAD_SILENCE_MS = 1800;
 const VAD_MIN_SPEECH_MS = 500;
+const VAD_CALIBRATION_MS = 400;
 let vadSpeaking = false;
 let vadSpeechStarted = null;
 let vadSilenceSince = null;
+let vadCalibrating = false;
+let vadCalibrateEndsAt = 0;
+let vadNoiseFloor = 0;
+let vadThreshold = VAD_THRESHOLD;
+
+function startVadCalibration(now) {
+  vadCalibrating = true;
+  vadCalibrateEndsAt = now + VAD_CALIBRATION_MS;
+  vadNoiseFloor = 0;
+  vadThreshold = VAD_THRESHOLD;
+}
 
 function checkVad(level, now) {
   if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
-  if (level > VAD_THRESHOLD) {
+  if (vadCalibrating) {
+    vadNoiseFloor = Math.max(vadNoiseFloor, level);
+    if (now < vadCalibrateEndsAt) return;
+    vadCalibrating = false;
+    vadThreshold = Math.max(VAD_THRESHOLD, vadNoiseFloor * 1.6 + 0.015);
+    return; // real detection resumes next frame against the calibrated threshold
+  }
+  if (level > vadThreshold) {
     if (!vadSpeaking) { vadSpeaking = true; vadSpeechStarted = now; }
     vadSilenceSince = null;
     return;
@@ -390,6 +416,21 @@ function checkVad(level, now) {
     vadSpeaking = false;
     vadSpeechStarted = null;
     vadSilenceSince = null;
+  }
+}
+
+async function startRecordingTurnSafe() {
+  // For live mode's own auto-continue points: if the mic fails partway
+  // through a conversation (permission revoked, device unplugged, another
+  // app grabs it), fall back to ending live mode cleanly instead of an
+  // unhandled rejection that leaves the button stuck saying "End live
+  // conversation" while nothing is actually listening.
+  try {
+    await startRecordingTurn();
+  } catch (e) {
+    liveMode = false;
+    liveBtn.textContent = 'Go live';
+    statusEl.textContent = 'lost microphone access, live mode ended: ' + e.message;
   }
 }
 
@@ -419,7 +460,7 @@ async function startRecordingTurn() {
       if (data.error) {
         statusEl.textContent = data.error;
         avatarState = 'idle';
-        if (liveMode) startRecordingTurn(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
+        if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
       } else {
         if (data.transcript) addMessage('"' + data.transcript + '"', 'employee transcript');
         if (data.reply) addMessage(data.reply, 'facilitator');
@@ -429,7 +470,7 @@ async function startRecordingTurn() {
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
       avatarState = 'idle';
-      if (liveMode) startRecordingTurn();
+      if (liveMode) startRecordingTurnSafe();
     } finally {
       setBusy(false);
     }
@@ -437,6 +478,7 @@ async function startRecordingTurn() {
   mediaRecorder.start();
   avatarState = 'listening';
   startMicAnalysis(stream);
+  startVadCalibration(performance.now());
   recordBtn.classList.add('recording');
   if (liveMode) liveBtn.classList.add('recording');
 }
@@ -446,7 +488,11 @@ async function toggleRecording() {
     mediaRecorder.stop();
     return;
   }
-  await startRecordingTurn();
+  try {
+    await startRecordingTurn();
+  } catch (e) {
+    statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
+  }
 }
 
 recordBtn.addEventListener('click', toggleRecording);
@@ -460,9 +506,20 @@ async function toggleLiveMode() {
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     return;
   }
-  liveMode = true;
-  liveBtn.textContent = 'End live conversation';
-  if (!mediaRecorder || mediaRecorder.state !== 'recording') await startRecordingTurn();
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    liveMode = true;
+    liveBtn.textContent = 'End live conversation';
+    return;
+  }
+  try {
+    await startRecordingTurn();
+    liveMode = true;
+    liveBtn.textContent = 'End live conversation';
+  } catch (e) {
+    statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
+    // liveMode stays off and the button stays "Go live" -- nothing to clean up,
+    // startRecordingTurn never got far enough to create a recorder or start listening
+  }
 }
 
 liveBtn.addEventListener('click', toggleLiveMode);
