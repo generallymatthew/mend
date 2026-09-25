@@ -32,6 +32,8 @@
   .video-toggle button{font-size:12.5px; padding:6px 10px;}
   .video-area{flex:1; display:flex; flex-direction:column; gap:8px;}
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
+  .avatar-row{display:flex; justify-content:center; padding:8px 0 4px;}
+  #avatarCanvas{display:block;}
   [hidden]{display:none !important;}
 </style>
 </head>
@@ -43,6 +45,7 @@
   </div>
 
   <div id="textMode" class="video-area" style="flex-direction:column;">
+    <div class="avatar-row"><canvas id="avatarCanvas" width="120" height="120"></canvas></div>
     <div class="thread" id="thread"></div>
     <div class="composer">
       <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
@@ -71,8 +74,60 @@ const recordBtn = document.getElementById('recordBtn');
 const statusEl = document.getElementById('status');
 
 const audioEl = new Audio();
+
+// Abstract avatar: a plain shape with a mouth that opens with the audio's
+// own volume, in place of a realistic video face. Reacts to whatever audio
+// plays through audioEl, regardless of which TTS produced it.
+let audioCtx = null, analyser = null, avatarData = null;
+const avatarCanvas = document.getElementById('avatarCanvas');
+const avatarCtx = avatarCanvas.getContext('2d');
+
+function ensureAudioGraph() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaElementSource(audioEl);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    avatarData = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+  } catch (e) {} // Web Audio unavailable; avatar just stays idle, audio still plays normally
+}
+
+function drawAvatar(level) {
+  const w = avatarCanvas.width, h = avatarCanvas.height;
+  const style = getComputedStyle(document.body);
+  avatarCtx.clearRect(0, 0, w, h);
+  avatarCtx.fillStyle = style.getPropertyValue('--accent').trim() || '#3D6B62';
+  avatarCtx.beginPath();
+  avatarCtx.arc(w / 2, h / 2, w / 2 - 6, 0, Math.PI * 2);
+  avatarCtx.fill();
+  const mouthW = 42, mouthH = 4 + level * 38;
+  avatarCtx.fillStyle = style.getPropertyValue('--paper').trim() || '#F2F3EE';
+  avatarCtx.beginPath();
+  avatarCtx.ellipse(w / 2, h / 2 + 10, mouthW / 2, mouthH / 2, 0, 0, Math.PI * 2);
+  avatarCtx.fill();
+}
+
+function animateAvatar() {
+  requestAnimationFrame(animateAvatar);
+  if (!analyser || audioEl.paused) { drawAvatar(0); return; }
+  analyser.getByteTimeDomainData(avatarData);
+  let sumSq = 0;
+  for (let i = 0; i < avatarData.length; i++) {
+    const v = (avatarData[i] - 128) / 128;
+    sumSq += v * v;
+  }
+  const rms = Math.sqrt(sumSq / avatarData.length);
+  drawAvatar(Math.min(1, rms * 4));
+}
+animateAvatar();
+
 function playReplyAudio(url) {
   if (!url) return;
+  ensureAudioGraph();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   audioEl.src = url;
   audioEl.play().catch(() => {}); // autoplay can be blocked before first user gesture; harmless if so
 }

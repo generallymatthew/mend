@@ -35,7 +35,12 @@ load_dotenv(ROOT / ".env")
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 MODEL = "claude-sonnet-5"
 AUDIO_DIR = Path(tempfile.mkdtemp(prefix="mend-intake-audio-"))
-VOICE = "Samantha"  # a built-in macOS voice; change freely, see `say -v ?` for options
+VOICE = "Samantha"  # a built-in macOS voice, used only if OPENAI_API_KEY isn't set; see `say -v ?`
+
+# Optional higher-quality voice via OpenAI TTS. Falls back to macOS `say`
+# above if OPENAI_API_KEY isn't set, or if the OpenAI call fails.
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+OPENAI_TTS_VOICE = os.environ.get("OPENAI_TTS_VOICE", "alloy")
 
 # Optional video-avatar mode (Tavus Conversational Video Interface). All four
 # must be set -- see README.md's "Optional: video avatar" section for how to
@@ -50,13 +55,31 @@ app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 
 
-def synthesize_speech(text: str) -> str | None:
+def synthesize_speech_openai(text: str) -> str | None:
+    """Speaks `text` with OpenAI's TTS, saves the returned mp3, and returns
+    a URL path to fetch it. Returns None on any failure so the caller falls
+    back to macOS `say`."""
+    try:
+        resp = httpx.post(
+            "https://api.openai.com/v1/audio/speech",
+            headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
+            json={"model": "gpt-4o-mini-tts", "voice": OPENAI_TTS_VOICE, "input": text},
+            timeout=30,
+        )
+        resp.raise_for_status()
+    except httpx.HTTPError:
+        return None
+    file_id = uuid.uuid4().hex
+    mp3_path = AUDIO_DIR / f"{file_id}.mp3"
+    mp3_path.write_bytes(resp.content)
+    return f"/api/audio/{file_id}.mp3"
+
+
+def synthesize_speech_say(text: str) -> str | None:
     """Speaks `text` with macOS's built-in `say`, converts to .m4a (broad
     browser support), and returns a URL path to fetch it. Returns None
     (and lets the caller fall back to text-only) if `say`/`afconvert`
     aren't available -- e.g. running this on non-macOS."""
-    if not text:
-        return None
     file_id = uuid.uuid4().hex
     aiff_path = AUDIO_DIR / f"{file_id}.aiff"
     m4a_path = AUDIO_DIR / f"{file_id}.m4a"
@@ -71,6 +94,16 @@ def synthesize_speech(text: str) -> str | None:
     finally:
         aiff_path.unlink(missing_ok=True)
     return f"/api/audio/{file_id}.m4a"
+
+
+def synthesize_speech(text: str) -> str | None:
+    if not text:
+        return None
+    if OPENAI_API_KEY:
+        url = synthesize_speech_openai(text)
+        if url:
+            return url
+    return synthesize_speech_say(text)
 
 _whisper_model = None
 
@@ -312,8 +345,9 @@ async def post_voice(file: UploadFile):
 @app.post("/api/reset")
 async def reset():
     conversation.clear()
-    for f in AUDIO_DIR.glob("*.m4a"):
-        f.unlink(missing_ok=True)
+    for pattern in ("*.m4a", "*.mp3"):
+        for f in AUDIO_DIR.glob(pattern):
+            f.unlink(missing_ok=True)
     return {"ok": True}
 
 
@@ -322,7 +356,8 @@ async def get_audio(filename: str):
     path = AUDIO_DIR / filename
     if ".." in filename or not path.is_file():
         return JSONResponse({"error": "not found"}, status_code=404)
-    return FileResponse(path, media_type="audio/mp4")
+    media_type = "audio/mpeg" if path.suffix == ".mp3" else "audio/mp4"
+    return FileResponse(path, media_type=media_type)
 
 
 @app.get("/")

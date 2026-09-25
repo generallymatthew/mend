@@ -25,7 +25,21 @@ uvicorn server:app --reload --port 8420
 
 Open http://localhost:8420 in a browser. Voice memo recording needs microphone permission and works over `localhost` or HTTPS (browsers block mic access on plain HTTP for any other host).
 
-## Optional: video avatar (Tavus)
+## The avatar shape, and better voice quality
+
+Always on, no config needed: a plain circle above the chat thread, with a mouth that opens and closes with whatever audio is actually playing, no realistic face. It reacts to any audio through the page's `<audio>` element via the Web Audio API, so it works the same regardless of which TTS produced that audio.
+
+The voice itself matters more than the shape. By default it's macOS's built-in `say` (the "Samantha" voice, functional but robotic). For a more natural voice, add an OpenAI key to `.env`:
+
+```
+OPENAI_API_KEY=sk-...
+```
+
+That's it: `synthesize_speech` tries OpenAI's TTS (`gpt-4o-mini-tts`) first when the key is set, and only falls back to `say` if that call fails. Pick a different built-in voice with `OPENAI_TTS_VOICE` in `.env` (default `alloy`; also available: `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse`, `marin`, `cedar`).
+
+## Optional: realistic video avatar (Tavus)
+
+A separate, parked path if a photorealistic video face is ever wanted instead of the abstract shape above. More setup (its own account, a public tunnel, a custom-LLM shim), so it's kept as an independent option rather than the default.
 
 Bolted on alongside text/voice memo, not a replacement for it: a "Start video call" button appears once this is configured, and puts the same facilitator (same system prompt, same Claude backend) in front of a talking video avatar instead of a text thread. Text/voice-memo mode still works exactly as above either way.
 
