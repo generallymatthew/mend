@@ -30,6 +30,12 @@
   .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
   .video-toggle{display:flex; justify-content:flex-end; margin-bottom:8px;}
   .video-toggle button{font-size:12.5px; padding:6px 10px;}
+  .mode-toggle{display:flex; gap:6px; margin-bottom:12px;}
+  .mode-toggle button{flex:1; padding:9px 12px; font-size:13.5px; text-align:left;}
+  .mode-toggle button .sub{display:block; font-weight:400; font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .mode-toggle button.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .mode-toggle button.active .sub{color:rgba(255,255,255,.8);}
+  .roleplay-badge{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; margin-bottom:2px;}
   .video-area{flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;}
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
   .avatar-row{display:flex; justify-content:center; padding:8px 0 4px;}
@@ -60,6 +66,11 @@
 <body>
 <div class="wrap">
   <div class="eyebrow">Mend &middot; intake (local prototype, text + voice memo)</div>
+  <div class="mode-toggle">
+    <button id="modeTalkBtn" class="active">Talk<span class="sub">Talk to the facilitator</span></button>
+    <button id="modePracticeBtn">Practice<span class="sub">Rehearse the hard conversation first</span></button>
+  </div>
+
   <div class="video-toggle" id="videoToggle" hidden>
     <button id="videoStartBtn">Start video call</button>
   </div>
@@ -68,6 +79,7 @@
     <div class="call-layout">
       <div class="call-main">
         <div class="avatar-row"><canvas id="avatarCanvas" width="200" height="200"></canvas></div>
+        <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
         <div class="caption" id="caption"></div>
         <div class="call-controls">
           <div class="composer">
@@ -327,11 +339,14 @@ function addMessage(text, cls) {
 
 const banner = document.getElementById('banner');
 
+const roleplayBadge = document.getElementById('roleplayBadge');
+
 function handleSignal(signal) {
   if (!signal) return;
   try {
     const s = JSON.parse(signal);
     banner.hidden = !s.ready_for_joint_session;
+    roleplayBadge.hidden = !s.roleplay_active;
   } catch (e) {}
 }
 
@@ -595,11 +610,17 @@ videoEndBtn.addEventListener('click', endVideoCall);
   } catch (e) {}
 })();
 
+let currentMode = 'talk';
+
 async function start() {
   setBusy(true);
   avatarState = 'thinking';
   try {
-    const res = await fetch('/api/start', {method: 'POST'});
+    const res = await fetch('/api/start', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({mode: currentMode}),
+    });
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
     playReplyAudio(data.audio_url, data.reply);
@@ -610,12 +631,14 @@ async function start() {
 }
 
 const resetBtn = document.getElementById('resetBtn');
-resetBtn.addEventListener('click', async () => {
+
+async function resetAndStart() {
   if (liveMode) await toggleLiveMode(); // stop the live loop before wiping state under it
   if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
   audioEl.pause();
   audioEl.src = '';
   captionEl.textContent = '';
+  roleplayBadge.hidden = true;
   avatarState = 'idle';
   resetBtn.disabled = true;
   try {
@@ -626,7 +649,26 @@ resetBtn.addEventListener('click', async () => {
   } finally {
     resetBtn.disabled = false;
   }
-});
+}
+
+resetBtn.addEventListener('click', resetAndStart);
+
+const modeTalkBtn = document.getElementById('modeTalkBtn');
+const modePracticeBtn = document.getElementById('modePracticeBtn');
+
+async function switchMode(mode) {
+  if (mode === currentMode) return;
+  if (thread.children.length && !confirm('Switching modes starts a new conversation, and this one will be lost. Continue?')) {
+    return;
+  }
+  currentMode = mode;
+  modeTalkBtn.classList.toggle('active', mode === 'talk');
+  modePracticeBtn.classList.toggle('active', mode === 'practice');
+  await resetAndStart();
+}
+
+modeTalkBtn.addEventListener('click', () => switchMode('talk'));
+modePracticeBtn.addEventListener('click', () => switchMode('practice'));
 
 start();
 </script>

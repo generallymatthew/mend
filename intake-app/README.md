@@ -29,9 +29,16 @@ Open http://localhost:8420 in a browser. Voice memo recording needs microphone p
 
 A call, not a chat app: the avatar, captions, and controls are the main event in the center pane, sized and centered like a video call tile. The message-by-message transcript is reference material, docked in a scrollable column on the right rather than inline in the main flow. Narrow windows (under 760px) stack the transcript below instead of beside.
 
+## Two modes: Talk and Practice
+
+Two buttons above the call tile switch what the session is for, each starting its own fresh conversation (switching mid-conversation asks first, since it discards whatever's there):
+
+- **Talk**: the normal intake caucus, exactly as described throughout this README and `../facilitator-intake-system-prompt.md`.
+- **Practice**: skips the caucus opening and disclosures entirely and goes straight to rehearsal, per that same prompt's "Practicing the conversation (roleplay)" section, which already covers how the facilitator plays the other person. This just puts the choice up front, in the employee's hands, instead of waiting for the facilitator to organically offer it mid-conversation. The facilitator still gathers context first (who, what happened, a concrete example, how they plan to open it) before stepping into character. Whenever it's in character, a badge above the caption reads "In character: playing the other person", tied to the same `roleplay_active` signal the prompt already emits, so it's never ambiguous who you're actually talking to.
+
 ## The avatar shape, captions, and better voice quality
 
-Always on, no config needed: a plain circle, with a mouth that opens and closes with whatever audio is actually playing, no realistic face. It reacts to any audio through the page's `<audio>` element via the Web Audio API, so it works the same regardless of which TTS produced that audio. Four states, visually distinct on purpose so listening never looks like talking: idle (closed mouth, nothing happening), listening (the whole circle pulses in size with your own mic volume while recording, mouth stays shut), thinking (three pulsing dots while waiting on the facilitator), talking (mouth opens and closes with the facilitator's own TTS audio).
+Always on, no config needed: a plain circle with a mouth, geometry and per-state motion matching `../design_handoff_simple_agent_presence/`. It reacts to any audio through the page's `<audio>` element via the Web Audio API, so it works the same regardless of which TTS produced that audio. States, visually distinct on purpose so listening never looks like talking: idle/listening (closed mouth, a slow breathing scale and an occasional nod, not driven by your own mic volume), thinking (mouth shrinks and slides side to side on a dimmer, smaller circle), talking (mouth opens and closes with the facilitator's own TTS audio). Empathizing and Calming are implemented per the handoff but not yet wired to any trigger in this prototype.
 
 Under the avatar, a caption line shows the words being spoken, revealed in sync with playback. Neither TTS backend gives real per-word timestamps, so the reply is split into short chunks and each chunk's start time is estimated from its share of the total character count. It's an approximation, close enough to read like real subtitles, not frame-accurate.
 
