@@ -113,9 +113,14 @@ const statusEl = document.getElementById('status');
 const audioEl = new Audio();
 
 // Abstract avatar: a plain shape with a mouth, in place of a realistic
-// video face. Four states: idle (resting), listening (reacts to the
-// employee's own mic while recording a voice memo), thinking (waiting on
-// the facilitator), talking (reacts to the facilitator's own TTS audio).
+// video face. Geometry, colours and per-state motion match the design
+// handoff in design_handoff_simple_agent_presence/ exactly. States used
+// here: idle (resting, before anything's happened -- the handoff has no
+// rest state of its own, so this borrows Listening's look), listening
+// (recording the employee's own voice memo), thinking (waiting on the
+// facilitator), talking (reacts to the facilitator's own TTS audio, i.e.
+// the handoff's "Speaking"). empathizing/calming are implemented below
+// per the handoff but not yet wired to any trigger in this prototype.
 let avatarState = 'idle';
 let audioCtx = null, analyser = null, avatarData = null;
 let micAudioCtx = null, micAnalyser = null, micData = null;
@@ -163,54 +168,78 @@ function rmsLevel(analyserNode, dataArr) {
   return Math.min(1, Math.sqrt(sumSq / dataArr.length) * 4);
 }
 
-function drawBase() {
-  const w = avatarCanvas.width, h = avatarCanvas.height;
-  const style = getComputedStyle(document.body);
-  avatarCtx.clearRect(0, 0, w, h);
-  avatarCtx.fillStyle = style.getPropertyValue('--accent').trim() || '#3D6B62';
-  avatarCtx.beginPath();
-  avatarCtx.arc(w / 2, h / 2, w / 2 - 10, 0, Math.PI * 2);
-  avatarCtx.fill();
-  avatarCtx.fillStyle = style.getPropertyValue('--paper').trim() || '#F2F3EE';
-  return {w, h};
-}
+// Geometry and motion below are a direct port of target()/apply() from
+// design_handoff_simple_agent_presence/Simple Agent.dc.html, adapted from
+// SVG to canvas. Defined on the handoff's 200x200 viewBox and scaled
+// uniformly to this canvas's actual size. w = mouth half-width, o = mouth
+// height, dx/dy = mouth offset from centre, s = circle scale.
+const AVATAR_COLORS = {
+  listening:   [0x3f, 0x6b, 0x5e],
+  idle:        [0x3f, 0x6b, 0x5e], // handoff has no rest state; borrows Listening's colour too
+  talking:     [0x3f, 0x6b, 0x5e], // "Speaking" in the handoff
+  thinking:    [0x36, 0x5c, 0x52],
+  empathizing: [0x4e, 0x76, 0x5c],
+  calming:     [0x5c, 0x86, 0x76],
+};
+const AVATAR_MOUTH_FILL = '#f3f1e8';
 
-function drawMouth(level) {
-  const {w, h} = drawBase();
-  const mouthW = 70, mouthH = 6 + level * 64;
-  avatarCtx.beginPath();
-  avatarCtx.ellipse(w / 2, h / 2 + 17, mouthW / 2, mouthH / 2, 0, 0, Math.PI * 2);
-  avatarCtx.fill();
-}
-
-// Distinct from drawMouth() on purpose: listening (reacting to your own
-// voice) must not look like talking (an open mouth), or it reads as the
-// avatar mimicking or interrupting you. The whole circle pulses in size
-// with your volume instead, mouth staying closed.
-function drawListening(level) {
-  const w = avatarCanvas.width, h = avatarCanvas.height;
-  const style = getComputedStyle(document.body);
-  avatarCtx.clearRect(0, 0, w, h);
-  const r = 67 + level * 30; // stays well inside the 200x200 canvas at max
-  avatarCtx.fillStyle = style.getPropertyValue('--accent').trim() || '#3D6B62';
-  avatarCtx.beginPath();
-  avatarCtx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
-  avatarCtx.fill();
-  // No mouth at all here, on purpose: listening animates by pulsing the
-  // whole shape with your mic volume, with nothing that reads as a face
-  // about to speak.
-}
-
-function drawThinking(now) {
-  const {w, h} = drawBase();
-  const baseY = h / 2 + 17, spacing = 23, baseR = 7;
-  for (let i = -1; i <= 1; i++) {
-    const phase = now / 300 + i * 0.6;
-    const bump = (Math.sin(phase) + 1) / 2; // 0..1
-    avatarCtx.beginPath();
-    avatarCtx.arc(w / 2 + i * spacing, baseY, baseR + bump * 4, 0, Math.PI * 2);
-    avatarCtx.fill();
+function avatarTarget(state, t, level) {
+  if (state === 'listening' || state === 'idle') {
+    // side (dx) would drift toward whichever participant is currently
+    // speaking; this prototype only has one employee, so it stays centred.
+    const nod = Math.max(0, Math.sin(t * 1.6)) ** 8 * Math.max(0, Math.sin(t * 0.4));
+    return {w: 28, o: 6, dx: 0, dy: nod * 4, s: 1 + 0.012 * Math.sin(t * 1.1)};
   }
+  if (state === 'thinking') {
+    return {w: 12, o: 6, dx: 12 * Math.sin(t * 0.8), dy: -5, s: 0.97};
+  }
+  if (state === 'talking') { // "Speaking": driven by the facilitator's real TTS amplitude
+    const v = level;
+    return {w: 28 - 6 * v, o: 6 + 24 * v, dx: 0, dy: 0, s: 1 + 0.01 * v};
+  }
+  if (state === 'empathizing') {
+    return {w: 22, o: 12, dx: 0, dy: 2.5 * Math.sin(t * 1.3), s: 1.025};
+  }
+  // calming: slow 4s-in/6s-out breath cycle
+  const p = t % 10;
+  const b = p < 4 ? (1 - Math.cos(Math.PI * p / 4)) / 2 : (1 + Math.cos(Math.PI * (p - 4) / 6)) / 2;
+  return {w: 24 + 8 * b, o: 6, dx: 0, dy: 0, s: 0.98 + 0.07 * b};
+}
+
+let avatarCur = {w: 28, o: 6, dx: 0, dy: 0, s: 1, col: AVATAR_COLORS.idle.slice()};
+let avatarLastFrame = performance.now();
+
+function drawAvatarFrame(now) {
+  const dt = Math.min(0.05, (now - avatarLastFrame) / 1000);
+  avatarLastFrame = now;
+  const t = now / 1000;
+  const level = (avatarState === 'talking' && analyser && !audioEl.paused)
+    ? rmsLevel(analyser, avatarData) : 0;
+  const target = avatarTarget(avatarState, t, level);
+  const k = Math.min(1, dt * (avatarState === 'talking' ? 14 : 4));
+  for (const key of ['w', 'o', 'dx', 'dy', 's']) {
+    avatarCur[key] += (target[key] - avatarCur[key]) * k;
+  }
+  const targetCol = AVATAR_COLORS[avatarState] || AVATAR_COLORS.idle;
+  const kc = Math.min(1, dt * 2);
+  avatarCur.col = avatarCur.col.map((v, i) => v + (targetCol[i] - v) * kc);
+
+  const w = avatarCanvas.width, h = avatarCanvas.height;
+  const scale = w / 200; // handoff geometry is defined on a 200x200 viewBox
+  avatarCtx.clearRect(0, 0, w, h);
+  const r = 80 * avatarCur.s * scale;
+  const cx = w / 2, cy = h / 2 + avatarCur.dy * 0.3 * scale;
+  avatarCtx.fillStyle = `rgb(${avatarCur.col.map(Math.round).join(',')})`;
+  avatarCtx.beginPath();
+  avatarCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  avatarCtx.fill();
+
+  const mx = w / 2 + avatarCur.dx * scale;
+  const my = h / 2 + avatarCur.dy * scale + 30 * avatarCur.s * scale;
+  avatarCtx.fillStyle = AVATAR_MOUTH_FILL;
+  avatarCtx.beginPath();
+  avatarCtx.ellipse(mx, my, Math.max(0, avatarCur.w * scale), Math.max(0, (avatarCur.o / 2) * scale), 0, 0, Math.PI * 2);
+  avatarCtx.fill();
 }
 
 // Captions: no real per-word timing from either TTS backend, so the reply
@@ -261,16 +290,9 @@ function updateCaption() {
 function animateAvatar(now) {
   requestAnimationFrame(animateAvatar);
   const t = now || performance.now();
-  if (avatarState === 'talking' && analyser && !audioEl.paused) {
-    drawMouth(rmsLevel(analyser, avatarData));
-  } else if (avatarState === 'listening' && micAnalyser) {
-    const level = rmsLevel(micAnalyser, micData);
-    drawListening(level);
-    if (liveMode) checkVad(level, t);
-  } else if (avatarState === 'thinking') {
-    drawThinking(t);
-  } else {
-    drawMouth(0);
+  drawAvatarFrame(t);
+  if (avatarState === 'listening' && micAnalyser && liveMode) {
+    checkVad(rmsLevel(micAnalyser, micData), t);
   }
   updateCaption();
 }
