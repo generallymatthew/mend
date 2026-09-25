@@ -11,7 +11,7 @@ Open `Mend Pitch v2.dc.html` in a browser. Keep all files in this folder togethe
 
 Serve the folder over a local web server rather than double-clicking, since browsers block some file loads from `file://`:
 
-    cd "Mend Pitch package"
+    cd "Mend Pitch"
     python3 -m http.server 8000
 
 Then visit http://localhost:8000/Mend%20Pitch%20v2.dc.html
