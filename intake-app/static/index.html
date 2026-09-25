@@ -363,7 +363,7 @@ let liveMode = false;
 // it if it's cutting off too early/late for your mic and room noise.
 const VAD_THRESHOLD = 0.06;
 const VAD_SILENCE_MS = 1800;
-const VAD_MIN_SPEECH_MS = 400;
+const VAD_MIN_SPEECH_MS = 500;
 let vadSpeaking = false;
 let vadSpeechStarted = null;
 let vadSilenceSince = null;
@@ -377,9 +377,19 @@ function checkVad(level, now) {
   }
   if (!vadSpeaking) return;
   if (vadSilenceSince === null) vadSilenceSince = now;
-  const spokeLongEnough = vadSpeechStarted !== null && (now - vadSpeechStarted) > VAD_MIN_SPEECH_MS;
-  if (spokeLongEnough && (now - vadSilenceSince) > VAD_SILENCE_MS) {
+  if (now - vadSilenceSince < VAD_SILENCE_MS) return; // still inside the grace window, keep waiting
+  // Silence window elapsed. Was there actually enough speech before it started,
+  // or was this a click/breath/mic pop? Measuring "now - vadSpeechStarted" here
+  // was the bug: that's always >= VAD_SILENCE_MS by this point, so any blip at
+  // all used to pass. The real question is how long the sound itself lasted,
+  // from its own start to when it went quiet.
+  const speechDuration = vadSilenceSince - vadSpeechStarted;
+  if (speechDuration > VAD_MIN_SPEECH_MS) {
     mediaRecorder.stop();
+  } else {
+    vadSpeaking = false;
+    vadSpeechStarted = null;
+    vadSilenceSince = null;
   }
 }
 
