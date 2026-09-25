@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend launchpad</title>
+<style>
+  :root{
+    --ink:#1B2B2A; --ink-soft:#3C4C49; --paper:#F2F3EE; --card:#FFFFFF;
+    --accent:#3D6B62; --accent-soft:#E6EDE9; --border:#DADFD9;
+    --warn:#8C3B2E; --warn-soft:#F3E4DF;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
+  .wrap{max-width:640px; margin:0 auto; padding:32px 20px 60px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;}
+  h1{font-size:1.6rem; margin:0 0 8px;}
+  p.lede{color:var(--ink-soft); line-height:1.55; margin:0 0 6px;}
+  .howto{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.6; margin:16px 0 28px;}
+  .howto code{font-family:'IBM Plex Mono',monospace; background:var(--accent-soft); padding:1px 5px; border-radius:4px; font-size:12.5px;}
+
+  h2.group{font-family:'IBM Plex Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:28px 0 10px;}
+  .links{display:flex; flex-direction:column; gap:8px;}
+  a.link{display:flex; justify-content:space-between; align-items:center; gap:12px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:13px 15px; text-decoration:none; color:var(--ink);}
+  a.link:hover{border-color:var(--accent);}
+  .link .name{font-weight:600; font-size:14.5px;}
+  .link .desc{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .link .meta{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
+
+  .status{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; padding:2px 7px; border-radius:5px; margin-top:4px;}
+  .status.down{background:var(--warn-soft); color:var(--warn);}
+
+  footer{margin-top:32px; font-size:12px; color:var(--ink-soft); line-height:1.6; border-top:1px solid var(--border); padding-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Mend &middot; internal</div>
+  <h1>Launchpad</h1>
+  <p class="lede">Every page built so far, one click each. Bookmark this instead of hunting for ports and file paths.</p>
+
+  <div class="howto">
+    Serve the whole <code>Mend/</code> folder once, from this folder: <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/launchpad.html</code> instead of double-clicking this file. The document links below need a real server, not <code>file://</code>, to render correctly. Each local prototype app also needs its own server running per its own README (ports noted below).
+  </div>
+
+  <h2 class="group">Local prototype apps (each needs its own server)</h2>
+  <div class="links">
+    <a class="link" href="http://localhost:8423/" target="_blank" rel="noopener">
+      <div><div class="name">Demo hub</div><div class="desc">Sign-up + invite flow, links through the three below</div></div>
+      <div class="meta">:8423</div>
+    </a>
+    <a class="link" href="http://localhost:8420/" target="_blank" rel="noopener">
+      <div><div class="name">Intake</div><div class="desc">Private 1:1 consultation with the facilitator</div></div>
+      <div class="meta">:8420</div>
+    </a>
+    <a class="link" href="http://localhost:8421/" target="_blank" rel="noopener">
+      <div><div class="name">Joint session</div><div class="desc">Live session, you play both employees</div></div>
+      <div class="meta">:8421</div>
+    </a>
+    <a class="link" href="http://localhost:8422/" target="_blank" rel="noopener">
+      <div><div class="name">Post-session check-in</div><div class="desc">Private follow-up, with a scenario picker</div></div>
+      <div class="meta">:8422</div>
+    </a>
+  </div>
+
+  <h2 class="group">Documents (served locally, from this same folder)</h2>
+  <div class="links">
+    <a class="link" href="product-spec.html" target="_blank">
+      <div><div class="name">Product spec</div><div class="desc">Full buyer-facing spec, all sections</div></div>
+      <div class="meta">local</div>
+    </a>
+    <a class="link" href="Mend Pitch/Mend Pitch v2.dc.html" target="_blank">
+      <div><div class="name">Pitch page</div><div class="desc">Narrative walkthrough + animations</div></div>
+      <div class="meta">local</div>
+    </a>
+  </div>
+
+  <h2 class="group">Hosted (always available, no server needed)</h2>
+  <div class="links">
+    <a class="link" href="https://claude.ai/artifact/PRQ4kwizN721tXCAf6ACpt" target="_blank" rel="noopener">
+      <div><div class="name">Product spec (live artifact)</div><div class="desc">Same content, kept in sync, shareable link</div></div>
+      <div class="meta">claude.ai</div>
+    </a>
+    <a class="link" href="https://claude.ai/artifact/3PmW3kE6ejoq4B8XxS9rH1" target="_blank" rel="noopener">
+      <div><div class="name">Workflow diagram</div><div class="desc">Intake &rarr; invite &rarr; joint session &rarr; check-in, plus escalation &amp; manager-initiated routes</div></div>
+      <div class="meta">claude.ai</div>
+    </a>
+  </div>
+
+  <h2 class="group">GitHub Pages</h2>
+  <div class="links">
+    <a class="link" href="https://generallymatthew.github.io/mend/" target="_blank" rel="noopener">
+      <div>
+        <div class="name">generallymatthew.github.io/mend</div>
+        <div class="desc">Public landing page (pitch + spec)</div>
+        <div class="status down">currently down: account suspended, pending appeal</div>
+      </div>
+      <div class="meta">web</div>
+    </a>
+  </div>
+
+  <footer>
+    Internal draft, pre-legal review. This page isn't linked from <code>index.html</code> (the public Pages landing) and isn't meant for distribution. It's just a bookmark for testing.
+  </footer>
+</div>
+</body>
+</html>
