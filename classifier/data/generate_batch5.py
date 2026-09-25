@@ -31,6 +31,19 @@ workplace friction, so the model can't shortcut on those tokens alone --
 mirrors the same guard batch4 built for harassment_discrimination and
 threats_violence.
 
+A third lesson, caught after the first version of this batch was already
+queued for review: slot-filling a single sentence across many channel
+words ("she told me {in the retro / on the call / in a DM}...") produces
+examples that are grammatically fine and technically unique strings, but
+read as the exact same claim repeated over and over -- a real problem for
+a human reviewer going through them one at a time, and probably not much
+of a training signal either, since the model would mostly be learning to
+recognize one sentence shape rather than the underlying content. Caught
+by a reviewer actually going through the page, not by anything a
+dedup-by-string or grammar read-through would catch. Replaced those three
+templates with hand-written scenarios that differ in the actual act, not
+just the channel.
+
 Still synthetic; see ../README.md's "Before this goes anywhere near a
 real session" checklist. This closes the illegal_activity volume gap
 somewhat, not the review gap -- these examples still need the same human
@@ -39,7 +52,6 @@ QA pass as batch4 before they're trusted for anything real.
 Usage:
     python generate_batch5.py > workplace_conflict_batch5.jsonl
 """
-import itertools
 import json
 import random
 import sys
@@ -61,17 +73,7 @@ def make(text, **overrides):
     return {"text": text, **row}
 
 
-def combos(template, slot_options, n):
-    keys = list(slot_options.keys())
-    all_combos = list(itertools.product(*[slot_options[k] for k in keys]))
-    random.shuffle(all_combos)
-    picked = all_combos[:n]
-    return [template.format(**dict(zip(keys, combo))) for combo in picked]
-
-
 rows = []
-channels = ["in the Slack channel", "in a DM", "over text", "on the client call",
-            "in the retro", "in the hallway", "in the group chat", "on the call"]
 
 # ---------------------------------------------------------------------------
 # illegal_activity, in_progress=1 -- happening right now, the thin category.
@@ -93,18 +95,24 @@ live_acts = [
 ]
 rows += [make(t, illegal_activity=1, in_progress=1) for t in live_acts]
 
-for t in combos(
-    "He just told me {ctx} that he's about to submit the numbers even though he knows they're fake.",
-    {"ctx": channels}, 6,
-):
-    rows.append(make(t, illegal_activity=1, in_progress=1))
+live_disclosures = [
+    "He just told me he's about to submit the numbers even though he knows they're fake.",
+    "She just admitted on this call that she's backdating the invoice right now.",
+    "He's telling me right now that he already swapped the inspection tags before the auditor gets here.",
+    "She just said she's wiring the kickback payment before the vendor call ends.",
+    "He's asking me right now to co-sign an expense report for a trip that never happened.",
+    "She just told me she's clocking in for someone else who isn't even in the building today.",
+]
+rows += [make(t, illegal_activity=1, in_progress=1) for t in live_disclosures]
 
-vendor_channels = ["on the phone", "in a DM", "over text", "on the vendor call", "in an email thread"]
-for t in combos(
-    "She's telling the vendor {ctx} right now that she'll approve the invoice if he pads it for her.",
-    {"ctx": vendor_channels}, 5,
-):
-    rows.append(make(t, illegal_activity=1, in_progress=1))
+kickbacks_live = [
+    "She's telling the vendor on the phone right now that she'll approve the invoice if he pads it for her.",
+    "He's telling the supplier right now that he'll sign off on the shipment count if she looks the other way on the shortage.",
+    "She's offering the landlord a cut right now if he backdates the lease start date for the tax write-off.",
+    "He's telling the auditor right now that he'll vouch for the numbers if she skips the sample they flagged.",
+    "She's telling the broker right now that she'll steer the policy his way if he kicks back part of the commission.",
+]
+rows += [make(t, illegal_activity=1, in_progress=1) for t in kickbacks_live]
 
 confront_live = [
     "Stop shredding those right now, that's the file the investigation asked for.",
@@ -142,23 +150,25 @@ disclosed_acts = [
 ]
 rows += [make(t, illegal_activity=1, in_progress=0) for t in disclosed_acts]
 
-for t in combos(
-    "I found out {ctx} that he's been paying the safety inspector to sign off without actually checking anything.",
-    {"ctx": ["last week", "during the audit", "after the walkthrough", "at the site visit"]}, 4,
-):
-    rows.append(make(t, illegal_activity=1, in_progress=0))
-
-for t in combos(
-    "She told me {ctx} that she's been billing the client for a senior rate when a junior did the work.",
-    {"ctx": channels}, 6,
-):
-    rows.append(make(t, illegal_activity=1, in_progress=0))
-
-for t in combos(
-    "He mentioned {ctx} that he's been logging his personal mileage as business travel for reimbursement.",
-    {"ctx": channels}, 6,
-):
-    rows.append(make(t, illegal_activity=1, in_progress=0))
+more_disclosed = [
+    "I found out he's been paying the safety inspector to sign off without actually checking anything.",
+    "I found out she never actually filed the permit before the crew started digging.",
+    "I found out he's been reusing another contractor's certification number on our bids.",
+    "I found out she waived the required background check for two new hires to hit a start date.",
+    "She told me she's been billing the client for a senior rate when a junior did the work.",
+    "She told me she's been charging two different clients for the same set of hours.",
+    "She told me she's been marking unopened returns as damaged so she doesn't have to restock them.",
+    "She told me she's been approving her own travel reimbursements without a second signature.",
+    "She told me she's been logging a subcontractor's hours under her own name to get the referral bonus.",
+    "She told me she's been quietly waiving the late fee for one client in exchange for tickets to games.",
+    "He mentioned he's been logging his personal mileage as business travel for reimbursement.",
+    "He mentioned he's been using the company's software license on his side clients' projects.",
+    "He mentioned he's been forwarding leads to his cousin's competing agency for a referral fee.",
+    "He mentioned he's been passing the vendor's sample product off as something we manufactured.",
+    "He mentioned he's been letting his unlicensed nephew sign off on inspections under his own credentials.",
+    "He mentioned he's been quietly extending trial licenses past their expiration without paying for them.",
+]
+rows += [make(t, illegal_activity=1, in_progress=0) for t in more_disclosed]
 
 # reported-speech / negation-adjacent framing, content still flags per policy
 reported_negation = [
