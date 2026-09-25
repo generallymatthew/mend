@@ -34,6 +34,11 @@
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
   .avatar-row{display:flex; justify-content:center; padding:8px 0 4px;}
   #avatarCanvas{display:block;}
+  .caption{min-height:44px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:15px; font-weight:600; line-height:1.4; padding:0 12px 10px; color:var(--ink);}
+  .live-row{display:flex; align-items:center; gap:10px; margin-top:8px;}
+  .live-row button{font-size:13px; padding:7px 12px; flex-shrink:0;}
+  .live-row button.recording{background:#8C3B2E; color:#fff; border-color:#8C3B2E;}
+  .live-hint{font-size:11.5px; color:var(--ink-soft); line-height:1.4;}
   [hidden]{display:none !important;}
 </style>
 </head>
@@ -46,11 +51,16 @@
 
   <div id="textMode" class="video-area" style="flex-direction:column;">
     <div class="avatar-row"><canvas id="avatarCanvas" width="120" height="120"></canvas></div>
+    <div class="caption" id="caption"></div>
     <div class="thread" id="thread"></div>
     <div class="composer">
       <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
       <button id="recordBtn" title="Record a voice memo">&#127908;</button>
       <button id="sendBtn" class="primary">Send</button>
+    </div>
+    <div class="live-row">
+      <button id="liveBtn">Go live</button>
+      <span class="live-hint">Hands-free: it listens, replies, then listens again automatically until you end it.</span>
     </div>
     <div class="status" id="status"></div>
   </div>
@@ -75,10 +85,13 @@ const statusEl = document.getElementById('status');
 
 const audioEl = new Audio();
 
-// Abstract avatar: a plain shape with a mouth that opens with the audio's
-// own volume, in place of a realistic video face. Reacts to whatever audio
-// plays through audioEl, regardless of which TTS produced it.
+// Abstract avatar: a plain shape with a mouth, in place of a realistic
+// video face. Four states: idle (resting), listening (reacts to the
+// employee's own mic while recording a voice memo), thinking (waiting on
+// the facilitator), talking (reacts to the facilitator's own TTS audio).
+let avatarState = 'idle';
 let audioCtx = null, analyser = null, avatarData = null;
+let micAudioCtx = null, micAnalyser = null, micData = null;
 const avatarCanvas = document.getElementById('avatarCanvas');
 const avatarCtx = avatarCanvas.getContext('2d');
 
@@ -95,7 +108,35 @@ function ensureAudioGraph() {
   } catch (e) {} // Web Audio unavailable; avatar just stays idle, audio still plays normally
 }
 
-function drawAvatar(level) {
+function startMicAnalysis(stream) {
+  try {
+    micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = micAudioCtx.createMediaStreamSource(stream);
+    micAnalyser = micAudioCtx.createAnalyser();
+    micAnalyser.fftSize = 256;
+    micData = new Uint8Array(micAnalyser.frequencyBinCount);
+    source.connect(micAnalyser); // not connected to destination -- we don't want to echo the mic back
+  } catch (e) {}
+}
+
+function stopMicAnalysis() {
+  if (micAudioCtx) micAudioCtx.close().catch(() => {});
+  micAudioCtx = null;
+  micAnalyser = null;
+  micData = null;
+}
+
+function rmsLevel(analyserNode, dataArr) {
+  analyserNode.getByteTimeDomainData(dataArr);
+  let sumSq = 0;
+  for (let i = 0; i < dataArr.length; i++) {
+    const v = (dataArr[i] - 128) / 128;
+    sumSq += v * v;
+  }
+  return Math.min(1, Math.sqrt(sumSq / dataArr.length) * 4);
+}
+
+function drawBase() {
   const w = avatarCanvas.width, h = avatarCanvas.height;
   const style = getComputedStyle(document.body);
   avatarCtx.clearRect(0, 0, w, h);
@@ -103,29 +144,105 @@ function drawAvatar(level) {
   avatarCtx.beginPath();
   avatarCtx.arc(w / 2, h / 2, w / 2 - 6, 0, Math.PI * 2);
   avatarCtx.fill();
-  const mouthW = 42, mouthH = 4 + level * 38;
   avatarCtx.fillStyle = style.getPropertyValue('--paper').trim() || '#F2F3EE';
+  return {w, h};
+}
+
+function drawMouth(level) {
+  const {w, h} = drawBase();
+  const mouthW = 42, mouthH = 4 + level * 38;
   avatarCtx.beginPath();
   avatarCtx.ellipse(w / 2, h / 2 + 10, mouthW / 2, mouthH / 2, 0, 0, Math.PI * 2);
   avatarCtx.fill();
 }
 
-function animateAvatar() {
-  requestAnimationFrame(animateAvatar);
-  if (!analyser || audioEl.paused) { drawAvatar(0); return; }
-  analyser.getByteTimeDomainData(avatarData);
-  let sumSq = 0;
-  for (let i = 0; i < avatarData.length; i++) {
-    const v = (avatarData[i] - 128) / 128;
-    sumSq += v * v;
+function drawThinking(now) {
+  const {w, h} = drawBase();
+  const baseY = h / 2 + 10, spacing = 14, baseR = 4;
+  for (let i = -1; i <= 1; i++) {
+    const phase = now / 300 + i * 0.6;
+    const bump = (Math.sin(phase) + 1) / 2; // 0..1
+    avatarCtx.beginPath();
+    avatarCtx.arc(w / 2 + i * spacing, baseY, baseR + bump * 2.5, 0, Math.PI * 2);
+    avatarCtx.fill();
   }
-  const rms = Math.sqrt(sumSq / avatarData.length);
-  drawAvatar(Math.min(1, rms * 4));
+}
+
+// Captions: no real per-word timing from either TTS backend, so the reply
+// is split into short chunks and each chunk's start time is estimated
+// proportionally to its share of the total character count -- close enough
+// to read like real subtitles without needing forced alignment.
+const captionEl = document.getElementById('caption');
+let captionChunks = [];
+let captionStarts = [];
+
+function splitCaptionChunks(text) {
+  const sentences = (text || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+  const chunks = [];
+  let cur = '';
+  for (const s of sentences) {
+    if (cur && (cur + ' ' + s).length > 90) { chunks.push(cur); cur = s; }
+    else { cur = cur ? cur + ' ' + s : s; }
+  }
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+
+function computeCaptionStarts() {
+  if (!captionChunks.length || !isFinite(audioEl.duration) || audioEl.duration <= 0) return;
+  const lens = captionChunks.map(c => c.length);
+  const total = lens.reduce((a, b) => a + b, 0) || 1;
+  let acc = 0;
+  captionStarts = lens.map((len) => {
+    const start = (acc / total) * audioEl.duration;
+    acc += len;
+    return start;
+  });
+}
+
+function updateCaption() {
+  if (avatarState !== 'talking' || !captionChunks.length) {
+    captionEl.textContent = '';
+    return;
+  }
+  if (captionStarts.length !== captionChunks.length) computeCaptionStarts();
+  let idx = 0;
+  for (let i = 0; i < captionStarts.length; i++) {
+    if (audioEl.currentTime >= captionStarts[i]) idx = i;
+  }
+  captionEl.textContent = captionChunks[idx] || '';
+}
+
+function animateAvatar(now) {
+  requestAnimationFrame(animateAvatar);
+  const t = now || performance.now();
+  if (avatarState === 'talking' && analyser && !audioEl.paused) {
+    drawMouth(rmsLevel(analyser, avatarData));
+  } else if (avatarState === 'listening' && micAnalyser) {
+    const level = rmsLevel(micAnalyser, micData);
+    drawMouth(level);
+    if (liveMode) checkVad(level, t);
+  } else if (avatarState === 'thinking') {
+    drawThinking(t);
+  } else {
+    drawMouth(0);
+  }
+  updateCaption();
 }
 animateAvatar();
 
-function playReplyAudio(url) {
-  if (!url) return;
+audioEl.addEventListener('loadedmetadata', computeCaptionStarts);
+audioEl.addEventListener('play', () => { avatarState = 'talking'; });
+audioEl.addEventListener('pause', () => { if (avatarState === 'talking') avatarState = 'idle'; });
+audioEl.addEventListener('ended', () => {
+  if (avatarState === 'talking') avatarState = 'idle';
+  if (liveMode) startRecordingTurn();
+});
+
+function playReplyAudio(url, text) {
+  captionChunks = splitCaptionChunks(text);
+  captionStarts = [];
+  if (!url) { avatarState = 'idle'; return; }
   ensureAudioGraph();
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   audioEl.src = url;
@@ -163,6 +280,7 @@ async function sendText() {
   input.value = '';
   addMessage(text, 'employee');
   setBusy(true);
+  avatarState = 'thinking';
   try {
     const res = await fetch('/api/message', {
       method: 'POST',
@@ -171,10 +289,11 @@ async function sendText() {
     });
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
-    playReplyAudio(data.audio_url);
+    playReplyAudio(data.audio_url, data.reply);
     handleSignal(data.signal);
   } catch (e) {
     statusEl.textContent = 'error: ' + e.message;
+    avatarState = 'idle';
   } finally {
     setBusy(false);
   }
@@ -190,22 +309,52 @@ input.addEventListener('keydown', (e) => {
 
 let mediaRecorder = null;
 let chunks = [];
+let liveMode = false;
 
-async function toggleRecording() {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
+// Voice-activity detection for live mode: neither TTS backend gives us
+// real-time streaming STT, so a live "conversation" here means auto-stopping
+// the recording once the mic goes quiet, rather than an always-on stream.
+// VAD_THRESHOLD is on the same 0..1 scale rmsLevel() already produces; tune
+// it if it's cutting off too early/late for your mic and room noise.
+const VAD_THRESHOLD = 0.06;
+const VAD_SILENCE_MS = 1100;
+const VAD_MIN_SPEECH_MS = 400;
+let vadSpeaking = false;
+let vadSpeechStarted = null;
+let vadSilenceSince = null;
+
+function checkVad(level, now) {
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+  if (level > VAD_THRESHOLD) {
+    if (!vadSpeaking) { vadSpeaking = true; vadSpeechStarted = now; }
+    vadSilenceSince = null;
     return;
   }
+  if (!vadSpeaking) return;
+  if (vadSilenceSince === null) vadSilenceSince = now;
+  const spokeLongEnough = vadSpeechStarted !== null && (now - vadSpeechStarted) > VAD_MIN_SPEECH_MS;
+  if (spokeLongEnough && (now - vadSilenceSince) > VAD_SILENCE_MS) {
+    mediaRecorder.stop();
+  }
+}
+
+async function startRecordingTurn() {
   const stream = await navigator.mediaDevices.getUserMedia({audio: true});
   mediaRecorder = new MediaRecorder(stream);
   chunks = [];
+  vadSpeaking = false;
+  vadSpeechStarted = null;
+  vadSilenceSince = null;
   mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
+    stopMicAnalysis();
     recordBtn.classList.remove('recording');
+    liveBtn.classList.remove('recording');
     const blob = new Blob(chunks, {type: 'audio/webm'});
     addMessage('[voice memo]', 'employee transcript');
     setBusy(true);
+    avatarState = 'thinking';
     statusEl.textContent = 'transcribing...';
     try {
       const form = new FormData();
@@ -214,23 +363,54 @@ async function toggleRecording() {
       const data = await res.json();
       if (data.error) {
         statusEl.textContent = data.error;
+        avatarState = 'idle';
+        if (liveMode) startRecordingTurn(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
       } else {
         if (data.transcript) addMessage('"' + data.transcript + '"', 'employee transcript');
         if (data.reply) addMessage(data.reply, 'facilitator');
-        playReplyAudio(data.audio_url);
-    handleSignal(data.signal);
+        playReplyAudio(data.audio_url, data.reply);
+        handleSignal(data.signal);
       }
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
+      avatarState = 'idle';
+      if (liveMode) startRecordingTurn();
     } finally {
       setBusy(false);
     }
   };
   mediaRecorder.start();
+  avatarState = 'listening';
+  startMicAnalysis(stream);
   recordBtn.classList.add('recording');
+  if (liveMode) liveBtn.classList.add('recording');
+}
+
+async function toggleRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
+  await startRecordingTurn();
 }
 
 recordBtn.addEventListener('click', toggleRecording);
+
+const liveBtn = document.getElementById('liveBtn');
+
+async function toggleLiveMode() {
+  if (liveMode) {
+    liveMode = false;
+    liveBtn.textContent = 'Go live';
+    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    return;
+  }
+  liveMode = true;
+  liveBtn.textContent = 'End live conversation';
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') await startRecordingTurn();
+}
+
+liveBtn.addEventListener('click', toggleLiveMode);
 
 const videoToggle = document.getElementById('videoToggle');
 const videoStartBtn = document.getElementById('videoStartBtn');
@@ -283,11 +463,12 @@ videoEndBtn.addEventListener('click', endVideoCall);
 
 (async function start() {
   setBusy(true);
+  avatarState = 'thinking';
   try {
     const res = await fetch('/api/start', {method: 'POST'});
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
-    playReplyAudio(data.audio_url);
+    playReplyAudio(data.audio_url, data.reply);
     handleSignal(data.signal);
   } finally {
     setBusy(false);

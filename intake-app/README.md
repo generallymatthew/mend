@@ -25,9 +25,11 @@ uvicorn server:app --reload --port 8420
 
 Open http://localhost:8420 in a browser. Voice memo recording needs microphone permission and works over `localhost` or HTTPS (browsers block mic access on plain HTTP for any other host).
 
-## The avatar shape, and better voice quality
+## The avatar shape, captions, and better voice quality
 
-Always on, no config needed: a plain circle above the chat thread, with a mouth that opens and closes with whatever audio is actually playing, no realistic face. It reacts to any audio through the page's `<audio>` element via the Web Audio API, so it works the same regardless of which TTS produced that audio.
+Always on, no config needed: a plain circle above the chat thread, with a mouth that opens and closes with whatever audio is actually playing, no realistic face. It reacts to any audio through the page's `<audio>` element via the Web Audio API, so it works the same regardless of which TTS produced that audio. Four states: idle (closed mouth, nothing happening), listening (mouth reacts to your own mic while recording), thinking (three pulsing dots while waiting on the facilitator), talking (mouth reacts to the facilitator's own TTS audio).
+
+Under the avatar, a caption line shows the words being spoken, revealed in sync with playback. Neither TTS backend gives real per-word timestamps, so the reply is split into short chunks and each chunk's start time is estimated from its share of the total character count. It's an approximation, close enough to read like real subtitles, not frame-accurate.
 
 The voice itself matters more than the shape. By default it's macOS's built-in `say` (the "Samantha" voice, functional but robotic). For a more natural voice, add an OpenAI key to `.env`:
 
@@ -36,6 +38,14 @@ OPENAI_API_KEY=sk-...
 ```
 
 That's it: `synthesize_speech` tries OpenAI's TTS (`gpt-4o-mini-tts`) first when the key is set, and only falls back to `say` if that call fails. Pick a different built-in voice with `OPENAI_TTS_VOICE` in `.env` (default `alloy`; also available: `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse`, `marin`, `cedar`).
+
+## Live conversation (hands-free)
+
+The "Go live" button next to the mic turns voice memo's click-to-record/click-to-stop into an automatic loop: it listens, detects when you've stopped talking (voice-activity detection on your mic volume, not a real speech model), sends and gets a reply, plays it back, then starts listening again on its own. Click "End live conversation" to leave the loop.
+
+This isn't a real-time streaming conversation, since neither TTS backend here does streaming STT: each turn is still a full record-then-transcribe-then-reply round trip, just without you clicking anything between turns. It also doesn't support interrupting the facilitator while it's talking (barge-in); wait for it to finish before the mic starts listening again.
+
+The auto-stop threshold (`VAD_THRESHOLD` in `static/index.html`, currently `0.06` on the same 0..1 scale the avatar's own reactivity uses) is a guess. If it's cutting you off mid-sentence, raise the silence window (`VAD_SILENCE_MS`) or lower the threshold; if it's not noticing you've stopped, do the opposite. It depends on your mic and room noise.
 
 ## Optional: realistic video avatar (Tavus)
 
