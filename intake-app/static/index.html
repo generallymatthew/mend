@@ -11,7 +11,7 @@
   }
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
-  .wrap{max-width:640px; margin:0 auto; padding:24px 16px; display:flex; flex-direction:column; height:100vh;}
+  .wrap{max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-direction:column; height:100vh;}
   .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:12px;}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
   .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
@@ -34,11 +34,25 @@
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
   .avatar-row{display:flex; justify-content:center; padding:8px 0 4px;}
   #avatarCanvas{display:block;}
-  .caption{min-height:44px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:15px; font-weight:600; line-height:1.4; padding:0 12px 10px; color:var(--ink);}
+  .caption{min-height:44px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:16px; font-weight:600; line-height:1.4; padding:0 12px 10px; color:var(--ink); max-width:480px;}
   .live-row{display:flex; align-items:center; gap:10px; margin-top:8px;}
   .live-row button{font-size:13px; padding:7px 12px; flex-shrink:0;}
   .live-row button.recording{background:#8C3B2E; color:#fff; border-color:#8C3B2E;}
   .live-hint{font-size:11.5px; color:var(--ink-soft); line-height:1.4;}
+
+  /* Zoom-call style layout: the avatar + captions + controls are the main
+     event, full attention like a video tile; the transcript is reference
+     material, docked to the side rather than the main flow. */
+  .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--card);}
+  .call-main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; min-width:0; background:var(--paper);}
+  .call-controls{width:100%; max-width:480px; display:flex; flex-direction:column; gap:8px;}
+  .transcript-panel{width:340px; flex-shrink:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
+  .transcript-header{padding:14px 16px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0;}
+  .transcript-panel .thread{flex:1; overflow-y:auto; padding:16px; margin:0;}
+  @media (max-width: 760px){
+    .call-layout{flex-direction:column;}
+    .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
+  }
   [hidden]{display:none !important;}
 </style>
 </head>
@@ -50,19 +64,28 @@
   </div>
 
   <div id="textMode" class="video-area" style="flex-direction:column;">
-    <div class="avatar-row"><canvas id="avatarCanvas" width="120" height="120"></canvas></div>
-    <div class="caption" id="caption"></div>
-    <div class="thread" id="thread"></div>
-    <div class="composer">
-      <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
-      <button id="recordBtn" title="Record a voice memo">&#127908;</button>
-      <button id="sendBtn" class="primary">Send</button>
+    <div class="call-layout">
+      <div class="call-main">
+        <div class="avatar-row"><canvas id="avatarCanvas" width="200" height="200"></canvas></div>
+        <div class="caption" id="caption"></div>
+        <div class="call-controls">
+          <div class="composer">
+            <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
+            <button id="recordBtn" title="Record a voice memo">&#127908;</button>
+            <button id="sendBtn" class="primary">Send</button>
+          </div>
+          <div class="live-row">
+            <button id="liveBtn">Go live</button>
+            <span class="live-hint">Hands-free: it listens, replies, then listens again automatically until you end it.</span>
+          </div>
+          <div class="status" id="status"></div>
+        </div>
+      </div>
+      <div class="transcript-panel">
+        <div class="transcript-header">Transcript</div>
+        <div class="thread" id="thread"></div>
+      </div>
     </div>
-    <div class="live-row">
-      <button id="liveBtn">Go live</button>
-      <span class="live-hint">Hands-free: it listens, replies, then listens again automatically until you end it.</span>
-    </div>
-    <div class="status" id="status"></div>
   </div>
 
   <div id="videoMode" class="video-area" hidden>
@@ -142,7 +165,7 @@ function drawBase() {
   avatarCtx.clearRect(0, 0, w, h);
   avatarCtx.fillStyle = style.getPropertyValue('--accent').trim() || '#3D6B62';
   avatarCtx.beginPath();
-  avatarCtx.arc(w / 2, h / 2, w / 2 - 6, 0, Math.PI * 2);
+  avatarCtx.arc(w / 2, h / 2, w / 2 - 10, 0, Math.PI * 2);
   avatarCtx.fill();
   avatarCtx.fillStyle = style.getPropertyValue('--paper').trim() || '#F2F3EE';
   return {w, h};
@@ -150,20 +173,39 @@ function drawBase() {
 
 function drawMouth(level) {
   const {w, h} = drawBase();
-  const mouthW = 42, mouthH = 4 + level * 38;
+  const mouthW = 70, mouthH = 6 + level * 64;
   avatarCtx.beginPath();
-  avatarCtx.ellipse(w / 2, h / 2 + 10, mouthW / 2, mouthH / 2, 0, 0, Math.PI * 2);
+  avatarCtx.ellipse(w / 2, h / 2 + 17, mouthW / 2, mouthH / 2, 0, 0, Math.PI * 2);
+  avatarCtx.fill();
+}
+
+// Distinct from drawMouth() on purpose: listening (reacting to your own
+// voice) must not look like talking (an open mouth), or it reads as the
+// avatar mimicking or interrupting you. The whole circle pulses in size
+// with your volume instead, mouth staying closed.
+function drawListening(level) {
+  const w = avatarCanvas.width, h = avatarCanvas.height;
+  const style = getComputedStyle(document.body);
+  avatarCtx.clearRect(0, 0, w, h);
+  const r = 67 + level * 30; // stays well inside the 200x200 canvas at max
+  avatarCtx.fillStyle = style.getPropertyValue('--accent').trim() || '#3D6B62';
+  avatarCtx.beginPath();
+  avatarCtx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
+  avatarCtx.fill();
+  avatarCtx.fillStyle = style.getPropertyValue('--paper').trim() || '#F2F3EE';
+  avatarCtx.beginPath();
+  avatarCtx.ellipse(w / 2, h / 2 + 17, 35, 3, 0, 0, Math.PI * 2);
   avatarCtx.fill();
 }
 
 function drawThinking(now) {
   const {w, h} = drawBase();
-  const baseY = h / 2 + 10, spacing = 14, baseR = 4;
+  const baseY = h / 2 + 17, spacing = 23, baseR = 7;
   for (let i = -1; i <= 1; i++) {
     const phase = now / 300 + i * 0.6;
     const bump = (Math.sin(phase) + 1) / 2; // 0..1
     avatarCtx.beginPath();
-    avatarCtx.arc(w / 2 + i * spacing, baseY, baseR + bump * 2.5, 0, Math.PI * 2);
+    avatarCtx.arc(w / 2 + i * spacing, baseY, baseR + bump * 4, 0, Math.PI * 2);
     avatarCtx.fill();
   }
 }
@@ -220,7 +262,7 @@ function animateAvatar(now) {
     drawMouth(rmsLevel(analyser, avatarData));
   } else if (avatarState === 'listening' && micAnalyser) {
     const level = rmsLevel(micAnalyser, micData);
-    drawMouth(level);
+    drawListening(level);
     if (liveMode) checkVad(level, t);
   } else if (avatarState === 'thinking') {
     drawThinking(t);

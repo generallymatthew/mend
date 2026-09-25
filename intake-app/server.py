@@ -106,13 +106,18 @@ def synthesize_speech(text: str) -> str | None:
     return synthesize_speech_say(text)
 
 _whisper_model = None
+# "small.en" is noticeably slower on CPU than this needs to be for a live
+# back-and-forth conversation; "base.en" trades a bit of accuracy for a much
+# snappier turnaround. Override via .env if you want small/medium's accuracy
+# back and don't mind the wait.
+WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "base.en")
 
 
 def get_whisper():
     global _whisper_model
     if _whisper_model is None:
         from faster_whisper import WhisperModel
-        _whisper_model = WhisperModel("small.en", device="cpu", compute_type="int8")
+        _whisper_model = WhisperModel(WHISPER_MODEL_NAME, device="cpu", compute_type="int8")
     return _whisper_model
 
 
@@ -307,13 +312,19 @@ async def llm_chat_completions(request: Request):
     return StreamingResponse(stream_facilitator_reply(messages), media_type="text/event-stream")
 
 
+TEST_SHORT_INTRO = os.environ.get("TEST_SHORT_INTRO", "").lower() in ("1", "true", "yes")
+
+
 @app.post("/api/start")
 async def start():
     if not conversation:
-        conversation.append({
-            "role": "user",
-            "content": "(The employee just opened the app. Begin the conversation now with your opening line.)",
-        })
+        kickoff = "(The employee just opened the app. Begin the conversation now with your opening line.)"
+        if TEST_SHORT_INTRO:
+            kickoff += (
+                " (Testing note, not from the employee: keep this opening to one short sentence, "
+                "skip the usual disclosures, so this is fast to click through repeatedly.)"
+            )
+        conversation.append({"role": "user", "content": kickoff})
         return facilitator_reply()
     return {"reply": None, "signal": None}
 
@@ -358,6 +369,14 @@ async def get_audio(filename: str):
         return JSONResponse({"error": "not found"}, status_code=404)
     media_type = "audio/mpeg" if path.suffix == ".mp3" else "audio/mp4"
     return FileResponse(path, media_type=media_type)
+
+
+@app.on_event("startup")
+async def preload_whisper():
+    # Loads (and on first run, downloads) the model now, during startup, so
+    # the first voice message of a session isn't the one that eats this cost
+    # -- that's what made live mode feel stuck on "transcribing..." before.
+    get_whisper()
 
 
 @app.get("/")

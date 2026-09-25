@@ -25,9 +25,13 @@ uvicorn server:app --reload --port 8420
 
 Open http://localhost:8420 in a browser. Voice memo recording needs microphone permission and works over `localhost` or HTTPS (browsers block mic access on plain HTTP for any other host).
 
+## Layout
+
+A call, not a chat app: the avatar, captions, and controls are the main event in the center pane, sized and centered like a video call tile. The message-by-message transcript is reference material, docked in a scrollable column on the right rather than inline in the main flow. Narrow windows (under 760px) stack the transcript below instead of beside.
+
 ## The avatar shape, captions, and better voice quality
 
-Always on, no config needed: a plain circle above the chat thread, with a mouth that opens and closes with whatever audio is actually playing, no realistic face. It reacts to any audio through the page's `<audio>` element via the Web Audio API, so it works the same regardless of which TTS produced that audio. Four states: idle (closed mouth, nothing happening), listening (mouth reacts to your own mic while recording), thinking (three pulsing dots while waiting on the facilitator), talking (mouth reacts to the facilitator's own TTS audio).
+Always on, no config needed: a plain circle, with a mouth that opens and closes with whatever audio is actually playing, no realistic face. It reacts to any audio through the page's `<audio>` element via the Web Audio API, so it works the same regardless of which TTS produced that audio. Four states, visually distinct on purpose so listening never looks like talking: idle (closed mouth, nothing happening), listening (the whole circle pulses in size with your own mic volume while recording, mouth stays shut), thinking (three pulsing dots while waiting on the facilitator), talking (mouth opens and closes with the facilitator's own TTS audio).
 
 Under the avatar, a caption line shows the words being spoken, revealed in sync with playback. Neither TTS backend gives real per-word timestamps, so the reply is split into short chunks and each chunk's start time is estimated from its share of the total character count. It's an approximation, close enough to read like real subtitles, not frame-accurate.
 
@@ -46,6 +50,17 @@ The "Go live" button next to the mic turns voice memo's click-to-record/click-to
 This isn't a real-time streaming conversation, since neither TTS backend here does streaming STT: each turn is still a full record-then-transcribe-then-reply round trip, just without you clicking anything between turns. It also doesn't support interrupting the facilitator while it's talking (barge-in); wait for it to finish before the mic starts listening again.
 
 The auto-stop threshold (`VAD_THRESHOLD` in `static/index.html`, currently `0.06` on the same 0..1 scale the avatar's own reactivity uses) is a guess. If it's cutting you off mid-sentence, raise the silence window (`VAD_SILENCE_MS`) or lower the threshold; if it's not noticing you've stopped, do the opposite. It depends on your mic and room noise.
+
+## Why voice used to feel stuck on "transcribing..."
+
+Two real fixes, not just tuning:
+
+- `faster-whisper`'s model used to load (and on first run, download from Hugging Face) lazily, on the *first* voice message of a session. That download/load is genuinely slow, and it was landing on whatever turn happened to be first, live mode included, not on server startup where it belongs. It's now loaded eagerly in a startup hook, so `uvicorn` takes longer to report "Application startup complete" but every actual voice message afterward is fast.
+- The default model dropped from `small.en` to `base.en`, a real speed-for-accuracy trade worth knowing about. Override with `WHISPER_MODEL` in `.env` (e.g. `small.en` or `medium.en` for more accuracy and a slower turnaround, `tiny.en` for the fastest but least accurate option).
+
+## Testing shortcut: a one-sentence intro
+
+Reloading and sitting through the full multi-paragraph opening every time you test gets old fast. Set `TEST_SHORT_INTRO=1` in `.env` and the opening line collapses to one short sentence (still a real model call, still gets a real `mend_signal`, just less to read and less TTS to wait on per reload). Leave it unset for anything where the actual scripted opening matters.
 
 ## Optional: realistic video avatar (Tavus)
 
