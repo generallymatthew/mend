@@ -484,8 +484,9 @@
     <div class="summary-item"><span class="num">09</span><p><strong>Power-imbalance safeguards</strong> — the bot advocates for both employees, not the company, and specifically for whoever has less power in the relationship.</p></div>
     <div class="summary-item"><span class="num">10</span><p><strong>Legal &amp; compliance</strong> — open items flagged for real employment counsel, not resolved by this document.</p></div>
     <div class="summary-item"><span class="num">11</span><p><strong>Competitive landscape</strong> — adjacent to EAPs, whistleblower tools, and mediation services, but none combine AI-facilitated peer resolution with a legally-grounded HR firewall.</p></div>
-    <div class="summary-item"><span class="num">12</span><p><strong>IP &amp; defensibility</strong> — copyright and trade secret now, patents genuinely uncertain, the real moat is the trust track record itself.</p></div>
-    <div class="summary-item"><span class="num">13</span><p><strong>Open risks</strong> — what's honestly unproven: the wind-down language, real-time detection accuracy, trust in an AI-only facilitator, and ROI evidence before a real deployment exists.</p></div>
+    <div class="summary-item"><span class="num">12</span><p><strong>Pricing &amp; commercial model</strong> — a flat, all-hands tier rather than per-seat, because seat-gating itself would out who's using it; illustrative ROI math and two adjacent markets worth watching.</p></div>
+    <div class="summary-item"><span class="num">13</span><p><strong>IP &amp; defensibility</strong> — copyright and trade secret now, patents genuinely uncertain, the real moat is the trust track record itself.</p></div>
+    <div class="summary-item"><span class="num">14</span><p><strong>Open risks</strong> — what's honestly unproven: the wind-down language, real-time detection accuracy, trust in an AI-only facilitator, and ROI evidence before a real deployment exists.</p></div>
   </div>
 
   <nav class="toc">
@@ -502,8 +503,9 @@
       <li><a href="#power"><span class="num">09</span>Power-imbalance safeguards</a></li>
       <li><a href="#legal"><span class="num">10</span>Legal &amp; compliance — open items</a></li>
       <li><a href="#landscape"><span class="num">11</span>Competitive landscape</a></li>
-      <li><a href="#ip"><span class="num">12</span>IP &amp; defensibility</a></li>
-      <li><a href="#risks"><span class="num">13</span>Open risks, not yet solved</a></li>
+      <li><a href="#pricing"><span class="num">12</span>Pricing &amp; commercial model</a></li>
+      <li><a href="#ip"><span class="num">13</span>IP &amp; defensibility</a></li>
+      <li><a href="#risks"><span class="num">14</span>Open risks, not yet solved</a></li>
     </ol>
   </nav>
 
@@ -520,13 +522,13 @@
 
     <div class="callout">
       <span class="label">The actual bet this business makes</span>
-      <p>The buyer and the beneficiary aren't the same person. A company pays for this, but it only produces value if the employees using it trust it enough to be honest, and a company can't assert that trust on employees' behalf, no matter how sincerely it believes in the product. That's the real dependency underneath everything else in this spec: the floor triggers, the no-recording architecture, the proving-it tiers in Section 7, giving employees standing to sue over it. None of that is hardening added on top of the product, it's the mechanism by which "trust us" becomes something closer to verifiable. The wall between what stays private and what a company ever sees has to be non-porous, not mostly sealed, not sealed except for convenience, and that's a feature, not a limitation to be traded away for a richer report whenever one seems useful. There's also a bootstrapping problem worth naming plainly: the ROI case a company needs to believe in only gets proven by data that only exists once employees already trust the tool enough to use it honestly, which is exactly what the public pilot in Section 13 is trying to produce evidence for, ahead of asking any company to take it on faith.</p>
+      <p>The buyer and the beneficiary aren't the same person. A company pays for this, but it only produces value if the employees using it trust it enough to be honest, and a company can't assert that trust on employees' behalf, no matter how sincerely it believes in the product. That's the real dependency underneath everything else in this spec: the floor triggers, the no-recording architecture, the proving-it tiers in Section 7, giving employees standing to sue over it. None of that is hardening added on top of the product, it's the mechanism by which "trust us" becomes something closer to verifiable. The wall between what stays private and what a company ever sees has to be non-porous, not mostly sealed, not sealed except for convenience, and that's a feature, not a limitation to be traded away for a richer report whenever one seems useful. There's also a bootstrapping problem worth naming plainly: the ROI case a company needs to believe in only gets proven by data that only exists once employees already trust the tool enough to use it honestly, which is exactly what the public pilot in Section 14 is trying to produce evidence for, ahead of asking any company to take it on faith.</p>
       <p>One more honest limit, not a flaw to engineer around: this only works between people acting in good faith, who genuinely want to understand what happened. Someone acting in bad faith can use the caucusing, the pause-and-check-in, all of it, to perform rather than engage, and no version of this design fixes that. That's not unique to Mend, though, no process fixes bad faith, not mediation, not an HR investigation, not a courtroom. The goal isn't to make the process bad-faith-proof, it's to make it genuinely worth engaging with for everyone who'd actually use it as intended, which is most people, most of the time.</p>
       <p>Also honestly: being AI-facilitated instead of human isn't a neutral detail. Someone skeptical of AI, or just not bought into talking through a real personal conflict with a bot, is going to find this awkward, maybe genuinely embarrassing, and that's a real adoption barrier worth naming plainly, not talking around. But the comparison that matters isn't "AI vs. some better human process," it's AI vs. what people actually do today: stay quiet, or go through a well-meaning human process that isn't built to stay contained. A real, common failure mode: someone resolves a conflict the "right" way, talks to the other person's manager, then the coworker directly, actually fixes it, and the mere fact that a conflict happened, with no detail, sometimes not even the topic, shows up against them in a performance review months later. Awkward and genuinely private beats effective and quietly exposed.</p>
     </div>
 
     <h3>The ROI chain: prove your own link, borrow the rest</h3>
-    <p>Rather than proving the full path end to end, resolved conflict all the way through to a specific dollar figure, split it into two links. Mend only has to prove the first one itself: conflicts get resolved to both parties' satisfaction, which is exactly what the stored outcome data in Section 7 and the proxy questions in Section 13 (focus, avoidance behavior, relationship-quality delta) already produce. The second link, what restored focus and collaboration is actually worth once distraction and avoidance lift, doesn't need to be proven from scratch, it can be borrowed from existing, credible third-party research.</p>
+    <p>Rather than proving the full path end to end, resolved conflict all the way through to a specific dollar figure, split it into two links. Mend only has to prove the first one itself: conflicts get resolved to both parties' satisfaction, which is exactly what the stored outcome data in Section 7 and the proxy questions in Section 14 (focus, avoidance behavior, relationship-quality delta) already produce. The second link, what restored focus and collaboration is actually worth once distraction and avoidance lift, doesn't need to be proven from scratch, it can be borrowed from existing, credible third-party research.</p>
     <div class="table-wrap">
       <table>
         <tr><th>Source</th><th>Finding</th></tr>
@@ -638,6 +640,22 @@ flowchart TD
       <li>Same trigger monitoring as everywhere else. If what the employee describes from the real conversation meets the mandatory floor, the other person threatened them in response, say, it escalates through the same mechanism as any other conversation (Section 6). It doesn't matter that the triggering conversation happened outside Mend entirely.</li>
       <li>Same firewall as private processing. No manager ever learns this exchange happened; this is an extension of step one, not of the manager-mandated flow in Section 5.</li>
     </ul>
+
+    <h3>Live, real-time coaching during an actual meeting</h3>
+    <p>The rehearsal in step one raises an obvious follow-on question: could the same coaching run live, in-ear or on a second screen, during the real conversation instead of only before it? Considered, and deliberately kept out of scope rather than built.</p>
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>A live scripted prompter, feeding the employee lines to read during a real meeting with their manager. Divided attention is the first problem: reading dense text and staying emotionally present in a tense conversation don't coexist, the eyes-off-camera tell and the unnatural pause while scanning a suggestion read as unprepared or evasive, not composed. Streaming a real meeting's audio into a third-party tool also raises its own consent exposure, most two-party-consent jurisdictions require the other person's knowledge before their voice is captured into a transcription service at all, separately from anything about Mend's own no-recording architecture. And a live coach that misreads sarcasm or company-specific context under pressure can hand the employee an aggressive or ungrounded line at exactly the moment reading it aloud unfiltered does the most damage.</p>
+    </div>
+    <p>Disclosing the AI to the other party doesn't fix this either: telling a manager "I have an AI agent listening to help me present my argument" reliably reads as adversarial, an assembled dossier or a lack of confidence, not as good-faith preparation. The one case where a live agent belongs in the room at all is the joint session this product already builds, Section 3's own facilitated session, symmetrical and agreed to by both parties beforehand, not a private aid working for just one side.</p>
+    <div class="callout" style="background:var(--accent-soft); border-color:var(--accent);">
+      <span class="label" style="color:var(--accent);">What stays in scope</span>
+      <p style="color:var(--ink-soft);">Coaching stays asynchronous and pre-meeting: the rehearsal in step one, plus a private, pre-session "cheat sheet" of the employee's own core points and boundaries. If an ambient, in-the-moment aid is ever built, it should be limited to non-verbal, non-scripted pacing signals the employee alone sees, a talk-time ratio, a tone read, a one-word pause cue, never generated lines to read aloud, and never listening to the other party without their separate, informed consent.</p>
+    </div>
+
+    <h3>Performance improvement plan (PIP) navigator</h3>
+    <p>An employee placed on a PIP can use private processing (step one) for a specific, structured version of the same coaching: turning a subjective, anxiety-inducing document into an objective one. The facilitator helps separate observable deliverables from vague commentary in the plan itself, e.g. turning "needs to be more collaborative in sprint planning" into a proposed, concrete counter-metric the employee can bring back to their own manager, and helps them triage, privately, whether the plan looks genuinely remediable or reads as an exit runway where the priority should shift to a clean, dignified departure.</p>
+    <p>This stays inside the existing employee-first firewall (Section 2) and the same limits as any other coaching: the bot never gives legal advice, "you have a wrongful termination case" is out of scope regardless of how a PIP looks, and if what the employee describes meets the mandatory floor, retaliation tied to a protected characteristic, for instance, it escalates through the same mechanism as anything else (Section 6), referring to real counsel rather than adjudicating it itself. A manager never learns an employee used Mend for this, same as any other private processing conversation.</p>
   </section>
 
   <section id="initial-caucus">
@@ -665,7 +683,7 @@ flowchart TD
     </div>
     <div class="callout">
       <span class="label">Why even "resolved: yes/no" isn't automatically safe</span>
-      <p>A real, common failure mode: someone resolves a conflict through a normal human process, talking to the other person's manager, then the coworker directly, actually fixes it, and months later "you had a conflict" shows up against them in a performance review, with the manager not even knowing what it was about. The mere fact that a session happened, resolved or not, can become exactly this kind of mark if a company's culture conflates having a conflict with being a problem, and the technical wall above can't fix that on its own, it limits what data crosses it, not what a manager does with the one bit that does. That has to be a policy commitment the buying company makes, not just a data limitation: the existence of a session is never referenced in a performance review, and that commitment needs the same real teeth as the no-recording promise, the third-party-beneficiary standing in Section 12, not just an assertion in a sales deck.</p>
+      <p>A real, common failure mode: someone resolves a conflict through a normal human process, talking to the other person's manager, then the coworker directly, actually fixes it, and months later "you had a conflict" shows up against them in a performance review, with the manager not even knowing what it was about. The mere fact that a session happened, resolved or not, can become exactly this kind of mark if a company's culture conflates having a conflict with being a problem, and the technical wall above can't fix that on its own, it limits what data crosses it, not what a manager does with the one bit that does. That has to be a policy commitment the buying company makes, not just a data limitation: the existence of a session is never referenced in a performance review, and that commitment needs the same real teeth as the no-recording promise, the third-party-beneficiary standing in Section 13, not just an assertion in a sales deck.</p>
     </div>
   </section>
 
@@ -771,6 +789,9 @@ flowchart LR
       </div>
     </div>
 
+    <h3>Coaching continuity without a transcript</h3>
+    <p>The rehearsal and PIP-navigator coaching in Section 3 have a real tension with "nothing recorded": someone practicing a tough conversation across several sessions shouldn't have to re-explain their situation from scratch each time, but a saved transcript is exactly what the rest of this section rules out. The resolution is to keep a small, client-side "practice state" instead of a transcript: the counterpart's role, the employee's own stated objective and boundaries, and a one-line note on the last session's specific weakness, on the order of a few hundred tokens, encrypted with a key held only in the employee's own browser session. No dialogue, no venting content, nothing that reads as a record of what was said, only the shape of the employee's own strategy. The next session reopens with that state rather than a full history, and either the employee or the passage of time clears it, the same way nothing else in this section persists past its purpose.</p>
+
     <p>That trigger record is deliberately built to function as evidence in itself: HR can be told "this met harassment, level 3" and treat that determination as established, while conducting its own independent investigation into what actually happened (Section 5). That only works if the record can't quietly be altered afterward, so it needs to be tamper-evident, cryptographically signed or append-only logged, not just a row in an ordinary database Mend's own engineers could edit. See the transparency-log tier below.</p>
 
     <div class="callout">
@@ -832,8 +853,40 @@ flowchart LR
     <p>Adjacent categories already exist: EAP platforms, anonymous reporting and whistleblower tools (NAVEX, Lighthouse and similar), traditional workplace mediation services, AI coaching platforms in the BetterUp mold. None of them combine structured, AI-facilitated peer resolution with a strict, legally-grounded HR firewall, that specific combination is the actual bet here, not the general category.</p>
   </section>
 
+  <section id="pricing">
+    <div class="num-heading"><span class="num">12</span><h2>Pricing &amp; commercial model</h2></div>
+    <p>Standard per-seat B2B pricing works against Section 2's own principles here: if only some employees have a paid seat, having one becomes a signal in itself, exactly the kind of visibility the rest of this spec is built to avoid. The pricing model has to match the architecture, company-wide access, nothing that marks who's using it.</p>
+
+    <div class="tier ceiling">
+      <span class="tier-label">Proposed default: flat, all-hands tier</span>
+      <p>A single flat rate per employee per month, illustratively around $7.50/employee/month (~$9,000/yr ACV at 100 FTE), sold as company-wide SSO access with no seat-gating, so every employee has it whether or not they ever open it. The alternative, a la carte or manager-approved seats, reintroduces the exact stigma problem Section 3's anonymous-invite design exists to remove.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <tr><th>Value driver</th><th>Illustrative basis</th><th>Annual estimate</th></tr>
+        <tr><td>Productivity recaptured</td><td>2.8 hrs/wk lost to unresolved conflict (Section 1's CPP citation) across a slice of affected staff</td><td>tens of thousands per 100 FTE</td></tr>
+        <tr><td>Manager capacity restored</td><td>Hours/week of informal, off-the-books dispute counseling a frontline manager no longer has to do</td><td>low tens of thousands per 100 FTE</td></tr>
+        <tr><td>Turnover avoided</td><td>One preempted resignation, valued at roughly 1.5-2x salary (standard turnover-cost benchmarks)</td><td>tens of thousands, lumpy not smooth</td></tr>
+      </table>
+    </div>
+
+    <div class="callout">
+      <span class="label">Illustrative, not proven</span>
+      <p>These figures borrow the same two-link ROI structure as Section 1: Mend proves conflicts get resolved, the dollar value of that is borrowed from third-party research, not measured directly. Treat every number above as a placeholder for a sales conversation, not a validated claim, until the public pilot in Section 14 produces real outcome data to anchor it.</p>
+    </div>
+
+    <h3>Adjacent markets, not the initial focus</h3>
+    <p>The same mechanic, private processing plus an optional facilitated session, plausibly generalizes past the workplace: high-conflict co-parenting (a per-family-unit fee, with a mutually-signed schedule as the one artifact that does leave the system, since a custody agreement has to be enforceable), and episodic peer disputes outside any employer at all, roommates, bands, co-founders, priced per resolved incident rather than a subscription. Worth tracking as optionality, not a near-term commitment, the workplace product is the one with an actual buyer and a trigger system built for it.</p>
+
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>A small per-session incentive, a gift card or similar, specifically for completing a Mend session. This is the same idea already rejected in Section 1 for a different reason (destigmatizing use), and it fails again here on the commercial side: a reward tied to completion creates real moral hazard, rushed or manufactured sessions to collect it, and fulfilling it requires an external payout tied to an identity, which is exactly the record this product's architecture (Section 7) is built not to create. If adoption needs reinforcing, that has to happen through aggregate, anonymous reporting to the company, not a per-person payment.</p>
+    </div>
+  </section>
+
   <section id="ip">
-    <div class="num-heading"><span class="num">12</span><h2>IP &amp; defensibility</h2></div>
+    <div class="num-heading"><span class="num">13</span><h2>IP &amp; defensibility</h2></div>
     <p>Three tiers, from immediate and automatic to genuinely uncertain.</p>
     <div class="tier ceiling">
       <span class="tier-label">Cheap, do this regardless</span>
@@ -850,7 +903,7 @@ flowchart LR
   </section>
 
   <section id="risks">
-    <div class="num-heading"><span class="num">13</span><h2>Open risks, not yet solved</h2></div>
+    <div class="num-heading"><span class="num">14</span><h2>Open risks, not yet solved</h2></div>
     <div class="risk-list">
       <div class="risk-item"><span class="mark">＋</span><p>Full trigger taxonomy is pending legal review, this is the single highest-risk open item in the whole spec.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>How "puts the company at risk" is scoped beyond the floor categories isn't defined yet, likely the same list framed two ways rather than a separate one.</p></div>
