@@ -25,6 +25,8 @@ uvicorn server:app --reload --port 8420
 
 Open http://localhost:8420 in a browser. Voice memo recording needs microphone permission and works over `localhost` or HTTPS (browsers block mic access on plain HTTP for any other host).
 
+Running this as part of the full walkthrough instead of standalone? Use `../run_all.sh` and open http://localhost:8080/intake/ instead — the "continue to joint session" banner link only resolves correctly when browsed that way (see the repo root `README.md`).
+
 ## Layout
 
 A call, not a chat app: the avatar, captions, and controls are the main event in the center pane, sized and centered like a video call tile. The message-by-message transcript is reference material, docked in a scrollable column on the right rather than inline in the main flow. Narrow windows (under 760px) stack the transcript below instead of beside.

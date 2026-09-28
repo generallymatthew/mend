@@ -22,6 +22,8 @@ uvicorn server:app --reload --port 8422
 
 Open http://localhost:8422, set the scenario, hit Start.
 
+Running this as part of the full walkthrough instead of standalone? Use `../run_all.sh` and open http://localhost:8080/post/ instead (see the repo root `README.md`).
+
 ## What to actually test
 
 - **Escalation disclosure comes first, plainly, calmly** — pick "own conduct" or "other party's conduct" escalated and check it doesn't get buried under small talk or soften into ambiguity.

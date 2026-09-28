@@ -4,3 +4,4 @@ __pycache__/
 .env
 classifier/output/
 classifier/data/gen_stderr.txt
+.run_logs/

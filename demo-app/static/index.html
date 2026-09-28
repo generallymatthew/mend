@@ -85,8 +85,8 @@
             <div class="step-title">Private processing</div>
             <div class="step-desc">Talk through what happened, on your own. The facilitator decides with you whether a joint session makes sense.</div>
             <div class="step-actions">
-              <a class="linkbtn" href="http://localhost:8420/" target="_blank" rel="noopener"><button class="primary">Open intake &rarr;</button></a>
-              <span style="font-size:12px; color:var(--ink-soft)">localhost:8420</span>
+              <a class="linkbtn" href="/intake/" target="_blank" rel="noopener"><button class="primary">Open intake &rarr;</button></a>
+              <span style="font-size:12px; color:var(--ink-soft)">/intake/</span>
             </div>
           </div>
         </li>
@@ -104,6 +104,7 @@
               <button id="copyInviteBtn">Copy</button>
               <span class="copied" id="copiedMsg">copied</span>
             </div>
+            <div class="step-desc" id="inviteStatus" hidden></div>
           </div>
         </li>
 
@@ -111,10 +112,10 @@
           <span class="num">3</span>
           <div class="step-body">
             <div class="step-title">Joint session</div>
-            <div class="step-desc">Whether you invited them or they invited you, this is where you both show up. In this local demo you play both sides.</div>
+            <div class="step-desc">Whether you invited them or they invited you, this is where you both show up &mdash; each of you opens the session's own link with your own role, from separate devices or tabs.</div>
             <div class="step-actions">
-              <a class="linkbtn" href="http://localhost:8421/" target="_blank" rel="noopener"><button class="primary">Open joint session &rarr;</button></a>
-              <span style="font-size:12px; color:var(--ink-soft)">localhost:8421</span>
+              <a class="linkbtn" href="/joint/" target="_blank" rel="noopener"><button class="primary">Open joint session &rarr;</button></a>
+              <span style="font-size:12px; color:var(--ink-soft)">/joint/</span>
             </div>
           </div>
         </li>
@@ -125,8 +126,8 @@
             <div class="step-title">Post-session follow-up</div>
             <div class="step-desc">A private 1:1 afterward &mdash; handles any escalation disclosure first, then checks whether things actually got resolved.</div>
             <div class="step-actions">
-              <a class="linkbtn" href="http://localhost:8422/" target="_blank" rel="noopener"><button class="primary">Open post-session &rarr;</button></a>
-              <span style="font-size:12px; color:var(--ink-soft)">localhost:8422</span>
+              <a class="linkbtn" href="/post/" target="_blank" rel="noopener"><button class="primary">Open post-session &rarr;</button></a>
+              <span style="font-size:12px; color:var(--ink-soft)">/post/</span>
             </div>
           </div>
         </li>
@@ -134,7 +135,7 @@
     </div>
 
     <footer>
-      This hub only simulates sign-up and invite links client-side (localStorage, this browser only) &mdash; it doesn't run the anonymous-invite backend from <code>product-spec.html</code> (shared access code validation, crypto-shredding). The intake and joint-session apps each show a banner with a "continue" link once the facilitator's own signal says the next step is ready, so you don't have to guess when to move on.
+      Sign-up checks a real access code and invites are real server-side records (crypto-shredded on accept/decline, per <code>product-spec.html</code> Section 3) &mdash; so an invite link works for a real second person on their own device, not just this same browser. Not built here: peer-suggested invites, invite expiry, or multi-org codes. The intake and joint-session apps each show a banner with a "continue" link once the facilitator's own signal says the next step is ready, so you don't have to guess when to move on.
     </footer>
   </section>
 
@@ -142,6 +143,12 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
+// Path-relative, not hardcoded absolute: this page is served at "/"
+// standalone (direct port) but at "/" behind the local Caddy proxy too
+// (../Caddyfile has demo-app as the catch-all root) -- kept for the same
+// reason the other three apps need it, see ../joint-session-app.
+const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
+function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
 
 function loadIdentity() {
   try { return JSON.parse(localStorage.getItem('mend_demo_identity') || 'null'); }
@@ -156,21 +163,6 @@ function clearIdentity() {
   localStorage.removeItem('mend_demo_identity');
 }
 
-function storeInvite(code, fromEmail) {
-  try {
-    const invites = JSON.parse(localStorage.getItem('mend_demo_invites') || '{}');
-    invites[code] = {fromEmail, createdAt: Date.now()};
-    localStorage.setItem('mend_demo_invites', JSON.stringify(invites));
-  } catch (e) {}
-}
-
-function lookupInvite(code) {
-  try {
-    const invites = JSON.parse(localStorage.getItem('mend_demo_invites') || '{}');
-    return invites[code] || null;
-  } catch (e) { return null; }
-}
-
 function showHub(identity) {
   $('signup').hidden = true;
   $('hub').hidden = false;
@@ -182,43 +174,137 @@ function showSignup() {
   $('signup').hidden = false;
 }
 
-function renderInvitedNotice() {
-  const params = new URLSearchParams(location.search);
-  const code = params.get('invite');
-  if (!code) return;
-  const invite = lookupInvite(code);
-  const notice = $('invitedNotice');
-  notice.hidden = false;
-  notice.textContent = invite
-    ? `You were invited by ${invite.fromEmail} to a joint session on Mend.`
-    : `You followed an invite link (code ${code}), but this browser has no record of who sent it -- invites only work within this same local demo/browser.`;
+let pollTimer = null;
+
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
 
-$('signupBtn').addEventListener('click', () => {
+async function renderInvitedNotice() {
+  const inviteId = new URLSearchParams(location.search).get('invite');
+  if (!inviteId) return;
+  const notice = $('invitedNotice');
+  notice.hidden = false;
+
+  const identity = loadIdentity();
+  if (!identity) {
+    notice.innerHTML = 'Someone invited you to a joint session on Mend. Sign up below to see who, and to accept or decline.';
+    return;
+  }
+
+  let data;
+  try {
+    const res = await fetch(apiPath(`/api/invite/${inviteId}`));
+    data = await res.json();
+  } catch (e) {
+    notice.textContent = 'Could not reach the invite -- try reloading.';
+    return;
+  }
+
+  if (data.error) {
+    notice.textContent = `This invite link isn't valid (${data.error}).`;
+    return;
+  }
+  if (data.status === 'pending') {
+    notice.innerHTML = `<strong>${data.from_email}</strong> invited you to a confidential joint session on Mend. `;
+    const acceptBtn = document.createElement('button');
+    acceptBtn.className = 'primary';
+    acceptBtn.textContent = 'Accept';
+    acceptBtn.style.marginRight = '8px';
+    const declineBtn = document.createElement('button');
+    declineBtn.textContent = 'Decline';
+    notice.appendChild(document.createElement('br'));
+    notice.appendChild(acceptBtn);
+    notice.appendChild(declineBtn);
+    acceptBtn.addEventListener('click', async () => {
+      acceptBtn.disabled = true; declineBtn.disabled = true;
+      const r = await fetch(apiPath(`/api/invite/${inviteId}/accept`), {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({identity_token: identity.token}),
+      });
+      const d = await r.json();
+      if (d.joint_code) location.href = `/joint/?code=${d.joint_code}&role=b`;
+    });
+    declineBtn.addEventListener('click', async () => {
+      acceptBtn.disabled = true; declineBtn.disabled = true;
+      await fetch(apiPath(`/api/invite/${inviteId}/decline`), {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({identity_token: identity.token}),
+      });
+      notice.textContent = 'Declined. Nothing further happens on your end.';
+    });
+  } else if (data.status === 'accepted') {
+    notice.textContent = 'You already accepted this invite.';
+  } else if (data.status === 'declined') {
+    notice.textContent = 'You already declined this invite.';
+  }
+}
+
+$('signupBtn').addEventListener('click', async () => {
   const orgCode = $('orgCode').value.trim();
   const email = $('email').value.trim();
   const errorEl = $('signupError');
-  if (!orgCode) { errorEl.textContent = 'enter your org access code'; return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errorEl.textContent = 'enter a valid personal email'; return; }
   errorEl.textContent = '';
-  const identity = {email, orgCode, joinedAt: Date.now()};
+  let data;
+  try {
+    const res = await fetch(apiPath('/api/signup'), {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({org_code: orgCode, email}),
+    });
+    data = await res.json();
+    if (!res.ok) { errorEl.textContent = data.error || 'signup failed'; return; }
+  } catch (e) {
+    errorEl.textContent = 'could not reach the server: ' + e.message;
+    return;
+  }
+  const identity = {email: data.email, token: data.identity_token, joinedAt: Date.now()};
   saveIdentity(identity);
   showHub(identity);
+  renderInvitedNotice();
 });
 
 $('signoutBtn').addEventListener('click', () => {
+  stopPolling();
   clearIdentity();
   showSignup();
 });
 
-$('generateInviteBtn').addEventListener('click', () => {
+$('generateInviteBtn').addEventListener('click', async () => {
   const identity = loadIdentity();
   if (!identity) return;
-  const code = Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6);
-  storeInvite(code, identity.email);
-  const link = `${location.origin}${location.pathname}?invite=${code}`;
+  const res = await fetch(apiPath('/api/invite'), {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({identity_token: identity.token}),
+  });
+  const data = await res.json();
+  if (!data.invite_id) return;
+  const link = `${location.origin}${location.pathname}?invite=${data.invite_id}`;
   $('inviteLink').value = link;
   $('inviteRow').hidden = false;
+  $('inviteStatus').hidden = false;
+  $('inviteStatus').textContent = 'Waiting for them to respond...';
+
+  stopPolling();
+  pollTimer = setInterval(async () => {
+    const r = await fetch(apiPath(`/api/invite/${data.invite_id}`));
+    const d = await r.json();
+    if (d.status === 'accepted') {
+      stopPolling();
+      $('inviteStatus').innerHTML = '';
+      const joinBtn = document.createElement('a');
+      joinBtn.href = `/joint/?code=${d.joint_code}&role=a`;
+      joinBtn.target = '_blank';
+      joinBtn.rel = 'noopener';
+      const btn = document.createElement('button');
+      btn.className = 'primary';
+      btn.textContent = 'Accepted -- Join now →';
+      joinBtn.appendChild(btn);
+      $('inviteStatus').appendChild(joinBtn);
+    } else if (d.status === 'declined') {
+      stopPolling();
+      $('inviteStatus').textContent = 'They declined.';
+    }
+  }, 2000);
 });
 
 $('copyInviteBtn').addEventListener('click', async () => {
@@ -235,10 +321,10 @@ $('copyInviteBtn').addEventListener('click', async () => {
 });
 
 (function init() {
-  renderInvitedNotice();
   const identity = loadIdentity();
   if (identity) showHub(identity);
   else showSignup();
+  renderInvitedNotice();
 })();
 </script>
 </body>

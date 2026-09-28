@@ -1,0 +1,36 @@
+# Local reverse proxy: one entry point (http://localhost:8080/) in front of
+# the four independent app processes, so browsing the whole product doesn't
+# mean juggling four ports by hand. Each app is unaware it's proxied --
+# `handle_path` strips the matched prefix before forwarding, so every app
+# still sees requests at its own root, exactly as when run standalone.
+#
+# Run all four apps (see ../run_all.sh), then:
+#   caddy run
+# and open http://localhost:8080/
+#
+# Production note: once real hosting exists (roadmap Phase 2), the natural
+# shape is each app deployed on its own subdomain instead of reproducing
+# this path-prefix scheme -- this Caddyfile is a local dev convenience, not
+# meant to be deployed as-is.
+
+:8080 {
+	handle_path /intake/* {
+		reverse_proxy 127.0.0.1:8420
+	}
+
+	handle_path /joint/* {
+		reverse_proxy 127.0.0.1:8421
+	}
+
+	handle_path /post/* {
+		reverse_proxy 127.0.0.1:8422
+	}
+
+	handle_path /joint-audio/* {
+		reverse_proxy 127.0.0.1:8424
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8423
+	}
+}

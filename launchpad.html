@@ -40,26 +40,30 @@
   <p class="lede">Every page built so far, one click each. Bookmark this instead of hunting for ports and file paths.</p>
 
   <div class="howto">
-    Serve the whole <code>Mend/</code> folder once, from this folder: <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/launchpad.html</code> instead of double-clicking this file. The document links below need a real server, not <code>file://</code>, to render correctly. Each local prototype app also needs its own server running per its own README (ports noted below).
+    Serve the whole <code>Mend/</code> folder once, from this folder: <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/launchpad.html</code> instead of double-clicking this file. The document links below need a real server, not <code>file://</code>, to render correctly. The product links below need <code>./run_all.sh</code> running instead (repo root, needs <code>caddy</code> &mdash; see the root <code>README.md</code>); it puts all four apps behind <code>:8080</code> together.
   </div>
 
-  <h2 class="group">Local prototype apps (each needs its own server)</h2>
+  <h2 class="group">The product (needs ./run_all.sh running)</h2>
   <div class="links">
-    <a class="link" href="http://localhost:8423/" target="_blank" rel="noopener">
-      <div><div class="name">Demo hub</div><div class="desc">Sign-up + invite flow, links through the three below</div></div>
-      <div class="meta">:8423</div>
+    <a class="link" href="http://localhost:8080/" target="_blank" rel="noopener">
+      <div><div class="name">Demo hub</div><div class="desc">Sign-up + invite flow, links through the four below</div></div>
+      <div class="meta">:8080</div>
     </a>
-    <a class="link" href="http://localhost:8420/" target="_blank" rel="noopener">
+    <a class="link" href="http://localhost:8080/intake/" target="_blank" rel="noopener">
       <div><div class="name">Intake</div><div class="desc">Private 1:1 consultation with the facilitator</div></div>
-      <div class="meta">:8420</div>
+      <div class="meta">:8080/intake/</div>
     </a>
-    <a class="link" href="http://localhost:8421/" target="_blank" rel="noopener">
-      <div><div class="name">Joint session</div><div class="desc">Live session, you play both employees</div></div>
-      <div class="meta">:8421</div>
+    <a class="link" href="http://localhost:8080/joint/?code=launchpad&amp;role=a" target="_blank" rel="noopener">
+      <div><div class="name">Joint session &middot; Employee A</div><div class="desc">Real two-person session &mdash; also open the Employee B link below (two tabs, or send it to someone else)</div></div>
+      <div class="meta">:8080/joint/</div>
     </a>
-    <a class="link" href="http://localhost:8422/" target="_blank" rel="noopener">
-      <div><div class="name">Post-session check-in</div><div class="desc">Private follow-up, with a scenario picker</div></div>
-      <div class="meta">:8422</div>
+    <a class="link" href="http://localhost:8080/joint/?code=launchpad&amp;role=b" target="_blank" rel="noopener">
+      <div><div class="name">Joint session &middot; Employee B</div><div class="desc">Same session as above, the other role</div></div>
+      <div class="meta">:8080/joint/</div>
+    </a>
+    <a class="link" href="http://localhost:8080/post/" target="_blank" rel="noopener">
+      <div><div class="name">Post-session check-in</div><div class="desc">Private follow-up &mdash; auto-filled when reached via the joint session's own banner link, or use the scenario picker directly</div></div>
+      <div class="meta">:8080/post/</div>
     </a>
   </div>
 
