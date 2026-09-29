@@ -467,6 +467,19 @@ let liveMode = false;
 // nonstop speech, and once it happened to dip briefly, got sent as a memo,
 // then the whole thing repeated on the next turn -- "keeps making voice
 // memos when I'm not talking."
+//
+// The noise floor is the MINIMUM level sampled during calibration, not the
+// maximum -- deliberately. Calibration can't require the room to actually be
+// silent (in "Go live" hands-free mode, plenty of people start talking the
+// instant recording begins, before the 400ms window is even over), so it
+// has to be robust to real speech overlapping it. Tracking the max meant a
+// user's own voice at the very start of a turn became "ambient noise,"
+// setting the real threshold up near their own speaking volume -- normal
+// dips between words then read as silence and cut them off mid-sentence
+// ("stopping listening when I'm talking too soon"). Tracking the min
+// instead: even continuous speech almost always has at least one brief
+// quiet moment (a consonant, a breath) inside 400ms, which is a much safer
+// stand-in for true ambient floor than whatever the loudest syllable was.
 const VAD_THRESHOLD = 0.06;
 const VAD_SILENCE_MS = 1800;
 const VAD_MIN_SPEECH_MS = 500;
@@ -476,20 +489,20 @@ let vadSpeechStarted = null;
 let vadSilenceSince = null;
 let vadCalibrating = false;
 let vadCalibrateEndsAt = 0;
-let vadNoiseFloor = 0;
+let vadNoiseFloor = 1;
 let vadThreshold = VAD_THRESHOLD;
 
 function startVadCalibration(now) {
   vadCalibrating = true;
   vadCalibrateEndsAt = now + VAD_CALIBRATION_MS;
-  vadNoiseFloor = 0;
+  vadNoiseFloor = 1; // shrinks toward the quietest moment sampled, see above
   vadThreshold = VAD_THRESHOLD;
 }
 
 function checkVad(level, now) {
   if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
   if (vadCalibrating) {
-    vadNoiseFloor = Math.max(vadNoiseFloor, level);
+    vadNoiseFloor = Math.min(vadNoiseFloor, level);
     if (now < vadCalibrateEndsAt) return;
     vadCalibrating = false;
     vadThreshold = Math.max(VAD_THRESHOLD, vadNoiseFloor * 1.6 + 0.015);
