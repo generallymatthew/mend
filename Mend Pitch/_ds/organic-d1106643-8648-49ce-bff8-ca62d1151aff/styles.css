@@ -1,13 +1,26 @@
-/* Organic — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here and see readme.md. */
-@import url('https://fonts.googleapis.com/css2?family=Caprasimo:wght@400&family=Figtree:wght@400;600;700&display=swap');
+/* Organic — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here and see readme.md.
+   Rebranded to the Mend brand kit (Pink/Evergreen/Honey/Oat, Manrope) --
+   see /Users/matt/Downloads/Mend logo branding options.zip's README. The
+   two tonal ramps below are regenerated from the brand's Pink and
+   Evergreen via HSL lightness interpolation (hue/saturation held from the
+   base color, lightness stepped 95%->15% across the 9 stops), not
+   hand-picked, so they stay faithful to the actual brand colors. */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap');
 
 :root {
-  --color-bg: #f5ead8;
-  --color-surface: #ebddc5;
-  --color-text: #201e1d;
-  --color-accent: #c67139;
-  --color-accent-2: #7a8a5e;
-  --color-divider: color-mix(in srgb, #201e1d 16%, transparent);
+  --color-bg: #F6F1E7;       /* Oat */
+  --color-surface: #e9dec6;  /* Oat, one step darker */
+  --color-text: #17372E;     /* Evergreen */
+  --color-accent: #F3829A;   /* Mend Pink -- primary. Per the brand kit's own
+                                 contrast note, never use this as body text on
+                                 a light background (fails WCAG AA, verified:
+                                 2.2:1) -- fills/icons/the logo only. */
+  --color-accent-2: #17372E; /* Evergreen -- secondary accent, doubles as ink */
+  --color-honey: #E9B949;    /* Highlight / "resolved" accent -- fills only,
+                                 same low-contrast-as-text problem as Pink
+                                 (verified: 1.6:1 on Oat). Pair with Evergreen
+                                 text on top of a Honey fill, never Honey text. */
+  --color-divider: color-mix(in srgb, #17372E 16%, transparent);
 
   /* Tonal ramps — generated in OKLCH on one shared lightness scale, so the
      same step of any role matches the others in visual value. */
@@ -21,29 +34,31 @@
   --color-neutral-800: #474238;
   --color-neutral-900: #2e2b25;
 
-  --color-accent-100: #fff2eb;
-  --color-accent-200: #ffe1d0;
-  --color-accent-300: #ffc6a5;
-  --color-accent-400: #f6a06b;
-  --color-accent-500: #d67f48;
-  --color-accent-600: #b2622d;
-  --color-accent-700: #8c491a;
-  --color-accent-800: #643312;
-  --color-accent-900: #402310;
+  /* Pink ramp, replaces the old terracotta --color-accent-* scale */
+  --color-accent-100: #fbe9ed;
+  --color-accent-200: #fac7d2;
+  --color-accent-300: #f599ac;
+  --color-accent-400: #ef5c7b;
+  --color-accent-500: #ea204b;
+  --color-accent-600: #ba1236;
+  --color-accent-700: #8c0d28;
+  --color-accent-800: #660a1d;
+  --color-accent-900: #410b17;
 
-  --color-accent-2-100: #f0fae1;
-  --color-accent-2-200: #e1eecc;
-  --color-accent-2-300: #ccdbb2;
-  --color-accent-2-400: #aebf92;
-  --color-accent-2-500: #8fa073;
-  --color-accent-2-600: #728157;
-  --color-accent-2-700: #56633f;
-  --color-accent-2-800: #3d472b;
-  --color-accent-2-900: #272e1b;
+  /* Evergreen ramp, replaces the old olive --color-accent-2-* scale */
+  --color-accent-2-100: #eef7f4;
+  --color-accent-2-200: #d4ede6;
+  --color-accent-2-300: #b0ded1;
+  --color-accent-2-400: #81cab6;
+  --color-accent-2-500: #52b79b;
+  --color-accent-2-600: #3c9078;
+  --color-accent-2-700: #2d6c5a;
+  --color-accent-2-800: #214f42;
+  --color-accent-2-900: #19342c;
 
-  --font-heading: "Caprasimo", system-ui, sans-serif;
-  --font-heading-weight: 400;
-  --font-body: "Figtree", system-ui, sans-serif;
+  --font-heading: "Manrope", system-ui, sans-serif;
+  --font-heading-weight: 800;
+  --font-body: "Manrope", system-ui, sans-serif;
 
   --space-1: 4.4px;
   --space-2: 8.8px;
@@ -79,7 +94,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: var(--font-headi
    ══════════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; font-size: 15px; line-height: 1.55; font-weight: 400; }
+body { margin: 0; font-size: 15px; line-height: 1.55; font-weight: 500; }
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading); font-weight: var(--font-heading-weight);
   line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 var(--space-2);
@@ -92,7 +107,8 @@ h5 { font-size: 16px; }
 h6 { font-size: 13px; }
 h6 { letter-spacing: 0.08em; text-transform: uppercase; }
 p { margin: 0 0 var(--space-3); }
-a { color: var(--color-accent); text-underline-offset: 3px; }
+a { color: var(--color-accent-700); text-underline-offset: 3px; } /* Pink itself fails as text
+  (verified 2.2:1 on Oat); the ramp's 700 step passes at 8.5:1 and stays in the Pink family */
 img { display: block; max-width: 100%; }
 figure { margin: 0; }
 figcaption {
@@ -123,13 +139,15 @@ figcaption {
 }
 .btn svg { display: block; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-primary { background: var(--color-accent); color: var(--color-bg); }
-.btn-primary:hover { background: var(--color-accent-600); }
-.btn-primary:active { background: var(--color-accent-700); }
+.btn-primary { background: var(--color-accent); color: var(--color-text); } /* Pink fill needs dark
+  text at this lightness -- verified 5.2:1, Oat text here fails at 2.2:1 */
+.btn-primary:hover { background: var(--color-accent-600); color: var(--color-bg); } /* darker fill,
+  flips back to light text -- verified 5.8:1, Evergreen text here fails at 2.0:1 */
+.btn-primary:active { background: var(--color-accent-700); color: var(--color-bg); }
 .btn-secondary { border-color: var(--color-divider); }
 .btn-secondary:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
 .btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
-.btn-ghost { color: var(--color-accent); padding-inline: var(--space-1); }
+.btn-ghost { color: var(--color-accent-700); padding-inline: var(--space-1); }
 .btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
 .btn-ghost:active { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
 .btn-icon { width: 36px; height: 36px; padding: 0; }
@@ -172,7 +190,8 @@ textarea.input { min-height: 90px; resize: vertical; }
   padding: 7px 12px; font-size: 13px; cursor: pointer;
 }
 .seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
-.seg-opt:has(input:checked) { background: var(--color-accent); color: var(--color-bg); }
+.seg-opt:has(input:checked) { background: var(--color-accent); color: var(--color-text); } /* Pink fill,
+  dark text -- see .btn-primary's comment above for the verified contrast numbers */
 .seg-opt:not(:has(input:checked)):hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
 .seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 
@@ -181,7 +200,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   display: flex; flex-direction: column; gap: var(--space-2);
   padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface);
 }
-.card-kicker { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent); }
+.card-kicker { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent-700); }
 .card-title {
   font-family: var(--font-heading); font-weight: var(--font-heading-weight);
   font-size: 17px; line-height: 1.2;
@@ -204,7 +223,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 .tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
 .tag-accent-2 { background: var(--color-accent-2-100); color: var(--color-accent-2-800); }
 .tag-neutral { background: var(--color-neutral-100); color: var(--color-neutral-800); }
-.tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); }
+.tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent-700); }
 
 /* — navigation — */
 .nav {
@@ -217,7 +236,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   font-size: 18px; margin-right: auto;
 }
 .nav a { color: inherit; text-decoration: none; font-size: 14px; }
-.nav a:hover, .nav a[aria-current='page'] { color: var(--color-accent); }
+.nav a:hover, .nav a[aria-current='page'] { color: var(--color-accent-700); }
 
 /* — tables — */
 .table { width: 100%; border-collapse: collapse; font-size: 14px; }

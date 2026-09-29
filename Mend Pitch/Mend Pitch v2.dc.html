@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="logo/mend-app-icon-pink.svg">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -10,10 +11,14 @@
 <helmet>
 <link rel="stylesheet" href="_ds/organic-d1106643-8648-49ce-bff8-ca62d1151aff/styles.css">
 <script src="_ds/organic-d1106643-8648-49ce-bff8-ca62d1151aff/_ds_bundle.js"></script>
-<style>:root{--color-bg:#fbfaf7;--color-surface:#f2f1ec;--color-text:#2a2d2c;--color-accent:#4f8a7e;--color-accent-2:#7d8fc2;--color-divider:color-mix(in srgb,#2a2d2c 12%,transparent);
---color-neutral-100:#fdfcfa;--color-neutral-200:#f0efea;--color-neutral-300:#dfddd6;--color-neutral-400:#c3c1b9;--color-neutral-500:#a3a19a;--color-neutral-600:#84827c;--color-neutral-700:#65645f;--color-neutral-800:#484844;--color-neutral-900:#2f2f2c;
---color-accent-100:#eef6f4;--color-accent-200:#dbece8;--color-accent-300:#bddbd4;--color-accent-400:#8fc0b5;--color-accent-500:#62a193;--color-accent-600:#4a8579;--color-accent-700:#386a60;--color-accent-800:#294f47;--color-accent-900:#1b342f;
---color-accent-2-100:#f1f4fb;--color-accent-2-200:#e2e8f6;--color-accent-2-300:#cad4ee;--color-accent-2-400:#a6b4dd;--color-accent-2-500:#8193c6;--color-accent-2-600:#6576a8;--color-accent-2-700:#4e5c86;--color-accent-2-800:#394363;--color-accent-2-900:#252b40;}html{scroll-behavior:smooth}body{margin:0;background:var(--color-bg)}@media print{[data-reveal]{opacity:1!important;transform:none!important}}a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-800)}</style>
+<!-- Rebranded to match _ds/organic-*/styles.css exactly (Mend Pink/Evergreen/Oat) --
+     this page-level override previously had its own third, different color
+     instance (teal/blue-purple) that diverged from the design system's own
+     tokens; kept in sync now rather than left as a second inconsistent theme. -->
+<style>:root{--color-bg:#F6F1E7;--color-surface:#e9dec6;--color-text:#17372E;--color-accent:#F3829A;--color-accent-2:#17372E;--color-honey:#E9B949;--color-divider:color-mix(in srgb,#17372E 16%,transparent);
+--color-neutral-100:#f9f4ed;--color-neutral-200:#eee7db;--color-neutral-300:#dcd3c4;--color-neutral-400:#c0b6a5;--color-neutral-500:#a19786;--color-neutral-600:#82796a;--color-neutral-700:#645c50;--color-neutral-800:#474238;--color-neutral-900:#2e2b25;
+--color-accent-100:#fbe9ed;--color-accent-200:#fac7d2;--color-accent-300:#f599ac;--color-accent-400:#ef5c7b;--color-accent-500:#ea204b;--color-accent-600:#ba1236;--color-accent-700:#8c0d28;--color-accent-800:#660a1d;--color-accent-900:#410b17;
+--color-accent-2-100:#eef7f4;--color-accent-2-200:#d4ede6;--color-accent-2-300:#b0ded1;--color-accent-2-400:#81cab6;--color-accent-2-500:#52b79b;--color-accent-2-600:#3c9078;--color-accent-2-700:#2d6c5a;--color-accent-2-800:#214f42;--color-accent-2-900:#19342c;}html{scroll-behavior:smooth}body{margin:0;background:var(--color-bg)}@media print{[data-reveal]{opacity:1!important;transform:none!important}}a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-800)}</style>
 </helmet>
 
 <div style="position:fixed;right:16px;bottom:16px;z-index:50;display:flex;align-items:center;gap:8px;background:var(--color-neutral-100);padding:6px 6px 6px 14px;border-radius:999px;box-shadow:var(--shadow-md)">
@@ -25,7 +30,10 @@
 </div>
 
 <nav class="nav" style="max-width:1240px;margin:0 auto;padding:20px clamp(20px,5vw,56px);flex-wrap:wrap">
-  <span class="nav-brand" style="font-size:24px">Mend</span>
+  <span class="nav-brand" style="font-size:24px;display:inline-flex;align-items:center;gap:8px">
+    <img src="logo/mend-mark-pink.svg" alt="" width="28" height="20" style="display:block">
+    <span style="font-weight:800;letter-spacing:-0.05em">mend</span>
+  </span>
   <a href="#problem">The problem</a>
   <a href="#watch">Watch</a>
   <a href="#how">How it works</a>
@@ -72,7 +80,7 @@
         <h3 style="font-size:24px;margin:0">File a complaint</h3>
         <p style="margin:0;color:var(--color-neutral-800)">Adversarial, and it carries real career risk. Most people save it for emergencies.</p>
       </div>
-      <div data-reveal="200" style="background:var(--color-accent);color:var(--color-bg);border-radius:var(--radius-lg);padding:28px;display:flex;flex-direction:column;gap:8px">
+      <div data-reveal="200" style="background:var(--color-accent);color:var(--color-text);border-radius:var(--radius-lg);padding:28px;display:flex;flex-direction:column;gap:8px">
         <span class="tag" style="align-self:flex-start;background:var(--color-bg);color:var(--color-accent-800)">The missing middle</span>
         <h3 style="font-size:24px;margin:0">Mend</h3>
         <p style="margin:0">A private place to understand what happened, and an optional facilitated conversation to resolve it.</p>
@@ -122,7 +130,7 @@
         <span style="font-size:13px;color:var(--color-accent-2-700)">After Mend</span>
         <p style="font-family:var(--font-heading);font-size:26px;line-height:1.2;margin:0">Stronger relationships, because they handled it the right way.</p>
       </div>
-      <div data-reveal="200" style="background:var(--color-accent);color:var(--color-bg);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:10px">
+      <div data-reveal="200" style="background:var(--color-accent);color:var(--color-text);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:10px">
         <span style="font-size:13px">What the company gets</span>
         <p style="font-family:var(--font-heading);font-size:26px;line-height:1.2;margin:0">A team refocused on the work, more collaborative than before.</p>
       </div>
@@ -161,7 +169,7 @@
     <ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px">
       <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
         <li data-reveal="0" style="display:flex;gap:20px;align-items:flex-start;background:var(--color-surface);border-radius:var(--radius-lg);padding:24px 28px">
-          <span style="flex:none;width:52px;height:52px;border-radius:50%;background:var(--color-accent);color:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:22px">{{ s.n }}</span>
+          <span style="flex:none;width:52px;height:52px;border-radius:50%;background:var(--color-accent);color:var(--color-text);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:22px">{{ s.n }}</span>
           <div style="display:flex;flex-direction:column;gap:4px">
             <h3 style="font-size:22px;margin:0">{{ s.title }}</h3>
             <p style="margin:0;font-size:16px;color:var(--color-neutral-800);text-wrap:pretty">{{ s.body }}</p>
@@ -308,7 +316,7 @@
         <div></div>
         <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
           <div style="display:flex;align-items:center;gap:10px;padding:0 4px 6px">
-            <span style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--color-accent);color:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:16px">{{ s.n }}</span>
+            <span style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--color-accent);color:var(--color-text);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:16px">{{ s.n }}</span>
             <span style="font-family:var(--font-heading);font-size:17px;line-height:1.15">{{ s.short }}</span>
           </div>
         </sc-for>
@@ -424,7 +432,7 @@
       <p data-reveal="160" style="margin:0;font-size:clamp(18px,1.8vw,20px);line-height:1.55;max-width:700px">Mend only has to show that conflicts get resolved to both people's satisfaction. What restored focus is worth is already well researched.</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
-      <div data-reveal="0" style="background:var(--color-accent);color:var(--color-bg);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:12px">
+      <div data-reveal="0" style="background:var(--color-accent);color:var(--color-text);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:12px">
         <span style="font-size:13px;letter-spacing:0.08em;text-transform:uppercase">Link 1 · Mend proves</span>
         <p style="font-family:var(--font-heading);font-size:26px;line-height:1.2;margin:0">Conflicts resolved, per person, reconfirmed.</p>
         <p style="margin:0;font-size:15px">Plus structured pilot measures: focus, avoidance, relationship quality before and after.</p>
@@ -451,7 +459,7 @@
       <p data-reveal="160" style="margin:0;font-size:clamp(18px,1.8vw,21px);line-height:1.55;max-width:680px">Per-seat pricing would turn "having a license" into a signal, exactly what this product exists to avoid. Mend is company-wide instead: every employee has it, whether or not they ever open it.</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
-      <div data-reveal="0" style="background:var(--color-accent);color:var(--color-bg);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:10px">
+      <div data-reveal="0" style="background:var(--color-accent);color:var(--color-text);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:10px">
         <span style="font-size:13px">All-hands tier</span>
         <p style="font-family:var(--font-heading);font-size:40px;line-height:1;margin:0">$7.50<span style="font-size:16px;font-weight:400"> / employee / mo</span></p>
         <p style="margin:0;font-size:15px">Company-wide SSO. No seats, no approval step, no visible roster.</p>

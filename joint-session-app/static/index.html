@@ -4,16 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mend joint session (local prototype)</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#1B2B2A; --ink-soft:#3C4C49; --paper:#F2F3EE; --card:#FFFFFF;
-    --accent:#3D6B62; --accent-soft:#E6EDE9; --border:#DADFD9;
-    --a:#3D6B62; --b:#8C5B3D;
+    /* Mend brand kit: Evergreen ink, Oat paper, Pink primary (reserved for
+       the facilitator -- see the tile scheme below), Honey for Employee B.
+       Pink/Honey both fail as text color at this lightness (verified via
+       WCAG contrast calc: 2.2:1 and 1.6:1 on Oat respectively) -- used as
+       fills only, paired with Evergreen text on top, never as body text. */
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --a:#17372E; --b:#E9B949; --facilitator:#F3829A;
   }
   *{box-sizing:border-box}
-  body{margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
   .wrap{max-width:760px; margin:0 auto; padding:20px 16px; display:flex; flex-direction:column; height:100vh;}
   .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
+  /* CSS background, not an inline <svg> child -- #roleLabel's JS sets
+     .textContent (see below), which would silently wipe out any child
+     markup. A ::before background survives that. */
+  .eyebrow::before{content:'';display:inline-block;width:14px;height:10px;margin-right:6px;vertical-align:-1px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
   .signal{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:10px; white-space:pre-wrap;}
 
   .stage{display:flex; gap:10px; margin-bottom:10px;}
@@ -21,9 +32,9 @@
   .tile.unlocked{opacity:1;}
   .tile.speaking{box-shadow:0 0 0 2px var(--accent);}
   .tile .avatar{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; color:#fff; flex:none;}
-  .tile.a .avatar{background:var(--a);}
-  .tile.b .avatar{background:var(--b);}
-  .tile.facilitator .avatar{background:var(--ink-soft); font-size:18px;}
+  .tile.a .avatar{background:var(--a);} /* Evergreen fill, white letter passes at 12.9:1 */
+  .tile.b .avatar{background:var(--b); color:var(--ink);} /* Honey fill needs dark letter -- white fails at 1.8:1, Evergreen passes at 7.1:1 */
+  .tile.facilitator .avatar{background:var(--facilitator); color:var(--ink); font-size:18px;} /* Pink fill, same reasoning: Evergreen letter passes at 5.2:1 */
   .tile.facilitator{opacity:1;}
   .tile .name{font-size:11.5px; font-weight:600; line-height:1.3;}
   .tile .you{position:absolute; top:6px; right:8px; font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.03em; color:var(--accent);}
@@ -37,7 +48,7 @@
   .msg.mine{align-self:flex-end;}
   .msg.theirs{align-self:flex-start;}
   .msg.from-a{background:var(--a); color:#fff;}
-  .msg.from-b{background:var(--b); color:#fff;}
+  .msg.from-b{background:var(--b); color:var(--ink);} /* Honey fill, Evergreen text -- same contrast reasoning as the tile avatar above */
   .msg.private{border:1.5px dashed var(--ink-soft); background:transparent; align-self:center; max-width:92%; font-style:italic;}
   .composer{display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:10px;}
   .row{display:flex; gap:8px; align-items:flex-end;}

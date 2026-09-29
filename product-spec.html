@@ -1,63 +1,76 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#F6F1E7;color:#17372E}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Mend</title>
 <style>
   :root{
-    --ink:#1B2B2A;
+    /* Mend brand kit: Evergreen ink, Oat paper/surface, Evergreen as
+       primary accent (Pink reserved for the logo/single CTAs -- fails as
+       text/light-fill at this lightness, verified via WCAG contrast calc:
+       2.2:1 on Oat). --good maps to Honey, matching the kit's own stated
+       role ("highlights, resolved states") almost exactly -- but Honey
+       also fails as text (1.6:1 on Oat), so --good-soft pairs it as a fill
+       with --ink text on top, same as everywhere else Honey is used as a
+       fill in this rebrand. --warm/--warm-soft/--warm-text are a fifth
+       semantic color this document already needed (cautionary highlights,
+       distinct from --good's positive ones) that the 4-color brand kit
+       doesn't cover -- left as the original warm amber rather than
+       collapsed into Honey, which would erase that distinction. */
+    --ink:#17372E;
     --ink-soft:#3C4C49;
     --muted:#6E7268;
-    --paper:#F2F3EE;
-    --surface:#FBFAF6;
-    --line:#DAD8CB;
-    --accent:#3D6B62;
-    --accent-soft:#E6EDE9;
+    --paper:#F6F1E7;
+    --surface:#FBF7EE;
+    --line:#DDD4C0;
+    --accent:#17372E;
+    --accent-soft:#EAF0EC;
     --warm:#A9702F;
     --warm-soft:#F6E9D4;
     --warm-text:#6B4A1C;
-    --mono-bg:#EAE9DF;
-    --good:#2F6B4F;
-    --good-soft:#E3EFE7;
+    --mono-bg:#EDE6D5;
+    --good:#E9B949;
+    --good-soft:#FBF2DC;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --ink:#EDEEE7;
       --ink-soft:#C7CBC1;
       --muted:#93968B;
-      --paper:#151E1C;
-      --surface:#1B2523;
+      --paper:#132420;
+      --surface:#182E28;
       --line:#33403C;
-      --accent:#7CB0A4;
-      --accent-soft:#22322C;
+      --accent:#71BBA6;
+      --accent-soft:#1D3630;
       --warm:#D9A85B;
       --warm-soft:#3A2E17;
       --warm-text:#E9C88A;
-      --mono-bg:#202B27;
-      --good:#7FC49E;
-      --good-soft:#1E3227;
+      --mono-bg:#1C332C;
+      --good:#E7C474;
+      --good-soft:#332A15;
     }
   }
   :root[data-theme="dark"]{
     --ink:#EDEEE7;
     --ink-soft:#C7CBC1;
     --muted:#93968B;
-    --paper:#151E1C;
-    --surface:#1B2523;
+    --paper:#132420;
+    --surface:#182E28;
     --line:#33403C;
-    --accent:#7CB0A4;
-    --accent-soft:#22322C;
+    --accent:#71BBA6;
+    --accent-soft:#1D3630;
     --warm:#D9A85B;
     --warm-soft:#3A2E17;
     --warm-text:#E9C88A;
-    --mono-bg:#202B27;
-    --good:#7FC49E;
-    --good-soft:#1E3227;
+    --mono-bg:#1C332C;
+    --good:#E7C474;
+    --good-soft:#332A15;
   }
 
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
   body{
     background:var(--paper);
     color:var(--ink);
-    font-family:'Public Sans', system-ui, sans-serif;
+    font-family:'Manrope', system-ui, sans-serif;
+    font-weight:500;
     padding-left:20px;
     padding-right:20px;
     padding-block:48px;
@@ -70,10 +83,11 @@
   }
 
   h1,h2,h3{
-    font-family:'Fraunces', Georgia, serif;
+    font-family:'Manrope', system-ui, sans-serif;
     color:var(--ink);
     text-wrap:balance;
-    font-weight:600;
+    font-weight:800;
+    letter-spacing:-0.02em;
     margin:0;
   }
 
@@ -265,7 +279,7 @@
     margin:22px 0 36px 0;
   }
   .pitch p{
-    font-family:'Fraunces', Georgia, serif;
+    font-family:'Manrope', system-ui, sans-serif;
     font-size:1.25rem;
     line-height:1.5;
     color:var(--ink);
@@ -447,8 +461,9 @@
 <div class="page">
 
   <header class="cover">
-    <div class="wordmark">
-      <h1>Mend</h1>
+    <div class="wordmark" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <svg width="34" height="24" viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#F3829A"></path></svg>
+      <h1 style="font-weight:800;letter-spacing:-0.03em">mend</h1>
       <span class="status-pill">Draft spec · v0.1</span>
     </div>
     <p class="tagline">Confidential, AI-facilitated conflict resolution for teams — private by default, with a narrow, disclosed, legally-grounded exception, never a marketing fiction.</p>

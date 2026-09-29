@@ -3,12 +3,18 @@
 <head>
 <meta charset="utf-8">
 <title>Mend joint-session-audio (debug harness)</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 <style>
   :root{
-    --ink:#1B2B2A; --ink-soft:#3C4C49; --paper:#F2F3EE; --card:#FFFFFF;
-    --accent:#3D6B62; --accent-soft:#E6EDE9; --border:#DADFD9;
-    --a:#3D6B62; --b:#8C5B3D;
+    /* Mend brand kit: Evergreen ink, Oat paper. --a (you) = Evergreen,
+       --b (other employee) = Honey -- same two-participant scheme as
+       ../joint-session-app/static/index.html, minus the Pink-reserved-for-
+       facilitator tile since this debug harness has no facilitator tile. */
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --a:#17372E; --b:#E9B949;
   }
   *{box-sizing:border-box}
   /* .stage{display:flex} below would otherwise beat the UA [hidden]
@@ -16,7 +22,7 @@
      specificity) -- without this, the stage rendered before consent was
      even chosen. */
   [hidden]{display:none !important;}
-  body { font-family: -apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;
+  body { font-family: 'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
          background: var(--paper); color: var(--ink); max-width: 640px; margin: 40px auto; padding: 0 16px; }
   #log { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap;
          background: #111; color: #0f0; padding: 12px; height: 220px; overflow-y: auto; margin-top: 16px; }
@@ -33,8 +39,8 @@
         padding:12px 8px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px;}
   .tile .avatar{width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center;
                 font-weight:700; font-size:22px; color:#fff; flex:none;}
-  .tile.a .avatar{background:var(--a);}
-  .tile.b .avatar{background:var(--b);}
+  .tile.a .avatar{background:var(--a);} /* Evergreen fill, white letter passes (verified 12.9:1) */
+  .tile.b .avatar{background:var(--b); color:var(--ink);} /* Honey fill needs dark letter -- white fails at 1.8:1, Evergreen passes at 7.1:1 */
   .tile video{width:100%; aspect-ratio:1; border-radius:12px; object-fit:cover; background:#000;}
   .tile .name{font-size:11.5px; font-weight:600;}
 

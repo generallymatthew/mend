@@ -349,7 +349,7 @@ function Stage({
   width = 1280,
   height = 720,
   duration = 10,
-  background = '#f6f4ef',
+  background = '#F6F1E7',
   fps = 60,
   loop = true,
   autoplay = true,
@@ -724,7 +724,7 @@ function PlaybackBar({ time, duration, playing, onPlayPause, onReset, onSeek, on
       alignSelf: 'center',
 
       borderRadius: 6,
-      color: '#2a2d2c',
+      color: '#17372E',
       fontFamily: 'Inter, system-ui, sans-serif',
       userSelect: 'none',
       flexShrink: 0,
@@ -753,7 +753,7 @@ function PlaybackBar({ time, duration, playing, onPlayPause, onReset, onSeek, on
         fontSize: 12,
         fontVariantNumeric: 'tabular-nums',
         width: 64, textAlign: 'right',
-        color: '#2a2d2c',
+        color: '#17372E',
       }}>
         {fmt(time)}
       </div>
@@ -835,7 +835,7 @@ function IconButton({ children, onClick, title }) {
         background: hover ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)',
         border: '1px solid rgba(0,0,0,0.1)',
         borderRadius: 5,
-        color: '#2a2d2c',
+        color: '#17372E',
         cursor: 'pointer',
         padding: 0,
         transition: 'background 120ms',
@@ -1074,7 +1074,7 @@ function Captions(props) {
       style={Object.assign({
         position: 'absolute', left: '8%', right: '8%', bottom: '7%',
         textAlign: 'center', opacity: o, pointerEvents: 'none',
-        font: '500 30px Inter, system-ui, sans-serif', color: '#f6f4ef',
+        font: '500 30px Inter, system-ui, sans-serif', color: '#F6F1E7',
         textShadow: '0 1px 14px rgba(0,0,0,0.45)',
       }, props.style)}
     >{active.text}</div>
@@ -1114,7 +1114,7 @@ function CompositionStage(props) {
     return (
       <div style={{
         position: 'absolute', inset: 0, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', background: '#0b0b0e', color: '#c96442',
+        justifyContent: 'center', background: '#0b0b0e', color: '#F3829A',
         font: '500 16px Inter, system-ui, sans-serif', textAlign: 'center',
       }}>
         animations-v3: the scenes prop isn't a valid JSON scene list
@@ -1196,7 +1196,7 @@ function WatercolorSheet(props) {
   }, props.style);
   if (!L) {
     return (
-      <div style={Object.assign(style, { background: '#f4f1e8', color: '#8a8270', font: '12px system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' })}>
+      <div style={Object.assign(style, { background: '#F6F1E7', color: '#8a8270', font: '12px system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' })}>
         watercolor-kit.js not loaded (or the painting failed to build)
       </div>
     );
@@ -1320,7 +1320,7 @@ function WatercolorReveal(props) {
   if (frames) return <img src={frames[i]} alt={props.alt || ''} style={style} />;
   if (!kit || !painting) {
     return (
-      <div style={Object.assign({ width: '100%', height: '100%', background: '#f4f1e8', color: '#8a8270', font: '12px system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }, props.style)}>
+      <div style={Object.assign({ width: '100%', height: '100%', background: '#F6F1E7', color: '#8a8270', font: '12px system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }, props.style)}>
         watercolor-kit.js not loaded (or no painting function)
       </div>
     );
@@ -1330,7 +1330,7 @@ function WatercolorReveal(props) {
       cache.frames[i] = kit.frame(painting, Object.assign({}, opts, { at: i / steps }));
     } catch (e) {
       return (
-        <div style={Object.assign({ width: '100%', height: '100%', background: '#f4f1e8', color: '#8a8270', font: '12px system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }, props.style)}>
+        <div style={Object.assign({ width: '100%', height: '100%', background: '#F6F1E7', color: '#8a8270', font: '12px system-ui, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center' }, props.style)}>
           painting too large to render ({String(e && e.message).slice(0, 80)})
         </div>
       );

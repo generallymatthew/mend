@@ -1,11 +1,11 @@
 const C0 = {
-  bg: '#fbfaf7', room: '#f2f1ec', card: '#fdfcfa', ink: '#2a2d2c', mute: '#65645f', line: '#dfddd6',
-  acc: '#4f8a7e', acc1: '#eef6f4', acc2: '#dbece8', acc7: '#386a60', acc9: '#1b342f',
-  blu: '#8193c6', blu1: '#f1f4fb', blu2: '#e2e8f6', blu9: '#252b40',
+  bg: '#F6F1E7', room: '#e9dec6', card: '#f9f4ed', ink: '#17372E', mute: '#65645f', line: '#dfddd6',
+  acc: '#F3829A', acc1: '#fbe9ed', acc2: '#fac7d2', acc7: '#8c0d28', acc9: '#410b17',
+  blu: '#17372E', blu1: '#eef7f4', blu2: '#d4ede6', blu9: '#19342c',
   pri: '#e6b8a4', pri9: '#5a3325', warn: '#c0765e',
 };
-const HF = '"Caprasimo", Georgia, serif';
-const BF = '"Figtree", system-ui, sans-serif';
+const HF = '"Manrope", system-ui, sans-serif';
+const BF = '"Manrope", system-ui, sans-serif';
 
 const MOTION = {
   enter: (s, d = 0.6) => animate({ from: 0, to: 1, start: s, end: s + d, ease: Easing.easeOutCubic }),
