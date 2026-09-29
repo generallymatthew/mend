@@ -468,18 +468,26 @@ let liveMode = false;
 // then the whole thing repeated on the next turn -- "keeps making voice
 // memos when I'm not talking."
 //
-// The noise floor is the MINIMUM level sampled during calibration, not the
-// maximum -- deliberately. Calibration can't require the room to actually be
-// silent (in "Go live" hands-free mode, plenty of people start talking the
-// instant recording begins, before the 400ms window is even over), so it
-// has to be robust to real speech overlapping it. Tracking the max meant a
-// user's own voice at the very start of a turn became "ambient noise,"
-// setting the real threshold up near their own speaking volume -- normal
-// dips between words then read as silence and cut them off mid-sentence
-// ("stopping listening when I'm talking too soon"). Tracking the min
-// instead: even continuous speech almost always has at least one brief
-// quiet moment (a consonant, a breath) inside 400ms, which is a much safer
-// stand-in for true ambient floor than whatever the loudest syllable was.
+// Calibration used to block real speech detection entirely for its first
+// 400ms ("if (vadCalibrating) { ...; return; }") -- fine if that window is
+// silent, but in "Go live" hands-free mode plenty of people start talking
+// the instant recording begins, so the very start of what they said was
+// never marked as speech at all ("not hearing me at first"). Below,
+// calibration now runs quietly in the background (only ever refining
+// vadThreshold once, when its window ends) while speech detection itself
+// runs every frame from turn start, always against whatever vadThreshold
+// currently is -- the safe fixed VAD_THRESHOLD floor until calibration
+// finishes, then the calibrated value after.
+//
+// Calibration also only counts samples that are already below the fixed
+// floor toward the noise-floor estimate -- a sample at or above it is
+// almost certainly the user's own voice, not ambient noise, and including
+// it would set the real threshold up near their own speaking volume, so
+// normal dips between words would then read as silence and cut them off
+// mid-sentence ("cuts off before I am done"). If no genuinely-quiet sample
+// ever appears in the window (continuous talking or loud room noise the
+// whole time), calibration just leaves the safe fixed floor in place
+// rather than computing a threshold from nothing.
 const VAD_THRESHOLD = 0.06;
 const VAD_SILENCE_MS = 1800;
 const VAD_MIN_SPEECH_MS = 500;
@@ -495,18 +503,23 @@ let vadThreshold = VAD_THRESHOLD;
 function startVadCalibration(now) {
   vadCalibrating = true;
   vadCalibrateEndsAt = now + VAD_CALIBRATION_MS;
-  vadNoiseFloor = 1; // shrinks toward the quietest moment sampled, see above
+  vadNoiseFloor = 1; // shrinks toward the quietest genuinely-ambient sample found, see above
   vadThreshold = VAD_THRESHOLD;
 }
 
 function checkVad(level, now) {
   if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
   if (vadCalibrating) {
-    vadNoiseFloor = Math.min(vadNoiseFloor, level);
-    if (now < vadCalibrateEndsAt) return;
-    vadCalibrating = false;
-    vadThreshold = Math.max(VAD_THRESHOLD, vadNoiseFloor * 1.6 + 0.015);
-    return; // real detection resumes next frame against the calibrated threshold
+    if (level < VAD_THRESHOLD) vadNoiseFloor = Math.min(vadNoiseFloor, level);
+    if (now >= vadCalibrateEndsAt) {
+      vadCalibrating = false;
+      if (vadNoiseFloor < 1) vadThreshold = Math.max(VAD_THRESHOLD, vadNoiseFloor * 1.6 + 0.015);
+      // else: no quiet sample ever appeared -- vadThreshold stays at the
+      // safe fixed floor set in startVadCalibration, not computed from a
+      // noise-floor estimate that was never actually observed.
+    }
+    // Falls through to real detection below every frame, calibrating or
+    // not -- speech is never left undetected while this window runs.
   }
   if (level > vadThreshold) {
     if (!vadSpeaking) { vadSpeaking = true; vadSpeechStarted = now; }
