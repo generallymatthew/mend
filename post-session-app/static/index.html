@@ -116,6 +116,28 @@ function playReplyAudio(url) {
   audioEl.play().catch(() => {});
 }
 
+// Reply text now arrives without audio -- see server.py's facilitator_reply
+// docstring. Fetches audio in a second round trip, not awaited by callers,
+// so the input re-enables as soon as text arrives instead of waiting on
+// voice too.
+async function speakReply(text) {
+  if (!text) return;
+  statusEl.textContent = 'generating voice...';
+  let audioUrl = null;
+  try {
+    const res = await fetch(apiPath('/api/speak'), {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text}),
+    });
+    const data = await res.json();
+    audioUrl = data.audio_url || null;
+  } catch (e) {
+    // no audio -- playReplyAudio(null) below is already a no-op
+  }
+  if (statusEl.textContent === 'generating voice...') statusEl.textContent = '';
+  playReplyAudio(audioUrl);
+}
+
 function renderSignal(signal) {
   if (!signal) return;
   try {
@@ -165,7 +187,7 @@ startBtn.addEventListener('click', async () => {
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
     renderSignal(data.signal);
-    playReplyAudio(data.audio_url);
+    speakReply(data.reply);
   } finally {
     setBusy(false);
   }
@@ -186,7 +208,7 @@ async function sendText() {
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
     renderSignal(data.signal);
-    playReplyAudio(data.audio_url);
+    speakReply(data.reply);
   } catch (e) {
     statusEl.textContent = 'error: ' + e.message;
   } finally {
@@ -229,7 +251,7 @@ async function toggleRecording() {
         if (data.transcript) addMessage('"' + data.transcript + '"', 'employee transcript');
         if (data.reply) addMessage(data.reply, 'facilitator');
         renderSignal(data.signal);
-        playReplyAudio(data.audio_url);
+        speakReply(data.reply);
       }
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;

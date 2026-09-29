@@ -282,7 +282,8 @@ function initRoom() {
       const cls = data.private ? 'private' : 'facilitator';
       const label = 'Facilitator' + (data.private ? ' (private, just for you)' : '');
       addMessage(data.text, cls, label);
-      playAudio(data.audio_url);
+      // Audio arrives separately now, via the 'audio' case below (see
+      // server.py's send_audio_followup) -- text doesn't wait on TTS.
     } else {
       const mine = data.from === role;
       const colorCls = data.from === 'employee_a' ? 'from-a' : 'from-b';
@@ -333,6 +334,15 @@ function initRoom() {
           break;
         case 'message':
           handleMessage(data);
+          break;
+        case 'audio':
+          // Arrives after the 'message' event it belongs to, once TTS
+          // synthesis finishes server-side (see server.py's
+          // send_audio_followup) -- no message id to correlate against,
+          // but only one facilitator reply is ever in flight at a time,
+          // so "whatever's currently in the audio element" is always the
+          // right target.
+          playAudio(data.audio_url);
           break;
         case 'paused':
           // Neutral, whole-room state -- deliberately not a partially-dimmed

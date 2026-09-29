@@ -96,6 +96,10 @@ VOICE = "Samantha"  # a built-in macOS voice, used only if OPENAI_API_KEY isn't 
 # OPENAI_API_KEY isn't set, or if the OpenAI call fails.
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_TTS_VOICE = os.environ.get("OPENAI_TTS_VOICE", "alloy")
+# tts-1, not gpt-4o-mini-tts: same latency fix as ../intake-app/server.py,
+# measured ~2x faster for the same text there. Less expressive/steerable, a
+# real tradeoff, not a strict improvement -- override with OPENAI_TTS_MODEL.
+OPENAI_TTS_MODEL = os.environ.get("OPENAI_TTS_MODEL", "tts-1")
 
 ROLE_SLUGS = {"a": "employee_a", "b": "employee_b"}
 SPEAKER_LABEL = {"employee_a": "Employee A", "employee_b": "Employee B"}
@@ -191,7 +195,7 @@ def synthesize_speech_openai(text: str) -> str | None:
         resp = httpx.post(
             "https://api.openai.com/v1/audio/speech",
             headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
-            json={"model": "gpt-4o-mini-tts", "voice": OPENAI_TTS_VOICE, "input": text},
+            json={"model": OPENAI_TTS_MODEL, "voice": OPENAI_TTS_VOICE, "input": text},
             timeout=30,
         )
         resp.raise_for_status()
@@ -238,7 +242,15 @@ def facilitator_reply(session: Session) -> dict:
     """Assumes the latest turn just appended to session.conversation is a
     user turn. Rolls it back on any failure so conversation always ends on
     an assistant turn or empty -- same reasoning as intake-app. Caller must
-    hold session.lock."""
+    hold session.lock.
+
+    Never synthesizes audio inline (see intake-app/server.py's
+    facilitator_reply docstring for the full reasoning): TTS alone measured
+    ~12-14s for a typical reply there, on top of the LLM call, all
+    previously blocking one turn end-to-end. broadcast_result below sends
+    the text reply immediately and fires audio synthesis as a background
+    task, pushing a separate "audio" event once it's ready instead of
+    making both participants wait on voice to see the text."""
     if client is None:
         session.conversation.pop()
         return {"reply": "(server error: ANTHROPIC_API_KEY is not set -- see README)", "signal": None}
@@ -262,7 +274,23 @@ def facilitator_reply(session: Session) -> dict:
         }
     visible, signal = strip_signal(raw)
     session.conversation.append({"role": "assistant", "content": raw})
-    return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible)}
+    return {"reply": visible, "signal": signal, "audio_url": None}
+
+
+async def send_audio_followup(session: Session, recipients: list[str], text: str) -> None:
+    """Fired via asyncio.create_task, not awaited by broadcast_result --
+    synthesizes audio for a reply that's already been sent as text, then
+    pushes a separate "audio" event to the exact same recipient(s) the
+    text message went to. Recipients are passed in explicitly rather than
+    recomputed here so this can never drift from broadcast_result's own
+    privacy-sensitive routing (checkin_target-only vs. both employees)."""
+    if not text:
+        return
+    audio_url = synthesize_speech(text)
+    if not audio_url:
+        return
+    for role in recipients:
+        await send_to(session, role, {"type": "audio", "audio_url": audio_url})
 
 
 async def send_to(session: Session, role: str, payload: dict) -> None:
@@ -347,9 +375,13 @@ async def broadcast_result(
             "type": "message", "from": "facilitator", "text": reply_text,
             "private": True, "audio_url": audio_url, "signal": public_signal,
         })
+        if reply_text:
+            asyncio.create_task(send_audio_followup(session, [checkin_target], reply_text))
         if prev_state != "paused_checkin":
             await send_to(session, OTHER_ROLE[checkin_target], {"type": "paused"})
     else:
+        if reply_text:
+            asyncio.create_task(send_audio_followup(session, ["employee_a", "employee_b"], reply_text))
         for role in ("employee_a", "employee_b"):
             await send_to(session, role, {
                 "type": "message", "from": "facilitator", "text": reply_text,

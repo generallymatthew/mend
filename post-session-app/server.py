@@ -75,14 +75,33 @@ SYSTEM_PROMPT = load_system_prompt()
 conversation: list[dict] = []
 
 _whisper_model = None
+# Same latency fix as ../intake-app/server.py, applied here too: "small.en"
+# was noticeably slower than needed, and CTranslate2's own cpu_threads=0
+# default measured slower on real hardware than just handing it every
+# logical core (no accuracy cost, unlike the model-size trade). See
+# intake-app/README.md's "Why voice used to feel stuck on 'transcribing...'"
+# for the actual numbers this is based on.
+WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "tiny.en")
+WHISPER_CPU_THREADS = int(os.environ.get("WHISPER_CPU_THREADS", str(os.cpu_count() or 4)))
 
 
 def get_whisper():
     global _whisper_model
     if _whisper_model is None:
         from faster_whisper import WhisperModel
-        _whisper_model = WhisperModel("small.en", device="cpu", compute_type="int8")
+        _whisper_model = WhisperModel(
+            WHISPER_MODEL_NAME, device="cpu", compute_type="int8", cpu_threads=WHISPER_CPU_THREADS,
+        )
     return _whisper_model
+
+
+@app.on_event("startup")
+async def preload_whisper():
+    # Loads (and on first run, downloads) the model now, during startup,
+    # instead of lazily on the first voice message -- same fix as
+    # intake-app/server.py, this app was missing it (this one still loaded
+    # cold on whichever turn happened to be first).
+    get_whisper()
 
 FLOOR_CATEGORIES = {
     "harassment_discrimination": "harassment or discrimination based on a protected characteristic",
@@ -126,7 +145,10 @@ def synthesize_speech(text: str) -> str | None:
     return f"/api/audio/{file_id}.m4a"
 
 
-def facilitator_reply() -> dict:
+def facilitator_reply(synthesize: bool = False) -> dict:
+    """synthesize=False by default -- see intake-app/server.py's
+    facilitator_reply docstring for the full reasoning. Callers get reply
+    text back fast and fetch audio separately via POST /api/speak."""
     if client is None:
         conversation.pop()
         return {"reply": "(server error: ANTHROPIC_API_KEY is not set -- see README)", "signal": None}
@@ -150,7 +172,7 @@ def facilitator_reply() -> dict:
         }
     visible, signal = strip_signal(raw)
     conversation.append({"role": "assistant", "content": raw})
-    return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible)}
+    return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible) if synthesize else None}
 
 
 @app.post("/api/start")
@@ -222,6 +244,16 @@ async def post_voice(file: UploadFile):
     result = facilitator_reply()
     result["transcript"] = transcript
     return result
+
+
+@app.post("/api/speak")
+async def speak(payload: dict):
+    """Second round trip for a reply's audio -- see facilitator_reply's
+    docstring. Stateless, no coupling to `conversation`."""
+    text = (payload.get("text") or "").strip()
+    if not text:
+        return JSONResponse({"error": "empty text"}, status_code=400)
+    return {"audio_url": synthesize_speech(text)}
 
 
 @app.post("/api/reset")
