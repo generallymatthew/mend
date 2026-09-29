@@ -19,11 +19,19 @@ state is lost on restart. What's real:
   process. That's what "the key is destroyed, not the record" means in the
   spec, implemented, not just referenced in a comment.
 
+Peer-suggested invites (a third party generates two links for two coworkers
+who aren't them) reuse the exact same crypto-shredding pattern, just with
+two independent accept/decline slots instead of one -- see PAIR_INVITES
+below. Unlike the spec's earlier draft, the suggester isn't anonymous: since
+delivery is always manual (there's no email/SMS integration here or in the
+real product's invite mechanism), the recipient already knows who sent the
+link the moment they get it, so hiding the suggester's identity from Mend's
+own record would protect nothing.
+
 Deliberately not built here (see the plan / product-spec.html for why):
-peer-suggested invites (a distinct mechanism), invite expiry, multi-org
-access codes, rate limiting, or any real password/persistent-account system
--- the access code itself is a trust model, not a cryptographic guarantee,
-per the spec's own framing.
+invite expiry, multi-org access codes, or any real password/persistent-
+account system -- the access code itself is a trust model, not a
+cryptographic guarantee, per the spec's own framing.
 
 Run:
     pip install -r requirements.txt
@@ -51,6 +59,7 @@ app = FastAPI()
 # In-memory only -- lost on restart, same convention as every other app here.
 IDENTITIES: dict[str, str] = {}  # identity_token -> email
 INVITES: dict[str, dict] = {}  # invite_id -> {status, ciphertext, key, joint_code}
+PAIR_INVITES: dict[str, dict] = {}  # pair_id -> {status_a, status_b, ciphertext, key, joint_code}
 
 # --- Rate limiting --------------------------------------------------------
 # /api/signup is a brute-force surface for ORG_ACCESS_CODE -- a wrong guess
@@ -171,6 +180,82 @@ async def decline_invite(invite_id: str, payload: dict):
     if not invite:
         return JSONResponse({"error": "no such invite"}, status_code=404)
     return {"status": invite["status"]}
+
+
+_SLOTS = ("a", "b")
+
+
+@app.post("/api/pair-invite")
+async def create_pair_invite(payload: dict):
+    token = payload.get("identity_token") or ""
+    email = require_identity(token)
+    if not email:
+        return JSONResponse({"error": "sign up first"}, status_code=401)
+
+    pair_id = secrets.token_urlsafe(12)
+    joint_code = secrets.token_urlsafe(6)
+    key = Fernet.generate_key()
+    ciphertext = Fernet(key).encrypt(email.encode())
+    PAIR_INVITES[pair_id] = {
+        "status_a": "pending",
+        "status_b": "pending",
+        "ciphertext": ciphertext,
+        "key": key,
+        "joint_code": joint_code,
+    }
+    return {"pair_id": pair_id}
+
+
+@app.get("/api/pair-invite/{pair_id}")
+async def get_pair_invite(pair_id: str, slot: str):
+    if slot not in _SLOTS:
+        return JSONResponse({"error": "slot must be 'a' or 'b'"}, status_code=400)
+    pair = PAIR_INVITES.get(pair_id)
+    if not pair:
+        return JSONResponse({"error": "no such invite"}, status_code=404)
+    result = {"status_a": pair["status_a"], "status_b": pair["status_b"]}
+    if "key" in pair:
+        # Only reachable while the key still exists -- same shredding rule as INVITES.
+        result["from_email"] = Fernet(pair["key"]).decrypt(pair["ciphertext"]).decode()
+    if pair["status_a"] == "accepted" and pair["status_b"] == "accepted":
+        result["joint_code"] = pair["joint_code"]
+    return result
+
+
+@app.post("/api/pair-invite/{pair_id}/accept")
+async def accept_pair_invite(pair_id: str, payload: dict):
+    token = payload.get("identity_token") or ""
+    slot = payload.get("slot") or ""
+    if not require_identity(token):
+        return JSONResponse({"error": "sign up first"}, status_code=401)
+    if slot not in _SLOTS:
+        return JSONResponse({"error": "slot must be 'a' or 'b'"}, status_code=400)
+    pair = PAIR_INVITES.get(pair_id)
+    if not pair:
+        return JSONResponse({"error": "no such invite"}, status_code=404)
+    pair[f"status_{slot}"] = "accepted"
+    if pair["status_a"] == "accepted" and pair["status_b"] == "accepted":
+        pair.pop("key", None)  # crypto-shredding: ciphertext stays, key doesn't
+    result = {"status_a": pair["status_a"], "status_b": pair["status_b"]}
+    if pair["status_a"] == "accepted" and pair["status_b"] == "accepted":
+        result["joint_code"] = pair["joint_code"]
+    return result
+
+
+@app.post("/api/pair-invite/{pair_id}/decline")
+async def decline_pair_invite(pair_id: str, payload: dict):
+    token = payload.get("identity_token") or ""
+    slot = payload.get("slot") or ""
+    if not require_identity(token):
+        return JSONResponse({"error": "sign up first"}, status_code=401)
+    if slot not in _SLOTS:
+        return JSONResponse({"error": "slot must be 'a' or 'b'"}, status_code=400)
+    pair = PAIR_INVITES.get(pair_id)
+    if not pair:
+        return JSONResponse({"error": "no such invite"}, status_code=404)
+    pair[f"status_{slot}"] = "declined"
+    pair.pop("key", None)  # either decline kills the whole pair -- shred now
+    return {"status_a": pair["status_a"], "status_b": pair["status_b"]}
 
 
 @app.get("/")

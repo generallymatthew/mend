@@ -118,8 +118,29 @@
         <li class="step">
           <span class="num">3</span>
           <div class="step-body">
+            <div class="step-title">Suggest a conversation between two coworkers</div>
+            <div class="step-desc">Not involved yourself? If you've noticed tension between two other people, generate two links and send one to each of them, any way you like &mdash; same as inviting someone yourself, just on their behalf. They'll each see it came from you.</div>
+            <div class="step-actions">
+              <button id="generatePairBtn">Generate two links</button>
+            </div>
+            <div class="invite-row" id="pairRowA" hidden>
+              <input type="text" id="pairLinkA" readonly>
+              <button class="copyPairBtn" data-target="pairLinkA">Copy</button>
+            </div>
+            <div class="invite-row" id="pairRowB" hidden>
+              <input type="text" id="pairLinkB" readonly>
+              <button class="copyPairBtn" data-target="pairLinkB">Copy</button>
+            </div>
+            <span class="copied" id="copiedPairMsg">copied</span>
+            <div class="step-desc" id="pairStatus" hidden></div>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="num">4</span>
+          <div class="step-body">
             <div class="step-title">Joint session</div>
-            <div class="step-desc">Whether you invited them or they invited you, this is where you both show up &mdash; each of you opens the session's own link with your own role, from separate devices or tabs.</div>
+            <div class="step-desc">Whoever invited whom, this is where you both show up &mdash; each of you opens the session's own link with your own role, from separate devices or tabs.</div>
             <div class="step-actions">
               <a class="linkbtn" href="/joint/" target="_blank" rel="noopener"><button class="primary">Open joint session &rarr;</button></a>
               <span style="font-size:12px; color:var(--ink-soft)">/joint/</span>
@@ -128,7 +149,7 @@
         </li>
 
         <li class="step">
-          <span class="num">4</span>
+          <span class="num">5</span>
           <div class="step-body">
             <div class="step-title">Post-session follow-up</div>
             <div class="step-desc">A private 1:1 afterward &mdash; handles any escalation disclosure first, then checks whether things actually got resolved.</div>
@@ -142,7 +163,7 @@
     </div>
 
     <footer>
-      Sign-up checks a real access code and invites are real server-side records (crypto-shredded on accept/decline, per <code>product-spec.html</code> Section 3) &mdash; so an invite link works for a real second person on their own device, not just this same browser. Not built here: peer-suggested invites, invite expiry, or multi-org codes. The intake and joint-session apps each show a banner with a "continue" link once the facilitator's own signal says the next step is ready, so you don't have to guess when to move on.
+      Sign-up checks a real access code and invites (direct or suggested) are real server-side records (crypto-shredded on accept/decline, per <code>product-spec.html</code> Section 3) &mdash; so an invite link works for a real second person on their own device, not just this same browser. Not built here: invite expiry or multi-org codes. The intake and joint-session apps each show a banner with a "continue" link once the facilitator's own signal says the next step is ready, so you don't have to guess when to move on.
     </footer>
   </section>
 
@@ -188,14 +209,22 @@ function stopPolling() {
 }
 
 async function renderInvitedNotice() {
-  const inviteId = new URLSearchParams(location.search).get('invite');
-  if (!inviteId) return;
+  const params = new URLSearchParams(location.search);
+  const inviteId = params.get('invite');
+  const pairId = params.get('pair');
+  const slot = params.get('slot');
+  if (!inviteId && !(pairId && slot)) return;
   const notice = $('invitedNotice');
   notice.hidden = false;
 
   const identity = loadIdentity();
   if (!identity) {
     notice.innerHTML = 'Someone invited you to a joint session on Mend. Sign up below to see who, and to accept or decline.';
+    return;
+  }
+
+  if (pairId && slot) {
+    await renderPairInviteNotice(notice, pairId, slot, identity);
     return;
   }
 
@@ -245,6 +274,75 @@ async function renderInvitedNotice() {
   } else if (data.status === 'declined') {
     notice.textContent = 'You already declined this invite.';
   }
+}
+
+async function renderPairInviteNotice(notice, pairId, slot, identity) {
+  let data;
+  try {
+    const res = await fetch(apiPath(`/api/pair-invite/${pairId}?slot=${slot}`));
+    data = await res.json();
+  } catch (e) {
+    notice.textContent = 'Could not reach the invite -- try reloading.';
+    return;
+  }
+  if (data.error) {
+    notice.textContent = `This invite link isn't valid (${data.error}).`;
+    return;
+  }
+
+  const myStatus = data[`status_${slot}`];
+  const otherStatus = data[`status_${slot === 'a' ? 'b' : 'a'}`];
+
+  if (myStatus === 'declined' || otherStatus === 'declined') {
+    notice.textContent = otherStatus === 'declined' && myStatus !== 'declined'
+      ? 'The other person declined. Nothing further happens on your end.'
+      : 'Declined. Nothing further happens on your end.';
+    return;
+  }
+  if (myStatus === 'accepted' && otherStatus === 'accepted' && data.joint_code) {
+    notice.innerHTML = 'Both of you accepted. ';
+    const joinBtn = document.createElement('a');
+    joinBtn.href = `/joint/?code=${data.joint_code}&role=${slot}`;
+    joinBtn.target = '_blank';
+    joinBtn.rel = 'noopener';
+    const btn = document.createElement('button');
+    btn.className = 'primary';
+    btn.textContent = 'Join now →';
+    joinBtn.appendChild(btn);
+    notice.appendChild(joinBtn);
+    return;
+  }
+  if (myStatus === 'accepted') {
+    notice.textContent = 'You accepted -- waiting for the other person.';
+    return;
+  }
+
+  notice.innerHTML = `<strong>${data.from_email}</strong> thought a conversation between you and a coworker might help. `;
+  const acceptBtn = document.createElement('button');
+  acceptBtn.className = 'primary';
+  acceptBtn.textContent = 'Accept';
+  acceptBtn.style.marginRight = '8px';
+  const declineBtn = document.createElement('button');
+  declineBtn.textContent = 'Decline';
+  notice.appendChild(document.createElement('br'));
+  notice.appendChild(acceptBtn);
+  notice.appendChild(declineBtn);
+  acceptBtn.addEventListener('click', async () => {
+    acceptBtn.disabled = true; declineBtn.disabled = true;
+    await fetch(apiPath(`/api/pair-invite/${pairId}/accept`), {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({identity_token: identity.token, slot}),
+    });
+    renderPairInviteNotice(notice, pairId, slot, identity);
+  });
+  declineBtn.addEventListener('click', async () => {
+    acceptBtn.disabled = true; declineBtn.disabled = true;
+    await fetch(apiPath(`/api/pair-invite/${pairId}/decline`), {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({identity_token: identity.token, slot}),
+    });
+    notice.textContent = 'Declined. Nothing further happens on your end.';
+  });
 }
 
 $('signupBtn').addEventListener('click', async () => {
@@ -325,6 +423,50 @@ $('copyInviteBtn').addEventListener('click', async () => {
   const msg = $('copiedMsg');
   msg.classList.add('show');
   setTimeout(() => msg.classList.remove('show'), 1200);
+});
+
+$('generatePairBtn').addEventListener('click', async () => {
+  const identity = loadIdentity();
+  if (!identity) return;
+  const res = await fetch(apiPath('/api/pair-invite'), {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({identity_token: identity.token}),
+  });
+  const data = await res.json();
+  if (!data.pair_id) return;
+  $('pairLinkA').value = `${location.origin}${location.pathname}?pair=${data.pair_id}&slot=a`;
+  $('pairLinkB').value = `${location.origin}${location.pathname}?pair=${data.pair_id}&slot=b`;
+  $('pairRowA').hidden = false;
+  $('pairRowB').hidden = false;
+  $('pairStatus').hidden = false;
+  $('pairStatus').textContent = 'Send one link to each person. Waiting for both to respond...';
+
+  const pairPollTimer = setInterval(async () => {
+    const r = await fetch(apiPath(`/api/pair-invite/${data.pair_id}?slot=a`));
+    const d = await r.json();
+    if (d.status_a === 'declined' || d.status_b === 'declined') {
+      clearInterval(pairPollTimer);
+      $('pairStatus').textContent = 'One of them declined.';
+    } else if (d.status_a === 'accepted' && d.status_b === 'accepted') {
+      clearInterval(pairPollTimer);
+      $('pairStatus').textContent = 'Both accepted -- they can join the joint session now.';
+    }
+  }, 2000);
+});
+
+document.querySelectorAll('.copyPairBtn').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const input = $(btn.dataset.target);
+    input.select();
+    try {
+      await navigator.clipboard.writeText(input.value);
+    } catch (e) {
+      document.execCommand('copy');
+    }
+    const msg = $('copiedPairMsg');
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 1200);
+  });
 });
 
 (function init() {
