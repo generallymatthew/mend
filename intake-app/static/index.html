@@ -293,7 +293,11 @@ function drawAvatarFrame(now) {
 // Captions: no real per-word timing from either TTS backend, so the reply
 // is split into short chunks and each chunk's start time is estimated
 // proportionally to its share of the total character count -- close enough
-// to read like real subtitles without needing forced alignment.
+// to read like real subtitles without needing forced alignment. One chunk
+// is at most one sentence -- never merge several short sentences together,
+// or the first chunk shows a whole mini-paragraph on screen at t=0, before
+// most of it has actually been said. A single long sentence still gets
+// split further on clause breaks so no one chunk sits on screen too long.
 const captionEl = document.getElementById('caption');
 let captionChunks = [];
 let captionStarts = [];
@@ -301,12 +305,16 @@ let captionStarts = [];
 function splitCaptionChunks(text) {
   const sentences = (text || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
   const chunks = [];
-  let cur = '';
   for (const s of sentences) {
-    if (cur && (cur + ' ' + s).length > 90) { chunks.push(cur); cur = s; }
-    else { cur = cur ? cur + ' ' + s : s; }
+    if (s.length <= 90) { chunks.push(s); continue; }
+    const clauses = s.split(/(?<=[,;:])\s+/);
+    let cur = '';
+    for (const c of clauses) {
+      if (cur && (cur + ' ' + c).length > 90) { chunks.push(cur); cur = c; }
+      else { cur = cur ? cur + ' ' + c : c; }
+    }
+    if (cur) chunks.push(cur);
   }
-  if (cur) chunks.push(cur);
   return chunks;
 }
 
