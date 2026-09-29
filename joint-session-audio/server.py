@@ -22,6 +22,8 @@ Run:
 import os
 from pathlib import Path
 
+import json
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
@@ -39,6 +41,23 @@ ROLE_IDENTITIES = {"a": "employee_a", "b": "employee_b"}
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
+
+_lkapi: api.LiveKitAPI | None = None
+
+
+def get_lkapi() -> api.LiveKitAPI:
+    # Lazy singleton: this admin client is only needed by the manual
+    # breakout-room trigger below, not by every request.
+    global _lkapi
+    if _lkapi is None:
+        _lkapi = api.LiveKitAPI(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+    return _lkapi
+
+
+@app.on_event("shutdown")
+async def _close_lkapi():
+    if _lkapi is not None:
+        await _lkapi.aclose()
 
 
 @app.get("/")
@@ -72,3 +91,44 @@ def token(code: str, role: str, video_consent: bool = False):
         .to_jwt()
     )
     return JSONResponse({"token": jwt, "room": room_name, "identity": identity})
+
+
+# --- Manual/test-only breakout-room trigger --------------------------------
+# agent.py owns the actual BreakoutGate + audio isolation, in its own
+# process, as a participant inside the room. This process is not a
+# participant -- it never joins a room itself, only mints tokens -- so the
+# only way to reach a running agent job is the room's own data channel via
+# the admin RoomService API (self-hosted-compatible; see breakout_gate.py's
+# module docstring). A real facilitator-LLM integration would send this
+# exact same control message from wherever it runs; these two endpoints are
+# that seam, exposed here so the mechanism can be exercised by hand or by
+# tests/test_breakout_gate.py's live-server counterpart, not because this
+# process makes any decision about when a check-in should happen.
+@app.post("/api/room/{code}/checkin")
+async def trigger_checkin(code: str, payload: dict):
+    target = payload.get("target")
+    if target not in ("employee_a", "employee_b"):
+        raise HTTPException(status_code=400, detail="target must be 'employee_a' or 'employee_b'")
+    room_name = f"joint-audio-{code}"
+    await get_lkapi().room.send_data(
+        api.SendDataRequest(
+            room=room_name,
+            data=json.dumps({"type": "breakout_checkin", "target": target}).encode(),
+            # kind defaults to RELIABLE -- a dropped control message would
+            # leave the room stuck paused (or never paused), unlike an
+            # ordinary audio frame where dropping one is harmless.
+        )
+    )
+    return {"sent": "breakout_checkin", "target": target}
+
+
+@app.post("/api/room/{code}/resume")
+async def trigger_resume(code: str):
+    room_name = f"joint-audio-{code}"
+    await get_lkapi().room.send_data(
+        api.SendDataRequest(
+            room=room_name,
+            data=json.dumps({"type": "breakout_resume"}).encode(),
+        )
+    )
+    return {"sent": "breakout_resume"}

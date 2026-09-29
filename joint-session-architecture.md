@@ -33,7 +33,7 @@ mic audio → streaming STT → rolling transcript window
 ACTIVE
   ├─ facilitator senses rising tension (no trigger) ─→ PAUSED_CHECKIN(participant)
   │     PAUSED_CHECKIN: other participant sees a neutral "one moment" state, no content leak.
-  │     Facilitator talks privately to the flagged participant over the same caucus channel
+  │     Facilitator talks privately to the flagged participant over the same side-conversation channel
   │     used in intake. That participant decides: resume → ACTIVE, or end → WINDING_DOWN.
   │
   ├─ serious-not-acute content surfaces (floor-tripping, not happening live right now)
@@ -78,5 +78,6 @@ Irreducible latency (STT + classification + the cut itself) means the delay buff
 
 - The joint-session facilitator system prompt itself is now written (`facilitator-joint-session-system-prompt.md`), as is the post-session follow-up (`facilitator-post-session-system-prompt.md`), and both have now been tested against a real model in `../joint-session-app/`.
 - Exact thresholds/prompts for the fast classifier vs. the LLM severity read — the classifier exists and is wired in (see above), but its 0.9 cut threshold is still an unvalidated guess, not tuned against real precision/recall curves.
-- How the private breakout sub-room is implemented in LiveKit specifically (room composition vs. a second room with re-publish).
 - The real audio delay buffer itself and streaming STT — the classifier above currently scores a complete text message, not a rolling audio chunk gating live delivery. That's still the core unbuilt piece of this whole document.
+
+**Now built**, as room composition (`../joint-session-audio/breakout_gate.py` + its wiring in `agent.py`, live-verified against a real `livekit-server --dev`): the private breakout sub-room mechanism itself — pausing both employees' cross-publish, a neutral pause signal to the non-target employee, and a private subscription-restricted track for the target. LiveKit's `move_participant`/`forward_participant` (the "second room with re-publish" option) turned out to be Cloud/Private-Cloud only, confirmed against the installed SDK, so this uses the same self-hosted-compatible primitives the video-parity code already proved out. **Still not built**: any actual facilitator voice publishing into that private track, and any live connection to `../joint-session-app`'s facilitator LLM (which already decides `paused_checkin`/`checkin_target` today, over text/WebSocket, with zero relationship to the audio app) — see `../joint-session-audio/README.md`'s "Private side conversation" and "Known gaps" sections for the exact scope line.

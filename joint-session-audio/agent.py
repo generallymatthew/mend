@@ -38,6 +38,7 @@ from dotenv import load_dotenv
 from livekit import api, rtc
 from livekit.agents import AutoSubscribe, JobContext, JobProcess, WorkerOptions, cli
 
+from breakout_gate import BreakoutGate, SessionState
 from delay_buffer import DEFAULT_BUFFER_SECONDS, DEFAULT_CUT_THRESHOLD, DelayBuffer, load_default_classifier
 from stt import SAMPLE_RATE, StreamingSTT
 from video_parity import RoomVideoMode, VideoParityGate
@@ -95,6 +96,11 @@ class ParticipantBridge:
             ),
         )
         self.stt = StreamingSTT(participant_identity, self._on_segment)
+        # Set while the room is paused for a private side conversation --
+        # see BreakoutGate. STT/DelayBuffer keep running underneath (so
+        # nothing is lost/desynced when the pause ends), only the release
+        # onto the other employee's bridge track is withheld.
+        self.paused = False
 
     async def publish(self):
         # Scope this track so only `other_identity` may subscribe to it --
@@ -103,10 +109,18 @@ class ParticipantBridge:
         # employee. See module docstring re: API version sensitivity.
         # (allow_all_participants is this installed version's real kwarg
         # name -- verified against livekit-agents 1.x's rtc.LocalParticipant,
-        # not the all_participants_allowed guessed in an earlier draft.)
+        # not the all_participants_allowed guessed in an earlier draft.
+        # set_track_subscription_permissions itself is synchronous in this
+        # installed version -- confirmed via source, `-> None`, not a
+        # coroutine -- awaiting it raised "NoneType can't be used in
+        # 'await' expression" every time this ran, silently, since it's
+        # called from a fire-and-forget asyncio.create_task with no one
+        # ever awaiting the task or checking its exception. Found live
+        # while testing the new breakout gate below, which copied this
+        # same call.)
         options = rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE)
         publication = await self.room.local_participant.publish_track(self._out_track, options)
-        await self.room.local_participant.set_track_subscription_permissions(
+        self.room.local_participant.set_track_subscription_permissions(
             allow_all_participants=False,
             participant_permissions=[
                 rtc.ParticipantTrackPermission(
@@ -124,6 +138,8 @@ class ParticipantBridge:
         asyncio.create_task(self.buffer.submit(audio_bytes, text))
 
     def _publish_release(self, audio_bytes: bytes):
+        if self.paused:
+            return
         frame = rtc.AudioFrame(
             data=audio_bytes,
             sample_rate=SAMPLE_RATE,
@@ -200,6 +216,93 @@ async def entrypoint(ctx: JobContext):
             logger.exception("failed to broadcast video_mode=%s", new_mode)
 
     video_gate = VideoParityGate(("employee_a", "employee_b"), on_mode_changed=on_video_mode_changed)
+
+    # Private side-conversation (breakout) isolation -- see breakout_gate.py.
+    # checkin_pub holds the one active private track's publication SID
+    # between enter_checkin and resume; there's at most one at a time
+    # (BreakoutGate rejects a second target while already paused).
+    checkin_pub: dict[str, str] = {}
+
+    def on_breakout_state_changed(old_state: SessionState, new_state: SessionState, target: str | None):
+        logger.warning("breakout: %s -> %s (target=%s)", old_state, new_state, target)
+        asyncio.create_task(_apply_breakout_state(new_state, target))
+
+    async def _apply_breakout_state(new_state: SessionState, target: str | None):
+        if new_state == "paused_checkin" and target:
+            other = breakout_gate.other_identity
+            for identity in (target, other):
+                bridge = bridges.get(identity)
+                if bridge:
+                    bridge.paused = True
+            # A private, subscription-restricted track for `target` alone --
+            # inert for now (no facilitator TTS wired in, deliberately out
+            # of scope, see breakout_gate.py's module docstring), this just
+            # proves the isolation mechanism itself: the same
+            # set_track_subscription_permissions call ParticipantBridge.publish
+            # already uses for the human-to-human bridge tracks, applied here
+            # to reserve a private channel only `target` can subscribe to.
+            source = rtc.AudioSource(SAMPLE_RATE, 1)
+            track = rtc.LocalAudioTrack.create_audio_track(f"facilitator-checkin-{target}", source)
+            options = rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE)
+            try:
+                publication = await room.local_participant.publish_track(track, options)
+                room.local_participant.set_track_subscription_permissions(
+                    allow_all_participants=False,
+                    participant_permissions=[
+                        rtc.ParticipantTrackPermission(
+                            participant_identity=target,
+                            allow_all=False,
+                            allowed_track_sids=[publication.sid],
+                        )
+                    ],
+                )
+                checkin_pub["sid"] = publication.sid
+            except Exception:
+                logger.exception("failed to open private check-in track for %s", target)
+            try:
+                room.local_participant.publish_data(
+                    json.dumps({"type": "session_paused", "checkin_target": target}).encode(),
+                    reliable=True,
+                )
+            except Exception:
+                logger.exception("failed to broadcast session_paused")
+        elif new_state == "active":
+            for identity in ("employee_a", "employee_b"):
+                bridge = bridges.get(identity)
+                if bridge:
+                    bridge.paused = False
+            sid = checkin_pub.pop("sid", None)
+            if sid:
+                try:
+                    await room.local_participant.unpublish_track(sid)
+                except Exception:
+                    logger.exception("failed to close private check-in track")
+            try:
+                room.local_participant.publish_data(
+                    json.dumps({"type": "session_resumed"}).encode(),
+                    reliable=True,
+                )
+            except Exception:
+                logger.exception("failed to broadcast session_resumed")
+
+    breakout_gate = BreakoutGate(("employee_a", "employee_b"), on_state_changed=on_breakout_state_changed)
+
+    @room.on("data_received")
+    def on_data_received(data: rtc.DataPacket):
+        # Control channel for the breakout gate -- see server.py's
+        # POST /api/room/{code}/checkin|resume, the manual/test-only trigger
+        # documented there. A real facilitator-LLM integration would send
+        # these same two message shapes from wherever it runs.
+        try:
+            msg = json.loads(data.data.decode())
+        except Exception:
+            return
+        if msg.get("type") == "breakout_checkin":
+            target = msg.get("target")
+            if target:
+                breakout_gate.enter_checkin(target)
+        elif msg.get("type") == "breakout_resume":
+            breakout_gate.resume()
 
     @room.on("track_subscribed")
     def on_track_subscribed(track: rtc.Track, publication, participant: rtc.RemoteParticipant):
