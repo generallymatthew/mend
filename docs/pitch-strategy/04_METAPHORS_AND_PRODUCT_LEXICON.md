@@ -11,7 +11,7 @@ Sewing, tailoring, and textile metaphors give Mend a cohesive, craft-grounded vo
 
 ## Intake & Preparation Modules
 
-- **The Spool** (the solo intake caucus) — where a tangled strand is collected, smoothed, and wound into an orderly, tension-free thread before entering the machine.
+- **The Spool** (the solo intake side conversation) — where a tangled strand is collected, smoothed, and wound into an orderly, tension-free thread before entering the machine.
 - **Untangling / Teasing the Knot** (emotion-to-fact de-biasing) — teasing apart tight, snarled threads without snapping them; the intake prompt stripping emotional venting and accusations down to the functional operational blocker.
 - **The Basting Stitch** (the practice rehearsal / mock session) — a temporary, loose stitch used to hold pieces in place for a trial fitting before final sewing; the rehearsal agent where an employee runs a low-stakes mock conversation against an AI counterpart first.
 - **The Pattern** (the "tough talk cheat sheet") — the precise blueprint cut ahead of time to guide the conversation, keeping boundaries and talking points aligned.
@@ -33,7 +33,7 @@ Sewing, tailoring, and textile metaphors give Mend a cohesive, craft-grounded vo
 ## Example: Feature Hierarchy in Marketing Copy
 
 > **Mend: Precision Care for Frayed Teams**
-> - The Spool — unwind raw tension in a private, 1:1 intake caucus.
+> - The Spool — unwind raw tension in a private, 1:1 intake side conversation.
 > - The Basting Stitch — test your framing in a low-stakes practice run before entering the room.
 > - The Tension Gauge — real-time Watcher guardrails that keep dialogue grounded, fair, and safe.
 > - The Dissolving Suture — ephemeral, zero-trace resolution that lets your team re-knit without management oversight or scar tissue.

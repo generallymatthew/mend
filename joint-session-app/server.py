@@ -139,7 +139,7 @@ SYSTEM_PROMPT = load_system_prompt()
 
 KICKOFF_TURN = (
     "(Both employees have just joined the joint session, having already "
-    "completed their private caucuses. Begin the session now: frame what "
+    "completed their private side conversations. Begin the session now: frame what "
     "it's for and manage the room.)"
 )
 

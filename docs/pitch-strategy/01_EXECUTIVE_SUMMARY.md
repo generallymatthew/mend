@@ -22,5 +22,5 @@ Every week, the average U.S. employee loses **2.8 hours** to workplace conflict 
 ## The Core Thesis & Value Proposition
 
 - **Outcomes over surveillance.** True resolution requires radical psychological safety. People only acknowledge blind spots and own mistakes when they know their words can never be weaponized against them.
-- **Autonomous resolution.** Symmetrical turn-taking, solo caucusing, and decoupled agreements let colleagues reach durable alignment without authority intervention.
+- **Autonomous resolution.** Symmetrical turn-taking, solo side conversations, and decoupled agreements let colleagues reach durable alignment without authority intervention.
 - **The dissolving suture.** Ephemeral, in-memory execution guarantees that once healing is achieved, no permanent dossier or career scar tissue remains.

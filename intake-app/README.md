@@ -1,6 +1,6 @@
 # Mend intake prototype (local, text + voice memo)
 
-A local-only prototype of the employee-initiated intake conversation (private processing → decision point → pre-session screen → initial caucus), driven by `../facilitator-intake-system-prompt.md`. Text and voice-memo input, text replies. Single-user, in-memory conversation, nothing persisted to disk or a database, consistent with the "nothing recorded" principle in `../product-spec.html`.
+A local-only prototype of the employee-initiated intake conversation (private processing → decision point → pre-session screen → initial side conversation), driven by `../facilitator-intake-system-prompt.md`. Text and voice-memo input, text replies. Single-user, in-memory conversation, nothing persisted to disk or a database, consistent with the "nothing recorded" principle in `../product-spec.html`.
 
 ## Setup
 
@@ -35,8 +35,8 @@ A call, not a chat app: the avatar, captions, and controls are the main event in
 
 Two buttons above the call tile switch what the session is for, each starting its own fresh conversation (switching mid-conversation asks first, since it discards whatever's there):
 
-- **Talk**: the normal intake caucus, exactly as described throughout this README and `../facilitator-intake-system-prompt.md`.
-- **Practice**: skips the caucus opening and disclosures entirely and goes straight to rehearsal, per that same prompt's "Practicing the conversation (roleplay)" section, which already covers how the facilitator plays the other person. This just puts the choice up front, in the employee's hands, instead of waiting for the facilitator to organically offer it mid-conversation. The facilitator still gathers context first (who, what happened, a concrete example, how they plan to open it) before stepping into character. Whenever it's in character, a badge above the caption reads "In character: playing the other person", tied to the same `roleplay_active` signal the prompt already emits, so it's never ambiguous who you're actually talking to.
+- **Talk**: the normal intake side conversation, exactly as described throughout this README and `../facilitator-intake-system-prompt.md`.
+- **Practice**: skips the side-conversation opening and disclosures entirely and goes straight to rehearsal, per that same prompt's "Practicing the conversation (roleplay)" section, which already covers how the facilitator plays the other person. This just puts the choice up front, in the employee's hands, instead of waiting for the facilitator to organically offer it mid-conversation. The facilitator still gathers context first (who, what happened, a concrete example, how they plan to open it) before stepping into character. Whenever it's in character, a badge above the caption reads "In character: playing the other person", tied to the same `roleplay_active` signal the prompt already emits, so it's never ambiguous who you're actually talking to.
 
 ## The avatar shape, captions, and better voice quality
 

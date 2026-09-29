@@ -4,7 +4,7 @@ Open `Mend Pitch v2.dc.html` in a browser. Keep all files in this folder togethe
 
 - `Mend Pitch v2.dc.html`: the pitch page (layout A/B switch, bottom right)
 - `Mend Workflow Video.dc.html` + `mend-flow.jsx`: the one-minute workflow video
-- `Mend Session Opening.dc.html` + `mend-opening.jsx`: the intake / joint session / caucus video
+- `Mend Session Opening.dc.html` + `mend-opening.jsx`: the intake / joint session / side-conversation video
 - `animations-v3.jsx`: animation engine used by both videos
 - `support.js`: runtime for the .dc.html files
 - `_ds/…/styles.css`: Organic design tokens (the pitch overrides colors at the top of its `<style>` block)

@@ -35,7 +35,7 @@ User Input ──► [Facilitator LLM (Drafts Action/Advice)]
 
 ## Unit Economics & Cost Analysis (100 conflict pairs / 10,000 turns)
 
-- Intake caucus (40 turns) + joint session (20 turns) + decoupled agreement (40 turns) = 100 turns per pair.
+- Intake side conversation (40 turns) + joint session (20 turns) + decoupled agreement (40 turns) = 100 turns per pair.
 - Total LLM turn cost (Facilitator + Watcher): ~$0.0047/turn.
 - Total cost for 100 full pairs: ~$47.00-$60.00 total spend.
 - Gross margin on the software license exceeds 98%.

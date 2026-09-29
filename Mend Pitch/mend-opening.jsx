@@ -85,11 +85,11 @@ function useLines() {
     [C.Heat + 0.2, C.Heat + 2.6, 's', 'The deadline change felt rushed. Kind of careless.', true],
     [C.Heat + 2.8, C.Heat + 4.4, 'p', 'Careless? I was the one saving the account.', true],
     [C.Heat + 4.6, C.Heat + 5.8, 'm', 'Let’s pause here for a moment.', true],
-    [C.Caucus + 0.4, C.Caucus + 2.6, 'm', 'Priya, it’s just us now. Sam can’t hear this. Are you okay?', true],
-    [C.Caucus + 2.8, C.Caucus + 4.4, 'p', 'I’m okay. That word just stung.', true],
-    [C.Caucus + 4.6, C.Caucus + 6.8, 'm', 'That makes sense. How would you like to respond when we’re back?', true],
-    [C.Caucus + 7.0, C.Caucus + 9.2, 'p', 'Tell Sam how it landed, without firing back.', true],
-    [C.Caucus + 9.4, C.Caucus + 10.6, 'm', 'That sounds like a good plan.', true],
+    [C.SideConvo + 0.4, C.SideConvo + 2.6, 'm', 'Priya, it’s just us now. Sam can’t hear this. Are you okay?', true],
+    [C.SideConvo + 2.8, C.SideConvo + 4.4, 'p', 'I’m okay. That word just stung.', true],
+    [C.SideConvo + 4.6, C.SideConvo + 6.8, 'm', 'That makes sense. How would you like to respond when we’re back?', true],
+    [C.SideConvo + 7.0, C.SideConvo + 9.2, 'p', 'Tell Sam how it landed, without firing back.', true],
+    [C.SideConvo + 9.4, C.SideConvo + 10.6, 'm', 'That sounds like a good plan.', true],
     [C.Resume + 0.6, C.Resume + 3.6, 'p', 'Sam, when you said careless, it felt like my work didn’t count.', true],
     [C.Resume + 3.8, C.Resume + 5.4, 's', 'That’s fair. It’s not what I meant.', true],
   ];
@@ -127,8 +127,8 @@ function OCall() {
   const o = interpolate([C.Arrive - 0.4, C.Arrive + 0.2, C.Why - 0.1, C.Why + 0.4, C.Ground - 0.4, C.Ground + 0.1, C.Close - 0.2, C.Close + 0.3], [0, 1, 1, 0, 0, 1, 1, 0], ez)(T);
   const sc = interpolate([C.Why - 0.1, C.Why + 0.4, C.Ground - 0.4, C.Ground + 0.1], [1, 0.94, 0.94, 1], ez)(T);
   const samMood = interpolate([C.Awkward + 1.0, C.Awkward + 2.0, C.Ground + 0.5, C.Ground + 2.5, C.Begin + 1.5, C.Heat + 0.2, C.Heat + 3.0, C.Resume + 3.6, C.Resume + 4.4], [0.6, 0.4, 0.4, 0.75, 0.8, 0.5, 0.3, 0.35, 0.65], ez)(T);
-  const priMood = interpolate([C.Awkward + 1.0, C.Awkward + 2.0, C.Awkward + 3.9, C.Awkward + 4.4, C.Ground + 0.5, C.Ground + 2.5, C.Heat + 2.2, C.Heat + 2.8, C.Caucus + 2.8, C.Caucus + 10, C.Resume + 4.4], [0.6, 0.4, 0.4, 0.5, 0.5, 0.8, 0.75, 0.1, 0.2, 0.5, 0.6], ez)(T);
-  const cv = win(T, C.Caucus + 0.1, C.Resume + 0.2, 0.4);
+  const priMood = interpolate([C.Awkward + 1.0, C.Awkward + 2.0, C.Awkward + 3.9, C.Awkward + 4.4, C.Ground + 0.5, C.Ground + 2.5, C.Heat + 2.2, C.Heat + 2.8, C.SideConvo + 2.8, C.SideConvo + 10, C.Resume + 4.4], [0.6, 0.4, 0.4, 0.5, 0.5, 0.8, 0.75, 0.1, 0.2, 0.5, 0.6], ez)(T);
+  const cv = win(T, C.SideConvo + 0.1, C.Resume + 0.2, 0.4);
   const ts = talkOf(lines, 's', T), tp = talkOf(lines, 'p', T), tm = talkOf(lines, 'm', T);
   let cur = null; for (const l of lines) if (l[4] && T >= l[0] - 0.1 && T < l[1] + 0.35) cur = l;
   const subO = cur ? Math.min(1, (T - cur[0] + 0.1) / 0.2, (cur[1] + 0.35 - T) / 0.2) : 0;
@@ -381,7 +381,7 @@ function OPiece() {
     { at: C.Ground + 0.2, text: 'Ground rules, before anyone speaks.' },
     { at: C.Begin + 0.2, text: 'Then the conversation begins.' },
     { at: C.Heat + 0.2, text: 'Sometimes a comment lands hard.' },
-    { at: C.Caucus + 0.2, text: 'Mend pauses and checks in privately.' },
+    { at: C.SideConvo + 0.2, text: 'Mend pauses and checks in privately.' },
     { at: C.Resume + 0.2, text: 'Then the conversation continues, more carefully.', until: C.Close - 0.1 },
   ];
   return (

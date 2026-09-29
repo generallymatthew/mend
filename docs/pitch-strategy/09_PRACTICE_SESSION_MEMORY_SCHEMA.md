@@ -38,7 +38,7 @@ Serialize only the essential factual and psychological parameters into a lightwe
 | Retained state (~350-500 tokens) | Discarded (zero-trace / ephemeral) |
 |---|---|
 | The north-star objective: the single concrete agreement the user wants out of the meeting | Raw back-and-forth dialogue — every sentence said during previous practice turns |
-| Counterpart pressure model: why the counterpart acts the way they do, to keep the AI roleplayer realistic | Emotional venting & complaints — the messy, raw initial venting from the intake caucus |
+| Counterpart pressure model: why the counterpart acts the way they do, to keep the AI roleplayer realistic | Emotional venting & complaints — the messy, raw initial venting from the intake side conversation |
 | Concession limits: what the user is and isn't willing to trade | Intermediate Watcher logs: audits and draft rejections from earlier practice rounds |
 | Progress delta: 1-2 sentences on the prior session's tactical mistake (e.g. "got defensive on turn 3") | Full audio / screen state: any recording or raw text buffer from prior sessions |
 

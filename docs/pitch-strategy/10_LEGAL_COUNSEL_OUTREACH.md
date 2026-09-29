@@ -8,7 +8,7 @@ Outreach template for finding employment/tech-liability counsel ahead of the use
 
 > Hi [Name/Title],
 >
-> I am the founder of Mend, an early-stage startup developing an autonomous, digital-only dispute facilitator for workplace teams. The platform uses symmetrical turn-taking and a private caucus structure to help coworkers de-escalate day-to-day friction before it reaches HR.
+> I am the founder of Mend, an early-stage startup developing an autonomous, digital-only dispute facilitator for workplace teams. The platform uses symmetrical turn-taking and a private side-conversation structure to help coworkers de-escalate day-to-day friction before it reaches HR.
 >
 > Because our system operates as an informal peer tool with zero persistent conversation storage (volatile in-memory execution), we are seeking targeted, limited-scope legal counsel prior to our user-testing pilot. Specifically, we want to ensure our architecture and user agreements avoid inadvertent liability for our company and the employers deploying it.
 >
@@ -30,7 +30,7 @@ Outreach template for finding employment/tech-liability counsel ahead of the use
 ### 1. Executive summary & product architecture
 
 Mend is an automated conflict facilitation web application. It provides:
-- **Solo intake caucus:** a private space where an employee deconstructs a workplace issue with an AI agent.
+- **Solo intake side conversation:** a private space where an employee deconstructs a workplace issue with an AI agent.
 - **Symmetrical joint room:** a guided digital session enforcing turn-taking and reframing hostile phrasing into operational proposals.
 - **Decoupled agreement:** solutions are accepted or rejected asynchronously in private.
 - **Ephemerality:** transcripts are processed in volatile runtime memory and are not stored in durable databases.

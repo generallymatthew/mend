@@ -155,7 +155,7 @@ SYSTEM_PROMPT = load_system_prompt()
 
 # In-memory conversation state -- a prototype, not a persistence layer.
 conversation: list[dict] = []
-session_mode = "talk"  # "talk" (normal caucus) or "practice" (rehearsal only, see /api/start)
+session_mode = "talk"  # "talk" (normal side conversation) or "practice" (rehearsal only, see /api/start)
 
 
 def strip_signal(reply_text: str) -> tuple[str, str | None]:
@@ -347,7 +347,7 @@ async def start(payload: dict = None):
             kickoff = (
                 "(The employee just opened the app in Practice mode: they want to rehearse a hard "
                 "conversation with you playing the other person, before actually having it for real. "
-                "This is not the standard intake caucus -- skip the phase-by-phase intake flow "
+                "This is not the standard intake side conversation -- skip the phase-by-phase intake flow "
                 "entirely. Begin now by briefly asking who they need to talk to and what the "
                 "situation is, just enough for you to play a realistic version of that person, then "
                 "move into the rehearsal itself per your own instructions on practicing the "
