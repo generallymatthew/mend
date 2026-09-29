@@ -25,6 +25,7 @@
   .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
   .msg.employee{background:var(--accent); color:#fff; align-self:flex-end;}
   .msg.transcript{font-style:italic; opacity:.7;}
+  .msg.pending{opacity:.45;} /* live partial transcript, not yet the finalized turn -- same bubble, corrected in place once real */
   .composer{display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--border); padding-top:12px;}
   textarea{flex:1; resize:none; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; background:var(--card); color:var(--ink);}
   button{border:1.5px solid var(--border); background:var(--card); color:var(--ink); border-radius:10px; padding:10px 14px; font:inherit; font-weight:600; cursor:pointer;}
@@ -182,6 +183,26 @@ function ensureAudioGraph() {
   } catch (e) {} // Web Audio unavailable; avatar just stays idle, audio still plays normally
 }
 
+// Live partial transcription: while the employee is still talking, the raw
+// PCM samples of the turn-so-far are periodically re-sent to Whisper and the
+// result is written into the SAME transcript-panel bubble the final turn
+// will end up in (see startRecordingTurn/onstop) -- one place, corrected in
+// place, never a separate live indicator plus a final message shown after.
+// Same ScriptProcessorNode tap as the VAD/level meter, just also collecting
+// raw samples rather than only reading levels off an analyser. faster-
+// whisper resamples whatever rate it's given (same as the final /api/voice
+// call, which already hands it raw browser-native-rate webm) -- no client-
+// side resampling needed, just a WAV header.
+let micProcessor = null;
+let pcmChunks = [];
+let pcmSampleRate = 16000;
+let partialTurnId = 0;
+let partialInFlight = false;
+let partialSentSamples = 0;
+let pendingTranscriptEl = null;
+const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny sliver of new audio
+const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
+
 function startMicAnalysis(stream) {
   try {
     micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -190,10 +211,26 @@ function startMicAnalysis(stream) {
     micAnalyser.fftSize = 256;
     micData = new Uint8Array(micAnalyser.frequencyBinCount);
     source.connect(micAnalyser); // not connected to destination -- we don't want to echo the mic back
+
+    pcmSampleRate = micAudioCtx.sampleRate;
+    micProcessor = micAudioCtx.createScriptProcessor(4096, 1, 1);
+    micProcessor.onaudioprocess = (e) => {
+      pcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+    };
+    source.connect(micProcessor);
+    micProcessor.connect(micAudioCtx.destination); // some browsers only fire onaudioprocess once connected to a destination; silent since we never write to outputBuffer
   } catch (e) {}
 }
 
+function resetPartialCapture() {
+  pcmChunks = [];
+  partialSentSamples = 0;
+  partialTurnId++; // invalidates any in-flight partial response from the turn just ended
+}
+
 function stopMicAnalysis() {
+  if (micProcessor) micProcessor.disconnect();
+  micProcessor = null;
   if (micAudioCtx) micAudioCtx.close().catch(() => {});
   micAudioCtx = null;
   micAnalyser = null;
@@ -208,6 +245,63 @@ function rmsLevel(analyserNode, dataArr) {
     sumSq += v * v;
   }
   return Math.min(1, Math.sqrt(sumSq / dataArr.length) * 4);
+}
+
+function encodeWavBlob(samples, sampleRate) {
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buf);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); // byte rate (16-bit mono)
+  view.setUint16(32, 2, true); // block align
+  view.setUint16(34, 16, true); // bits per sample
+  writeStr(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Blob([buf], {type: 'audio/wav'});
+}
+
+function concatFloat32(chunks) {
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const out = new Float32Array(total);
+  let offset = 0;
+  for (const c of chunks) { out.set(c, offset); offset += c.length; }
+  return out;
+}
+
+async function maybeSendPartial(now) {
+  if (partialInFlight || !pendingTranscriptEl) return;
+  const totalSamples = pcmChunks.reduce((n, c) => n + c.length, 0);
+  if (totalSamples < pcmSampleRate * PARTIAL_MIN_TOTAL_SEC) return;
+  if (totalSamples - partialSentSamples < pcmSampleRate * PARTIAL_MIN_NEW_SAMPLES_SEC) return;
+  const turnId = partialTurnId;
+  partialInFlight = true;
+  partialSentSamples = totalSamples;
+  try {
+    const wav = encodeWavBlob(concatFloat32(pcmChunks), pcmSampleRate);
+    const form = new FormData();
+    form.append('file', wav, 'partial.wav');
+    const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
+    const data = await res.json();
+    if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
+      pendingTranscriptEl.textContent = '"' + data.partial + '"';
+      thread.scrollTop = thread.scrollHeight;
+    }
+  } catch (e) {
+    // best-effort preview only -- a failed partial never interrupts the turn
+  } finally {
+    partialInFlight = false;
+  }
 }
 
 // Geometry and motion below are a direct port of target()/apply() from
@@ -351,6 +445,7 @@ function animateAvatar(now) {
     const level = rmsLevel(micAnalyser, micData);
     micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
     if (liveMode) checkVad(level, t);
+    maybeSendPartial(t);
   }
   updateCaption();
 }
@@ -578,12 +673,14 @@ async function startRecordingTurn() {
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
+    partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
     recordBtn.classList.remove('recording');
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
     liveBtn.classList.remove('recording');
     const blob = new Blob(chunks, {type: 'audio/webm'});
-    addMessage('[voice memo]', 'employee transcript');
+    const bubble = pendingTranscriptEl;
+    pendingTranscriptEl = null;
     setBusy(true);
     avatarState = 'thinking';
     statusEl.textContent = 'transcribing...';
@@ -595,9 +692,15 @@ async function startRecordingTurn() {
       if (data.error) {
         statusEl.textContent = data.error;
         avatarState = 'idle';
+        if (bubble) bubble.remove(); // nothing usable was actually said -- don't leave a stale live-preview bubble behind
         if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
       } else {
-        if (data.transcript) addMessage('"' + data.transcript + '"', 'employee transcript');
+        if (data.transcript && bubble) {
+          bubble.textContent = '"' + data.transcript + '"';
+          bubble.classList.remove('pending');
+        } else if (bubble) {
+          bubble.remove();
+        }
         if (data.reply) addMessage(data.reply, 'facilitator');
         handleSignal(data.signal);
         speakReply(data.reply);
@@ -605,6 +708,7 @@ async function startRecordingTurn() {
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
       avatarState = 'idle';
+      if (bubble) bubble.remove();
       if (liveMode) startRecordingTurnSafe();
     } finally {
       setBusy(false);
@@ -613,6 +717,8 @@ async function startRecordingTurn() {
   mediaRecorder.start();
   avatarState = 'listening';
   startMicAnalysis(stream);
+  resetPartialCapture();
+  pendingTranscriptEl = addMessage('…', 'employee transcript pending');
   startVadCalibration(performance.now());
   recordBtn.classList.add('recording');
   micIndicator.classList.add('active');
