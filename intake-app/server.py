@@ -149,6 +149,12 @@ WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "tiny.en")
 # tradeoff above, this one's free, no accuracy cost, just using the hardware
 # that's actually available.
 WHISPER_CPU_THREADS = int(os.environ.get("WHISPER_CPU_THREADS", str(os.cpu_count() or 4)))
+# faster-whisper's own default (beam_size=5) explores 5 hypotheses per step;
+# tiny.en is small enough that greedy decoding (beam_size=1) is a real
+# turnaround win -- measured 2.9s avg vs 2.0s avg (beam=5 vs beam=1) on the
+# same ~9.5s clip, same transcript both times in that test. Free to override
+# if a harder clip shows quality issues at beam=1.
+WHISPER_BEAM_SIZE = int(os.environ.get("WHISPER_BEAM_SIZE", "1"))
 
 
 def get_whisper():
@@ -411,7 +417,7 @@ async def post_voice(file: UploadFile):
     with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:
         tmp.write(await file.read())
         tmp.flush()
-        segments, _ = get_whisper().transcribe(tmp.name)
+        segments, _ = get_whisper().transcribe(tmp.name, beam_size=WHISPER_BEAM_SIZE)
         transcript = " ".join(seg.text.strip() for seg in segments).strip()
     if not transcript:
         return JSONResponse({"error": "couldn't transcribe audio"}, status_code=400)

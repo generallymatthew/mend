@@ -83,6 +83,10 @@ _whisper_model = None
 # for the actual numbers this is based on.
 WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "tiny.en")
 WHISPER_CPU_THREADS = int(os.environ.get("WHISPER_CPU_THREADS", str(os.cpu_count() or 4)))
+# Same beam-size fix as ../intake-app/server.py: greedy decoding (beam_size=1)
+# measured ~30% faster than faster-whisper's own default (beam_size=5) on
+# tiny.en, same transcript in that test -- see intake-app/server.py's comment.
+WHISPER_BEAM_SIZE = int(os.environ.get("WHISPER_BEAM_SIZE", "1"))
 
 
 def get_whisper():
@@ -236,7 +240,7 @@ async def post_voice(file: UploadFile):
     with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:
         tmp.write(await file.read())
         tmp.flush()
-        segments, _ = get_whisper().transcribe(tmp.name)
+        segments, _ = get_whisper().transcribe(tmp.name, beam_size=WHISPER_BEAM_SIZE)
         transcript = " ".join(seg.text.strip() for seg in segments).strip()
     if not transcript:
         return JSONResponse({"error": "couldn't transcribe audio"}, status_code=400)
