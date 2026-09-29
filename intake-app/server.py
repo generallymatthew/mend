@@ -412,6 +412,22 @@ async def post_message(payload: dict):
     return facilitator_reply()
 
 
+@app.post("/api/voice/partial")
+async def post_voice_partial(file: UploadFile):
+    """Live preview only, called repeatedly while the employee is still
+    talking (see static/index.html's partial-capture loop) -- re-transcribes
+    whatever's been said so far in the current turn so the UI can show real
+    words appearing during speech, not just after it stops. Never touches
+    `conversation`; a bad or empty result here just means no preview update,
+    never an error the employee sees."""
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
+        tmp.write(await file.read())
+        tmp.flush()
+        segments, _ = get_whisper().transcribe(tmp.name, beam_size=WHISPER_BEAM_SIZE)
+        transcript = " ".join(seg.text.strip() for seg in segments).strip()
+    return {"partial": transcript}
+
+
 @app.post("/api/voice")
 async def post_voice(file: UploadFile):
     with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:

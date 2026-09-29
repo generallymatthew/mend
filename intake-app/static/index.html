@@ -56,9 +56,9 @@
      The dot actually lights up on real mic input above a small threshold
      (see updateMicIndicator()), not just on "recording" state, so it's
      proof sound is being picked up, not just that the button was pressed. */
-  .mic-indicator{display:none; align-items:center; gap:7px; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+  .mic-indicator{display:none; align-items:flex-start; gap:7px; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
   .mic-indicator.active{display:flex;}
-  .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
+  .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear; flex-shrink:0; margin-top:4px;}
   .mic-indicator-dot.lit{background:#8C3B2E; transform:scale(1.15);}
 
   /* Zoom-call style layout: the avatar + captions + controls are the main
@@ -108,7 +108,7 @@
           </div>
           <div class="mic-indicator" id="micIndicator">
             <span class="mic-indicator-dot" id="micIndicatorDot"></span>
-            <span>Listening&hellip;</span>
+            <span id="micIndicatorLabel">Listening&hellip;</span>
           </div>
           <div class="status" id="status"></div>
         </div>
@@ -151,6 +151,7 @@ const recordBtn = document.getElementById('recordBtn');
 const statusEl = document.getElementById('status');
 const micIndicator = document.getElementById('micIndicator');
 const micIndicatorDot = document.getElementById('micIndicatorDot');
+const micIndicatorLabel = document.getElementById('micIndicatorLabel');
 
 const audioEl = new Audio();
 
@@ -182,6 +183,23 @@ function ensureAudioGraph() {
   } catch (e) {} // Web Audio unavailable; avatar just stays idle, audio still plays normally
 }
 
+// Live partial transcription: while the employee is still talking, the raw
+// PCM samples of the turn-so-far are periodically re-sent to Whisper so the
+// mic indicator can show real words appearing during speech, not just after
+// the recording stops. Same ScriptProcessorNode tap as the VAD/level meter,
+// just also collecting the raw samples rather than only reading levels off
+// an analyser. faster-whisper resamples whatever rate it's given (same as
+// the final /api/voice call, which already hands it raw browser-native-rate
+// webm) -- no client-side resampling needed, just a WAV header.
+let micProcessor = null;
+let pcmChunks = [];
+let pcmSampleRate = 16000;
+let partialTurnId = 0;
+let partialInFlight = false;
+let partialSentSamples = 0;
+const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny sliver of new audio
+const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
+
 function startMicAnalysis(stream) {
   try {
     micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -190,10 +208,27 @@ function startMicAnalysis(stream) {
     micAnalyser.fftSize = 256;
     micData = new Uint8Array(micAnalyser.frequencyBinCount);
     source.connect(micAnalyser); // not connected to destination -- we don't want to echo the mic back
+
+    pcmSampleRate = micAudioCtx.sampleRate;
+    micProcessor = micAudioCtx.createScriptProcessor(4096, 1, 1);
+    micProcessor.onaudioprocess = (e) => {
+      pcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+    };
+    source.connect(micProcessor);
+    micProcessor.connect(micAudioCtx.destination); // required by some browsers to actually pull audio through; silent, see gain-less wiring below
   } catch (e) {}
 }
 
+function resetPartialCapture() {
+  pcmChunks = [];
+  partialSentSamples = 0;
+  partialTurnId++; // invalidates any in-flight partial response from the turn just ended
+  micIndicatorLabel.textContent = 'Listening…';
+}
+
 function stopMicAnalysis() {
+  if (micProcessor) micProcessor.disconnect();
+  micProcessor = null;
   if (micAudioCtx) micAudioCtx.close().catch(() => {});
   micAudioCtx = null;
   micAnalyser = null;
@@ -208,6 +243,60 @@ function rmsLevel(analyserNode, dataArr) {
     sumSq += v * v;
   }
   return Math.min(1, Math.sqrt(sumSq / dataArr.length) * 4);
+}
+
+function encodeWavBlob(samples, sampleRate) {
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buf);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); // byte rate (16-bit mono)
+  view.setUint16(32, 2, true); // block align
+  view.setUint16(34, 16, true); // bits per sample
+  writeStr(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Blob([buf], {type: 'audio/wav'});
+}
+
+function concatFloat32(chunks) {
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const out = new Float32Array(total);
+  let offset = 0;
+  for (const c of chunks) { out.set(c, offset); offset += c.length; }
+  return out;
+}
+
+async function maybeSendPartial(now) {
+  if (partialInFlight) return;
+  const totalSamples = pcmChunks.reduce((n, c) => n + c.length, 0);
+  if (totalSamples < pcmSampleRate * PARTIAL_MIN_TOTAL_SEC) return;
+  if (totalSamples - partialSentSamples < pcmSampleRate * PARTIAL_MIN_NEW_SAMPLES_SEC) return;
+  const turnId = partialTurnId;
+  partialInFlight = true;
+  partialSentSamples = totalSamples;
+  try {
+    const wav = encodeWavBlob(concatFloat32(pcmChunks), pcmSampleRate);
+    const form = new FormData();
+    form.append('file', wav, 'partial.wav');
+    const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
+    const data = await res.json();
+    if (turnId === partialTurnId && data.partial) micIndicatorLabel.textContent = data.partial;
+  } catch (e) {
+    // best-effort preview only -- a failed partial never interrupts the turn
+  } finally {
+    partialInFlight = false;
+  }
 }
 
 // Geometry and motion below are a direct port of target()/apply() from
@@ -351,6 +440,7 @@ function animateAvatar(now) {
     const level = rmsLevel(micAnalyser, micData);
     micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
     if (liveMode) checkVad(level, t);
+    maybeSendPartial(t);
   }
   updateCaption();
 }
@@ -613,6 +703,7 @@ async function startRecordingTurn() {
   mediaRecorder.start();
   avatarState = 'listening';
   startMicAnalysis(stream);
+  resetPartialCapture();
   startVadCalibration(performance.now());
   recordBtn.classList.add('recording');
   micIndicator.classList.add('active');
