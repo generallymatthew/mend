@@ -54,6 +54,28 @@ VIDEO_ENABLED = bool(TAVUS_API_KEY and TAVUS_PAL_ID and LLM_SHIM_SECRET)
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 
+# --- Rate limiting --------------------------------------------------------
+# A free/public pilot with no request limit on endpoints that call a paid
+# LLM API (or Tavus video minutes) is an open invitation to run up the bill.
+# Simple in-memory fixed-window limiter per client IP -- no new dependency,
+# consistent with every other app's in-memory-only state.
+RATE_LIMIT_MAX = int(os.environ.get("RATE_LIMIT_MAX", "20"))
+RATE_LIMIT_WINDOW = int(os.environ.get("RATE_LIMIT_WINDOW", "60"))
+_rate_hits: dict[str, list[float]] = {}
+
+
+@app.middleware("http")
+async def rate_limit(request: Request, call_next):
+    if request.url.path.startswith("/api/") or request.url.path.startswith("/chat/"):
+        ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        hits = [t for t in _rate_hits.get(ip, []) if now - t < RATE_LIMIT_WINDOW]
+        if len(hits) >= RATE_LIMIT_MAX:
+            return JSONResponse({"error": "too many requests -- slow down and try again shortly"}, status_code=429)
+        hits.append(now)
+        _rate_hits[ip] = hits
+    return await call_next(request)
+
 
 def synthesize_speech_openai(text: str) -> str | None:
     """Speaks `text` with OpenAI's TTS, saves the returned mp3, and returns

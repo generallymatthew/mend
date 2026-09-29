@@ -111,11 +111,20 @@
 
   <div class="banner" id="banner" hidden>
     <span>Facilitator says you're ready for a joint session.</span>
-    <a href="http://localhost:8421/" target="_blank" rel="noopener"><button>Continue &rarr;</button></a>
+    <a href="/joint/" target="_blank" rel="noopener"><button>Continue &rarr;</button></a>
   </div>
 </div>
 
 <script>
+// Path-relative, not hardcoded absolute: this page is served at "/"
+// standalone (direct port) but at "/intake/" behind the local Caddy proxy
+// (../Caddyfile). fetch('/api/...') and a server-returned "/api/audio/..."
+// URL are both absolute paths that would otherwise resolve against the
+// proxy's root instead of this app -- same class of bug the WebSocket URL
+// in ../joint-session-app/static/index.html had.
+const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
+function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
+
 const thread = document.getElementById('thread');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
@@ -324,7 +333,7 @@ function playReplyAudio(url, text) {
   if (!url) { avatarState = 'idle'; return; }
   ensureAudioGraph();
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-  audioEl.src = url;
+  audioEl.src = apiPath(url);
   audioEl.play().catch(() => {}); // autoplay can be blocked before first user gesture; harmless if so
 }
 
@@ -364,7 +373,7 @@ async function sendText() {
   setBusy(true);
   avatarState = 'thinking';
   try {
-    const res = await fetch('/api/message', {
+    const res = await fetch(apiPath('/api/message'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({text}),
@@ -492,7 +501,7 @@ async function startRecordingTurn() {
     try {
       const form = new FormData();
       form.append('file', blob, 'memo.webm');
-      const res = await fetch('/api/voice', {method: 'POST', body: form});
+      const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
       const data = await res.json();
       if (data.error) {
         statusEl.textContent = data.error;
@@ -572,7 +581,7 @@ let videoSignalTimer = null;
 async function startVideoCall() {
   videoStartBtn.disabled = true;
   try {
-    const res = await fetch('/api/video/start', {method: 'POST'});
+    const res = await fetch(apiPath('/api/video/start'), {method: 'POST'});
     const data = await res.json();
     if (data.error) {
       statusEl.textContent = data.error;
@@ -582,7 +591,7 @@ async function startVideoCall() {
     textMode.hidden = true;
     videoMode.hidden = false;
     videoSignalTimer = setInterval(async () => {
-      const r = await fetch('/api/video/signal');
+      const r = await fetch(apiPath('/api/video/signal'));
       const d = await r.json();
       handleSignal(d.signal);
     }, 3000);
@@ -593,7 +602,7 @@ async function startVideoCall() {
 
 async function endVideoCall() {
   clearInterval(videoSignalTimer);
-  await fetch('/api/video/end', {method: 'POST'});
+  await fetch(apiPath('/api/video/end'), {method: 'POST'});
   videoFrame.src = 'about:blank';
   videoMode.hidden = true;
   textMode.hidden = false;
@@ -604,7 +613,7 @@ videoEndBtn.addEventListener('click', endVideoCall);
 
 (async function checkVideoEnabled() {
   try {
-    const res = await fetch('/api/video/enabled');
+    const res = await fetch(apiPath('/api/video/enabled'));
     const data = await res.json();
     videoToggle.hidden = !data.enabled;
   } catch (e) {}
@@ -616,7 +625,7 @@ async function start() {
   setBusy(true);
   avatarState = 'thinking';
   try {
-    const res = await fetch('/api/start', {
+    const res = await fetch(apiPath('/api/start'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({mode: currentMode}),
@@ -642,7 +651,7 @@ async function resetAndStart() {
   avatarState = 'idle';
   resetBtn.disabled = true;
   try {
-    await fetch('/api/reset', {method: 'POST'});
+    await fetch(apiPath('/api/reset'), {method: 'POST'});
     thread.innerHTML = '';
     banner.hidden = true;
     await start();

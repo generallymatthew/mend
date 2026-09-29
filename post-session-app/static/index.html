@@ -76,6 +76,14 @@
 </div>
 
 <script>
+// Path-relative, not hardcoded absolute: this page is served at "/"
+// standalone (direct port) but at "/post/" behind the local Caddy proxy
+// (../Caddyfile). fetch('/api/...') and a server-returned "/api/audio/..."
+// URL are both absolute paths that would otherwise resolve against the
+// proxy's root instead of this app.
+const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
+function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
+
 const setupEl = document.getElementById('setup');
 const composerEl = document.getElementById('composer');
 const signalEl = document.getElementById('signal');
@@ -97,7 +105,7 @@ function addMessage(text, cls) {
 
 function playReplyAudio(url) {
   if (!url) return;
-  audioEl.src = url;
+  audioEl.src = apiPath(url);
   audioEl.play().catch(() => {});
 }
 
@@ -117,10 +125,17 @@ function setBusy(busy) {
 }
 
 (function prefillFromQuery() {
-  const category = new URLSearchParams(location.search).get('category');
-  if (!category) return;
+  const params = new URLSearchParams(location.search);
+  const escalation = params.get('escalation');
+  const category = params.get('category');
+
+  const escalationSelect = document.getElementById('escalation');
+  if (escalation && [...escalationSelect.options].some(o => o.value === escalation)) {
+    escalationSelect.value = escalation;
+  }
+
   const categorySelect = document.getElementById('category');
-  if ([...categorySelect.options].some(o => o.value === category)) {
+  if (category && [...categorySelect.options].some(o => o.value === category)) {
     categorySelect.value = category;
   }
 })();
@@ -135,7 +150,7 @@ startBtn.addEventListener('click', async () => {
   signalEl.hidden = false;
   setBusy(true);
   try {
-    const res = await fetch('/api/start', {
+    const res = await fetch(apiPath('/api/start'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({escalation, category, context}),
@@ -156,7 +171,7 @@ async function sendText() {
   addMessage(text, 'employee');
   setBusy(true);
   try {
-    const res = await fetch('/api/message', {
+    const res = await fetch(apiPath('/api/message'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({text}),
@@ -199,7 +214,7 @@ async function toggleRecording() {
     try {
       const form = new FormData();
       form.append('file', blob, 'memo.webm');
-      const res = await fetch('/api/voice', {method: 'POST', body: form});
+      const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
       const data = await res.json();
       if (data.error) {
         statusEl.textContent = data.error;
