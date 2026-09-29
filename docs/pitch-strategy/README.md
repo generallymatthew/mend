@@ -14,6 +14,7 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 | [07_CULTURAL_POSITIONING_AND_ADOPTION.md](07_CULTURAL_POSITIONING_AND_ADOPTION.md) | Framing Mend usage as professional maturity, the cost-of-inaction case, onboarding/invite copy |
 | [08_PIP_NAVIGATOR_FEATURE.md](08_PIP_NAVIGATOR_FEATURE.md) | Feature concept for navigating a Performance Improvement Plan |
 | [09_PRACTICE_SESSION_MEMORY_SCHEMA.md](09_PRACTICE_SESSION_MEMORY_SCHEMA.md) | Lightweight client-side schema so repeated practice sessions don't need full transcripts |
+| [10_LEGAL_COUNSEL_OUTREACH.md](10_LEGAL_COUNSEL_OUTREACH.md) | Outreach email + scoping memo template for finding employment/tech-liability counsel pre-pilot |
 
 ## Status
 
