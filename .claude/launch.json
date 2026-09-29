@@ -18,6 +18,12 @@
       "runtimeExecutable": "post-session-app/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--reload", "--port", "8422", "--app-dir", "post-session-app"],
       "port": 8422
+    },
+    {
+      "name": "mend-joint-session-audio",
+      "runtimeExecutable": "joint-session-audio/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--reload", "--port", "8424", "--app-dir", "joint-session-audio"],
+      "port": 8424
     }
   ]
 }

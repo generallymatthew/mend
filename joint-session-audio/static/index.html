@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mend joint-session-audio (debug harness)</title>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#1B2B2A; --ink-soft:#3C4C49; --paper:#F2F3EE; --card:#FFFFFF;
+    --accent:#3D6B62; --accent-soft:#E6EDE9; --border:#DADFD9;
+    --a:#3D6B62; --b:#8C5B3D;
+  }
+  *{box-sizing:border-box}
+  /* .stage{display:flex} below would otherwise beat the UA [hidden]
+     stylesheet rule (author styles always win over UA styles regardless of
+     specificity) -- without this, the stage rendered before consent was
+     even chosen. */
+  [hidden]{display:none !important;}
+  body { font-family: -apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;
+         background: var(--paper); color: var(--ink); max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  #log { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap;
+         background: #111; color: #0f0; padding: 12px; height: 220px; overflow-y: auto; margin-top: 16px; }
+  .cut { color: #f55; }
+  #status { font-weight: bold; }
+
+  /* Same .tile/.avatar shapes as ../joint-session-app/static/index.html --
+     small intentional duplication, the two apps don't share a static asset
+     root. See the plan's "Client UI" section for why this, not
+     intake-app's animated facilitator-mood canvas avatar, is the right
+     placeholder for "this employee's camera is off." */
+  .stage{display:flex; gap:10px; margin:16px 0;}
+  .tile{flex:1; min-width:0; background:var(--card); border:1px solid var(--border); border-radius:12px;
+        padding:12px 8px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .tile .avatar{width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+                font-weight:700; font-size:22px; color:#fff; flex:none;}
+  .tile.a .avatar{background:var(--a);}
+  .tile.b .avatar{background:var(--b);}
+  .tile video{width:100%; aspect-ratio:1; border-radius:12px; object-fit:cover; background:#000;}
+  .tile .name{font-size:11.5px; font-weight:600;}
+
+  #consent { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  #consent button{ display:block; width:100%; margin:8px 0; padding:10px; border-radius:8px;
+                    border:1px solid var(--border); background:var(--card); font-size:14px; cursor:pointer; }
+  #consent button.primary{ background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  #toast{ display:none; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px;
+          padding:10px 14px; margin:10px 0; font-size:13.5px; }
+</style>
+</head>
+<body>
+<h1>joint-session-audio debug harness</h1>
+<p>Not a real product UI -- proves the delay-buffer mechanism and the video-parity
+mechanism only. Real UX lives in <code>../joint-session-app/</code>'s design once
+this is integrated.</p>
+
+<div id="consent">
+  <p>If you turn your camera on, the other employee will be able to see you too.
+  If either of you turns it off during the session, you'll both switch to voice + avatar.</p>
+  <button class="primary" id="useCameraBtn">Use my camera</button>
+  <button id="avatarOnlyBtn">Voice &amp; avatar only</button>
+</div>
+
+<div id="toast"></div>
+<p id="status" hidden>connecting...</p>
+<div class="stage" id="stage" hidden>
+  <div class="tile a" id="tileSelf">
+    <video id="videoSelf" autoplay muted playsinline hidden></video>
+    <div class="avatar" id="avatarSelf">?</div>
+    <div class="name">You</div>
+  </div>
+  <div class="tile b" id="tileOther">
+    <video id="videoOther" autoplay playsinline hidden></video>
+    <div class="avatar" id="avatarOther">?</div>
+    <div class="name">Other employee</div>
+  </div>
+</div>
+<div id="log"></div>
+<script>
+const params = new URLSearchParams(location.search);
+const code = params.get("code") || "test1";
+const role = params.get("role") || "a";
+const statusEl = document.getElementById("status");
+const logEl = document.getElementById("log");
+const consentEl = document.getElementById("consent");
+const stageEl = document.getElementById("stage");
+const toastEl = document.getElementById("toast");
+const videoSelf = document.getElementById("videoSelf");
+const videoOther = document.getElementById("videoOther");
+const avatarSelf = document.getElementById("avatarSelf");
+const avatarOther = document.getElementById("avatarOther");
+
+avatarSelf.textContent = role.toUpperCase();
+avatarOther.textContent = role === "a" ? "B" : "A";
+
+function log(line, cls) {
+  const div = document.createElement("div");
+  if (cls) div.className = cls;
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${line}`;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+let toastTimer = null;
+function showToast(text) {
+  toastEl.textContent = text;
+  toastEl.style.display = "block";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 4000);
+}
+function hideToast() {
+  toastEl.style.display = "none";
+}
+
+let currentMode = null; // set on first video_mode message
+let otherVideoPublication = null;
+
+function applyVideoMode(mode) {
+  const wasActive = currentMode === "video_active";
+  const isTransitionToAvatar = wasActive && mode === "avatar_audio_only";
+  currentMode = mode;
+
+  const active = mode === "video_active";
+  // Both tiles fall back together -- nobody, including yourself, sees an
+  // asymmetric view of the room once parity breaks.
+  videoSelf.hidden = !active;
+  avatarSelf.hidden = active;
+  videoOther.hidden = !active;
+  avatarOther.hidden = active;
+
+  if (otherVideoPublication) {
+    otherVideoPublication.setSubscribed(active);
+  }
+
+  if (isTransitionToAvatar) {
+    showToast("Session switched to Voice & Avatar mode.");
+  }
+  log(`video_mode -> ${mode}`);
+}
+
+async function main() {
+  const videoConsent = await new Promise((resolve) => {
+    document.getElementById("useCameraBtn").onclick = () => resolve(true);
+    document.getElementById("avatarOnlyBtn").onclick = () => resolve(false);
+  });
+  consentEl.hidden = true;
+  statusEl.hidden = false;
+  stageEl.hidden = false;
+
+  const cfgRes = await fetch("/api/config");
+  const { livekit_url } = await cfgRes.json();
+  const tokRes = await fetch(
+    `/api/token?code=${encodeURIComponent(code)}&role=${encodeURIComponent(role)}&video_consent=${videoConsent}`
+  );
+  if (!tokRes.ok) {
+    statusEl.textContent = `token error: ${await tokRes.text()}`;
+    return;
+  }
+  const { token, room: roomName, identity } = await tokRes.json();
+  log(`joining ${roomName} as ${identity} (video_consent=${videoConsent})`);
+
+  const room = new LivekitClient.Room({ autoSubscribe: false });
+
+  room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+    log(`subscribed: ${track.kind} track from ${participant.identity} (${publication.trackSid})`);
+    if (track.kind === "audio") {
+      track.attach(); // bridge-republished audio; no visible element needed
+    } else if (track.kind === "video") {
+      track.attach(videoOther);
+    }
+  });
+
+  room.on(LivekitClient.RoomEvent.TrackPublished, (publication, participant) => {
+    if (publication.kind === "video") {
+      otherVideoPublication = publication;
+      if (currentMode === "video_active") publication.setSubscribed(true);
+    }
+  });
+
+  room.on(LivekitClient.RoomEvent.DataReceived, (payload) => {
+    try {
+      const msg = JSON.parse(new TextDecoder().decode(payload));
+      if (msg.type === "video_mode") applyVideoMode(msg.mode);
+    } catch (err) {
+      log(`bad data message: ${err}`, "cut");
+    }
+  });
+
+  room.on(LivekitClient.RoomEvent.Disconnected, () => {
+    statusEl.textContent = "disconnected";
+  });
+
+  await room.connect(livekit_url, token);
+  statusEl.textContent = `connected as ${identity} in ${roomName}`;
+
+  await room.localParticipant.setMicrophoneEnabled(true);
+  log("mic published");
+
+  if (videoConsent) {
+    await room.localParticipant.setCameraEnabled(true);
+    const pub = room.localParticipant.videoTrackPublications.values().next().value;
+    if (pub && pub.track) pub.track.attach(videoSelf);
+    log("camera published");
+  }
+}
+
+main().catch((err) => {
+  statusEl.hidden = false;
+  statusEl.textContent = "error";
+  log(String(err), "cut");
+  console.error(err);
+});
+</script>
+</body>
+</html>
