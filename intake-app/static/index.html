@@ -350,6 +350,30 @@ function playReplyAudio(url, text) {
   audioEl.play().catch(() => {}); // autoplay can be blocked before first user gesture; harmless if so
 }
 
+// Reply text now arrives without audio (see server.py's facilitator_reply
+// docstring: TTS alone measured ~12-14s, previously bundled into one
+// blocking request with a misleading "transcribing..."/"responding..."
+// label the whole time). This fetches audio in a second round trip, not
+// awaited by callers, so the input re-enables as soon as text arrives
+// instead of waiting on voice too.
+async function speakReply(text) {
+  if (!text) return;
+  statusEl.textContent = 'generating voice...';
+  let audioUrl = null;
+  try {
+    const res = await fetch(apiPath('/api/speak'), {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text}),
+    });
+    const data = await res.json();
+    audioUrl = data.audio_url || null;
+  } catch (e) {
+    // no audio -- playReplyAudio(null, ...) below falls back to text-only
+  }
+  if (statusEl.textContent === 'generating voice...') statusEl.textContent = '';
+  playReplyAudio(audioUrl, text);
+}
+
 function addMessage(text, cls) {
   const div = document.createElement('div');
   div.className = 'msg ' + cls;
@@ -393,8 +417,8 @@ async function sendText() {
     });
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
-    playReplyAudio(data.audio_url, data.reply);
     handleSignal(data.signal);
+    speakReply(data.reply);
   } catch (e) {
     statusEl.textContent = 'error: ' + e.message;
     avatarState = 'idle';
@@ -523,8 +547,8 @@ async function startRecordingTurn() {
       } else {
         if (data.transcript) addMessage('"' + data.transcript + '"', 'employee transcript');
         if (data.reply) addMessage(data.reply, 'facilitator');
-        playReplyAudio(data.audio_url, data.reply);
         handleSignal(data.signal);
+        speakReply(data.reply);
       }
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
@@ -645,8 +669,8 @@ async function start() {
     });
     const data = await res.json();
     if (data.reply) addMessage(data.reply, 'facilitator');
-    playReplyAudio(data.audio_url, data.reply);
     handleSignal(data.signal);
+    speakReply(data.reply);
   } finally {
     setBusy(false);
   }

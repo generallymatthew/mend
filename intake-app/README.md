@@ -62,10 +62,13 @@ The auto-stop threshold (`VAD_THRESHOLD` in `static/index.html`, currently `0.06
 
 ## Why voice used to feel stuck on "transcribing..."
 
-Two real fixes, not just tuning:
+Several real fixes, not just tuning:
 
 - `faster-whisper`'s model used to load (and on first run, download from Hugging Face) lazily, on the *first* voice message of a session. That download/load is genuinely slow, and it was landing on whatever turn happened to be first, live mode included, not on server startup where it belongs. It's now loaded eagerly in a startup hook, so `uvicorn` takes longer to report "Application startup complete" but every actual voice message afterward is fast.
-- The default model dropped from `small.en` to `base.en`, a real speed-for-accuracy trade worth knowing about. Override with `WHISPER_MODEL` in `.env` (e.g. `small.en` or `medium.en` for more accuracy and a slower turnaround, `tiny.en` for the fastest but least accurate option).
+- The default model dropped from `small.en` to `base.en` to `tiny.en` over time, a real speed-for-accuracy trade worth knowing about at each step. Override with `WHISPER_MODEL` in `.env` (e.g. `base.en`, `small.en`, or `medium.en` for more accuracy and a slower turnaround).
+- `faster-whisper`'s own `cpu_threads=0` default (its own internal heuristic) measured meaningfully slower than just handing it every logical core on this machine -- no accuracy cost, unlike the model-size trade above, just using the hardware that's actually available. Now defaults to `os.cpu_count()`, override with `WHISPER_CPU_THREADS` if you want to leave headroom for something else running on the same machine.
+- `/api/voice`, `/api/message`, and `/api/start` used to also run TTS synthesis inline before returning anything, meaning the *entire* reply -- transcription/LLM call *and* voice synthesis -- sat behind one "transcribing..."/"facilitator is responding..." label, typically 25-30s combined, TTS alone often the biggest single piece of that (scales with reply length). Reply text now comes back on its own, fast, and the frontend fetches audio in a second round trip via `POST /api/speak` afterward, not blocking the input on it. See `facilitator_reply()`'s docstring in `server.py`.
+- Real numbers, measured on an Intel i5-8210Y MacBook Air (dual-core, no GPU/Neural Engine -- there's no Metal/Core ML acceleration path for local Whisper on this class of hardware, only faster CPU config or a smaller model help locally) for a ~9.5s clip: `base.en` at the old default thread count, 5.16s; `base.en` with `cpu_threads=4`, 3.58s; `tiny.en` with `cpu_threads=4` (now the default), 2.24s. A cloud STT API (OpenAI's `gpt-4o-mini-transcribe`, measured 1.81s for the same clip) would be faster still, but was deliberately not adopted here: it would send the employee's raw voice memo off the machine, a real step down in privacy posture for a product whose entire pitch is "nothing recorded" -- kept local-only on purpose, even in this dev prototype.
 
 ## Testing shortcut: a one-sentence intro
 

@@ -41,6 +41,12 @@ VOICE = "Samantha"  # a built-in macOS voice, used only if OPENAI_API_KEY isn't 
 # above if OPENAI_API_KEY isn't set, or if the OpenAI call fails.
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_TTS_VOICE = os.environ.get("OPENAI_TTS_VOICE", "alloy")
+# tts-1, not gpt-4o-mini-tts: measured ~2x faster for the same text (2.64s vs
+# 4.97s in a real timing test) with this prototype's voice-latency complaint
+# in mind. Less expressive/steerable than gpt-4o-mini-tts, a real tradeoff,
+# not a strict improvement -- override with OPENAI_TTS_MODEL if the more
+# natural voice matters more than speed for what you're testing.
+OPENAI_TTS_MODEL = os.environ.get("OPENAI_TTS_MODEL", "tts-1")
 
 # Optional video-avatar mode (Tavus Conversational Video Interface). All four
 # must be set -- see README.md's "Optional: video avatar" section for how to
@@ -85,7 +91,7 @@ def synthesize_speech_openai(text: str) -> str | None:
         resp = httpx.post(
             "https://api.openai.com/v1/audio/speech",
             headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
-            json={"model": "gpt-4o-mini-tts", "voice": OPENAI_TTS_VOICE, "input": text},
+            json={"model": OPENAI_TTS_MODEL, "voice": OPENAI_TTS_VOICE, "input": text},
             timeout=30,
         )
         resp.raise_for_status()
@@ -128,18 +134,30 @@ def synthesize_speech(text: str) -> str | None:
     return synthesize_speech_say(text)
 
 _whisper_model = None
-# "small.en" is noticeably slower on CPU than this needs to be for a live
-# back-and-forth conversation; "base.en" trades a bit of accuracy for a much
-# snappier turnaround. Override via .env if you want small/medium's accuracy
-# back and don't mind the wait.
-WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "base.en")
+# "small.en"/"base.en" are noticeably slower on CPU than this needs to be for
+# a live back-and-forth conversation, especially on weaker hardware (no
+# GPU/Neural Engine acceleration path exists for faster-whisper on Intel
+# Macs) -- "tiny.en" trades real accuracy for a much snappier turnaround.
+# Measured on an Intel i5-8210Y (dual-core, no GPU): base.en ~5.2s, tiny.en
+# ~2.2s for the same ~9.5s clip, real transcript quality held up in that
+# test but this is a genuine tradeoff, not a free win -- override via .env
+# if you want base/small/medium's accuracy back and don't mind the wait.
+WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "tiny.en")
+# CTranslate2's own default (cpu_threads=0, its own heuristic) measured
+# meaningfully slower here than just handing it every logical core
+# (base.en: 5.16s default vs 3.58s at cpu_threads=4) -- unlike the model-size
+# tradeoff above, this one's free, no accuracy cost, just using the hardware
+# that's actually available.
+WHISPER_CPU_THREADS = int(os.environ.get("WHISPER_CPU_THREADS", str(os.cpu_count() or 4)))
 
 
 def get_whisper():
     global _whisper_model
     if _whisper_model is None:
         from faster_whisper import WhisperModel
-        _whisper_model = WhisperModel(WHISPER_MODEL_NAME, device="cpu", compute_type="int8")
+        _whisper_model = WhisperModel(
+            WHISPER_MODEL_NAME, device="cpu", compute_type="int8", cpu_threads=WHISPER_CPU_THREADS,
+        )
     return _whisper_model
 
 
@@ -166,12 +184,23 @@ def strip_signal(reply_text: str) -> tuple[str, str | None]:
     return visible, signal
 
 
-def facilitator_reply() -> dict:
+def facilitator_reply(synthesize: bool = False) -> dict:
     """Assumes the latest turn just appended to `conversation` is the user's.
     On any failure, rolls that turn back off so conversation always ends on
     an assistant turn (or is empty) -- Anthropic's API rejects consecutive
     same-role turns, so a dangling unanswered user turn would break the
-    next real call once a key is set."""
+    next real call once a key is set.
+
+    `synthesize=False` by default: TTS alone measured ~12-14s for a typical
+    reply (OpenAI call, scales with text length), on top of ~5-6s for the
+    Claude call itself and, for voice input, ~6-8s of Whisper transcription
+    -- all previously bundled into one blocking request the UI showed as a
+    single misleading "transcribing..." label the whole time, real total
+    ~30s. Callers now get reply text back fast and fetch audio separately
+    via POST /api/speak, so the UI can show the reply ~15-20s sooner and
+    label the remaining wait accurately. Pass synthesize=True to keep the
+    old one-shot behavior (unused today, kept for e.g. a non-interactive
+    caller that has no second round trip available)."""
     if client is None:
         conversation.pop()
         return {"reply": "(server error: ANTHROPIC_API_KEY is not set in this shell)", "signal": None}
@@ -195,7 +224,7 @@ def facilitator_reply() -> dict:
         }
     visible, signal = strip_signal(raw)
     conversation.append({"role": "assistant", "content": raw})
-    return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible)}
+    return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible) if synthesize else None}
 
 
 # --- Video-avatar mode (Tavus) -------------------------------------------
@@ -390,6 +419,17 @@ async def post_voice(file: UploadFile):
     result = facilitator_reply()
     result["transcript"] = transcript
     return result
+
+
+@app.post("/api/speak")
+async def speak(payload: dict):
+    """Second round trip for a reply's audio -- see facilitator_reply's
+    docstring for why this is split out. Stateless: just synthesizes
+    whatever text is handed to it, no coupling to `conversation`."""
+    text = (payload.get("text") or "").strip()
+    if not text:
+        return JSONResponse({"error": "empty text"}, status_code=400)
+    return {"audio_url": synthesize_speech(text)}
 
 
 @app.post("/api/reset")
