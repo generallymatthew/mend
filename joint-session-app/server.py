@@ -45,6 +45,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 from pathlib import Path
 
@@ -100,6 +101,26 @@ ROLE_SLUGS = {"a": "employee_a", "b": "employee_b"}
 SPEAKER_LABEL = {"employee_a": "Employee A", "employee_b": "Employee B"}
 OTHER_ROLE = {"employee_a": "employee_b", "employee_b": "employee_a"}
 
+# --- Rate limiting --------------------------------------------------------
+# Same reasoning as ../intake-app/server.py, but there's no per-request HTTP
+# endpoint to hook here -- every real message is a WebSocket frame, so the
+# limiter lives inside the receive loop instead of an HTTP middleware.
+# In-memory fixed-window per client IP.
+WS_RATE_MAX = int(os.environ.get("WS_RATE_MAX", "20"))
+WS_RATE_WINDOW = int(os.environ.get("WS_RATE_WINDOW", "60"))
+_ws_rate_hits: dict[str, list[float]] = {}
+
+
+def ws_rate_limited(ip: str) -> bool:
+    now = time.time()
+    hits = [t for t in _ws_rate_hits.get(ip, []) if now - t < WS_RATE_WINDOW]
+    if len(hits) >= WS_RATE_MAX:
+        _ws_rate_hits[ip] = hits
+        return True
+    hits.append(now)
+    _ws_rate_hits[ip] = hits
+    return False
+
 load_dotenv(ROOT / ".env")
 
 app = FastAPI()
@@ -134,6 +155,14 @@ class Session:
         self.sockets: dict[str, WebSocket] = {}
         self.lock = asyncio.Lock()
         self.started = False
+        self.ended = False
+        # Accumulated across turns, unlike floor_category/triggered_by --
+        # a below-floor pattern doesn't end the session the same turn it's
+        # noticed (see facilitator-joint-session-system-prompt.md), so it
+        # can't be read off just the final turn's signal. First-fired-wins:
+        # the model isn't asked to keep restating it once flagged.
+        self.below_floor_pattern: str | None = None
+        self.pattern_shown_by: str | None = None
 
 
 SESSIONS: dict[str, Session] = {}
@@ -261,6 +290,23 @@ async def broadcast_result(
     signal = result.get("signal") or {}
     new_state = signal.get("session_state", prev_state)
     checkin_target = signal.get("checkin_target")
+    triggered_by = signal.get("triggered_by")
+
+    # First-fired-wins accumulation -- see Session.__init__. This can fire
+    # on any turn, long before (or after) the session actually ends, unlike
+    # floor_category/triggered_by which are only ever read off the same
+    # turn that also closes the room.
+    if signal.get("below_floor_pattern") and session.below_floor_pattern is None:
+        session.below_floor_pattern = signal["below_floor_pattern"]
+        session.pattern_shown_by = signal.get("pattern_shown_by")
+
+    # `triggered_by` (which employee's words fired floor_category) must
+    # never reach the shared room broadcast -- both roles currently receive
+    # the same `signal` alongside every "message" event, and revealing *who*
+    # while they're still together is exactly the premature disclosure the
+    # system prompt's hard boundaries forbid. It only ever travels inside
+    # the per-role "ended" event below, computed separately for each side.
+    public_signal = {k: v for k, v in signal.items() if k != "triggered_by"} if signal else None
 
     # The sender's own message: said in the open room unless the room was
     # already paused when they sent it (in which case only checkin_target
@@ -299,7 +345,7 @@ async def broadcast_result(
     if new_state == "paused_checkin" and checkin_target:
         await send_to(session, checkin_target, {
             "type": "message", "from": "facilitator", "text": reply_text,
-            "private": True, "audio_url": audio_url, "signal": signal or None,
+            "private": True, "audio_url": audio_url, "signal": public_signal,
         })
         if prev_state != "paused_checkin":
             await send_to(session, OTHER_ROLE[checkin_target], {"type": "paused"})
@@ -307,13 +353,53 @@ async def broadcast_result(
         for role in ("employee_a", "employee_b"):
             await send_to(session, role, {
                 "type": "message", "from": "facilitator", "text": reply_text,
-                "private": False, "audio_url": audio_url, "signal": signal or None,
+                "private": False, "audio_url": audio_url, "signal": public_signal,
             })
         if prev_state == "paused_checkin" and prev_checkin_target:
-            await send_to(session, OTHER_ROLE[prev_checkin_target], {"type": "resumed", "signal": signal or None})
-        if new_state == "ended":
+            await send_to(session, OTHER_ROLE[prev_checkin_target], {"type": "resumed", "signal": public_signal})
+
+        # The model is never actually instructed to emit session_state:
+        # "ended" -- joint-session-architecture.md's state machine treats
+        # WINDING_DOWN -> ENDED as something the orchestration layer
+        # declares once employees are moved apart, not a model decision.
+        # winding_down + ready_to_close is the real, already-guaranteed
+        # signal that this turn's reply *is* the routine close (see the
+        # system prompt's "same turn" rule); "ended" is kept as a literal
+        # check too in case a future prompt revision emits it directly.
+        room_closed = new_state == "ended" or (new_state == "winding_down" and signal.get("ready_to_close"))
+        if room_closed and not session.ended:
+            session.ended = True
+            floor_category = signal.get("floor_category")
             for role in ("employee_a", "employee_b"):
-                await send_to(session, role, {"type": "ended", "floor_category": signal.get("floor_category")})
+                if not floor_category:
+                    escalation = "none"
+                elif triggered_by == role:
+                    escalation = "own_conduct"
+                elif triggered_by == OTHER_ROLE.get(role):
+                    escalation = "other_party_conduct"
+                else:
+                    # A floor category fired but the model didn't name who
+                    # -- shouldn't happen now that triggered_by is asked
+                    # for, but fail toward disclosing less, not more.
+                    escalation = "none"
+
+                if not session.below_floor_pattern:
+                    coaching_role = None
+                elif session.pattern_shown_by == role:
+                    coaching_role = "shown"
+                elif session.pattern_shown_by == OTHER_ROLE.get(role):
+                    coaching_role = "experienced"
+                else:
+                    # Flagged but the model didn't name who -- same
+                    # fail-toward-disclosing-less choice as escalation above.
+                    coaching_role = None
+
+                await send_to(session, role, {
+                    "type": "ended", "escalation": escalation,
+                    "category": floor_category if escalation != "none" else None,
+                    "coaching_pattern": session.below_floor_pattern if coaching_role else None,
+                    "coaching_role": coaching_role,
+                })
 
     session.state = signal or session.state
 
@@ -334,6 +420,7 @@ async def handle_reset(session: Session) -> None:
     session.conversation.clear()
     session.state = {}
     session.started = False
+    session.ended = False
     for f in AUDIO_DIR.glob("*.m4a"):
         f.unlink(missing_ok=True)
     for role in ("employee_a", "employee_b"):
@@ -373,6 +460,11 @@ async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
 
             text = (payload.get("text") or "").strip()
             if not text:
+                continue
+
+            ip = websocket.client.host if websocket.client else "unknown"
+            if ws_rate_limited(ip):
+                await send_to(session, role, {"type": "error", "error": "too many messages -- slow down and try again shortly"})
                 continue
 
             current_state = session.state.get("session_state", "active")

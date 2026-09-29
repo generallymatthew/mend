@@ -20,12 +20,13 @@ import os
 import re
 import subprocess
 import tempfile
+import time
 import uuid
 from pathlib import Path
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -39,6 +40,27 @@ load_dotenv(ROOT / ".env")
 
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
+
+# --- Rate limiting --------------------------------------------------------
+# Same reasoning as ../intake-app/server.py: a free/public pilot with no
+# request limit on endpoints that call a paid LLM API is an open invitation
+# to run up the bill. In-memory fixed-window limiter per client IP.
+RATE_LIMIT_MAX = int(os.environ.get("RATE_LIMIT_MAX", "20"))
+RATE_LIMIT_WINDOW = int(os.environ.get("RATE_LIMIT_WINDOW", "60"))
+_rate_hits: dict[str, list[float]] = {}
+
+
+@app.middleware("http")
+async def rate_limit(request: Request, call_next):
+    if request.url.path.startswith("/api/"):
+        ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        hits = [t for t in _rate_hits.get(ip, []) if now - t < RATE_LIMIT_WINDOW]
+        if len(hits) >= RATE_LIMIT_MAX:
+            return JSONResponse({"error": "too many requests -- slow down and try again shortly"}, status_code=429)
+        hits.append(now)
+        _rate_hits[ip] = hits
+    return await call_next(request)
 
 
 def load_system_prompt() -> str:
@@ -67,6 +89,14 @@ FLOOR_CATEGORIES = {
     "threats_violence": "threats or violence",
     "illegal_activity": "illegal activity",
     "immediate_safety_risk": "immediate safety risk",
+}
+
+# Below-floor patterns (product-spec.html's "Below the floor, still harmful"
+# callout) -- never escalates to HR, unlike FLOOR_CATEGORIES above. Labels
+# are for the kickoff note only; the facilitator prompt does the actual
+# explaining.
+COACHING_PATTERNS = {
+    "coercive_control": "coercive control / gaslighting",
 }
 
 
@@ -127,12 +157,16 @@ def facilitator_reply() -> dict:
 async def start(payload: dict):
     """payload: {escalation: 'none' | 'own_conduct' | 'other_party_conduct',
                  category: one of FLOOR_CATEGORIES keys (if escalation != 'none'),
+                 coaching_role: 'shown' | 'experienced', optional,
+                 coaching_pattern: one of COACHING_PATTERNS keys, optional,
                  context: free-text note on what happened, optional}"""
     if conversation:
         return {"reply": None, "signal": None}
 
     escalation = payload.get("escalation", "none")
     category = payload.get("category")
+    coaching_role = payload.get("coaching_role")
+    coaching_pattern = payload.get("coaching_pattern")
     context = payload.get("context", "").strip()
 
     if escalation == "none":
@@ -142,12 +176,25 @@ async def start(payload: dict):
         whose = "this employee's own conduct" if escalation == "own_conduct" else "the other party's conduct (not this employee's)"
         escalation_note = f"Something was escalated in the joint session: {whose}, category: {cat_label}."
 
+    # Below-floor pattern -- never HR-bound, unlike escalation_note above.
+    # See product-spec.html's "Below the floor, still harmful" callout and
+    # this prompt's "Below-floor pattern" section.
+    if not coaching_role:
+        coaching_note = ""
+    else:
+        pattern_label = COACHING_PATTERNS.get(coaching_pattern, coaching_pattern or "a harmful communication pattern")
+        if coaching_role == "shown":
+            coaching_note = f" The joint session also flagged that this employee showed signs of {pattern_label} toward the other party."
+        else:
+            coaching_note = f" The joint session also flagged that the other party showed signs of {pattern_label} toward this employee."
+
     context_note = f" Additional context on what happened: {context}" if context else ""
 
     kickoff = (
         f"(This employee just came out of a joint session with the other party. {escalation_note}"
-        f"{context_note} Begin the follow-up now, handling the escalation disclosure first if "
-        f"applicable, per your instructions.)"
+        f"{coaching_note}{context_note} Begin the follow-up now, handling the escalation disclosure "
+        f"first if applicable, then the below-floor pattern disclosure if applicable, per your "
+        f"instructions.)"
     )
     conversation.append({"role": "user", "content": kickoff})
     return facilitator_reply()

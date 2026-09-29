@@ -102,7 +102,7 @@
 
   <div class="banner" id="banner" hidden>
     <span id="bannerText">Session ended.</span>
-    <a id="bannerLink" href="http://localhost:8422/" target="_blank" rel="noopener"><button>Continue to post-session &rarr;</button></a>
+    <a id="bannerLink" href="/post/" target="_blank" rel="noopener"><button>Continue to post-session &rarr;</button></a>
   </div>
   <button class="reset" id="resetBtn">reset session</button>
   <div class="thread" id="thread"></div>
@@ -142,6 +142,13 @@ if (!code || !role) {
 }
 
 function initRoom() {
+  // Path-relative, not hardcoded: "/" standalone, "/joint/" behind the
+  // local Caddy proxy (../Caddyfile). Used for both the WebSocket URL and
+  // any server-returned "/api/audio/..." URL -- both are absolute paths
+  // that would otherwise resolve against the proxy's root.
+  const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
+  function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
+
   const thread = document.getElementById('thread');
   const signalEl = document.getElementById('signal');
   const statusEl = document.getElementById('status');
@@ -203,7 +210,7 @@ function initRoom() {
 
   function playAudio(url) {
     if (!url) return;
-    audioEl.src = url;
+    audioEl.src = apiPath(url);
     audioEl.play().catch(() => {});
   }
 
@@ -276,8 +283,16 @@ function initRoom() {
 
   function handleEnded(data) {
     ended = true;
-    const url = new URL('http://localhost:8422/');
-    if (data.floor_category) url.searchParams.set('category', data.floor_category);
+    // Root-relative, not a hardcoded port: correct when browsed through the
+    // local Caddy proxy (../Caddyfile), where post-session-app lives at
+    // /post/ alongside this app's own /joint/. Direct-port access (this app
+    // opened straight on :8421, bypassing the proxy) won't resolve this
+    // link -- expected per-app-in-isolation limitation, see repo README.
+    const url = new URL('/post/', location.origin);
+    if (data.escalation) url.searchParams.set('escalation', data.escalation);
+    if (data.category) url.searchParams.set('category', data.category);
+    if (data.coaching_role) url.searchParams.set('coaching_role', data.coaching_role);
+    if (data.coaching_pattern) url.searchParams.set('coaching_pattern', data.coaching_pattern);
     bannerLink.href = url.toString();
     banner.hidden = false;
     updateComposer();
@@ -286,7 +301,7 @@ function initRoom() {
   let ws;
   function connect() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${proto}://${location.host}/ws/${code}/${roleSlug}`);
+    ws = new WebSocket(`${proto}://${location.host}${apiPath('/ws/' + code + '/' + roleSlug)}`);
     ws.onmessage = (ev) => {
       const data = JSON.parse(ev.data);
       switch (data.type) {
