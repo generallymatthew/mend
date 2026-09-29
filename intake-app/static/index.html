@@ -52,6 +52,14 @@
   .live-row button{font-size:13px; padding:7px 12px; flex-shrink:0;}
   .live-row button.recording{background:#8C3B2E; color:#fff; border-color:#8C3B2E;}
   .live-hint{font-size:11.5px; color:var(--ink-soft); line-height:1.4;}
+  /* Simple "yes, I can hear you" indicator -- shown only while recording.
+     The dot actually lights up on real mic input above a small threshold
+     (see updateMicIndicator()), not just on "recording" state, so it's
+     proof sound is being picked up, not just that the button was pressed. */
+  .mic-indicator{display:none; align-items:center; gap:7px; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+  .mic-indicator.active{display:flex;}
+  .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
+  .mic-indicator-dot.lit{background:#8C3B2E; transform:scale(1.15);}
 
   /* Zoom-call style layout: the avatar + captions + controls are the main
      event, full attention like a video tile; the transcript is reference
@@ -98,6 +106,10 @@
             <button id="liveBtn">Go live</button>
             <span class="live-hint">Hands-free: it listens, replies, then listens again automatically until you end it.</span>
           </div>
+          <div class="mic-indicator" id="micIndicator">
+            <span class="mic-indicator-dot" id="micIndicatorDot"></span>
+            <span>Listening&hellip;</span>
+          </div>
           <div class="status" id="status"></div>
         </div>
       </div>
@@ -137,6 +149,8 @@ const input = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
 const recordBtn = document.getElementById('recordBtn');
 const statusEl = document.getElementById('status');
+const micIndicator = document.getElementById('micIndicator');
+const micIndicatorDot = document.getElementById('micIndicatorDot');
 
 const audioEl = new Audio();
 
@@ -325,8 +339,10 @@ function animateAvatar(now) {
   requestAnimationFrame(animateAvatar);
   const t = now || performance.now();
   drawAvatarFrame(t);
-  if (avatarState === 'listening' && micAnalyser && liveMode) {
-    checkVad(rmsLevel(micAnalyser, micData), t);
+  if (micAnalyser && recordBtn.classList.contains('recording')) {
+    const level = rmsLevel(micAnalyser, micData);
+    micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
+    if (liveMode) checkVad(level, t);
   }
   updateCaption();
 }
@@ -529,6 +545,8 @@ async function startRecordingTurn() {
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
     recordBtn.classList.remove('recording');
+    micIndicator.classList.remove('active');
+    micIndicatorDot.classList.remove('lit');
     liveBtn.classList.remove('recording');
     const blob = new Blob(chunks, {type: 'audio/webm'});
     addMessage('[voice memo]', 'employee transcript');
@@ -563,6 +581,7 @@ async function startRecordingTurn() {
   startMicAnalysis(stream);
   startVadCalibration(performance.now());
   recordBtn.classList.add('recording');
+  micIndicator.classList.add('active');
   if (liveMode) liveBtn.classList.add('recording');
 }
 
