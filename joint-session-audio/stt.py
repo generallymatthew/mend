@@ -44,6 +44,51 @@ class StreamingSTT:
             language="en",
             on_recording_stop=self._handle_finalized,
         )
+        # Found live, in two separate layers -- both needed:
+        #
+        # 1. Without `.listen()`, the recorder never once started a
+        # recording -- RealtimeSTT's own recording worker thread only acts
+        # on voice activity when `start_recording_on_voice_activity` is
+        # True, and that flag is set ONLY by `.listen()` (or the `.text()`/
+        # `.wait_audio()` call a typical caller loops on) -- construction
+        # alone never sets it. feed_audio() was reaching the recorder's
+        # audio queue the whole time (confirmed live), but with nothing
+        # ever arming listening, the worker thread's VAD check was
+        # unreachable code every single pass, so `on_recording_stop` could
+        # never fire regardless of any buffering/pacing fix.
+        #
+        # 2. `.listen()` alone (confirmed live, the next bug found once (1)
+        # was fixed) gets recording STARTED but never stopped: RealtimeSTT's
+        # own end-of-speech check in core/recording.py is gated behind a
+        # SEPARATE flag, `stop_recording_on_voice_deactivity`, which
+        # `.listen()` does not touch -- only `.text()`/`.wait_audio()`'s
+        # internal bookkeeping sets it (core/lifecycle.py's
+        # wait_for_recorded_audio), which this event-driven/callback usage
+        # never calls. Left unset, it defaults to False forever, so once
+        # recording starts here it simply never ends regardless of how much
+        # silence follows. Setting it directly alongside `.listen()` is the
+        # real fix, confirmed live: "recording started" now reliably
+        # followed by "recording stopped" once real silence gaps play out.
+        #
+        # `.listen()`/`.text()` would also work (that's the library's own
+        # intended blocking-loop pattern) but `.text()` blocks synchronously
+        # waiting for a full record cycle -- wrong fit for a constructor or
+        # a quick re-arm after each callback.
+        self._recorder.listen()
+        self._recorder.stop_recording_on_voice_deactivity = True
+
+    def _rearm_listening(self) -> None:
+        # stop_recording() (inside RealtimeSTT) clears both
+        # start_recording_on_voice_activity and stop_recording_on_voice_
+        # deactivity and does not set either again on its own -- confirmed
+        # by reading core/lifecycle.py's stop_recording, which has no
+        # equivalent of wait_audio()'s re-arm branch. Without repeating both
+        # calls here after every finalized segment, only ever the FIRST
+        # utterance of a session would transcribe; found live testing
+        # multi-sentence real speech, where only silence followed the first
+        # segment forever after.
+        self._recorder.listen()
+        self._recorder.stop_recording_on_voice_deactivity = True
 
     def push_audio(self, pcm_bytes: bytes) -> None:
         self._pending_audio.extend(pcm_bytes)
@@ -53,6 +98,7 @@ class StreamingSTT:
         text = self._recorder.text()
         audio_bytes = bytes(self._pending_audio)
         self._pending_audio.clear()
+        self._rearm_listening()
         if not text.strip():
             return
         logger.debug("finalized participant=%s text=%r", self.participant_id, text)

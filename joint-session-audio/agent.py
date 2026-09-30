@@ -30,9 +30,39 @@ Run (after `livekit-server --dev` is already running -- see README.md):
 import asyncio
 import json
 import logging
+import multiprocessing
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+
+# Forces a genuinely fresh interpreter (exec, not a memory-copying fork) for
+# RealtimeSTT's transcription-worker subprocess (imported below, transitively
+# via stt.py). Kept as real, independent hardening even though it turned out
+# NOT to be the fix for the segfault below -- see KMP_DUPLICATE_LIB_OK.
+if multiprocessing.get_start_method(allow_none=True) != "spawn":
+    multiprocessing.set_start_method("spawn", force=True)
+
+# The actual fix for a SIGSEGV in __kmp_fork_barrier that kept killing the
+# worker process partway through STT init, found live even after the spawn
+# change above made no difference: torch and ctranslate2 each bundle their
+# OWN separate copy of Intel's OpenMP runtime (.venv/.../torch/lib/libiomp5.
+# dylib vs .venv/.../ctranslate2/.dylibs/libiomp5.dylib) -- classifier (torch)
+# and STT (ctranslate2, inside RealtimeSTT) both load in this same process
+# tree, so both copies end up loaded together, a documented crash trigger for
+# Intel's OpenMP runtime. KMP_DUPLICATE_LIB_OK alone turned out NOT to be
+# enough -- confirmed live, it only silences the runtime's own duplicate-load
+# *detection* (which would otherwise abort cleanly with "OMP: Error #15"), it
+# does not make running two copies' thread teams concurrently actually safe,
+# and the crash still happened with only this set. Capping both to a single
+# thread avoids the actual unsafe code path (the two-copies' barrier/fork
+# logic that was segfaulting in __kmp_fork_barrier) rather than just hiding
+# its warning -- confirmed fixed via a standalone repro (classifier load
+# followed by STT init, single and twice back-to-back) before trusting this
+# against a real room again.
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 import httpx
 from dotenv import load_dotenv
@@ -69,6 +99,16 @@ _prosody_http = httpx.AsyncClient(timeout=3.0)
 # API) -- keep it off the event loop via a small dedicated pool, shared by
 # both employees' DelayBuffers in a room.
 CLASSIFIER_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="classifier")
+
+# StreamingSTT construction spawns RealtimeSTT's own transcription-worker
+# subprocess, which loads a ctranslate2/MKL whisper model -- found live, the
+# hard way: with both employees' bridges initializing at once, their two
+# subprocesses hit Intel's OpenMP runtime (libiomp5) concurrently during
+# model load and segfaulted (SIGSEGV in __kmp_fork_call), taking the whole
+# worker process down mid-session. Serializing the two loads through this
+# lock avoids the concurrent-init race entirely; it costs a few extra
+# seconds of startup staggering, not a real slowdown once both are warm.
+STT_INIT_LOCK = asyncio.Lock()
 
 
 def prewarm(proc: JobProcess):
@@ -112,7 +152,18 @@ class ParticipantBridge:
                 participant_identity, other_identity, latency,
             ),
         )
-        self.stt = StreamingSTT(participant_identity, self._on_segment)
+        # Deliberately NOT constructed here -- see construct_stt() below. Frames
+        # that arrive before it's ready are buffered here (see push_frame),
+        # not dropped -- STT init takes 15-35s, and the previous behavior of
+        # only starting to read the track's AudioStream *after* init
+        # finished silently discarded a live speaker's first 15-35s of
+        # speech every single time. Found live: this was why real
+        # microphone testing never once produced a prosody flag all
+        # session, independent of and on top of every crash/dispatch bug
+        # fixed earlier.
+        self.stt: StreamingSTT | None = None
+        self._recorder: StreamingSTT | None = None
+        self._pending_frames: list[bytes] = []
         # Set while the room is paused for a private side conversation --
         # see BreakoutGate. STT/DelayBuffer keep running underneath (so
         # nothing is lost/desynced when the pause ends), only the release
@@ -125,6 +176,12 @@ class ParticipantBridge:
         # above: it doesn't influence the real-time cut decision, only
         # observability -- see prosody.py's module docstring for why.
         self.prosody_baseline = SpeakerBaseline()
+        # _on_segment/_log_prosody fire from RealtimeSTT's own recording-
+        # worker thread (StreamingSTT's on_recording_stop callback), not the
+        # event loop thread -- captured here while __init__ is still
+        # guaranteed to run on the loop thread (see construct_stt's own
+        # comment on why the rest of __init__ can't move off it).
+        self._loop = asyncio.get_event_loop()
 
     async def publish(self):
         # Scope this track so only `other_identity` may subscribe to it --
@@ -155,12 +212,91 @@ class ParticipantBridge:
             ],
         )
 
+    def construct_stt(self):
+        # Split out of __init__ so it can run in a worker thread (see
+        # on_track_subscribed) -- constructing StreamingSTT loads the
+        # faster-whisper model synchronously, ~30-60s on first run, which
+        # must never happen on the event loop (see that call site for why).
+        # The rest of __init__ stays on the loop thread deliberately: several
+        # of those calls (e.g. rtc.AudioSource) implicitly grab the running
+        # event loop via asyncio.get_event_loop() and raise if there isn't
+        # one, which a plain worker thread doesn't have.
+        #
+        # Deliberately just the model load -- see drain_pending_stt below for
+        # why the backlog replay is a separate step, run outside the caller's
+        # STT_INIT_LOCK. self.stt stays None until that replay finishes (see
+        # push_frame), same buffering behavior as before this split.
+        self._recorder = StreamingSTT(self.participant_identity, self._on_segment)
+
+    def drain_pending_stt(self):
+        # Runs after construct_stt, deliberately NOT under STT_INIT_LOCK --
+        # found live: with both employees' bridges sharing that lock across
+        # the whole of what used to be init_stt(), the second participant's
+        # pending-frame queue kept growing for the ENTIRE duration of the
+        # first's real-time-paced replay below (not just their model load,
+        # the actual race this lock exists for), and its own replay then
+        # took that same duration again -- 82s becoming a 230s backlog in a
+        # two-participant test in this environment, not the "few extra
+        # seconds of startup staggering" this lock was meant to cost. Only
+        # StreamingSTT's own construction above needs serializing (the two
+        # employees' faster-whisper model loads racing is what segfaults,
+        # see STT_INIT_LOCK) -- this replay loop touches only this
+        # participant's own recorder and pending-frame list, safe to run
+        # concurrently with the other participant's construct_stt/replay.
+        pending, self._pending_frames = self._pending_frames, []
+        logger.info(
+            "init_stt draining participant=%s pending_frames=%d pending_bytes=%d",
+            self.participant_identity, len(pending), sum(len(c) for c in pending),
+        )
+        # Replaying the whole backlog in a tight loop (no pacing) fed
+        # RealtimeSTT's VAD a multi-second block of audio all at once --
+        # confirmed live to reach the recorder (peak_amplitude=32767, real
+        # signal, not silence) but never once produced a finalized segment.
+        # RealtimeSTT's voice-activity segmentation tracks silence by
+        # elapsed wall-clock time between push_audio calls, same as it
+        # would from a live mic feed -- a call to push_audio does not by
+        # itself scream "this many ms of audio"; it is the CALL that
+        # implicitly is timed. Replaying at roughly the original real-time
+        # cadence (this runs in a worker thread, so a plain blocking sleep
+        # here costs nothing on the event loop) lets it see the backlog the
+        # same way it would have lived through it.
+        for chunk in pending:
+            self._recorder.push_audio(chunk)
+            time.sleep(len(chunk) / 2 / SAMPLE_RATE)
+        # Only now does push_frame start feeding the recorder directly --
+        # any frames that arrived live during this replay were appended to
+        # self._pending_frames same as before (push_frame still checks
+        # self.stt is None), so this drains them too instead of losing them.
+        # A second drain pass keeps the same real-time cadence for whatever
+        # arrived while this one was running.
+        more, self._pending_frames = self._pending_frames, []
+        for chunk in more:
+            self._recorder.push_audio(chunk)
+            time.sleep(len(chunk) / 2 / SAMPLE_RATE)
+        self.stt = self._recorder
+
     def push_frame(self, frame: rtc.AudioFrame):
-        self.stt.push_audio(bytes(frame.data))
+        data = bytes(frame.data)
+        if self.stt is None:
+            self._pending_frames.append(data)
+            return
+        self.stt.push_audio(data)
 
     def _on_segment(self, audio_bytes: bytes, text: str):
+        # Found live: this fires from RealtimeSTT's own recording-worker
+        # thread (stt.py's on_recording_stop callback), not the event loop
+        # thread -- plain asyncio.create_task() raised "RuntimeError: no
+        # running event loop" every time, and because RealtimeSTT's worker
+        # loop has no outer try/except around invoking this callback, that
+        # exception silently killed the ENTIRE recording-worker thread.
+        # Confirmed live: a participant's very first finalized segment was
+        # also its last -- STT looked "stuck" afterward (still fed audio,
+        # never produced another segment) because the thread that would
+        # have produced one was already dead. run_coroutine_threadsafe is
+        # the correct cross-thread scheduling call here; self._loop was
+        # captured in __init__ while still on the loop thread.
         self._log_prosody(audio_bytes, text)
-        asyncio.create_task(self.buffer.submit(audio_bytes, text))
+        asyncio.run_coroutine_threadsafe(self.buffer.submit(audio_bytes, text), self._loop)
 
     def _log_prosody(self, audio_bytes: bytes, text: str):
         # Plain numpy on a handful of ~30ms frames -- cheap enough (unlike
@@ -168,6 +304,7 @@ class ParticipantBridge:
         # to run inline here without blocking the event loop.
         features = analyze_segment(audio_bytes, text)
         flags = self.prosody_baseline.flags(features)
+        logger.info("prosody segment participant=%s text=%r flags=%s", self.participant_identity, text, flags)
         if flags:
             logger.info(
                 "prosody participant=%s flags=%s pitch=%s energy=%.3f pace=%s text=%r",
@@ -177,7 +314,8 @@ class ParticipantBridge:
                 f"{features.speaking_rate_wps:.1f}wps" if features.speaking_rate_wps else "n/a",
                 text,
             )
-            asyncio.create_task(self._send_prosody_signal(flags))
+            # Same off-loop-thread constraint as _on_segment above.
+            asyncio.run_coroutine_threadsafe(self._send_prosody_signal(flags), self._loop)
         self.prosody_baseline.update(features)
 
     async def _send_prosody_signal(self, flags):
@@ -363,30 +501,79 @@ async def entrypoint(ctx: JobContext):
 
     @room.on("track_subscribed")
     def on_track_subscribed(track: rtc.Track, publication, participant: rtc.RemoteParticipant):
+        logger.info("track_subscribed kind=%s participant=%s", track.kind, participant.identity)
         if track.kind != rtc.TrackKind.KIND_AUDIO:
             return
         other = other_of(participant.identity)
         if other is None:
             logger.warning("unexpected participant identity: %s", participant.identity)
             return
-        bridge = bridges.setdefault(
-            participant.identity,
-            ParticipantBridge(room, participant.identity, other, classifier),
-        )
-        asyncio.create_task(bridge.publish())
+        async def init_stt_in_background(bridge: "ParticipantBridge"):
+            # ParticipantBridge.__init__ itself must stay on the loop
+            # thread -- rtc.AudioSource grabs the running event loop
+            # internally and raises in a plain worker thread. Only
+            # construct_stt() (the faster-whisper model load, ~30-60s on
+            # first run: download + the ctranslate2 float32 conversion)
+            # goes through the executor, so that cost can never block
+            # the loop and trip livekit-agents' own unresponsive-process
+            # watchdog again -- found live: it killed the job mid-session
+            # the first time this ran on the loop directly. Run as its own
+            # background task (not awaited inline before reading frames
+            # below) -- see bridge_and_read_frames for why.
+            #
+            # STT_INIT_LOCK wraps ONLY construct_stt (the model load that
+            # actually segfaults when two employees' loads race -- see the
+            # lock's own definition). drain_pending_stt runs after the lock
+            # is released -- found live: holding the lock across the whole
+            # of what used to be one init_stt() call let the second
+            # participant's pending-frame queue keep growing for the
+            # ENTIRE duration of the first's real-time-paced replay, not
+            # just their model load, compounding into minutes of lag
+            # instead of the "few extra seconds" this lock was meant to
+            # cost. See drain_pending_stt's own docstring-comment.
+            loop = asyncio.get_event_loop()
+            async with STT_INIT_LOCK:
+                await loop.run_in_executor(None, bridge.construct_stt)
+            await loop.run_in_executor(None, bridge.drain_pending_stt)
 
-        async def read_frames():
-            stream = rtc.AudioStream(track)
+        async def bridge_and_read_frames():
+            bridge = bridges.get(participant.identity)
+            if bridge is None:
+                bridge = ParticipantBridge(room, participant.identity, other, classifier)
+                bridges[participant.identity] = bridge
+                await bridge.publish()
+                asyncio.create_task(init_stt_in_background(bridge))
+            # sample_rate=SAMPLE_RATE forces LiveKit's own resampler to
+            # convert down from the track's native 48kHz to the 16kHz this
+            # whole pipeline (StreamingSTT, prosody.py) assumes -- without
+            # this the default was 48kHz, fed straight into RealtimeSTT as
+            # if it were 16kHz raw PCM, corrupting every frame. And this
+            # stream is created and read starting now, NOT after awaiting
+            # init_stt above (previously it was, which meant the 15-35s STT
+            # load silently ate a live speaker's first utterances every
+            # time -- push_frame buffers frames itself until self.stt
+            # exists, see ParticipantBridge.push_frame/init_stt).
+            stream = rtc.AudioStream(track, sample_rate=SAMPLE_RATE, num_channels=1)
             async for event in stream:
                 bridge.push_frame(event.frame)
 
-        asyncio.create_task(read_frames())
+        asyncio.create_task(bridge_and_read_frames())
 
     @room.on("track_published")
     def on_track_published(publication, participant: rtc.RemoteParticipant):
-        if publication.kind != rtc.TrackKind.KIND_VIDEO:
-            return
+        logger.info("track_published kind=%s participant=%s", publication.kind, participant.identity)
         if other_of(participant.identity) is None:
+            return
+        if publication.kind == rtc.TrackKind.KIND_AUDIO:
+            # Client publishes its mic *after* room.connect() resolves (see
+            # index.html), i.e. after this agent's participant_connected
+            # handler already ran and found no audio publications to seed --
+            # this is the only path that ever subscribes to it. Without this,
+            # track_subscribed never fires for audio and the whole bridge
+            # (STT, delay buffer, prosody) silently never runs.
+            publication.set_subscribed(True)
+            return
+        if publication.kind != rtc.TrackKind.KIND_VIDEO:
             return
         video_track_sids[participant.identity] = publication.sid
         video_gate.set_camera_live(participant.identity, True)
@@ -402,6 +589,10 @@ async def entrypoint(ctx: JobContext):
 
     @room.on("participant_connected")
     def on_participant_connected(participant: rtc.RemoteParticipant):
+        logger.info(
+            "participant_connected identity=%s existing_publications=%s",
+            participant.identity, [p.kind for p in participant.track_publications.values()],
+        )
         # Bridge always subscribes to the raw mic track -- the two employees
         # never do (see entrypoint's SUBSCRIBE_NONE connect above, which
         # applies to this agent's own auto-subscribe default; each employee
@@ -430,6 +621,17 @@ async def entrypoint(ctx: JobContext):
         video_track_sids.pop(participant.identity, None)
         video_gate.set_camera_live(participant.identity, False)
 
+    # room.on("participant_connected") only fires for participants who join
+    # AFTER this point -- it does not replay for whoever connected while this
+    # job was still spawning/loading its model weights (real, and not rare:
+    # cold worker startup measured ~33s against a live server, easily longer
+    # than both employees take to open their links). Without this, a normal
+    # "both employees already in the room" job start never subscribes to
+    # either mic at all -- the whole bridge (STT, delay buffer, prosody)
+    # silently never runs, found live testing against real audio.
+    for participant in room.remote_participants.values():
+        on_participant_connected(participant)
+
 
 if __name__ == "__main__":
     cli.run_app(WorkerOptions(
@@ -440,4 +642,13 @@ if __name__ == "__main__":
         # already moves that cost out of the per-job path, this is headroom
         # for the process-spawn itself, not a substitute for prewarm.
         initialize_process_timeout=60.0,
+        # `dev` mode's own default is 0 idle processes -- it only spins one
+        # up once a job actually arrives, so the very first job on a fresh
+        # worker always cold-starts. Found live: that cold start (~30s on
+        # this machine) lost the race against livekit-server's own dispatch-
+        # acceptance timeout, which logged "no servers available" and
+        # silently dropped the room -- not a crash, just a job nobody ever
+        # picked up. Forcing one warm process keeps that race from
+        # happening at all, first job included.
+        num_idle_processes=2,
     ))

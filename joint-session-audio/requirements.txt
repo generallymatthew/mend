@@ -3,7 +3,7 @@ uvicorn>=0.29
 python-dotenv>=1.0
 livekit-agents>=0.9
 livekit-api>=0.7
-RealtimeSTT>=0.3
+RealtimeSTT[faster-whisper]>=0.3
 
 # For the real-time hard-cut classifier (../classifier/inference.py) --
 # same inference-only subset, same pinned versions, as
