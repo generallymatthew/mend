@@ -68,6 +68,7 @@ this is integrated.</p>
 
 <div id="toast"></div>
 <p id="status" hidden>connecting...</p>
+<button id="muteIncomingBtn" hidden>Mute incoming audio</button>
 <div class="stage" id="stage" hidden>
   <div class="tile a" id="tileSelf">
     <video id="videoSelf" autoplay muted playsinline hidden></video>
@@ -90,6 +91,7 @@ const logEl = document.getElementById("log");
 const consentEl = document.getElementById("consent");
 const stageEl = document.getElementById("stage");
 const toastEl = document.getElementById("toast");
+const muteIncomingBtn = document.getElementById("muteIncomingBtn");
 const videoSelf = document.getElementById("videoSelf");
 const videoOther = document.getElementById("videoOther");
 const avatarSelf = document.getElementById("avatarSelf");
@@ -119,6 +121,21 @@ function hideToast() {
 
 let currentMode = null; // set on first video_mode message
 let otherVideoPublication = null;
+
+// Solo two-tab testing on one machine (see README's "Run" section) means
+// this tab's speaker output can get picked up by the other tab's mic
+// (and vice versa), a real acoustic feedback loop -- headphones are the
+// real fix, but not everyone has them to hand for a quick local test, so
+// this at least kills the loop from this tab's incoming audio without
+// needing OS/browser-level tab muting.
+let incomingMuted = false;
+const incomingAudioEls = [];
+
+muteIncomingBtn.onclick = () => {
+  incomingMuted = !incomingMuted;
+  for (const el of incomingAudioEls) el.muted = incomingMuted;
+  muteIncomingBtn.textContent = incomingMuted ? "Unmute incoming audio" : "Mute incoming audio";
+};
 
 function applyVideoMode(mode) {
   const wasActive = currentMode === "video_active";
@@ -151,6 +168,7 @@ async function main() {
   consentEl.hidden = true;
   statusEl.hidden = false;
   stageEl.hidden = false;
+  muteIncomingBtn.hidden = false;
 
   const cfgRes = await fetch("/api/config");
   const { livekit_url } = await cfgRes.json();
@@ -169,7 +187,9 @@ async function main() {
   room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
     log(`subscribed: ${track.kind} track from ${participant.identity} (${publication.trackSid})`);
     if (track.kind === "audio") {
-      track.attach(); // bridge-republished audio; no visible element needed
+      const el = track.attach(); // bridge-republished audio; no visible element needed
+      el.muted = incomingMuted; // apply current mute state in case it was toggled before this track arrived
+      incomingAudioEls.push(el);
     } else if (track.kind === "video") {
       track.attach(videoOther);
     }
