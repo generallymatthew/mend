@@ -133,7 +133,14 @@ alongside the transcript, not a confidence score or an automated decision.
 Wiring it into an actual decision (the cut gate, or the disconnected
 `../joint-session-app` facilitator LLM) is real future work, not done here --
 same "separate, larger integration" boundary as the breakout room's
-facilitator-voice gap above.
+facilitator-voice gap above. Before committing to that integration,
+`../joint-session-app/poc_prosody_in_prompt.py` tests whether the idea has
+real value at all: does annotating a transcript line with these exact flags
+change how the real facilitator system prompt + real model reads it,
+without building the live bridge yet. See that app's README for what it
+found -- short version: a genuinely promising real difference on a
+textually-neutral line, where text alone gave the facilitator nothing to
+go on.
 
 Pure feature extraction + baseline logic, no LiveKit dependency, fully
 unit-tested with synthetic tones (see `tests/test_prosody.py`).

@@ -32,7 +32,20 @@ If it scores a message as cut-worthy: that message is withheld from the other pa
 
 `CLASSIFIER_CUT_THRESHOLD` in `.env` overrides the 0.9 default for local testing (e.g. to reliably trigger a cut with milder test phrasing) — this is a testing convenience, not a substitute for the real threshold tuning `classifier/README.md` calls for.
 
-## Setup
+## Prosody proof-of-concept (not live-wired)
+
+`../joint-session-audio/prosody.py` computes tone flags (`pitch_elevated`, `pitch_flattened`, `pace_elevated`, etc.) per audio segment, but that app and this one are still disconnected -- nothing here actually receives them yet (see `../joint-session-audio/README.md`'s "Prosody / tone signal"). Before building that real bridge, `poc_prosody_in_prompt.py` tests the *idea* directly against the real facilitator system prompt and the real model: does annotating a transcript line with prosody.py's actual flag vocabulary change how the facilitator reads it? Not a live integration, just a controlled side-by-side -- same conversation, same everything, branching into two variants that differ in exactly one line's annotation, one real API call per variant.
+
+Run it (costs a few cents in real API calls, not automated):
+```bash
+python poc_prosody_in_prompt.py
+```
+
+Two scenarios, two different findings:
+- **A textually-loaded line** ("Fine, whatever you say.", after being told an omission "wasn't intentional") -- text alone already reads as passive-aggressive; the facilitator paused for a check-in either way. The tone-annotated variant committed to `severity_tier: "rising_tension"` explicitly where the baseline run left it `null` despite still pausing -- a real but narrower difference, and this phrase was too textually loaded to cleanly isolate what tone alone adds.
+- **A textually-neutral line** ("Sure, I can take care of that too.", agreeing to take on extra work) -- the words carry no negative signal at all. Baseline: the facilitator treated it as an ordinary, untroubled response (`session_state: null`, no pause) and moved on. Tone-annotated (`pitch_flattened`, `pace_slowed`): the facilitator paused for a private check-in (`severity_tier: "rising_tension"`), reading it as someone possibly agreeing under strain rather than freely -- exactly the system prompt's own "Power imbalance" guidance ("if they seem to be going along with something under pressure... that's itself a signal for the rising-tension pause"), triggered here by tone alone, since the text gave it nothing to go on.
+
+**Real, and worth taking seriously, but not a rigorous validation**: two scenarios, one run each -- LLM outputs have real sampling variance (re-running scenario 1 once during this testing gave a different baseline result the second time). This proves the concept has genuine signal, not that these exact numbers/behaviors are reproducible at scale. Enough to justify the real integration work, not enough to skip validating that integration once built.
 
 ```bash
 cd joint-session-app
