@@ -235,9 +235,12 @@ rejected, the original target holds.
 - The video-parity `on_mode_changed` handler's `LiveKitAPI` client
   (`agent.py`) is never explicitly closed -- fine for one job's lifetime in
   this prototype, not for a long-running deployment.
-- Not wired into `run_all.sh`/`Caddyfile` port 8424 entry's `livekit-server`
-  process management -- `run_all.sh` starts/stops it same as Caddy, but you
-  still need `brew install livekit` done once yourself first.
+- Stale note removed here: this app *is* wired into `run_all.sh` (starts
+  `livekit-server --dev`, `agent.py`, and this app's own `uvicorn`, all three
+  torn down together with everything else on Ctrl-C) and into `Caddyfile`
+  (`/joint-audio/*` -> port 8424). It's opt-in only -- `run_all.sh` skips it
+  gracefully if `.venv` or the `livekit-server` binary (`brew install
+  livekit`) aren't set up yet -- not unwired.
 - No re-enable-after-drop flow, and no video content moderation -- both
   deliberately out of scope, see the plan's "Scope boundaries".
 - The breakout room's private track is inert (no facilitator TTS), and
