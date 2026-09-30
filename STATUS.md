@@ -1,6 +1,6 @@
 # Status
 
-Updated at natural checkpoints (a completed, verified piece of work), not on every commit. Meant to let anyone — including you, switching between your two Claude accounts on this same machine — pick the project back up cold, without depending on any one conversation's chat history. See `README.md` for what the project actually is.
+Updated at natural checkpoints (a completed, verified piece of work), not on every commit. Meant to let anyone — including you, switching between your two Claude accounts on this same machine — pick the project back up cold, without depending on any one conversation's chat history. See `README.md` for what the project actually is, and `ROADMAP.md` for the structural phase-level view (this file is the rolling log of what actually happened; that one is the checklist of what needs to be true next).
 
 **Last updated:** 2026-09-30
 

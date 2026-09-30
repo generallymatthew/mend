@@ -1,6 +1,6 @@
 # Mend
 
-A confidential, AI-facilitated conflict resolution tool for workplace teams. See `product-spec.html` for the full elevator pitch and mission.
+A confidential, AI-facilitated conflict resolution tool for workplace teams. See `product-spec.html` for the full elevator pitch and mission, `STATUS.md` for what's recently happened, and `ROADMAP.md` for the phase-level view of what's next.
 
 ## What's here
 
