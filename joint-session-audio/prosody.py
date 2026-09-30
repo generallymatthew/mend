@@ -150,6 +150,7 @@ class SpeakerBaseline:
     def __init__(self, min_segments_for_baseline: int = 3):
         self.min_segments_for_baseline = min_segments_for_baseline
         self._pitch = _RunningStat()
+        self._pitch_variability = _RunningStat()  # this speaker's own typical WITHIN-utterance pitch_std_hz, not the mean pitch -- see flags()
         self._energy = _RunningStat()
         self._rate = _RunningStat()
 
@@ -160,6 +161,8 @@ class SpeakerBaseline:
     def update(self, features: ProsodyFeatures) -> None:
         if features.pitch_mean_hz is not None:
             self._pitch.update(features.pitch_mean_hz)
+        if features.pitch_std_hz is not None:
+            self._pitch_variability.update(features.pitch_std_hz)
         self._energy.update(features.energy_mean)
         if features.speaking_rate_wps is not None:
             self._rate.update(features.speaking_rate_wps)
@@ -171,7 +174,20 @@ class SpeakerBaseline:
         themselves instead of trusting a black box. Empty, including while
         the baseline is still warming up (`ready` is False): "no flags yet"
         is the honest answer when there isn't enough of this speaker's own
-        history to compare against."""
+        history to compare against.
+
+        pitch_lowered and pitch_flattened are deliberately two different
+        checks, found to be necessary (not just a hypothetical) by real-
+        speech validation (see README.md's "Prosody / tone signal"):
+        pitch_lowered compares this segment's AVERAGE pitch against the
+        speaker's own average (a lower average can read as resigned or
+        withdrawn); pitch_flattened compares this segment's OWN pitch_std_hz
+        -- how much the pitch moves around WITHIN the segment -- against
+        how much it usually does for this speaker, which is the more
+        accurate signal for monotone/deadpan delivery. A segment can have a
+        perfectly normal average pitch while still sounding flat/deadpan if
+        it just doesn't rise and fall the way this speaker's speech usually
+        does -- conflating the two under one mean-pitch check missed that."""
         if not self.ready:
             return []
         out: List[str] = []
@@ -180,9 +196,12 @@ class SpeakerBaseline:
             if z >= z_threshold:
                 out.append("pitch_elevated")
             elif z <= -z_threshold:
-                # notably flatter/lower than this speaker's own norm -- can
-                # read as deadpan delivery or withdrawal, not a claim of
-                # which; see module docstring
+                out.append("pitch_lowered")
+        if features.pitch_std_hz is not None and self._pitch_variability.std > 0:
+            z = (features.pitch_std_hz - self._pitch_variability.mean) / self._pitch_variability.std
+            if z <= -z_threshold:
+                # can read as deadpan/monotone delivery, or flat affect --
+                # not a claim of which; see module docstring
                 out.append("pitch_flattened")
         if self._energy.std > 0:
             z = (features.energy_mean - self._energy.mean) / self._energy.std

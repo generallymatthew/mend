@@ -136,15 +136,42 @@ same "separate, larger integration" boundary as the breakout room's
 facilitator-voice gap above.
 
 Pure feature extraction + baseline logic, no LiveKit dependency, fully
-unit-tested with synthetic tones (see `tests/test_prosody.py`) -- real
-speech's actual pitch/energy distributions, and whether z-score >= 1.5 is
-even the right threshold for these categories, have not been validated
-against real recorded conversation, only proven internally consistent
-against synthetic audio. Real validation needs real recorded speech (this
-sandboxed dev environment has no microphone, same constraint as the video
-opt-in gap above) and almost certainly a human read of whether the flags
-that fire actually track real tension, not just algorithmic deviation from
-a speaker's own recent past.
+unit-tested with synthetic tones (see `tests/test_prosody.py`).
+
+**Also validated against real synthesized speech** (macOS `say` -- genuine
+formants/harmonics/prosody, not sine tones; still not a live human
+recording, this sandboxed environment has no microphone -- see
+`tests/validate_prosody_real_speech.py`, runnable standalone). Pitch, energy,
+and speaking-rate tracking all behave correctly on real speech: pitch stays
+stable (168-175Hz) across six different calm utterances from the same
+voice, a genuinely loud+fast segment correctly fires `energy_elevated`/
+`pace_elevated`, and a genuinely pitch-shifted segment correctly fires
+`pitch_elevated` too.
+
+**This real-speech run also caught a real bug, not just a data point**: an
+earlier version of `pitch_flattened` compared a segment's *average* pitch
+against the baseline average, which conflates "lower pitch" with "flatter,
+less-varying pitch" -- two different things (a resigned, quieter tone vs. a
+genuinely monotone/deadpan one). Fixed in `prosody.py`: `pitch_lowered`
+(average pitch dropped) and `pitch_flattened` (this segment's own
+pitch_std_hz -- how much pitch moves around *within* the segment -- dropped
+relative to how much it usually does for this speaker) are now two separate
+checks, both covered in `tests/test_prosody.py` with synthetic audio built
+specifically to isolate one from the other.
+
+**What real-speech validation could *not* confirm**: whether
+`pitch_flattened` fires correctly on genuine human deadpan/sarcastic
+delivery. macOS's TTS has no real "flat affect" mode -- slowing the rate
+down on a short, punctuated, deliberately sarcastic-sounding line
+("Sure. That's just great. No problem at all.") produced *more* pitch
+variability than the calm baseline, not less, because each short sentence
+gets its own falling terminal pitch contour from the TTS engine. That's an
+honest limit of what TTS can validate, not evidence the flag itself is
+wrong -- the controlled synthetic test proves the underlying logic
+correctly detects reduced variability when it's actually present. Whether
+it fires the way a human reviewer would expect on genuine sarcastic
+delivery still needs real recorded human speech, which remains blocked on
+this sandboxed environment having no microphone.
 
 ## Setup
 
@@ -292,10 +319,15 @@ rejected, the original target holds.
   lives entirely in `../joint-session-app`'s facilitator LLM today, over
   text/WebSocket, with no live connection to this app. Wiring the two
   together is a separate, larger integration, deliberately out of scope.
-- **Prosody (see "Prosody / tone signal" above) is unvalidated against real
-  speech** -- proven internally consistent against synthetic tones only
-  (`tests/test_prosody.py`), not checked against real recorded conversation
-  for whether the features/thresholds actually track real tension (this
+- **Prosody (see "Prosody / tone signal" above) is validated against real
+  synthesized speech, not real human speech** -- `tests/validate_prosody_real_speech.py`
+  confirmed pitch/energy/rate tracking behave correctly on genuine speech
+  audio (not just sine tones) and caught a real bug (`pitch_flattened` was
+  conflating average-pitch-drop with reduced-variability, now fixed and
+  split into two checks). What it could not confirm: whether the flags,
+  `pitch_flattened` especially, fire the way a human would expect on
+  genuine deadpan/sarcastic delivery -- macOS TTS has no real "flat affect"
+  mode to test that against. Needs real recorded human speech (this
   sandboxed environment has no microphone, same constraint as the video-
   opt-in gap above). It's also not wired into any decision anywhere, by
   design for now -- logged for a human to read, nothing more.

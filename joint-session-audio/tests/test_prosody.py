@@ -24,6 +24,22 @@ def tone_pcm16(freq_hz: float, duration_s: float, amplitude: float = 0.5, sample
     return (wave * 32767).astype(np.int16).tobytes()
 
 
+def varying_tone_pcm16(
+    base_freq_hz: float, swing_hz: float, duration_s: float,
+    amplitude: float = 0.5, sample_rate: int = SAMPLE_RATE, mod_rate_hz: float = 1.5,
+) -> bytes:
+    """A tone whose instantaneous frequency sweeps +/-swing_hz around
+    base_freq_hz -- simulates a natural rising/falling pitch contour (a
+    constant tone has none), which is what pitch_flattened's WITHIN-segment
+    variability check (see prosody.py's SpeakerBaseline.flags) needs a
+    baseline of to mean anything."""
+    t = np.arange(int(sample_rate * duration_s)) / sample_rate
+    inst_freq = base_freq_hz + swing_hz * np.sin(2 * np.pi * mod_rate_hz * t)
+    phase = 2 * np.pi * np.cumsum(inst_freq) / sample_rate
+    wave = amplitude * np.sin(phase)
+    return (wave * 32767).astype(np.int16).tobytes()
+
+
 def silence_pcm16(duration_s: float, sample_rate: int = SAMPLE_RATE) -> bytes:
     return np.zeros(int(sample_rate * duration_s), dtype=np.int16).tobytes()
 
@@ -110,6 +126,44 @@ def test_baseline_flags_elevated_pitch_energy_and_pace():
     print(f"PASS: a segment far from this speaker's own baseline is flagged: {flags}")
 
 
+def _build_expressive_baseline() -> SpeakerBaseline:
+    """A baseline where pitch genuinely rises and falls within each segment
+    (a real speaker's normal expressive range), needed for pitch_flattened's
+    WITHIN-segment variability check to mean anything -- constant tones (as
+    in _build_calm_baseline) have ~zero pitch_std by construction, which
+    can't establish what "less variable than usual" would even mean."""
+    baseline = SpeakerBaseline(min_segments_for_baseline=3)
+    sweeps = [(150, 25, 0.28), (155, 30, 0.31), (148, 22, 0.29), (152, 28, 0.30)]
+    texts = ["four calm steady words", "five fairly calm words too", "three calm words", "four steady calm words"]
+    for (base, swing, amp), text in zip(sweeps, texts):
+        baseline.update(analyze_segment(varying_tone_pcm16(base, swing, 2.0, amplitude=amp), text, SAMPLE_RATE))
+    return baseline
+
+
+def test_baseline_flags_pitch_flattened_from_reduced_variability():
+    baseline = _build_expressive_baseline()
+    assert baseline.ready is True
+    monotone = analyze_segment(tone_pcm16(150, 2.0, amplitude=0.30), "four calm steady words", SAMPLE_RATE)
+    flags = baseline.flags(monotone)
+    assert "pitch_flattened" in flags, flags
+    print("PASS: a perfectly constant-pitch segment is flagged pitch_flattened against an expressive baseline")
+
+
+def test_baseline_flags_pitch_lowered_distinctly_from_pitch_flattened():
+    baseline = _build_expressive_baseline()
+    # Same swing_hz as the baseline (so equally variable within the
+    # segment), just centered on a lower average frequency -- isolates
+    # "average pitch dropped" from "variability dropped," which a constant
+    # tone (zero variability by construction) can't do on its own.
+    lower_but_still_expressive = analyze_segment(
+        varying_tone_pcm16(90, 26, 2.0, amplitude=0.30), "four calm steady words", SAMPLE_RATE
+    )
+    flags = baseline.flags(lower_but_still_expressive)
+    assert "pitch_lowered" in flags, flags
+    assert "pitch_flattened" not in flags, flags
+    print("PASS: a lower average pitch with normal variability is pitch_lowered, not pitch_flattened")
+
+
 def test_baseline_no_flags_for_a_consistent_segment():
     baseline = _build_calm_baseline()
     consistent = analyze_segment(tone_pcm16(150, 2.0, amplitude=0.30), "four calm steady words", SAMPLE_RATE)
@@ -133,6 +187,8 @@ def main():
     test_short_audio_below_one_frame_does_not_crash()
     test_baseline_not_ready_returns_no_flags_even_if_extreme()
     test_baseline_flags_elevated_pitch_energy_and_pace()
+    test_baseline_flags_pitch_flattened_from_reduced_variability()
+    test_baseline_flags_pitch_lowered_distinctly_from_pitch_flattened()
     test_baseline_no_flags_for_a_consistent_segment()
     test_baseline_flags_hesitant_from_pause_ratio()
     print("\nPASS (all)")
