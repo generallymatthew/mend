@@ -40,6 +40,7 @@ from livekit.agents import AutoSubscribe, JobContext, JobProcess, WorkerOptions,
 
 from breakout_gate import BreakoutGate, SessionState
 from delay_buffer import DEFAULT_BUFFER_SECONDS, DEFAULT_CUT_THRESHOLD, DelayBuffer, load_default_classifier
+from prosody import SpeakerBaseline, analyze_segment
 from stt import SAMPLE_RATE, StreamingSTT
 from video_parity import RoomVideoMode, VideoParityGate
 
@@ -101,6 +102,13 @@ class ParticipantBridge:
         # nothing is lost/desynced when the pause ends), only the release
         # onto the other employee's bridge track is withheld.
         self.paused = False
+        # Auxiliary tension signal (prosody.py) -- pitch/energy/pace judged
+        # against THIS participant's own running baseline, logged for a
+        # human or a future facilitator prompt to weigh alongside the
+        # transcript. Deliberately not read by DelayBuffer/the classifier
+        # above: it doesn't influence the real-time cut decision, only
+        # observability -- see prosody.py's module docstring for why.
+        self.prosody_baseline = SpeakerBaseline()
 
     async def publish(self):
         # Scope this track so only `other_identity` may subscribe to it --
@@ -135,7 +143,25 @@ class ParticipantBridge:
         self.stt.push_audio(bytes(frame.data))
 
     def _on_segment(self, audio_bytes: bytes, text: str):
+        self._log_prosody(audio_bytes, text)
         asyncio.create_task(self.buffer.submit(audio_bytes, text))
+
+    def _log_prosody(self, audio_bytes: bytes, text: str):
+        # Plain numpy on a handful of ~30ms frames -- cheap enough (unlike
+        # the classifier's BERT call, which does need the executor below)
+        # to run inline here without blocking the event loop.
+        features = analyze_segment(audio_bytes, text)
+        flags = self.prosody_baseline.flags(features)
+        if flags:
+            logger.info(
+                "prosody participant=%s flags=%s pitch=%s energy=%.3f pace=%s text=%r",
+                self.participant_identity, flags,
+                f"{features.pitch_mean_hz:.0f}Hz" if features.pitch_mean_hz else "n/a",
+                features.energy_mean,
+                f"{features.speaking_rate_wps:.1f}wps" if features.speaking_rate_wps else "n/a",
+                text,
+            )
+        self.prosody_baseline.update(features)
 
     def _publish_release(self, audio_bytes: bytes):
         if self.paused:

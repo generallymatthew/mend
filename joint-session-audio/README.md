@@ -33,6 +33,9 @@ behavior, not a guarantee.
 - `breakout_gate.py` -- the private side-conversation ("breakout") state
   gate (see "Private side conversation" below). No LiveKit dependency,
   unit-testable on its own -- same split as the other two.
+- `prosody.py` -- pitch/energy/pace feature extraction and a per-speaker
+  baseline (see "Prosody / tone signal" below). No LiveKit dependency,
+  unit-testable on its own -- same split as the other three.
 - `agent.py` -- the LiveKit Agents worker that's the actual "bridge"
   participant: subscribes to each employee's mic, wires STT -> delay buffer,
   republishes gated audio to the other employee only; also enforces video
@@ -101,6 +104,47 @@ data channel via the admin `RoomService.send_data` API --
 `POST /api/room/{code}/resume` send the exact same two control-message
 shapes a real facilitator-LLM integration would send from wherever it
 runs. These two endpoints are that seam, not a decision-maker.
+
+## Prosody / tone signal
+
+A text transcript alone can't carry tone -- a flat, deadpan "sure, that's
+fine" reads identically to a sincere one once it's been transcribed. Real
+audio-only sarcasm/intent detection is a hard, unsolved research problem
+though, and this product leans hard toward precision over false positives
+everywhere it makes an automated call (`../classifier/README.md`'s Results
+section shows what happens when an under-validated signal gets trusted too
+early, even with good intentions behind it). So this starts narrow and
+deliberately auxiliary, not as a sarcasm classifier: `prosody.py` extracts a
+few interpretable acoustic features per STT-finalized segment --
+pitch (F0), loudness/energy, speaking rate, pause ratio -- and
+`SpeakerBaseline` compares each new segment against *that same speaker's*
+own running average (Welford's streaming mean/variance) rather than a fixed
+population threshold, since baseline pitch/pace varies enormously person to
+person. When a segment is notably elevated or flattened relative to that
+speaker's own baseline (z-score >= 1.5), `agent.py` logs a human-readable
+flag line (`pitch_elevated`, `energy_elevated`, `pace_elevated`,
+`pace_slowed`, `pitch_flattened`, `hesitant`) -- see `ParticipantBridge.
+_log_prosody`.
+
+**Deliberately not wired into the real-time cut decision.** `delay_buffer.py`
+and `../classifier/inference.py` are unchanged; this is observability only,
+meant as context for a human or a future facilitator-LLM prompt to weigh
+alongside the transcript, not a confidence score or an automated decision.
+Wiring it into an actual decision (the cut gate, or the disconnected
+`../joint-session-app` facilitator LLM) is real future work, not done here --
+same "separate, larger integration" boundary as the breakout room's
+facilitator-voice gap above.
+
+Pure feature extraction + baseline logic, no LiveKit dependency, fully
+unit-tested with synthetic tones (see `tests/test_prosody.py`) -- real
+speech's actual pitch/energy distributions, and whether z-score >= 1.5 is
+even the right threshold for these categories, have not been validated
+against real recorded conversation, only proven internally consistent
+against synthetic audio. Real validation needs real recorded speech (this
+sandboxed dev environment has no microphone, same constraint as the video
+opt-in gap above) and almost certainly a human read of whether the flags
+that fire actually track real tension, not just algorithmic deviation from
+a speaker's own recent past.
 
 ## Setup
 
@@ -248,3 +292,10 @@ rejected, the original target holds.
   lives entirely in `../joint-session-app`'s facilitator LLM today, over
   text/WebSocket, with no live connection to this app. Wiring the two
   together is a separate, larger integration, deliberately out of scope.
+- **Prosody (see "Prosody / tone signal" above) is unvalidated against real
+  speech** -- proven internally consistent against synthetic tones only
+  (`tests/test_prosody.py`), not checked against real recorded conversation
+  for whether the features/thresholds actually track real tension (this
+  sandboxed environment has no microphone, same constraint as the video-
+  opt-in gap above). It's also not wired into any decision anywhere, by
+  design for now -- logged for a human to read, nothing more.
