@@ -1,0 +1,949 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mend manager coaching (local prototype)</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Mend brand kit: Evergreen ink, Oat paper, Evergreen as primary UI
+       accent -- Pink is reserved for the logo mark/single CTAs, not general
+       chrome, since it fails as text/fill-with-light-text at this
+       lightness (verified via WCAG contrast calc: 2.2:1 on Oat). */
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
+  .wrap{max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-direction:column; height:100vh;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:12px;}
+  .eyebrow::before{content:'';display:inline-block;width:14px;height:10px;margin-right:6px;vertical-align:-1px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
+  .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
+  .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
+  .msg.manager{background:var(--accent); color:#fff; align-self:flex-end;}
+  .msg.transcript{font-style:italic; opacity:.7;}
+  .msg.pending{opacity:.45;} /* live partial transcript, not yet the finalized turn -- same bubble, corrected in place once real */
+  .composer{display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--border); padding-top:12px;}
+  textarea{flex:1; resize:none; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; background:var(--card); color:var(--ink);}
+  button{border:1.5px solid var(--border); background:var(--card); color:var(--ink); border-radius:10px; padding:10px 14px; font:inherit; font-weight:600; cursor:pointer;}
+  button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  button.recording{background:#8C3B2E; color:#fff; border-color:#8C3B2E;}
+  button:disabled{opacity:.5; cursor:default;}
+  .status{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:6px;}
+  .banner{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:10px 14px; margin-top:10px; font-size:13.5px;}
+  .banner a{text-decoration:none;}
+  .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
+  .video-toggle{display:flex; justify-content:flex-end; margin-bottom:8px;}
+  .video-toggle button{font-size:12.5px; padding:6px 10px;}
+  .mode-toggle{display:flex; gap:6px; margin-bottom:12px;}
+  .mode-toggle button{flex:1; padding:9px 12px; font-size:13.5px; text-align:left;}
+  .mode-toggle button .sub{display:block; font-weight:400; font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .mode-toggle button.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .mode-toggle button.active .sub{color:rgba(255,255,255,.8);}
+  .roleplay-badge{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; margin-bottom:2px;}
+  .video-area{flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;}
+  .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
+  /* Fixed 200x200 footprint (matching avatarCanvas's own size) so the
+     facilitator's canvas and the manager's plain circle -- drawn at
+     different diameters, see below -- still occupy identical space and
+     land on the same center point once live mode top-anchors both tiles. */
+  .avatar-row{display:flex; align-items:center; justify-content:center; width:200px; height:200px;}
+  #avatarCanvas{display:block;}
+  .caption{min-height:44px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:16px; font-weight:600; line-height:1.4; padding:0 12px 10px; color:var(--ink); max-width:480px;}
+  .live-row{display:flex; align-items:center; gap:10px; margin-top:8px;}
+  .live-row button{font-size:13px; padding:7px 12px; flex-shrink:0;}
+  .live-row button.recording{background:#8C3B2E; color:#fff; border-color:#8C3B2E;}
+  .live-hint{font-size:11.5px; color:var(--ink-soft); line-height:1.4;}
+  /* Simple "yes, I can hear you" indicator -- shown only while recording.
+     The dot actually lights up on real mic input above a small threshold
+     (see updateMicIndicator()), not just on "recording" state, so it's
+     proof sound is being picked up, not just that the button was pressed. */
+  .mic-indicator{display:none; align-items:center; gap:7px; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+  .mic-indicator.active{display:flex;}
+  .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
+  .mic-indicator-dot.lit{background:#8C3B2E; transform:scale(1.15);}
+
+  /* Zoom-call style layout: the avatar + captions + controls are the main
+     event, full attention like a video tile; the transcript is reference
+     material, docked to the side rather than the main flow. */
+  /* overflow-y:auto not hidden: on a short/narrow viewport, live mode's two
+     stacked tiles (see the mobile media query below) can need more height
+     than this box has -- centered flex content that overflows a hidden box
+     clips silently off the TOP too, not just the bottom, which made the new
+     facilitator tile-label vanish invisibly instead of just being scrolled
+     past. overflow-x stays clipped for the rounded corners. */
+  .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow-y:auto; overflow-x:hidden; background:var(--card);}
+  .call-main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper); overflow-y:auto;}
+  .call-controls{width:100%; max-width:480px; display:flex; flex-direction:column; gap:8px;}
+  .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
+  .transcript-header{padding:14px 16px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
+  .transcript-header button{font-size:11px; padding:5px 9px; text-transform:none; letter-spacing:normal; font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
+  .transcript-panel .thread{flex:1; min-height:0; overflow-y:auto; padding:16px; margin:0;}
+
+  /* Live mode: two matching tiles (facilitator | you) instead of one avatar
+     plus a side transcript log -- each side's spoken words show as a single
+     current-sentence subtitle under its own circle, never also logged as a
+     separate full message. See setLiveLayout(). The two circles need to
+     land at the same height regardless of how long either side's caption
+     text is, so live mode pins label+circle to the top of each tile
+     (flex-start) instead of centering each tile's content as its own block
+     -- centering independently is what let them drift out of alignment
+     whenever one caption ran longer than the other. */
+  .tile-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);}
+  .call-layout.live .call-main, .call-layout.live .manager-tile{justify-content:flex-start;}
+  .manager-tile{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper); border-left:1px solid var(--border); overflow-y:auto;}
+  /* 160px, not the 200x200 canvas's own box size: drawAvatarFrame() draws
+     the facilitator's circle at radius 80*scale (~160px diameter) inset
+     within its 200x200 canvas, not edge-to-edge -- matching this to that
+     drawn diameter, not the canvas's outer box, is what actually makes the
+     two circles read as the same size. */
+  .manager-circle{width:160px; height:160px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
+  .manager-circle.lit{background:#8C3B2E; transform:scale(1.03);}
+  @media (max-width: 760px){
+    .call-layout{flex-direction:column;}
+    .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
+    .manager-tile{border-left:none; border-top:1px solid var(--border);}
+  }
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Mend &middot; manager coaching (local prototype, text + voice memo)</div>
+  <div class="mode-toggle">
+    <button id="modeTalkBtn" class="active">Talk<span class="sub">Think it through with the facilitator</span></button>
+    <button id="modePracticeBtn">Practice<span class="sub">Rehearse the hard conversation first</span></button>
+  </div>
+
+  <div class="video-toggle" id="videoToggle" hidden>
+    <button id="videoStartBtn">Start video call</button>
+  </div>
+
+  <div id="textMode" class="video-area" style="flex-direction:column;">
+    <div class="call-layout">
+      <div class="call-main">
+        <div class="tile-label" id="facilitatorLabel" hidden>Facilitator</div>
+        <div class="avatar-row"><canvas id="avatarCanvas" width="200" height="200"></canvas></div>
+        <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
+        <div class="caption" id="caption"></div>
+        <div class="call-controls">
+          <div class="composer" id="composer">
+            <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
+            <button id="recordBtn" title="Record a voice memo">&#127908;</button>
+            <button id="sendBtn" class="primary">Send</button>
+          </div>
+          <div class="live-row">
+            <button id="liveBtn">Go live</button>
+            <span class="live-hint">Hands-free: it listens, replies, then listens again automatically until you end it.</span>
+          </div>
+          <div class="mic-indicator" id="micIndicator">
+            <span class="mic-indicator-dot" id="micIndicatorDot"></span>
+            <span>Listening&hellip;</span>
+          </div>
+          <div class="status" id="status"></div>
+        </div>
+      </div>
+      <div class="manager-tile" id="managerTile" hidden>
+        <div class="tile-label">You</div>
+        <div class="avatar-row"><div class="manager-circle" id="managerCircle"></div></div>
+        <div class="caption" id="managerCaption"></div>
+      </div>
+      <div class="transcript-panel" id="transcriptPanel">
+        <div class="transcript-header">
+          <span>Transcript</span>
+          <button id="resetBtn" title="Start a new conversation">Reset</button>
+        </div>
+        <div class="thread" id="thread"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="videoMode" class="video-area" hidden>
+    <iframe id="videoFrame" allow="camera; microphone; autoplay; display-capture" title="Mend facilitator video call"></iframe>
+    <button id="videoEndBtn">End video call</button>
+  </div>
+
+  <div class="banner" id="banner" hidden>
+    <span>You've structured this conversation. Ready to rehearse it? Switch to Practice above.</span>
+  </div>
+</div>
+
+<script>
+// Path-relative, not hardcoded absolute: this page is served at "/"
+// standalone (direct port) but at "/coach/" behind the local Caddy proxy
+// (../Caddyfile). fetch('/api/...') and a server-returned "/api/audio/..."
+// URL are both absolute paths that would otherwise resolve against the
+// proxy's root instead of this app -- same class of bug the WebSocket URL
+// in ../joint-session-app/static/index.html had.
+const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
+function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
+
+const thread = document.getElementById('thread');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const recordBtn = document.getElementById('recordBtn');
+const statusEl = document.getElementById('status');
+const micIndicator = document.getElementById('micIndicator');
+const micIndicatorDot = document.getElementById('micIndicatorDot');
+const facilitatorLabel = document.getElementById('facilitatorLabel');
+const managerTile = document.getElementById('managerTile');
+const managerCircle = document.getElementById('managerCircle');
+const managerCaption = document.getElementById('managerCaption');
+const transcriptPanel = document.getElementById('transcriptPanel');
+const composer = document.getElementById('composer');
+const callLayout = document.querySelector('.call-layout');
+
+// Live mode swaps the single avatar + side transcript log for two matching
+// tiles (facilitator | you), each showing only its own current subtitle --
+// see the CSS comment above .manager-tile. Non-live Talk/Practice mode is
+// unaffected, still the original avatar + transcript-panel layout.
+function setLiveLayout(active) {
+  callLayout.classList.toggle('live', active);
+  facilitatorLabel.hidden = !active;
+  managerTile.hidden = !active;
+  transcriptPanel.hidden = active;
+  micIndicator.hidden = active; // the manager tile's circle + subtitle now do this job
+  composer.hidden = active; // hands-free: nothing to type or manually record while live
+}
+
+const audioEl = new Audio();
+
+// Abstract avatar: a plain shape with a mouth, in place of a realistic
+// video face. Geometry, colours and per-state motion match the design
+// handoff in design_handoff_simple_agent_presence/ exactly. States used
+// here: idle (resting, before anything's happened -- the handoff has no
+// rest state of its own, so this borrows Listening's look), listening
+// (recording the manager's own voice memo), thinking (waiting on the
+// facilitator), talking (reacts to the facilitator's own TTS audio, i.e.
+// the handoff's "Speaking"). empathizing/calming are implemented below
+// per the handoff but not yet wired to any trigger in this prototype.
+let avatarState = 'idle';
+let audioCtx = null, analyser = null, avatarData = null;
+let micAudioCtx = null, micAnalyser = null, micData = null;
+const avatarCanvas = document.getElementById('avatarCanvas');
+const avatarCtx = avatarCanvas.getContext('2d');
+
+function ensureAudioGraph() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaElementSource(audioEl);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    avatarData = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+  } catch (e) {} // Web Audio unavailable; avatar just stays idle, audio still plays normally
+}
+
+// Live partial transcription: while the manager is still talking, the raw
+// PCM samples of the turn-so-far are periodically re-sent to Whisper and the
+// result is written into the SAME transcript-panel bubble the final turn
+// will end up in (see startRecordingTurn/onstop) -- one place, corrected in
+// place, never a separate live indicator plus a final message shown after.
+// Same ScriptProcessorNode tap as the VAD/level meter, just also collecting
+// raw samples rather than only reading levels off an analyser. faster-
+// whisper resamples whatever rate it's given (same as the final /api/voice
+// call, which already hands it raw browser-native-rate webm) -- no client-
+// side resampling needed, just a WAV header.
+let micProcessor = null;
+let pcmChunks = [];
+let pcmSampleRate = 16000;
+let partialTurnId = 0;
+let partialInFlight = false;
+let partialSentSamples = 0;
+let pendingTranscriptEl = null;
+const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny sliver of new audio
+const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
+
+function startMicAnalysis(stream) {
+  try {
+    micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = micAudioCtx.createMediaStreamSource(stream);
+    micAnalyser = micAudioCtx.createAnalyser();
+    micAnalyser.fftSize = 256;
+    micData = new Uint8Array(micAnalyser.frequencyBinCount);
+    source.connect(micAnalyser); // not connected to destination -- we don't want to echo the mic back
+
+    pcmSampleRate = micAudioCtx.sampleRate;
+    micProcessor = micAudioCtx.createScriptProcessor(4096, 1, 1);
+    micProcessor.onaudioprocess = (e) => {
+      pcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+    };
+    source.connect(micProcessor);
+    micProcessor.connect(micAudioCtx.destination); // some browsers only fire onaudioprocess once connected to a destination; silent since we never write to outputBuffer
+  } catch (e) {}
+}
+
+function resetPartialCapture() {
+  pcmChunks = [];
+  partialSentSamples = 0;
+  partialTurnId++; // invalidates any in-flight partial response from the turn just ended
+}
+
+function stopMicAnalysis() {
+  if (micProcessor) micProcessor.disconnect();
+  micProcessor = null;
+  if (micAudioCtx) micAudioCtx.close().catch(() => {});
+  micAudioCtx = null;
+  micAnalyser = null;
+  micData = null;
+}
+
+function rmsLevel(analyserNode, dataArr) {
+  analyserNode.getByteTimeDomainData(dataArr);
+  let sumSq = 0;
+  for (let i = 0; i < dataArr.length; i++) {
+    const v = (dataArr[i] - 128) / 128;
+    sumSq += v * v;
+  }
+  return Math.min(1, Math.sqrt(sumSq / dataArr.length) * 4);
+}
+
+function encodeWavBlob(samples, sampleRate) {
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buf);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); // byte rate (16-bit mono)
+  view.setUint16(32, 2, true); // block align
+  view.setUint16(34, 16, true); // bits per sample
+  writeStr(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Blob([buf], {type: 'audio/wav'});
+}
+
+function concatFloat32(chunks) {
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const out = new Float32Array(total);
+  let offset = 0;
+  for (const c of chunks) { out.set(c, offset); offset += c.length; }
+  return out;
+}
+
+async function maybeSendPartial(now) {
+  if (partialInFlight || !pendingTranscriptEl) return;
+  const totalSamples = pcmChunks.reduce((n, c) => n + c.length, 0);
+  if (totalSamples < pcmSampleRate * PARTIAL_MIN_TOTAL_SEC) return;
+  if (totalSamples - partialSentSamples < pcmSampleRate * PARTIAL_MIN_NEW_SAMPLES_SEC) return;
+  const turnId = partialTurnId;
+  partialInFlight = true;
+  partialSentSamples = totalSamples;
+  try {
+    const wav = encodeWavBlob(concatFloat32(pcmChunks), pcmSampleRate);
+    const form = new FormData();
+    form.append('file', wav, 'partial.wav');
+    const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
+    const data = await res.json();
+    if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
+      pendingTranscriptEl.textContent = '"' + data.partial + '"';
+      thread.scrollTop = thread.scrollHeight;
+      managerCaption.textContent = data.partial; // plain, no quotes -- matches the facilitator's own #caption style
+    }
+  } catch (e) {
+    // best-effort preview only -- a failed partial never interrupts the turn
+  } finally {
+    partialInFlight = false;
+  }
+}
+
+// Geometry and motion below are a direct port of target()/apply() from
+// design_handoff_simple_agent_presence/Simple Agent.dc.html, adapted from
+// SVG to canvas. Defined on the handoff's 200x200 viewBox and scaled
+// uniformly to this canvas's actual size. w = mouth half-width, o = mouth
+// height, dx/dy = mouth offset from centre, s = circle scale.
+// Pink-family now (the facilitator's own brand color, see joint-session-app's
+// tile scheme for the same "facilitator = Pink" convention) -- generated by
+// preserving each original state's lightness *offset* from its old
+// Evergreen-family base, reapplied to Mend Pink's own H/S, so the relative
+// mood relationships (thinking darker, empathizing/calming lighter/softer)
+// survive the rebrand instead of being hand-guessed.
+const AVATAR_COLORS = {
+  listening:   [0xf3, 0x82, 0x9a],
+  idle:        [0xf3, 0x82, 0x9a], // handoff has no rest state; borrows Listening's colour too
+  talking:     [0xf3, 0x82, 0x9a], // "Speaking" in the handoff
+  thinking:    [0xf1, 0x6c, 0x88],
+  empathizing: [0xf5, 0x9a, 0xad],
+  calming:     [0xf8, 0xb5, 0xc3],
+};
+const AVATAR_MOUTH_FILL = '#F6F1E7';
+
+function avatarTarget(state, t, level) {
+  if (state === 'listening' || state === 'idle') {
+    // side (dx) would drift toward whichever participant is currently
+    // speaking; this prototype only has one manager, so it stays centred.
+    const nod = Math.max(0, Math.sin(t * 1.6)) ** 8 * Math.max(0, Math.sin(t * 0.4));
+    return {w: 28, o: 6, dx: 0, dy: nod * 4, s: 1 + 0.012 * Math.sin(t * 1.1)};
+  }
+  if (state === 'thinking') {
+    return {w: 12, o: 6, dx: 12 * Math.sin(t * 0.8), dy: -5, s: 0.97};
+  }
+  if (state === 'talking') { // "Speaking": driven by the facilitator's real TTS amplitude
+    const v = level;
+    return {w: 28 - 6 * v, o: 6 + 24 * v, dx: 0, dy: 0, s: 1 + 0.01 * v};
+  }
+  if (state === 'empathizing') {
+    return {w: 22, o: 12, dx: 0, dy: 2.5 * Math.sin(t * 1.3), s: 1.025};
+  }
+  // calming: slow 4s-in/6s-out breath cycle
+  const p = t % 10;
+  const b = p < 4 ? (1 - Math.cos(Math.PI * p / 4)) / 2 : (1 + Math.cos(Math.PI * (p - 4) / 6)) / 2;
+  return {w: 24 + 8 * b, o: 6, dx: 0, dy: 0, s: 0.98 + 0.07 * b};
+}
+
+let avatarCur = {w: 28, o: 6, dx: 0, dy: 0, s: 1, col: AVATAR_COLORS.idle.slice()};
+let avatarLastFrame = performance.now();
+
+function drawAvatarFrame(now) {
+  const dt = Math.min(0.05, (now - avatarLastFrame) / 1000);
+  avatarLastFrame = now;
+  const t = now / 1000;
+  const level = (avatarState === 'talking' && analyser && !audioEl.paused)
+    ? rmsLevel(analyser, avatarData) : 0;
+  const target = avatarTarget(avatarState, t, level);
+  const k = Math.min(1, dt * (avatarState === 'talking' ? 14 : 4));
+  for (const key of ['w', 'o', 'dx', 'dy', 's']) {
+    avatarCur[key] += (target[key] - avatarCur[key]) * k;
+  }
+  const targetCol = AVATAR_COLORS[avatarState] || AVATAR_COLORS.idle;
+  const kc = Math.min(1, dt * 2);
+  avatarCur.col = avatarCur.col.map((v, i) => v + (targetCol[i] - v) * kc);
+
+  const w = avatarCanvas.width, h = avatarCanvas.height;
+  const scale = w / 200; // handoff geometry is defined on a 200x200 viewBox
+  avatarCtx.clearRect(0, 0, w, h);
+  const r = 80 * avatarCur.s * scale;
+  const cx = w / 2, cy = h / 2 + avatarCur.dy * 0.3 * scale;
+  avatarCtx.fillStyle = `rgb(${avatarCur.col.map(Math.round).join(',')})`;
+  avatarCtx.beginPath();
+  avatarCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  avatarCtx.fill();
+
+  const mx = w / 2 + avatarCur.dx * scale;
+  const my = h / 2 + avatarCur.dy * scale + 30 * avatarCur.s * scale;
+  avatarCtx.fillStyle = AVATAR_MOUTH_FILL;
+  avatarCtx.beginPath();
+  avatarCtx.ellipse(mx, my, Math.max(0, avatarCur.w * scale), Math.max(0, (avatarCur.o / 2) * scale), 0, 0, Math.PI * 2);
+  avatarCtx.fill();
+}
+
+// Captions: no real per-word timing from either TTS backend, so the reply
+// is split into short chunks and each chunk's start time is estimated
+// proportionally to its share of the total character count -- close enough
+// to read like real subtitles without needing forced alignment. One chunk
+// is at most one sentence -- never merge several short sentences together,
+// or the first chunk shows a whole mini-paragraph on screen at t=0, before
+// most of it has actually been said. A single long sentence still gets
+// split further on clause breaks so no one chunk sits on screen too long.
+const captionEl = document.getElementById('caption');
+let captionChunks = [];
+let captionStarts = [];
+
+function splitCaptionChunks(text) {
+  const sentences = (text || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+  const chunks = [];
+  for (const s of sentences) {
+    if (s.length <= 90) { chunks.push(s); continue; }
+    const clauses = s.split(/(?<=[,;:])\s+/);
+    let cur = '';
+    for (const c of clauses) {
+      if (cur && (cur + ' ' + c).length > 90) { chunks.push(cur); cur = c; }
+      else { cur = cur ? cur + ' ' + c : c; }
+    }
+    if (cur) chunks.push(cur);
+  }
+  return chunks;
+}
+
+function computeCaptionStarts() {
+  if (!captionChunks.length || !isFinite(audioEl.duration) || audioEl.duration <= 0) return;
+  const lens = captionChunks.map(c => c.length);
+  const total = lens.reduce((a, b) => a + b, 0) || 1;
+  let acc = 0;
+  captionStarts = lens.map((len) => {
+    const start = (acc / total) * audioEl.duration;
+    acc += len;
+    return start;
+  });
+}
+
+function updateCaption() {
+  if (avatarState !== 'talking' || !captionChunks.length) {
+    captionEl.textContent = '';
+    return;
+  }
+  if (captionStarts.length !== captionChunks.length) computeCaptionStarts();
+  let idx = 0;
+  for (let i = 0; i < captionStarts.length; i++) {
+    if (audioEl.currentTime >= captionStarts[i]) idx = i;
+  }
+  captionEl.textContent = captionChunks[idx] || '';
+}
+
+function animateAvatar(now) {
+  requestAnimationFrame(animateAvatar);
+  const t = now || performance.now();
+  drawAvatarFrame(t);
+  if (micAnalyser && recordBtn.classList.contains('recording')) {
+    const level = rmsLevel(micAnalyser, micData);
+    micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
+    managerCircle.classList.toggle('lit', level > VAD_THRESHOLD);
+    if (liveMode) checkVad(level, t);
+    maybeSendPartial(t);
+  }
+  updateCaption();
+}
+animateAvatar();
+
+audioEl.addEventListener('loadedmetadata', computeCaptionStarts);
+audioEl.addEventListener('play', () => { avatarState = 'talking'; });
+audioEl.addEventListener('pause', () => { if (avatarState === 'talking') avatarState = 'idle'; });
+audioEl.addEventListener('ended', () => {
+  if (avatarState === 'talking') avatarState = 'idle';
+  if (liveMode) startRecordingTurnSafe();
+});
+
+function playReplyAudio(url, text) {
+  captionChunks = splitCaptionChunks(text);
+  captionStarts = [];
+  if (!url) { avatarState = 'idle'; return; }
+  ensureAudioGraph();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  audioEl.src = apiPath(url);
+  audioEl.play().catch(() => {}); // autoplay can be blocked before first user gesture; harmless if so
+}
+
+// Reply text now arrives without audio (see server.py's facilitator_reply
+// docstring: TTS alone measured ~12-14s, previously bundled into one
+// blocking request with a misleading "transcribing..."/"responding..."
+// label the whole time). This fetches audio in a second round trip, not
+// awaited by callers, so the input re-enables as soon as text arrives
+// instead of waiting on voice too.
+async function speakReply(text) {
+  if (!text) return;
+  statusEl.textContent = 'generating voice...';
+  let audioUrl = null;
+  try {
+    const res = await fetch(apiPath('/api/speak'), {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text}),
+    });
+    const data = await res.json();
+    audioUrl = data.audio_url || null;
+  } catch (e) {
+    // no audio -- playReplyAudio(null, ...) below falls back to text-only
+  }
+  if (statusEl.textContent === 'generating voice...') statusEl.textContent = '';
+  playReplyAudio(audioUrl, text);
+}
+
+function addMessage(text, cls) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + cls;
+  div.textContent = text;
+  thread.appendChild(div);
+  thread.scrollTop = thread.scrollHeight;
+  return div;
+}
+
+const banner = document.getElementById('banner');
+
+const roleplayBadge = document.getElementById('roleplayBadge');
+
+function handleSignal(signal) {
+  if (!signal) return;
+  try {
+    const s = JSON.parse(signal);
+    banner.hidden = !s.conversation_structured;
+    roleplayBadge.hidden = !s.roleplay_active;
+  } catch (e) {}
+}
+
+function setBusy(busy) {
+  sendBtn.disabled = busy;
+  input.disabled = busy;
+  statusEl.textContent = busy ? 'facilitator is responding...' : '';
+}
+
+async function sendText() {
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMessage(text, 'manager');
+  setBusy(true);
+  avatarState = 'thinking';
+  try {
+    const res = await fetch(apiPath('/api/message'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text}),
+    });
+    const data = await res.json();
+    if (data.reply) addMessage(data.reply, 'facilitator');
+    handleSignal(data.signal);
+    speakReply(data.reply);
+  } catch (e) {
+    statusEl.textContent = 'error: ' + e.message;
+    avatarState = 'idle';
+  } finally {
+    setBusy(false);
+  }
+}
+
+sendBtn.addEventListener('click', sendText);
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendText();
+  }
+});
+
+let mediaRecorder = null;
+let chunks = [];
+let liveMode = false;
+
+// Voice-activity detection for live mode: neither TTS backend gives us
+// real-time streaming STT, so a live "conversation" here means auto-stopping
+// the recording once the mic goes quiet, rather than an always-on stream.
+// VAD_THRESHOLD is a floor, on the same 0..1 scale rmsLevel() already
+// produces, not the actual threshold used: every turn starts with a brief
+// calibration window that measures your real ambient noise (fan, room echo,
+// mic self-noise) and sets the real threshold above THAT, since a fixed
+// absolute number can't tell your background hum from your voice. Without
+// this, continuous ambient noise above the fixed threshold looked like
+// nonstop speech, and once it happened to dip briefly, got sent as a memo,
+// then the whole thing repeated on the next turn -- "keeps making voice
+// memos when I'm not talking."
+//
+// Calibration used to block real speech detection entirely for its first
+// 400ms ("if (vadCalibrating) { ...; return; }") -- fine if that window is
+// silent, but in "Go live" hands-free mode plenty of people start talking
+// the instant recording begins, so the very start of what they said was
+// never marked as speech at all ("not hearing me at first"). Below,
+// calibration now runs quietly in the background (only ever refining
+// vadThreshold once, when its window ends) while speech detection itself
+// runs every frame from turn start, always against whatever vadThreshold
+// currently is -- the safe fixed VAD_THRESHOLD floor until calibration
+// finishes, then the calibrated value after.
+//
+// Calibration also only counts samples that are already below the fixed
+// floor toward the noise-floor estimate -- a sample at or above it is
+// almost certainly the user's own voice, not ambient noise, and including
+// it would set the real threshold up near their own speaking volume, so
+// normal dips between words would then read as silence and cut them off
+// mid-sentence ("cuts off before I am done"). If no genuinely-quiet sample
+// ever appears in the window (continuous talking or loud room noise the
+// whole time), calibration just leaves the safe fixed floor in place
+// rather than computing a threshold from nothing.
+const VAD_THRESHOLD = 0.06;
+const VAD_SILENCE_MS = 1800;
+const VAD_MIN_SPEECH_MS = 500;
+const VAD_CALIBRATION_MS = 400;
+let vadSpeaking = false;
+let vadSpeechStarted = null;
+let vadSilenceSince = null;
+let vadCalibrating = false;
+let vadCalibrateEndsAt = 0;
+let vadNoiseFloor = 1;
+let vadThreshold = VAD_THRESHOLD;
+
+function startVadCalibration(now) {
+  vadCalibrating = true;
+  vadCalibrateEndsAt = now + VAD_CALIBRATION_MS;
+  vadNoiseFloor = 1; // shrinks toward the quietest genuinely-ambient sample found, see above
+  vadThreshold = VAD_THRESHOLD;
+}
+
+function checkVad(level, now) {
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+  if (vadCalibrating) {
+    if (level < VAD_THRESHOLD) vadNoiseFloor = Math.min(vadNoiseFloor, level);
+    if (now >= vadCalibrateEndsAt) {
+      vadCalibrating = false;
+      if (vadNoiseFloor < 1) vadThreshold = Math.max(VAD_THRESHOLD, vadNoiseFloor * 1.6 + 0.015);
+      // else: no quiet sample ever appeared -- vadThreshold stays at the
+      // safe fixed floor set in startVadCalibration, not computed from a
+      // noise-floor estimate that was never actually observed.
+    }
+    // Falls through to real detection below every frame, calibrating or
+    // not -- speech is never left undetected while this window runs.
+  }
+  if (level > vadThreshold) {
+    if (!vadSpeaking) { vadSpeaking = true; vadSpeechStarted = now; }
+    vadSilenceSince = null;
+    return;
+  }
+  if (!vadSpeaking) return;
+  if (vadSilenceSince === null) vadSilenceSince = now;
+  if (now - vadSilenceSince < VAD_SILENCE_MS) return; // still inside the grace window, keep waiting
+  // Silence window elapsed. Was there actually enough speech before it started,
+  // or was this a click/breath/mic pop? Measuring "now - vadSpeechStarted" here
+  // was the bug: that's always >= VAD_SILENCE_MS by this point, so any blip at
+  // all used to pass. The real question is how long the sound itself lasted,
+  // from its own start to when it went quiet.
+  const speechDuration = vadSilenceSince - vadSpeechStarted;
+  if (speechDuration > VAD_MIN_SPEECH_MS) {
+    mediaRecorder.stop();
+  } else {
+    vadSpeaking = false;
+    vadSpeechStarted = null;
+    vadSilenceSince = null;
+  }
+}
+
+async function startRecordingTurnSafe() {
+  // For live mode's own auto-continue points: if the mic fails partway
+  // through a conversation (permission revoked, device unplugged, another
+  // app grabs it), fall back to ending live mode cleanly instead of an
+  // unhandled rejection that leaves the button stuck saying "End live
+  // conversation" while nothing is actually listening.
+  try {
+    await startRecordingTurn();
+  } catch (e) {
+    liveMode = false;
+    liveBtn.textContent = 'Go live';
+    setLiveLayout(false);
+    statusEl.textContent = 'lost microphone access, live mode ended: ' + e.message;
+  }
+}
+
+async function startRecordingTurn() {
+  const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+  mediaRecorder = new MediaRecorder(stream);
+  chunks = [];
+  vadSpeaking = false;
+  vadSpeechStarted = null;
+  vadSilenceSince = null;
+  mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+  mediaRecorder.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    stopMicAnalysis();
+    partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
+    recordBtn.classList.remove('recording');
+    micIndicator.classList.remove('active');
+    micIndicatorDot.classList.remove('lit');
+    managerCircle.classList.remove('lit');
+    liveBtn.classList.remove('recording');
+    const blob = new Blob(chunks, {type: 'audio/webm'});
+    const bubble = pendingTranscriptEl;
+    pendingTranscriptEl = null;
+    setBusy(true);
+    avatarState = 'thinking';
+    statusEl.textContent = 'transcribing...';
+    try {
+      const form = new FormData();
+      form.append('file', blob, 'memo.webm');
+      const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
+      const data = await res.json();
+      if (data.error) {
+        statusEl.textContent = data.error;
+        avatarState = 'idle';
+        if (bubble) bubble.remove(); // nothing usable was actually said -- don't leave a stale live-preview bubble behind
+        managerCaption.textContent = '';
+        if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
+      } else {
+        if (data.transcript && bubble) {
+          bubble.textContent = '"' + data.transcript + '"';
+          bubble.classList.remove('pending');
+          managerCaption.textContent = data.transcript;
+        } else if (bubble) {
+          bubble.remove();
+          managerCaption.textContent = '';
+        }
+        if (data.reply) addMessage(data.reply, 'facilitator');
+        handleSignal(data.signal);
+        speakReply(data.reply);
+      }
+    } catch (e) {
+      statusEl.textContent = 'error: ' + e.message;
+      avatarState = 'idle';
+      if (bubble) bubble.remove();
+      managerCaption.textContent = '';
+      if (liveMode) startRecordingTurnSafe();
+    } finally {
+      setBusy(false);
+    }
+  };
+  mediaRecorder.start();
+  avatarState = 'listening';
+  startMicAnalysis(stream);
+  resetPartialCapture();
+  pendingTranscriptEl = addMessage('…', 'manager transcript pending');
+  managerCaption.textContent = '';
+  startVadCalibration(performance.now());
+  recordBtn.classList.add('recording');
+  micIndicator.classList.add('active');
+  if (liveMode) liveBtn.classList.add('recording');
+}
+
+async function toggleRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
+  try {
+    await startRecordingTurn();
+  } catch (e) {
+    statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
+  }
+}
+
+recordBtn.addEventListener('click', toggleRecording);
+
+const liveBtn = document.getElementById('liveBtn');
+
+async function toggleLiveMode() {
+  if (liveMode) {
+    liveMode = false;
+    liveBtn.textContent = 'Go live';
+    setLiveLayout(false);
+    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    return;
+  }
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    liveMode = true;
+    liveBtn.textContent = 'End live conversation';
+    setLiveLayout(true);
+    return;
+  }
+  try {
+    await startRecordingTurn();
+    liveMode = true;
+    liveBtn.textContent = 'End live conversation';
+    setLiveLayout(true);
+  } catch (e) {
+    statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
+    // liveMode stays off and the button stays "Go live" -- nothing to clean up,
+    // startRecordingTurn never got far enough to create a recorder or start listening
+  }
+}
+
+liveBtn.addEventListener('click', toggleLiveMode);
+
+const videoToggle = document.getElementById('videoToggle');
+const videoStartBtn = document.getElementById('videoStartBtn');
+const videoEndBtn = document.getElementById('videoEndBtn');
+const textMode = document.getElementById('textMode');
+const videoMode = document.getElementById('videoMode');
+const videoFrame = document.getElementById('videoFrame');
+let videoSignalTimer = null;
+
+async function startVideoCall() {
+  videoStartBtn.disabled = true;
+  try {
+    const res = await fetch(apiPath('/api/video/start'), {method: 'POST'});
+    const data = await res.json();
+    if (data.error) {
+      statusEl.textContent = data.error;
+      return;
+    }
+    videoFrame.src = data.conversation_url;
+    textMode.hidden = true;
+    videoMode.hidden = false;
+    videoSignalTimer = setInterval(async () => {
+      const r = await fetch(apiPath('/api/video/signal'));
+      const d = await r.json();
+      handleSignal(d.signal);
+    }, 3000);
+  } finally {
+    videoStartBtn.disabled = false;
+  }
+}
+
+async function endVideoCall() {
+  clearInterval(videoSignalTimer);
+  await fetch(apiPath('/api/video/end'), {method: 'POST'});
+  videoFrame.src = 'about:blank';
+  videoMode.hidden = true;
+  textMode.hidden = false;
+}
+
+videoStartBtn.addEventListener('click', startVideoCall);
+videoEndBtn.addEventListener('click', endVideoCall);
+
+(async function checkVideoEnabled() {
+  try {
+    const res = await fetch(apiPath('/api/video/enabled'));
+    const data = await res.json();
+    videoToggle.hidden = !data.enabled;
+  } catch (e) {}
+})();
+
+let currentMode = 'talk';
+
+async function start() {
+  setBusy(true);
+  avatarState = 'thinking';
+  try {
+    const res = await fetch(apiPath('/api/start'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({mode: currentMode}),
+    });
+    const data = await res.json();
+    if (data.reply) addMessage(data.reply, 'facilitator');
+    handleSignal(data.signal);
+    speakReply(data.reply);
+  } finally {
+    setBusy(false);
+  }
+}
+
+const resetBtn = document.getElementById('resetBtn');
+
+async function resetAndStart() {
+  if (liveMode) await toggleLiveMode(); // stop the live loop before wiping state under it
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  audioEl.pause();
+  audioEl.src = '';
+  captionEl.textContent = '';
+  roleplayBadge.hidden = true;
+  avatarState = 'idle';
+  resetBtn.disabled = true;
+  try {
+    await fetch(apiPath('/api/reset'), {method: 'POST'});
+    thread.innerHTML = '';
+    banner.hidden = true;
+    await start();
+  } finally {
+    resetBtn.disabled = false;
+  }
+}
+
+resetBtn.addEventListener('click', resetAndStart);
+
+const modeTalkBtn = document.getElementById('modeTalkBtn');
+const modePracticeBtn = document.getElementById('modePracticeBtn');
+
+async function switchMode(mode) {
+  if (mode === currentMode) return;
+  if (thread.children.length && !confirm('Switching modes starts a new conversation, and this one will be lost. Continue?')) {
+    return;
+  }
+  currentMode = mode;
+  modeTalkBtn.classList.toggle('active', mode === 'talk');
+  modePracticeBtn.classList.toggle('active', mode === 'practice');
+  await resetAndStart();
+}
+
+modeTalkBtn.addEventListener('click', () => switchMode('talk'));
+modePracticeBtn.addEventListener('click', () => switchMode('practice'));
+
+start();
+</script>
+</body>
+</html>
