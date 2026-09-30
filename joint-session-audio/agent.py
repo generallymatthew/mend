@@ -34,6 +34,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import httpx
 from dotenv import load_dotenv
 from livekit import api, rtc
 from livekit.agents import AutoSubscribe, JobContext, JobProcess, WorkerOptions, cli
@@ -52,6 +53,17 @@ logger = logging.getLogger("mend.joint_session_audio.agent")
 
 BUFFER_SECONDS = float(os.environ.get("BUFFER_SECONDS", DEFAULT_BUFFER_SECONDS))
 CUT_THRESHOLD = float(os.environ.get("CLASSIFIER_CUT_THRESHOLD", DEFAULT_CUT_THRESHOLD))
+
+# Real transport for prosody.py's flags -- see ../joint-session-app/server.py's
+# POST /api/room/{code}/prosody-signal and README.md's "Prosody / tone
+# signal" section for the full scope line. The two apps are still two
+# independently-run prototypes with no shared session-discovery layer, so
+# this only does anything useful when the operator has started a
+# joint-session-app session under the SAME code as this LiveKit room --
+# otherwise it's a harmless best-effort POST that either 404s (app not
+# running) or lands in a session nobody's connected to yet.
+JOINT_SESSION_APP_URL = os.environ.get("JOINT_SESSION_APP_URL", "http://localhost:8421")
+_prosody_http = httpx.AsyncClient(timeout=3.0)
 
 # should_cut() is a blocking torch call (classifier/inference.py has no async
 # API) -- keep it off the event loop via a small dedicated pool, shared by
@@ -81,6 +93,10 @@ class ParticipantBridge:
         self.room = room
         self.participant_identity = participant_identity
         self.other_identity = other_identity
+        # server.py's token() mints room_name = f"joint-audio-{code}" -- the
+        # inverse, needed to address ../joint-session-app/server.py's
+        # identically-coded session (see JOINT_SESSION_APP_URL above).
+        self.code = room.name.removeprefix("joint-audio-")
         self._out_source = rtc.AudioSource(SAMPLE_RATE, 1)
         self._out_track = rtc.LocalAudioTrack.create_audio_track(
             f"bridge-to-{other_identity}", self._out_source
@@ -161,7 +177,22 @@ class ParticipantBridge:
                 f"{features.speaking_rate_wps:.1f}wps" if features.speaking_rate_wps else "n/a",
                 text,
             )
+            asyncio.create_task(self._send_prosody_signal(flags))
         self.prosody_baseline.update(features)
+
+    async def _send_prosody_signal(self, flags):
+        # Best-effort only -- see JOINT_SESSION_APP_URL's module-level
+        # comment for why a failure here (joint-session-app not running,
+        # or running under a different code) is expected, not exceptional,
+        # and must never affect the audio bridge itself.
+        try:
+            resp = await _prosody_http.post(
+                f"{JOINT_SESSION_APP_URL}/api/room/{self.code}/prosody-signal",
+                json={"speaker": self.participant_identity, "flags": flags},
+            )
+            resp.raise_for_status()
+        except Exception as e:
+            logger.info("couldn't deliver prosody signal to joint-session-app (%s): %s", JOINT_SESSION_APP_URL, e)
 
     def _publish_release(self, audio_bytes: bytes):
         if self.paused:

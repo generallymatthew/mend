@@ -167,6 +167,13 @@ class Session:
         # the model isn't asked to keep restating it once flagged.
         self.below_floor_pattern: str | None = None
         self.pattern_shown_by: str | None = None
+        # Real transport for ../joint-session-audio/prosody.py's flags --
+        # see POST /api/room/{code}/prosody-signal below. Stored, not
+        # applied immediately: consumed (and cleared) the next time this
+        # speaker actually sends a message, so the annotation lands on the
+        # turn it's actually about rather than firing a stray facilitator
+        # reply of its own the moment a signal arrives.
+        self.pending_prosody: dict[str, list[str]] = {}
 
 
 SESSIONS: dict[str, Session] = {}
@@ -453,11 +460,38 @@ async def handle_reset(session: Session) -> None:
     session.state = {}
     session.started = False
     session.ended = False
+    session.pending_prosody.clear()
     for f in AUDIO_DIR.glob("*.m4a"):
         f.unlink(missing_ok=True)
     for role in ("employee_a", "employee_b"):
         await send_to(session, role, {"type": "reset"})
     await maybe_start(session)
+
+
+@app.post("/api/room/{code}/prosody-signal")
+async def prosody_signal(code: str, payload: dict):
+    """Real transport for ../joint-session-audio/prosody.py's tone flags --
+    that app's agent.py (ParticipantBridge._send_prosody_signal) POSTs here
+    whenever a segment's flags are non-empty. See
+    ../joint-session-app/README.md's "Prosody proof-of-concept" section for
+    what this integration is based on and what it found.
+
+    Requires the operator to have started a joint-session-audio room and
+    this app's session under the SAME code -- no shared session-discovery
+    layer exists between the two apps, this is the wire itself, not
+    auto-discovery. If no session with this code exists yet, get_session
+    creates an empty one and the signal just waits there unconsumed until a
+    real session starts -- harmless, not an error."""
+    speaker = payload.get("speaker")
+    flags = payload.get("flags") or []
+    if speaker not in ("employee_a", "employee_b"):
+        return JSONResponse({"error": "speaker must be employee_a or employee_b"}, status_code=400)
+    if not flags:
+        return JSONResponse({"error": "flags must be a non-empty list"}, status_code=400)
+    session = get_session(code)
+    session.pending_prosody[speaker] = flags
+    logger.info("prosody signal received code=%s speaker=%s flags=%s", code, speaker, flags)
+    return {"ok": True}
 
 
 @app.websocket("/ws/{code}/{role_slug}")
@@ -521,7 +555,18 @@ async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
                 await send_to(session, r, {"type": "thinking"})
 
             async with session.lock:
-                session.conversation.append({"role": "user", "content": f"[{SPEAKER_LABEL[role]}]: {text}"})
+                # Real prosody signal (see POST /api/room/{code}/prosody-signal
+                # above), if this speaker has one pending -- consumed here,
+                # not left for a later turn, so it lands on the message it
+                # was actually about. Format matches
+                # ../joint-session-app/poc_prosody_in_prompt.py's proof-of-
+                # concept exactly (same annotation shape, real data now
+                # instead of hand-constructed).
+                pending_flags = session.pending_prosody.pop(role, None)
+                speaker_label = SPEAKER_LABEL[role]
+                if pending_flags:
+                    speaker_label += f", voice: {', '.join(pending_flags)} relative to their own earlier baseline"
+                session.conversation.append({"role": "user", "content": f"[{speaker_label}]: {text}"})
                 if cut:
                     session.conversation.append({
                         "role": "user",

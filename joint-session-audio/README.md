@@ -127,20 +127,39 @@ flag line (`pitch_elevated`, `energy_elevated`, `pace_elevated`,
 _log_prosody`.
 
 **Deliberately not wired into the real-time cut decision.** `delay_buffer.py`
-and `../classifier/inference.py` are unchanged; this is observability only,
-meant as context for a human or a future facilitator-LLM prompt to weigh
-alongside the transcript, not a confidence score or an automated decision.
-Wiring it into an actual decision (the cut gate, or the disconnected
-`../joint-session-app` facilitator LLM) is real future work, not done here --
-same "separate, larger integration" boundary as the breakout room's
-facilitator-voice gap above. Before committing to that integration,
-`../joint-session-app/poc_prosody_in_prompt.py` tests whether the idea has
-real value at all: does annotating a transcript line with these exact flags
-change how the real facilitator system prompt + real model reads it,
-without building the live bridge yet. See that app's README for what it
-found -- short version: a genuinely promising real difference on a
-textually-neutral line, where text alone gave the facilitator nothing to
-go on.
+and `../classifier/inference.py` are unchanged -- flags never influence the
+hard-cut gate, only the facilitator LLM (see below).
+
+**Wired into `../joint-session-app`'s facilitator LLM, for real.** When
+`_log_prosody` finds non-empty flags, `ParticipantBridge._send_prosody_signal`
+POSTs them to that app's `POST /api/room/{code}/prosody-signal` (URL
+configurable via `JOINT_SESSION_APP_URL`, default `http://localhost:8421`;
+`self.code` is this room's code, recovered from `room.name`'s
+`joint-audio-{code}` convention). Best-effort and non-blocking -- a failed
+or timed-out POST (the other app isn't running, or running under a
+different code) is logged and swallowed, never affects the audio bridge
+itself. See that app's README for the receiving end (`Session.pending_prosody`,
+consumed into the annotated transcript line the next time that speaker
+actually sends a message) and for what this changes in practice: a live,
+two-participant, real-server-code test found the facilitator moved from
+raising a tension pattern in front of both employees (no signal) to pulling
+the flagged employee aside for a private check-in (with the signal) on the
+exact same words.
+
+**What "wired in" doesn't mean here**: the two apps still have no shared
+session-discovery layer (an operator starts both under the same code by
+hand), and `joint-session-app` is still text-only -- this moves tone
+*signal* between two independently-run prototypes, it doesn't merge them
+into one voice-driven session. Real STT-transcript-replaces-typed-messages
+integration, and facilitator TTS carrying replies back to both employees,
+remain a separate, larger project, same scope as the breakout room's
+facilitator-voice gap above.
+
+Before this was wired for real, `../joint-session-app/poc_prosody_in_prompt.py`
+tested whether the idea had real value at all, without any live
+integration -- same finding, on hand-constructed annotations instead of the
+real wire above. Kept as a cheaper, more controlled way to test new
+scenarios than driving full WebSocket sessions -- see that app's README.
 
 Pure feature extraction + baseline logic, no LiveKit dependency, fully
 unit-tested with synthetic tones (see `tests/test_prosody.py`).
@@ -336,5 +355,8 @@ rejected, the original target holds.
   genuine deadpan/sarcastic delivery -- macOS TTS has no real "flat affect"
   mode to test that against. Needs real recorded human speech (this
   sandboxed environment has no microphone, same constraint as the video-
-  opt-in gap above). It's also not wired into any decision anywhere, by
-  design for now -- logged for a human to read, nothing more.
+  opt-in gap above). Now wired into `../joint-session-app`'s facilitator LLM
+  for real (see "Prosody / tone signal" above) -- still not wired into the
+  hard-cut decision, by design, and the two apps still have no shared
+  session-discovery layer (an operator starts both under the same code by
+  hand).
