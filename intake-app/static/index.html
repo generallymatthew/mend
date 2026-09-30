@@ -46,7 +46,11 @@
   .roleplay-badge{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; margin-bottom:2px;}
   .video-area{flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;}
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
-  .avatar-row{display:flex; justify-content:center; padding:8px 0 4px;}
+  /* Fixed 200x200 footprint (matching avatarCanvas's own size) so the
+     facilitator's canvas and the employee's plain circle -- drawn at
+     different diameters, see below -- still occupy identical space and
+     land on the same center point once live mode top-anchors both tiles. */
+  .avatar-row{display:flex; align-items:center; justify-content:center; width:200px; height:200px;}
   #avatarCanvas{display:block;}
   .caption{min-height:44px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:16px; font-weight:600; line-height:1.4; padding:0 12px 10px; color:var(--ink); max-width:480px;}
   .live-row{display:flex; align-items:center; gap:10px; margin-top:8px;}
@@ -91,7 +95,12 @@
   .tile-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);}
   .call-layout.live .call-main, .call-layout.live .employee-tile{justify-content:flex-start;}
   .employee-tile{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper); border-left:1px solid var(--border); overflow-y:auto;}
-  .employee-circle{width:200px; height:200px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
+  /* 160px, not the 200x200 canvas's own box size: drawAvatarFrame() draws
+     the facilitator's circle at radius 80*scale (~160px diameter) inset
+     within its 200x200 canvas, not edge-to-edge -- matching this to that
+     drawn diameter, not the canvas's outer box, is what actually makes the
+     two circles read as the same size. */
+  .employee-circle{width:160px; height:160px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
   .employee-circle.lit{background:#8C3B2E; transform:scale(1.03);}
   @media (max-width: 760px){
     .call-layout{flex-direction:column;}
