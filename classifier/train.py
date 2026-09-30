@@ -88,6 +88,51 @@ class ConflictDataset(Dataset):
         return item
 
 
+def compute_pos_weight(label_matrix: np.ndarray, train_idx: np.ndarray, clip_max: float = 20.0) -> torch.Tensor:
+    """Per-class weight for BCEWithLogitsLoss's own `pos_weight` arg: how much
+    more a missed positive should cost than a missed negative, computed as
+    neg/pos on the TRAINING split only (never eval, that would leak eval
+    balance into a training-time choice). Without this, a class's share of
+    the loss just tracks its share of positives in the data -- exactly what
+    let v4 regress threats_violence/immediate_safety_risk while fixing
+    illegal_activity, see README.md's Results section: illegal_activity went
+    7% -> 21% of the data between v3 and v4 with every class weighted
+    equally, so pushing hard on its signal plausibly crowded out gradient
+    for the others rather than the model actually learning more.
+    Clipped (floor 1.0, ceiling clip_max) since this dataset is still small
+    enough (382-471 examples) that an unlucky split could leave a class
+    with very few train positives, producing a pos_weight large enough to
+    destabilize training rather than just correct for imbalance."""
+    train_labels = label_matrix[train_idx]
+    pos = train_labels.sum(axis=0)
+    neg = len(train_idx) - pos
+    weight = neg / np.clip(pos, 1, None)
+    weight = np.clip(weight, 1.0, clip_max)
+    return torch.tensor(weight, dtype=torch.float)
+
+
+class WeightedTrainer(Trainer):
+    """Same as Trainer, except the loss is BCEWithLogitsLoss with a per-class
+    pos_weight instead of the model's own built-in (unweighted) multi-label
+    loss -- see compute_pos_weight's docstring for why. Pass pos_weight=None
+    to fall back to plain unweighted BCE, e.g. for an apples-to-apples
+    comparison against a run from before this existed."""
+
+    def __init__(self, *args, pos_weight: torch.Tensor | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pos_weight = pos_weight
+
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        labels = inputs.pop("labels")
+        outputs = model(**inputs)
+        logits = outputs.logits
+        pos_weight = self.pos_weight.to(logits.device) if self.pos_weight is not None else None
+        loss = torch.nn.functional.binary_cross_entropy_with_logits(
+            logits, labels, pos_weight=pos_weight
+        )
+        return (loss, outputs) if return_outputs else loss
+
+
 def cut_trigger(label_matrix: np.ndarray) -> np.ndarray:
     """Derived operational label: would this fire the real-time cut?
     True iff at least one floor category fired AND it's in-progress."""
@@ -135,6 +180,11 @@ def main():
     ap.add_argument("--batch_size", type=int, default=8)
     ap.add_argument("--test_size", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument(
+        "--no_pos_weight", action="store_true",
+        help="Disable per-class loss weighting (see compute_pos_weight) -- "
+             "for an apples-to-apples comparison against a pre-weighting run.",
+    )
     args = ap.parse_args()
 
     df = load_examples(args.data)
@@ -152,6 +202,14 @@ def main():
     train_idx, val_idx = train_test_split(
         np.arange(len(df)), test_size=args.test_size, random_state=args.seed
     )
+
+    pos_weight = None if args.no_pos_weight else compute_pos_weight(label_matrix, train_idx)
+    if pos_weight is not None:
+        print("Per-class pos_weight (train split):")
+        for name, w in zip(LABELS, pos_weight.tolist()):
+            print(f"  {name}: {w:.2f}")
+    else:
+        print("Per-class loss weighting disabled (--no_pos_weight)")
 
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -180,12 +238,13 @@ def main():
         report_to=[],
     )
 
-    trainer = Trainer(
+    trainer = WeightedTrainer(
         model=model,
         args=training_args,
         train_dataset=train_ds,
         eval_dataset=val_ds,
         compute_metrics=compute_metrics,
+        pos_weight=pos_weight,
     )
 
     trainer.train()
