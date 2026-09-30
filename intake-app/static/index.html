@@ -65,16 +65,32 @@
   /* Zoom-call style layout: the avatar + captions + controls are the main
      event, full attention like a video tile; the transcript is reference
      material, docked to the side rather than the main flow. */
-  .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--card);}
-  .call-main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper);}
+  /* overflow-y:auto not hidden: on a short/narrow viewport, live mode's two
+     stacked tiles (see the mobile media query below) can need more height
+     than this box has -- centered flex content that overflows a hidden box
+     clips silently off the TOP too, not just the bottom, which made the new
+     facilitator tile-label vanish invisibly instead of just being scrolled
+     past. overflow-x stays clipped for the rounded corners. */
+  .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow-y:auto; overflow-x:hidden; background:var(--card);}
+  .call-main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper); overflow-y:auto;}
   .call-controls{width:100%; max-width:480px; display:flex; flex-direction:column; gap:8px;}
   .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
   .transcript-header{padding:14px 16px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
   .transcript-header button{font-size:11px; padding:5px 9px; text-transform:none; letter-spacing:normal; font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
   .transcript-panel .thread{flex:1; min-height:0; overflow-y:auto; padding:16px; margin:0;}
+
+  /* Live mode: two matching tiles (facilitator | you) instead of one avatar
+     plus a side transcript log -- each side's spoken words show as a single
+     current-sentence subtitle under its own circle, never also logged as a
+     separate full message. See setLiveLayout(). */
+  .tile-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);}
+  .employee-tile{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper); border-left:1px solid var(--border); overflow-y:auto;}
+  .employee-circle{width:160px; height:160px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
+  .employee-circle.lit{background:#8C3B2E; transform:scale(1.03);}
   @media (max-width: 760px){
     .call-layout{flex-direction:column;}
     .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
+    .employee-tile{border-left:none; border-top:1px solid var(--border);}
   }
   [hidden]{display:none !important;}
 </style>
@@ -94,11 +110,12 @@
   <div id="textMode" class="video-area" style="flex-direction:column;">
     <div class="call-layout">
       <div class="call-main">
+        <div class="tile-label" id="facilitatorLabel" hidden>Facilitator</div>
         <div class="avatar-row"><canvas id="avatarCanvas" width="200" height="200"></canvas></div>
         <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
         <div class="caption" id="caption"></div>
         <div class="call-controls">
-          <div class="composer">
+          <div class="composer" id="composer">
             <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
             <button id="recordBtn" title="Record a voice memo">&#127908;</button>
             <button id="sendBtn" class="primary">Send</button>
@@ -114,7 +131,12 @@
           <div class="status" id="status"></div>
         </div>
       </div>
-      <div class="transcript-panel">
+      <div class="employee-tile" id="employeeTile" hidden>
+        <div class="tile-label">You</div>
+        <div class="avatar-row"><div class="employee-circle" id="employeeCircle"></div></div>
+        <div class="caption" id="employeeCaption"></div>
+      </div>
+      <div class="transcript-panel" id="transcriptPanel">
         <div class="transcript-header">
           <span>Transcript</span>
           <button id="resetBtn" title="Start a new conversation">Reset</button>
@@ -152,6 +174,24 @@ const recordBtn = document.getElementById('recordBtn');
 const statusEl = document.getElementById('status');
 const micIndicator = document.getElementById('micIndicator');
 const micIndicatorDot = document.getElementById('micIndicatorDot');
+const facilitatorLabel = document.getElementById('facilitatorLabel');
+const employeeTile = document.getElementById('employeeTile');
+const employeeCircle = document.getElementById('employeeCircle');
+const employeeCaption = document.getElementById('employeeCaption');
+const transcriptPanel = document.getElementById('transcriptPanel');
+const composer = document.getElementById('composer');
+
+// Live mode swaps the single avatar + side transcript log for two matching
+// tiles (facilitator | you), each showing only its own current subtitle --
+// see the CSS comment above .employee-tile. Non-live Talk/Practice mode is
+// unaffected, still the original avatar + transcript-panel layout.
+function setLiveLayout(active) {
+  facilitatorLabel.hidden = !active;
+  employeeTile.hidden = !active;
+  transcriptPanel.hidden = active;
+  micIndicator.hidden = active; // the employee tile's circle + subtitle now do this job
+  composer.hidden = active; // hands-free: nothing to type or manually record while live
+}
 
 const audioEl = new Audio();
 
@@ -296,6 +336,7 @@ async function maybeSendPartial(now) {
     if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
       pendingTranscriptEl.textContent = '"' + data.partial + '"';
       thread.scrollTop = thread.scrollHeight;
+      employeeCaption.textContent = data.partial; // plain, no quotes -- matches the facilitator's own #caption style
     }
   } catch (e) {
     // best-effort preview only -- a failed partial never interrupts the turn
@@ -444,6 +485,7 @@ function animateAvatar(now) {
   if (micAnalyser && recordBtn.classList.contains('recording')) {
     const level = rmsLevel(micAnalyser, micData);
     micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
+    employeeCircle.classList.toggle('lit', level > VAD_THRESHOLD);
     if (liveMode) checkVad(level, t);
     maybeSendPartial(t);
   }
@@ -658,6 +700,7 @@ async function startRecordingTurnSafe() {
   } catch (e) {
     liveMode = false;
     liveBtn.textContent = 'Go live';
+    setLiveLayout(false);
     statusEl.textContent = 'lost microphone access, live mode ended: ' + e.message;
   }
 }
@@ -677,6 +720,7 @@ async function startRecordingTurn() {
     recordBtn.classList.remove('recording');
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
+    employeeCircle.classList.remove('lit');
     liveBtn.classList.remove('recording');
     const blob = new Blob(chunks, {type: 'audio/webm'});
     const bubble = pendingTranscriptEl;
@@ -693,13 +737,16 @@ async function startRecordingTurn() {
         statusEl.textContent = data.error;
         avatarState = 'idle';
         if (bubble) bubble.remove(); // nothing usable was actually said -- don't leave a stale live-preview bubble behind
+        employeeCaption.textContent = '';
         if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
       } else {
         if (data.transcript && bubble) {
           bubble.textContent = '"' + data.transcript + '"';
           bubble.classList.remove('pending');
+          employeeCaption.textContent = data.transcript;
         } else if (bubble) {
           bubble.remove();
+          employeeCaption.textContent = '';
         }
         if (data.reply) addMessage(data.reply, 'facilitator');
         handleSignal(data.signal);
@@ -709,6 +756,7 @@ async function startRecordingTurn() {
       statusEl.textContent = 'error: ' + e.message;
       avatarState = 'idle';
       if (bubble) bubble.remove();
+      employeeCaption.textContent = '';
       if (liveMode) startRecordingTurnSafe();
     } finally {
       setBusy(false);
@@ -719,6 +767,7 @@ async function startRecordingTurn() {
   startMicAnalysis(stream);
   resetPartialCapture();
   pendingTranscriptEl = addMessage('…', 'employee transcript pending');
+  employeeCaption.textContent = '';
   startVadCalibration(performance.now());
   recordBtn.classList.add('recording');
   micIndicator.classList.add('active');
@@ -745,18 +794,21 @@ async function toggleLiveMode() {
   if (liveMode) {
     liveMode = false;
     liveBtn.textContent = 'Go live';
+    setLiveLayout(false);
     if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     return;
   }
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     liveMode = true;
     liveBtn.textContent = 'End live conversation';
+    setLiveLayout(true);
     return;
   }
   try {
     await startRecordingTurn();
     liveMode = true;
     liveBtn.textContent = 'End live conversation';
+    setLiveLayout(true);
   } catch (e) {
     statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
     // liveMode stays off and the button stays "Go live" -- nothing to clean up,
