@@ -776,7 +776,11 @@ audioEl.addEventListener('ended', () => {
 function playReplyAudio(url, text) {
   captionChunks = splitCaptionChunks(text);
   captionStarts = [];
-  if (!url) { avatarState = 'idle'; return; }
+  if (!url) {
+    avatarState = 'idle';
+    if (liveMode) startRecordingTurnSafe(); // no TTS available -- nothing to wait for, listen now
+    return;
+  }
   ensureAudioGraph();
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   audioEl.src = apiPath(url);
@@ -1078,6 +1082,25 @@ async function startRecordingTurn() {
 // and Mute is the one control for pausing that without leaving Voice. See
 // setUi(): entering 'voice' calls enterVoiceLive(), entering 'text' calls
 // exitVoiceLive().
+// Entering live mode right after a reply was just triggered (first load,
+// reset, mode switch) is different from entering it with nothing pending
+// (clicking the Voice tab, unmuting): in the first case Thimble is about
+// to speak (or already is), and grabbing the mic immediately records over
+// its own voice -- this is what "mic turned on and off, then the intro
+// started, and it said it was transcribing while still talking" was.
+// armLiveMode() only flips the live-mode flag/UI; it deliberately does NOT
+// touch the mic. The actual startRecordingTurn() call is deferred to
+// whichever of these fires first: the reply's TTS audio finishing
+// ('ended' below), TTS failing outright (playReplyAudio's `!url` branch),
+// or autoplay being blocked (playReplyAudio's catch) -- all three already
+// call startRecordingTurnSafe() once liveMode is true.
+function armLiveMode() {
+  if (liveMode) return;
+  liveMode = true;
+  setLiveLayout(true);
+  hideMicError();
+}
+
 async function enterVoiceLive() {
   if (liveMode) return;
   if (mediaRecorder && mediaRecorder.state === 'recording') {
@@ -1219,7 +1242,7 @@ async function resetAndStart() {
     chatThreadInner.querySelectorAll('.chat-msg-wrap').forEach(el => el.remove());
     banner.hidden = true;
     await start();
-    if (ui === 'voice') enterVoiceLive(); // resume listening after the reset, same as being in Voice view normally does
+    if (ui === 'voice') armLiveMode(); // listening (re)starts once the new greeting's audio is done, not immediately
   } finally {
     resetBtn.disabled = false;
   }
@@ -1251,11 +1274,12 @@ modePracticeBtn.addEventListener('click', () => switchMode('practice'));
 // enterVoiceLive() (grabbing the mic) used to race, and grabbing the mic is
 // far faster than a Claude round trip -- the UI flipped to "Listening..."
 // well before Thimble had said anything, feeling like the app was just
-// waiting on the user with no introduction at all. Sequenced the same way
-// resetAndStart() below already does it: say hello first, listen second.
+// waiting on the user with no introduction at all. Awaiting start() fixed
+// that ordering, but armLiveMode() (not enterVoiceLive()) is what actually
+// avoids re-recording over Thimble's own greeting -- see its own comment.
 (async () => {
   await start();
-  if (ui === 'voice') enterVoiceLive();
+  if (ui === 'voice') armLiveMode();
 })();
 
 // Called here, not right after its own definition: the body references
