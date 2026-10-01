@@ -504,6 +504,7 @@ const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny s
 const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
 const TAIL_NEGLIGIBLE_SEC = 0.15; // on stop: audio this short since the last partial isn't worth a whole extra Whisper call
 const TAIL_OVERLAP_SEC = 1.0; // include this much audio BEFORE the cut point in the tail clip -- a hard cut with zero context corrupts the word straddling it (confirmed live: "caught" -> "Cockme" with no overlap); mergeTranscripts() below de-duplicates the resulting overlapping words
+const PARTIAL_MAX_TOTAL_SEC = 10.0; // stop resending live partials past this much total turn audio -- the live caption freezes, but bounds every partial call's own cost (each resends the WHOLE clip so far) regardless of how long the turn runs; the final tail-patch still covers whatever's left in one pass once the turn actually ends
 
 function startMicAnalysis(stream) {
   try {
@@ -671,6 +672,27 @@ async function maybeSendPartial(now) {
   const totalSamples = pcmChunks.reduce((n, c) => n + c.length, 0);
   if (totalSamples < pcmSampleRate * PARTIAL_MIN_TOTAL_SEC) return;
   if (totalSamples - partialSentSamples < pcmSampleRate * PARTIAL_MIN_NEW_SAMPLES_SEC) return;
+  // Resends the WHOLE clip so far every call -- each one re-transcribes
+  // everything before it too, so cost grows with turn length, and the LAST
+  // partial of a long turn (the one getFinalTranscript awaits) ends up
+  // re-transcribing the entire turn right when speed matters most.
+  // Reported live as "the delay is now 9 sec vs 3" on a ~16s turn.
+  //
+  // Tried windowing each call to only new-audio-since-last-partial + a
+  // small merge-context overlap, same shape as the one-time tail-patch at
+  // finalize -- wrong, caught live before shipping: a window that small
+  // gives Whisper too little sentence context, so word choice at each
+  // boundary drifted between calls and the merge (matching on exact words)
+  // couldn't find the true seam, producing a transcript with large
+  // repeated/garbled chunks. Reverted that.
+  //
+  // Simpler, safer bound: once a turn has gone on long enough that live
+  // caption staleness stops mattering as much as the per-call cost does,
+  // just stop resending entirely -- the caption freezes, but getFinalTranscript's
+  // existing tail-patch (the one PROVEN correct, including the sentence-
+  // boundary overlap test earlier this session) still transcribes
+  // whatever's left in one clean pass once the turn actually ends.
+  if (totalSamples > pcmSampleRate * PARTIAL_MAX_TOTAL_SEC) return;
   const turnId = partialTurnId;
   const sentSamples = totalSamples;
   partialInFlight = true;
