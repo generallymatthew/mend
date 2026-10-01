@@ -245,6 +245,7 @@
         </div>
         <div class="call-controls">
           <div class="control-bar">
+            <button id="pauseBtn" class="ctrl-btn" title="Pause"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg></button>
             <button id="muteBtn" class="ctrl-btn" title="Mute"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
             <button id="captionsToggleBtn" class="ctrl-btn" title="Toggle captions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"></path></svg></button>
             <button id="transcriptToggleBtn" class="ctrl-btn inactive" title="Show/hide transcript">&#9776;</button>
@@ -368,6 +369,42 @@ function setUi(next) {
 }
 document.querySelectorAll('.ui-tab').forEach(btn => btn.addEventListener('click', () => setUi(btn.dataset.ui)));
 
+// Pause is a hard stop, deliberately different from Mute: Mute keeps the
+// mic running and just stops it from triggering a turn (per the user's own
+// distinction -- "not mute... stop listening and stop anything, not just
+// put the microphone on mute"). Pause releases the mic entirely, discards
+// whatever was mid-recording without submitting it (see onstop's
+// discardNextStop check), and freezes Thimble's own audio in place.
+let sessionPaused = false;
+let discardNextStop = false;
+const pauseBtn = document.getElementById('pauseBtn');
+pauseBtn.addEventListener('click', () => {
+  if (sessionPaused) resumeSession(); else pauseSession();
+});
+function pauseSession() {
+  if (sessionPaused) return;
+  sessionPaused = true;
+  pauseBtn.classList.add('inactive');
+  pauseBtn.title = 'Resume';
+  skipRequested = true; // suppress any reply audio that's still in flight from starting once it lands
+  audioEl.pause();
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    discardNextStop = true;
+    mediaRecorder.stop();
+  }
+  liveMode = false;
+  setLiveLayout(false);
+  statusEl.textContent = 'paused';
+}
+function resumeSession() {
+  if (!sessionPaused) return;
+  sessionPaused = false;
+  pauseBtn.classList.remove('inactive');
+  pauseBtn.title = 'Pause';
+  if (statusEl.textContent === 'paused') statusEl.textContent = '';
+  if (ui === 'voice') { armLiveMode(); startRecordingTurnSafe(); }
+}
+
 let micMuted = false;
 const muteBtn = document.getElementById('muteBtn');
 muteBtn.addEventListener('click', () => {
@@ -465,8 +502,6 @@ let partialInFlightPromise = null; // the in-flight partial request itself, so a
 let pendingTranscriptEl = null;
 const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny sliver of new audio
 const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
-const TAIL_NEGLIGIBLE_SEC = 0.15; // on stop: audio this short since the last partial isn't worth a whole extra Whisper call
-const TAIL_OVERLAP_SEC = 1.0; // include this much audio BEFORE the cut point in the tail clip -- a hard cut with zero context corrupts the word straddling it (confirmed live: "caught" -> "Cockme" with no overlap); mergeTranscripts() below de-duplicates the resulting overlapping words
 
 function startMicAnalysis(stream) {
   try {
@@ -555,87 +590,28 @@ function concatFloat32(chunks) {
   return out;
 }
 
-// On stop, finalizing used to always re-transcribe the WHOLE clip from
-// scratch via /api/voice -- pure waste when the partial pipeline above had
-// already transcribed nearly all of that same audio seconds earlier, and
-// the real cause of the lag reported between "finished speaking" and
-// Thimble responding. Whisper has no real incremental/streaming decode, so
-// this reuses the last partial result as the base and only transcribes the
-// small audio tail recorded since that partial fired, instead of the full
-// clip again -- cuts the final transcription step down to (at most) a
-// fraction of a second of new audio. Falls back to the original full-clip
-// path whenever there's no usable partial to build on (short utterances
-// under PARTIAL_MIN_TOTAL_SEC never get one), so nothing regresses there.
-// Stitches a tail transcript (from an overlapping clip, see TAIL_OVERLAP_SEC)
-// onto the base transcript it was cut from, trimming the duplicated words in
-// the overlap rather than repeating them. Matches the longest run of words
-// shared between the base's own end and the tail's own start (case/
-// punctuation-insensitive); falls back to a blind join if no overlap is
-// found (e.g. Whisper rendered the same word differently on each pass).
-function mergeTranscripts(base, tail) {
-  const baseWords = base.trim().split(/\s+/);
-  const tailWords = tail.trim().split(/\s+/);
-  const norm = (w) => w.toLowerCase().replace(/[^a-z0-9']/g, '');
-  const maxOverlap = Math.min(8, baseWords.length, tailWords.length);
-  for (let n = maxOverlap; n > 0; n--) {
-    const baseEnd = baseWords.slice(-n).map(norm).join(' ');
-    const tailStart = tailWords.slice(0, n).map(norm).join(' ');
-    if (baseEnd && baseEnd === tailStart) {
-      return (baseWords.join(' ') + ' ' + tailWords.slice(n).join(' ')).replace(/\s+/g, ' ').trim();
-    }
-  }
-  return (base + ' ' + tail).replace(/\s+/g, ' ').trim();
-}
-
+// FAST-PATH EXPERIMENT: trust the last partial outright instead of
+// tail-patching it (no in-flight await, no tail transcribe, no merge) --
+// trading a small amount of accuracy at the very end of the turn (whatever
+// was said after the last partial fired, up to ~PARTIAL_MIN_NEW_SAMPLES_SEC
+// of audio, is simply not in the final transcript) for a final step that's
+// instant instead of another network round trip. Testing how much that
+// actually costs in practice before deciding whether to keep it over the
+// slower tail-patch version (see git history for that implementation).
 async function getFinalTranscript(blob) {
-  if (partialInFlight && partialInFlightPromise) {
-    // A partial was still mid-request when the turn ended -- most likely
-    // under exactly the CPU contention that makes this matter (confirmed
-    // live: Google Drive syncing stole enough CPU that partials fell
-    // behind, and the old fallback here threw away the 95% already
-    // transcribed and started a second, fully redundant full-clip
-    // transcription on top of an already-overloaded CPU, which is what
-    // actually produced the 18s wait. Awaiting the SAME in-flight request
-    // instead costs nothing extra and gives us a real base to tail-patch
-    // from, rather than discarding real progress and doubling the work.
-    const inFlightResult = await partialInFlightPromise;
-    if (inFlightResult) {
-      lastPartialText = inFlightResult.text;
-      partialSentSamples = inFlightResult.sentSamples;
-    }
+  if (lastPartialText) {
+    // Whisper marks a clip that trails off mid-sentence (exactly what
+    // every partial clip is, by definition) with a literal "..." -- strip
+    // it, a clean one-shot final transcript never had it.
+    return {transcript: lastPartialText.replace(/\.{2,}\s*$/, '').trim()};
   }
-  const allSamples = concatFloat32(pcmChunks);
-  const newSamples = allSamples.length - partialSentSamples;
-  if (!lastPartialText || newSamples > allSamples.length) {
-    // No partial ever completed to build on (too-short turn, or the one
-    // in-flight request we just waited on still failed outright) --
-    // only remaining option is to re-transcribe the whole clip.
-    const form = new FormData();
-    form.append('file', blob, 'memo.webm');
-    const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
-    const data = await res.json();
-    return data.error ? {error: data.error} : {transcript: data.transcript};
-  }
-  // Whisper marks a clip that trails off mid-sentence (exactly what every
-  // partial clip is, by definition) with a literal "..." -- real artifact,
-  // confirmed live, that a clean one-shot final transcript never had.
-  // Strip it before reusing the partial as the final transcript's base.
-  const base = lastPartialText.replace(/\.{2,}\s*$/, '').trim();
-  if (newSamples < pcmSampleRate * TAIL_NEGLIGIBLE_SEC) {
-    // Nothing meaningfully new since the last partial -- it already covers
-    // the whole turn, skip an extra network round trip entirely.
-    return {transcript: base};
-  }
-  const overlapStart = Math.max(0, partialSentSamples - pcmSampleRate * TAIL_OVERLAP_SEC);
-  const tailSamples = allSamples.slice(overlapStart);
-  const wav = encodeWavBlob(tailSamples, pcmSampleRate);
+  // No partial ever completed (too-short turn) -- only remaining option is
+  // a full-clip transcription.
   const form = new FormData();
-  form.append('file', wav, 'tail.wav');
-  const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
+  form.append('file', blob, 'memo.webm');
+  const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
   const data = await res.json();
-  const tailText = (data.partial || '').trim();
-  if (!tailText) return {transcript: base}; // tail transcribed to nothing (silence/noise) -- base alone is still correct
-  return {transcript: mergeTranscripts(base, tailText)};
+  return data.error ? {error: data.error} : {transcript: data.transcript};
 }
 
 async function maybeSendPartial(now) {
@@ -659,7 +635,7 @@ async function maybeSendPartial(now) {
       // this promise can resolve), but the transcript itself is still
       // real and still worth returning to getFinalTranscript's awaiter.
       if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
-        lastPartialText = data.partial; // reused as the final-transcript base on stop -- see onstop's tail-patch
+        lastPartialText = data.partial; // reused directly as the final transcript on stop -- see getFinalTranscript's fast-path
         pendingTranscriptEl.textContent = '"' + data.partial + '"';
         thread.scrollTop = thread.scrollHeight;
         if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = data.partial;
@@ -877,8 +853,8 @@ function animateAvatar(now) {
   if (recording) {
     micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
     employeeCircle.classList.toggle('lit', level > VAD_THRESHOLD);
-    if (liveMode && !micMuted) checkVad(level, t);
-    if (!micMuted) maybeSendPartial(t);
+    if (liveMode && !micMuted && !sessionPaused) checkVad(level, t);
+    if (!micMuted && !sessionPaused) maybeSendPartial(t);
   }
   updateCaption();
 }
@@ -1181,6 +1157,15 @@ async function startRecordingTurn() {
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
     employeeCircle.classList.remove('lit');
+    if (discardNextStop) {
+      // Pause fired mid-turn -- this stop is a hard abort, not a real end
+      // of speech. Nothing was actually finished, so there's nothing to
+      // transcribe or submit; just clean up the pending "..." bubble.
+      discardNextStop = false;
+      if (pendingTranscriptEl) { pendingTranscriptEl.remove(); if (pendingTranscriptEl.chatWrap) pendingTranscriptEl.chatWrap.remove(); }
+      pendingTranscriptEl = null;
+      return;
+    }
     const blob = new Blob(chunks, {type: 'audio/webm'});
     const bubble = pendingTranscriptEl;
     pendingTranscriptEl = null;
