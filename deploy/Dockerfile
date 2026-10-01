@@ -2,16 +2,14 @@
 # is the repo root (see render.yaml's dockerContext), since intake-app
 # reads ../facilitator-intake-system-prompt.md and ../product-spec.html at
 # runtime -- the whole repo ships, not just the two app folders.
-FROM python:3.11-slim
+#
+# Caddy comes from its own official image (copied binary), not apt --
+# Cloudsmith's Debian apt repo for Caddy has an expired signing subkey,
+# which fails OpenPGP verification on current Debian (trixie) base images.
+FROM caddy:2 AS caddy
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl debian-keyring debian-archive-keyring apt-transport-https gnupg \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
-       -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
-       -o /etc/apt/sources.list.d/caddy-stable.list \
-    && apt-get update && apt-get install -y --no-install-recommends caddy \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.11-slim
+COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
 
 WORKDIR /app
 COPY . .
