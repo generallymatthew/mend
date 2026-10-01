@@ -187,7 +187,6 @@ SYSTEM_PROMPT = load_system_prompt()
 
 # In-memory conversation state -- a prototype, not a persistence layer.
 conversation: list[dict] = []
-session_mode = "talk"  # "talk" (normal side conversation) or "practice" (rehearsal only, see /api/start)
 
 
 def strip_signal(reply_text: str) -> tuple[str, str | None]:
@@ -394,27 +393,17 @@ TEST_SHORT_INTRO = os.environ.get("TEST_SHORT_INTRO", "").lower() in ("1", "true
 
 @app.post("/api/start")
 async def start(payload: dict = None):
-    global session_mode
+    # No mode param anymore -- there's no frontend mode selector (Talk it
+    # through / Rehearse / For managers) to read one from. Which track
+    # applies (employee conflict vs. manager coaching) and whether someone
+    # wants to skip straight to rehearsal are now both things the facilitator
+    # itself figures out from the conversation, per its own system prompt's
+    # "Which track applies" section -- not pre-declared here.
     if not conversation:
-        session_mode = (payload or {}).get("mode", "talk")
-        if session_mode == "practice":
-            kickoff = (
-                "(The employee just opened the app in Practice mode: they want to rehearse a hard "
-                "conversation with you playing the other person, before actually having it for real. "
-                "This is not the standard intake side conversation -- skip the phase-by-phase intake flow "
-                "entirely. Begin now by briefly asking who they need to talk to and what the "
-                "situation is, just enough for you to play a realistic version of that person, then "
-                "move into the rehearsal itself per your own instructions on practicing the "
-                "conversation (roleplay). Stay in coaching/rehearsal mode for this whole session "
-                "unless the employee explicitly says they also want to open a real case or request a "
-                "joint session, in which case shift into the normal intake flow. Keep floor screening "
-                "active as always.)"
-            )
-        else:
-            kickoff = "(The employee just opened the app. Begin the conversation now with your opening line.)"
+        kickoff = "(Someone just opened the app. Begin the conversation now with your opening line.)"
         if TEST_SHORT_INTRO:
             kickoff += (
-                " (Testing note, not from the employee: keep this opening to one short sentence, "
+                " (Testing note, not from the user: keep this opening to one short sentence, "
                 "skip the usual disclosures, so this is fast to click through repeatedly.)"
             )
         conversation.append({"role": "user", "content": kickoff})
@@ -473,9 +462,7 @@ async def speak(payload: dict):
 
 @app.post("/api/reset")
 async def reset():
-    global session_mode
     conversation.clear()
-    session_mode = "talk"
     for pattern in ("*.m4a", "*.mp3"):
         for f in AUDIO_DIR.glob(pattern):
             f.unlink(missing_ok=True)

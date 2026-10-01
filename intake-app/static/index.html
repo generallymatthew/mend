@@ -43,11 +43,6 @@
   .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
   .video-toggle{display:flex; justify-content:flex-end; margin-bottom:8px;}
   .video-toggle button{font-size:12.5px; padding:6px 10px;}
-  .mode-toggle{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:16px;}
-  .mode-toggle button, .mode-toggle a{text-align:left; padding:16px 18px; font-size:16px; font-weight:700; border-radius:14px; line-height:1.3; text-decoration:none; display:block; border:1.5px solid var(--border); background:var(--card); color:var(--ink); cursor:pointer;}
-  .mode-toggle button .sub, .mode-toggle a .sub{display:block; font-weight:400; font-size:13.5px; color:var(--ink-soft); margin-top:4px; line-height:1.4;}
-  .mode-toggle button.active{background:var(--accent); color:var(--paper); border-color:var(--accent);}
-  .mode-toggle button.active .sub{color:rgba(246,241,231,.8);}
   .roleplay-badge{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; position:absolute; top:16px; left:50%; transform:translateX(-50%);}
   /* Mic permission failures used to be silent: avatarState stayed 'idle',
      which shares the exact same "Listening..." label as real listening, so
@@ -199,12 +194,6 @@
     </div>
     <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private. Nothing is recorded.</div>
   </div>
-  <div class="mode-toggle">
-    <button id="modeTalkBtn" class="active">Talk it through<span class="sub">Tell Thimble what happened, in your own words</span></button>
-    <button id="modePracticeBtn">Rehearse<span class="sub">Practice the hard conversation before you have it</span></button>
-    <a href="/coach/">For managers<span class="sub">Get advice on a hard conversation with someone you manage</span></a>
-  </div>
-
   <div class="video-toggle" id="videoToggle" hidden>
     <button id="videoStartBtn">Start video call</button>
   </div>
@@ -581,6 +570,11 @@ const THIMBLE_SHAPES = {
   listening:   {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   idle:        {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   thinking:    {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
+  // Same look as thinking (reply text has already arrived -- there's
+  // nothing left to think about) but a distinct state so the status label
+  // can say "Getting ready to talk..." instead of the misleading
+  // "Thinking..." during the separate TTS round trip. See speakReply().
+  synthesizing: {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
   talking:     {radius: '50%', anim: 'thimble-bob .8s ease-in-out infinite', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
   empathizing: {radius: '50% 50% 50% 50% / 62% 62% 38% 38%', anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
 };
@@ -608,7 +602,7 @@ function renderThimbleMouth(inst, state) {
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
   const s = inst.size;
   inst.mouth.style.top = shape.mouthTop + '%';
-  if (state === 'thinking') {
+  if (state === 'thinking' || state === 'synthesizing') {
     inst.mouth.className = 'thimble-mouth dots';
     inst.mouth.style.width = inst.mouth.style.height = 'auto';
     inst.mouth.style.gap = (0.04 * s) + 'px';
@@ -720,8 +714,8 @@ function computeCaptionStarts() {
   });
 }
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
-const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Talking…', empathizing: 'Empathizing…'};
+const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
 function updateStatePill() {
@@ -730,7 +724,7 @@ function updateStatePill() {
   lastStateWord = word;
   stateWordEl.textContent = word;
   chatStatusEl.textContent = CHAT_STATUS[avatarState] || CHAT_STATUS.idle;
-  chatTyping.hidden = avatarState !== 'thinking';
+  chatTyping.hidden = avatarState !== 'thinking' && avatarState !== 'synthesizing';
 }
 
 function updateCaption() {
@@ -788,9 +782,10 @@ function playReplyAudio(url, text) {
     // Autoplay can be blocked before the first user gesture (e.g. Voice
     // mode auto-starts listening on load, so Thimble's very first reply
     // has no gesture to ride on). The 'play' event never fires in that
-    // case, so avatarState would otherwise stay stuck on 'thinking'
+    // case, so avatarState would otherwise stay stuck on 'synthesizing'
+    // (or 'thinking', if speakReply's own state change above didn't run)
     // forever -- fall back the same way 'ended' does.
-    if (avatarState === 'thinking' || avatarState === 'talking') avatarState = 'idle';
+    if (avatarState === 'thinking' || avatarState === 'synthesizing' || avatarState === 'talking') avatarState = 'idle';
     if (liveMode) startRecordingTurnSafe();
   });
 }
@@ -803,6 +798,11 @@ function playReplyAudio(url, text) {
 // instead of waiting on voice too.
 async function speakReply(text) {
   if (!text) return;
+  // The reply text has already arrived by this point -- there's nothing
+  // left to "think" about, just TTS synthesis left to wait on. Reusing
+  // 'thinking' here (as this used to) made that wait look identical to
+  // composing the reply itself, which read as nothing happening.
+  if (avatarState === 'thinking') avatarState = 'synthesizing';
   statusEl.textContent = 'generating voice...';
   let audioUrl = null;
   try {
@@ -1198,16 +1198,17 @@ videoEndBtn.addEventListener('click', endVideoCall);
   } catch (e) {}
 })();
 
-let currentMode = 'talk';
-
 async function start() {
   setBusy(true);
   avatarState = 'thinking';
   try {
+    // No mode param -- there's no mode selector anymore. Which track
+    // applies (employee conflict vs. manager coaching) is something the
+    // facilitator itself now figures out from the conversation.
     const res = await fetch(apiPath('/api/start'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({mode: currentMode}),
+      body: JSON.stringify({}),
     });
     const data = await res.json();
     if (data.reply) {
@@ -1250,25 +1251,6 @@ async function resetAndStart() {
 
 resetBtn.addEventListener('click', resetAndStart);
 chatResetBtn.addEventListener('click', resetAndStart);
-
-const modeTalkBtn = document.getElementById('modeTalkBtn');
-const modePracticeBtn = document.getElementById('modePracticeBtn');
-const PLACEHOLDERS = {talk: 'Tell Thimble what happened…', practice: 'Say it the way you’d say it to them…'};
-
-async function switchMode(mode) {
-  if (mode === currentMode) return;
-  if (thread.children.length && !confirm('Switching modes starts a new conversation, and this one will be lost. Continue?')) {
-    return;
-  }
-  currentMode = mode;
-  modeTalkBtn.classList.toggle('active', mode === 'talk');
-  modePracticeBtn.classList.toggle('active', mode === 'practice');
-  chatInput.placeholder = PLACEHOLDERS[mode] || '';
-  await resetAndStart();
-}
-
-modeTalkBtn.addEventListener('click', () => switchMode('talk'));
-modePracticeBtn.addEventListener('click', () => switchMode('practice'));
 
 // await, not fire-and-forget: start() (Thimble's opening line) and
 // enterVoiceLive() (grabbing the mic) used to race, and grabbing the mic is
