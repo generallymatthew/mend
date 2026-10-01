@@ -590,6 +590,12 @@ const THIMBLE_SHAPES = {
   // can say "Getting ready to talk..." instead of the misleading
   // "Thinking..." during the separate TTS round trip. See speakReply().
   synthesizing: {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
+  // Same look again -- distinct state so the real transcription step (a
+  // couple seconds) doesn't share a label with the Claude reply wait
+  // after it (several more seconds), the exact conflation that made
+  // "transcribing" look like it was taking way longer than it actually
+  // was. See the onstop handler in startRecordingTurn().
+  transcribing: {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
   talking:     {radius: '50%', anim: 'thimble-bob .8s ease-in-out infinite', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
   empathizing: {radius: '50% 50% 50% 50% / 62% 62% 38% 38%', anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
 };
@@ -617,7 +623,7 @@ function renderThimbleMouth(inst, state) {
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
   const s = inst.size;
   inst.mouth.style.top = shape.mouthTop + '%';
-  if (state === 'thinking' || state === 'synthesizing') {
+  if (state === 'thinking' || state === 'synthesizing' || state === 'transcribing') {
     inst.mouth.className = 'thimble-mouth dots';
     inst.mouth.style.width = inst.mouth.style.height = 'auto';
     inst.mouth.style.gap = (0.04 * s) + 'px';
@@ -729,11 +735,11 @@ function computeCaptionStarts() {
   });
 }
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Talking…', empathizing: 'Empathizing…'};
-const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Talking…', empathizing: 'Empathizing…'};
+const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
-const BUSY_STATES = ['thinking', 'synthesizing', 'talking'];
+const BUSY_STATES = ['transcribing', 'thinking', 'synthesizing', 'talking'];
 function updateStatePill() {
   // Not gated by the early-return below -- this needs to react every
   // frame avatarState could've changed, same as the label itself would.
@@ -743,7 +749,7 @@ function updateStatePill() {
   lastStateWord = word;
   stateWordEl.textContent = word;
   chatStatusEl.textContent = CHAT_STATUS[avatarState] || CHAT_STATUS.idle;
-  chatTyping.hidden = avatarState !== 'thinking' && avatarState !== 'synthesizing';
+  chatTyping.hidden = !BUSY_STATES.includes(avatarState) || avatarState === 'talking';
 }
 
 function updateCaption() {
@@ -1080,35 +1086,47 @@ async function startRecordingTurn() {
     const bubble = pendingTranscriptEl;
     pendingTranscriptEl = null;
     setBusy(true);
-    avatarState = 'thinking';
+    avatarState = 'transcribing';
     skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
     statusEl.textContent = 'transcribing...';
     try {
+      // Two round trips, not one: /api/voice now only transcribes (fast,
+      // a couple seconds on this hardware) and returns. The Claude reply
+      // is a separate call to /api/message -- the same path typed text
+      // already takes -- so "transcribing..." only covers the part that
+      // actually is transcribing, instead of silently also covering
+      // however long the Claude call after it takes. Mirrors the
+      // existing TTS split (see facilitator_reply's docstring).
       const form = new FormData();
       form.append('file', blob, 'memo.webm');
-      const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
-      const data = await res.json();
-      if (data.error) {
-        statusEl.textContent = data.error;
+      const voiceRes = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
+      const voiceData = await voiceRes.json();
+      if (voiceData.error) {
+        statusEl.textContent = voiceData.error;
         avatarState = 'idle';
         if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); } // nothing usable was actually said -- don't leave a stale live-preview bubble behind
         employeeCaption.textContent = '';
         if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
-      } else {
-        if (data.transcript && bubble) {
-          bubble.textContent = '"' + data.transcript + '"';
-          bubble.classList.remove('pending');
-          if (bubble.chatBubble) bubble.chatBubble.textContent = data.transcript;
-          if (captionsOn) employeeCaption.textContent = data.transcript;
-        } else if (bubble) {
-          bubble.remove();
-          if (bubble.chatWrap) bubble.chatWrap.remove();
-          employeeCaption.textContent = '';
-        }
-        if (data.reply) addMessage(data.reply, 'facilitator');
-        handleSignal(data.signal);
-        speakReply(data.reply);
+        return;
       }
+      const transcript = voiceData.transcript;
+      if (bubble) {
+        bubble.textContent = '"' + transcript + '"';
+        bubble.classList.remove('pending');
+        if (bubble.chatBubble) bubble.chatBubble.textContent = transcript;
+        if (captionsOn) employeeCaption.textContent = transcript;
+      }
+      avatarState = 'thinking';
+      statusEl.textContent = 'thimble is responding...';
+      const msgRes = await fetch(apiPath('/api/message'), {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text: transcript}),
+      });
+      const data = await msgRes.json();
+      if (statusEl.textContent === 'thimble is responding...') statusEl.textContent = '';
+      if (data.reply) addMessage(data.reply, 'facilitator');
+      handleSignal(data.signal);
+      speakReply(data.reply);
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
       avatarState = 'idle';

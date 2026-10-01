@@ -461,16 +461,24 @@ async def post_voice_partial(file: UploadFile):
 
 @app.post("/api/voice")
 async def post_voice(file: UploadFile):
+    """Transcription only -- does NOT touch `conversation` or call the
+    facilitator. Used to bundle both in one request, with the frontend's
+    status line stuck on "transcribing..." for the whole thing -- real
+    transcription is a couple seconds on this hardware, but the Claude
+    call after it can run much longer, so "transcribing" was silently
+    mislabeling most of the actual wait. The caller now gets the
+    transcript back fast and POSTs it to /api/message itself (the exact
+    same path text input already takes), so the UI can show "you said
+    this" immediately and then accurately switch to "thinking..." for the
+    part that's actually thinking. Mirrors the same split already done
+    for TTS (see facilitator_reply's docstring)."""
     with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:
         tmp.write(await file.read())
         tmp.flush()
         transcript = await run_in_threadpool(transcribe_file, tmp.name)
     if not transcript:
         return JSONResponse({"error": "couldn't transcribe audio"}, status_code=400)
-    conversation.append({"role": "user", "content": transcript})
-    result = await run_in_threadpool(facilitator_reply)
-    result["transcript"] = transcript
-    return result
+    return {"transcript": transcript}
 
 
 @app.post("/api/speak")
