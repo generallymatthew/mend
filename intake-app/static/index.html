@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mend intake (local prototype)</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     /* Mend brand kit: Evergreen ink, Oat paper, Evergreen as primary UI
@@ -36,7 +37,7 @@
   button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
   button.recording{background:#8C3B2E; color:#fff; border-color:#8C3B2E;}
   button:disabled{opacity:.5; cursor:default;}
-  .status{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:6px;}
+  .status{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:6px;}
   .banner{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:10px 14px; margin-top:10px; font-size:13.5px;}
   .banner a{text-decoration:none;}
   .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
@@ -47,7 +48,16 @@
   .mode-toggle button .sub, .mode-toggle a .sub{display:block; font-weight:400; font-size:13.5px; color:var(--ink-soft); margin-top:4px; line-height:1.4;}
   .mode-toggle button.active{background:var(--accent); color:var(--paper); border-color:var(--accent);}
   .mode-toggle button.active .sub{color:rgba(246,241,231,.8);}
-  .roleplay-badge{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; position:absolute; top:16px; left:50%; transform:translateX(-50%);}
+  .roleplay-badge{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; position:absolute; top:16px; left:50%; transform:translateX(-50%);}
+  /* Mic permission failures used to be silent: avatarState stayed 'idle',
+     which shares the exact same "Listening..." label as real listening, so
+     a blocked/denied mic looked indistinguishable from normal operation --
+     the only trace was a tiny 11px status line, easy to miss entirely. This
+     banner makes that failure impossible to miss. */
+  .mic-error-banner{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:5; max-width:min(380px,80%); text-align:center; background:var(--card); border:1.5px solid #8C3B2E; border-radius:14px; padding:16px 18px; box-shadow:0 8px 24px rgba(23,55,46,.12);}
+  .mic-error-banner .title{font-weight:700; font-size:14.5px; color:#8C3B2E; margin-bottom:4px;}
+  .mic-error-banner .desc{font-size:13px; color:var(--ink-soft); line-height:1.5; margin-bottom:10px;}
+  .mic-error-banner button{font:inherit; font-weight:700; font-size:13px; padding:8px 16px; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:var(--paper); cursor:pointer;}
   .video-area{flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;}
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
   .avatar-row{display:flex; align-items:center; justify-content:center; width:200px; height:200px;}
@@ -91,7 +101,7 @@
   /* Superseded by the You-tile's own circle lighting up on mic input (see
      .employee-circle.lit) -- kept in the DOM only so the existing JS that
      toggles it keeps working untouched; permanently hidden via [hidden]. */
-  .mic-indicator{display:none; align-items:center; gap:7px; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+  .mic-indicator{display:none; align-items:center; gap:7px; margin-top:8px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-soft);}
   .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
   .mic-indicator-dot.lit{background:#8C3B2E; transform:scale(1.15);}
 
@@ -109,7 +119,7 @@
   .stage{position:relative; flex:1; display:flex; align-items:center; justify-content:center; padding:32px; min-width:0; min-height:280px; background:#FBF8F3; border-radius:18px;}
   .call-controls{width:100%; max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:8px; padding:14px 24px 20px;}
   .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
-  .transcript-header{padding:14px 16px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
+  .transcript-header{padding:14px 16px; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
   .transcript-header button{font-size:11px; padding:5px 9px; text-transform:none; letter-spacing:normal; font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
   .transcript-panel .thread{flex:1; min-height:0; overflow-y:auto; padding:16px; margin:0;}
 
@@ -141,7 +151,7 @@
   .ui-toggle{display:flex; padding:4px; border-radius:999px; background:#17372E0D; gap:2px; flex-shrink:0;}
   .ui-tab{font:inherit; font-size:13px; font-weight:700; padding:8px 16px; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
   .ui-tab.active{background:var(--accent); color:var(--paper);}
-  .live-timer{display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-family:'IBM Plex Mono',monospace; font-size:12px;}
+  .live-timer{display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:12px;}
   .you-tile-label-row{display:flex; align-items:center; gap:4px;}
   /* Text mode: a separate full chat panel, not just a composer bar bolted
      onto the avatar stage -- swapped in for the whole call-frame via setUi(),
@@ -226,6 +236,11 @@
             </div>
           </div>
           <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
+          <div class="mic-error-banner" id="micErrorBanner" hidden>
+            <div class="title">Microphone blocked</div>
+            <div class="desc" id="micErrorDesc">Allow microphone access for this site in your browser, then try again.</div>
+            <button id="micRetryBtn">Try again</button>
+          </div>
           <div class="caption-stack">
             <div class="caption" id="caption"></div>
           </div>
@@ -987,6 +1002,7 @@ async function startRecordingTurnSafe() {
     liveMode = false;
     setLiveLayout(false);
     statusEl.textContent = 'lost microphone access: ' + e.message;
+    showMicError(e);
   }
 }
 
@@ -1073,8 +1089,10 @@ async function enterVoiceLive() {
     await startRecordingTurn();
     liveMode = true;
     setLiveLayout(true);
+    hideMicError();
   } catch (e) {
     statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
+    showMicError(e);
   }
 }
 
@@ -1084,6 +1102,29 @@ function exitVoiceLive() {
   setLiveLayout(false);
   if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
 }
+
+// Without this, a blocked/denied mic left avatarState at 'idle', which
+// shares the exact same "Listening..." label as the real listening state
+// (see STATE_WORDS) -- so the failure was invisible, and looked identical
+// to Thimble just quietly waiting. This banner makes it unmissable and
+// gives a one-click way to retry once permission is actually granted.
+const micErrorBanner = document.getElementById('micErrorBanner');
+const micErrorDesc = document.getElementById('micErrorDesc');
+const micRetryBtn = document.getElementById('micRetryBtn');
+function showMicError(e) {
+  micErrorDesc.textContent = (e && e.name === 'NotFoundError')
+    ? 'No microphone was found on this device.'
+    : 'Allow microphone access for this site in your browser, then try again.';
+  micErrorBanner.hidden = false;
+}
+function hideMicError() {
+  micErrorBanner.hidden = true;
+}
+micRetryBtn.addEventListener('click', () => {
+  hideMicError();
+  statusEl.textContent = '';
+  enterVoiceLive();
+});
 
 const videoToggle = document.getElementById('videoToggle');
 const videoStartBtn = document.getElementById('videoStartBtn');
