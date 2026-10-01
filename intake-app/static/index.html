@@ -1247,8 +1247,16 @@ async function switchMode(mode) {
 modeTalkBtn.addEventListener('click', () => switchMode('talk'));
 modePracticeBtn.addEventListener('click', () => switchMode('practice'));
 
-start();
-if (ui === 'voice') enterVoiceLive(); // Voice is the default view, so start listening immediately
+// await, not fire-and-forget: start() (Thimble's opening line) and
+// enterVoiceLive() (grabbing the mic) used to race, and grabbing the mic is
+// far faster than a Claude round trip -- the UI flipped to "Listening..."
+// well before Thimble had said anything, feeling like the app was just
+// waiting on the user with no introduction at all. Sequenced the same way
+// resetAndStart() below already does it: say hello first, listen second.
+(async () => {
+  await start();
+  if (ui === 'voice') enterVoiceLive();
+})();
 
 // Called here, not right after its own definition: the body references
 // mediaRecorder/liveMode (declared further down), and this first call runs
