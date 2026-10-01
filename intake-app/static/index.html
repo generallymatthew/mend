@@ -502,6 +502,8 @@ let partialInFlightPromise = null; // the in-flight partial request itself, so a
 let pendingTranscriptEl = null;
 const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny sliver of new audio
 const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
+const TAIL_NEGLIGIBLE_SEC = 0.15; // on stop: audio this short since the last partial isn't worth a whole extra Whisper call
+const TAIL_OVERLAP_SEC = 1.0; // include this much audio BEFORE the cut point in the tail clip -- a hard cut with zero context corrupts the word straddling it (confirmed live: "caught" -> "Cockme" with no overlap); mergeTranscripts() below de-duplicates the resulting overlapping words
 
 function startMicAnalysis(stream) {
   try {
@@ -590,28 +592,78 @@ function concatFloat32(chunks) {
   return out;
 }
 
-// FAST-PATH EXPERIMENT: trust the last partial outright instead of
-// tail-patching it (no in-flight await, no tail transcribe, no merge) --
-// trading a small amount of accuracy at the very end of the turn (whatever
-// was said after the last partial fired, up to ~PARTIAL_MIN_NEW_SAMPLES_SEC
-// of audio, is simply not in the final transcript) for a final step that's
-// instant instead of another network round trip. Testing how much that
-// actually costs in practice before deciding whether to keep it over the
-// slower tail-patch version (see git history for that implementation).
-async function getFinalTranscript(blob) {
-  if (lastPartialText) {
-    // Whisper marks a clip that trails off mid-sentence (exactly what
-    // every partial clip is, by definition) with a literal "..." -- strip
-    // it, a clean one-shot final transcript never had it.
-    return {transcript: lastPartialText.replace(/\.{2,}\s*$/, '').trim()};
+// Fast-path experiment (reuse the last partial outright, no tail-patch) was
+// tried and rejected: reported live as cleanly instant, but it dropped the
+// turn's actual last sentence or two -- more cost than the speed was worth.
+// Back to tail-patching: reuse the last partial as a base and only
+// transcribe the small audio tail since then, instead of either extreme
+// (a full re-transcription, or trusting a partial that may be a full
+// second-plus stale). Stitches a tail transcript (from an overlapping
+// clip, see TAIL_OVERLAP_SEC) onto the base it was cut from, trimming the
+// duplicated words in the overlap rather than repeating them. Matches the
+// longest run of words shared between the base's own end and the tail's
+// own start (case/punctuation-insensitive); falls back to a blind join if
+// no overlap is found (e.g. Whisper rendered the same word differently on
+// each pass).
+function mergeTranscripts(base, tail) {
+  const baseWords = base.trim().split(/\s+/);
+  const tailWords = tail.trim().split(/\s+/);
+  const norm = (w) => w.toLowerCase().replace(/[^a-z0-9']/g, '');
+  const maxOverlap = Math.min(8, baseWords.length, tailWords.length);
+  for (let n = maxOverlap; n > 0; n--) {
+    const baseEnd = baseWords.slice(-n).map(norm).join(' ');
+    const tailStart = tailWords.slice(0, n).map(norm).join(' ');
+    if (baseEnd && baseEnd === tailStart) {
+      return (baseWords.join(' ') + ' ' + tailWords.slice(n).join(' ')).replace(/\s+/g, ' ').trim();
+    }
   }
-  // No partial ever completed (too-short turn) -- only remaining option is
-  // a full-clip transcription.
+  return (base + ' ' + tail).replace(/\s+/g, ' ').trim();
+}
+
+async function getFinalTranscript(blob) {
+  if (partialInFlight && partialInFlightPromise) {
+    // A partial was still mid-request when the turn ended -- awaiting the
+    // SAME in-flight request costs nothing extra and gives us a real base
+    // to tail-patch from, rather than discarding real progress and
+    // starting a second, redundant full-clip transcription.
+    const inFlightResult = await partialInFlightPromise;
+    if (inFlightResult) {
+      lastPartialText = inFlightResult.text;
+      partialSentSamples = inFlightResult.sentSamples;
+    }
+  }
+  const allSamples = concatFloat32(pcmChunks);
+  const newSamples = allSamples.length - partialSentSamples;
+  if (!lastPartialText || newSamples > allSamples.length) {
+    // No partial ever completed to build on (too-short turn, or the one
+    // in-flight request we just waited on still failed outright) --
+    // only remaining option is to re-transcribe the whole clip.
+    const form = new FormData();
+    form.append('file', blob, 'memo.webm');
+    const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
+    const data = await res.json();
+    return data.error ? {error: data.error} : {transcript: data.transcript};
+  }
+  // Whisper marks a clip that trails off mid-sentence (exactly what every
+  // partial clip is, by definition) with a literal "..." -- real artifact,
+  // confirmed live, that a clean one-shot final transcript never had.
+  // Strip it before reusing the partial as the final transcript's base.
+  const base = lastPartialText.replace(/\.{2,}\s*$/, '').trim();
+  if (newSamples < pcmSampleRate * TAIL_NEGLIGIBLE_SEC) {
+    // Nothing meaningfully new since the last partial -- it already covers
+    // the whole turn, skip an extra network round trip entirely.
+    return {transcript: base};
+  }
+  const overlapStart = Math.max(0, partialSentSamples - pcmSampleRate * TAIL_OVERLAP_SEC);
+  const tailSamples = allSamples.slice(overlapStart);
+  const wav = encodeWavBlob(tailSamples, pcmSampleRate);
   const form = new FormData();
-  form.append('file', blob, 'memo.webm');
-  const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
+  form.append('file', wav, 'tail.wav');
+  const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
   const data = await res.json();
-  return data.error ? {error: data.error} : {transcript: data.transcript};
+  const tailText = (data.partial || '').trim();
+  if (!tailText) return {transcript: base}; // tail transcribed to nothing (silence/noise) -- base alone is still correct
+  return {transcript: mergeTranscripts(base, tailText)};
 }
 
 async function maybeSendPartial(now) {
@@ -635,7 +687,7 @@ async function maybeSendPartial(now) {
       // this promise can resolve), but the transcript itself is still
       // real and still worth returning to getFinalTranscript's awaiter.
       if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
-        lastPartialText = data.partial; // reused directly as the final transcript on stop -- see getFinalTranscript's fast-path
+        lastPartialText = data.partial; // reused as the final-transcript base on stop -- see getFinalTranscript's tail-patch
         pendingTranscriptEl.textContent = '"' + data.partial + '"';
         thread.scrollTop = thread.scrollHeight;
         if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = data.partial;
