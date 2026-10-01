@@ -1288,19 +1288,37 @@ async function start() {
       speakReply(data.reply);
     } else {
       // /api/start is a no-op once `conversation` is already non-empty
-      // server-side (e.g. a reload after the session's already begun).
-      // Without replaying history here, this looked identical to a
-      // broken app: blank transcript, silent "Listening...", no trace
-      // a session was already in progress -- reported live more than
-      // once as "no intro, not reacting" before this existed.
+      // server-side (e.g. a reload, or a second tab, after the session's
+      // already begun). Without replaying history here, this looked
+      // identical to a broken app: blank transcript, silent
+      // "Listening...", no trace a session was already in progress --
+      // reported live more than once as "no intro, not reacting" before
+      // this existed.
       try {
         const histRes = await fetch(apiPath('/api/history'));
         const hist = await histRes.json();
-        for (const turn of (hist.turns || [])) {
-          addMessage(turn.text, turn.role === 'user' ? 'employee' : 'facilitator');
+        if ((hist.turns || []).length) {
+          for (const turn of hist.turns) {
+            addMessage(turn.text, turn.role === 'user' ? 'employee' : 'facilitator');
+          }
+          // The transcript panel is collapsed by default in Voice view --
+          // replaying history into it while it's still hidden is exactly
+          // as invisible as not replaying it at all. Show it so resuming
+          // a session is actually visible, not just present in the DOM.
+          transcriptPanel.hidden = false;
+          transcriptToggleBtn.classList.remove('inactive');
         }
       } catch (e) {}
       avatarState = 'idle';
+      // Resuming (this branch) never gets a fresh reply to speak, so
+      // none of speakReply/playReplyAudio's own "start listening once
+      // we're done talking" paths ever fire here -- armLiveMode() (called
+      // by our caller right after this) only arms liveMode/the UI, it
+      // doesn't grab the mic by itself. Without this, a resumed session
+      // showed "Listening..." and the live timer running while the mic
+      // was never actually requested -- looked like it was working,
+      // reported live as "it could not hear me."
+      if (ui === 'voice') { armLiveMode(); startRecordingTurnSafe(); }
     }
   } finally {
     setBusy(false);
