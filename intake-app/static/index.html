@@ -83,8 +83,8 @@
      the corner instead. The state pill and live timer live at the stage's
      top-left instead (see .stage-top-left), the Voice/Text toggle at
      top-right (see .stage-top-right). */
-  .caption-stack{position:absolute; left:28px; right:170px; bottom:24px;}
-  .caption{font-size:clamp(17px,1.6vw,22px); font-weight:500; line-height:1.4; color:var(--ink); text-align:left;}
+  .caption-stack{position:absolute; left:28px; right:170px; bottom:24px; display:flex; justify-content:center;}
+  .caption{max-width:720px; font-size:clamp(17px,1.6vw,22px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
   .stage-top-left{position:absolute; top:16px; left:16px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; z-index:2;}
   .stage-top-right{position:absolute; top:16px; right:16px; z-index:2;}
   .state-pill{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-size:13px; white-space:nowrap;}
