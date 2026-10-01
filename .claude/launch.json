@@ -4,7 +4,7 @@
     {
       "name": "mend-intake",
       "runtimeExecutable": "intake-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--reload-include", "*.md", "--port", "8420", "--app-dir", "intake-app"],
+      "runtimeArgs": ["server:app", "--reload", "--reload-include", "facilitator-*-system-prompt.md", "--port", "8420", "--app-dir", "intake-app"],
       "port": 8420
     },
     {
