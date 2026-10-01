@@ -391,6 +391,30 @@ async def llm_chat_completions(request: Request):
 TEST_SHORT_INTRO = os.environ.get("TEST_SHORT_INTRO", "").lower() in ("1", "true", "yes")
 
 
+@app.get("/api/history")
+async def get_history():
+    """`conversation` lives server-side and survives a reload; the
+    transcript panel / chat view are pure client-side DOM state and don't.
+    Without this, a reload partway through a session showed a blank,
+    silent screen -- indistinguishable from the app just being broken,
+    even though resuming instead of restarting is the intended behavior
+    once /api/start no-ops on a non-empty conversation. Strips the
+    synthetic kickoff turn (always a parenthesized stage direction, never
+    something the employee/manager actually said) and each reply's
+    <mend_signal> block -- only ever reconstructs what was already shown."""
+    turns = []
+    for msg in conversation:
+        if msg["role"] == "user" and msg["content"].startswith("("):
+            continue
+        if msg["role"] == "assistant":
+            visible, _ = strip_signal(msg["content"])
+            if visible:
+                turns.append({"role": "assistant", "text": visible})
+        else:
+            turns.append({"role": "user", "text": msg["content"]})
+    return {"turns": turns}
+
+
 @app.post("/api/start")
 async def start(payload: dict = None):
     # No mode param anymore -- there's no frontend mode selector (Talk it

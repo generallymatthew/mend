@@ -15,6 +15,7 @@
        lightness (verified via WCAG contrast calc: 2.2:1 on Oat). */
     --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
     --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --stage-bg:#FBF8F3; /* the video window's own lighter oat -- paler than --paper, used throughout the whole call window (stage + the area behind the control bar), not just the stage's own rounded box */
   }
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
@@ -110,8 +111,8 @@
      facilitator tile-label vanish invisibly instead of just being scrolled
      past. overflow-x stays clipped for the rounded corners. */
   .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow-y:auto; overflow-x:hidden; background:var(--card);}
-  .call-main{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--paper); overflow-y:auto;}
-  .stage{position:relative; flex:1; display:flex; align-items:center; justify-content:center; padding:32px; min-width:0; min-height:280px; background:#FBF8F3; border-radius:18px;}
+  .call-main{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--stage-bg); overflow-y:auto;}
+  .stage{position:relative; flex:1; display:flex; align-items:center; justify-content:center; padding:32px; min-width:0; min-height:280px; background:var(--stage-bg); border-radius:18px;}
   .call-controls{width:100%; max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:8px; padding:14px 24px 20px;}
   .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
   .transcript-header{padding:14px 16px; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
@@ -147,6 +148,8 @@
   .ui-tab{font:inherit; font-size:13px; font-weight:700; padding:8px 16px; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
   .ui-tab.active{background:var(--accent); color:var(--paper);}
   .live-timer{display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:12px;}
+  .skip-intro-btn{display:inline-flex; align-items:center; gap:4px; padding:5px 10px; border-radius:999px; background:rgba(15,38,32,.55); color:var(--paper); font:inherit; font-size:12px; font-weight:600; border:1px solid rgba(246,241,231,.3); cursor:pointer;}
+  .skip-intro-btn:hover{background:rgba(15,38,32,.75);}
   .you-tile-label-row{display:flex; align-items:center; gap:4px;}
   /* Text mode: a separate full chat panel, not just a composer bar bolted
      onto the avatar stage -- swapped in for the whole call-frame via setUi(),
@@ -205,6 +208,7 @@
           <div class="stage-top-left">
             <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
             <div class="live-timer" id="liveTimer" hidden>Live &middot; <span id="liveTimerText">00:00</span></div>
+            <button id="skipIntroBtn" class="skip-intro-btn" hidden>Skip &rarr;</button>
           </div>
           <div class="stage-top-right">
             <div class="ui-toggle">
@@ -347,6 +351,7 @@ const chatSendBtn = document.getElementById('chatSendBtn');
 const chatResetBtn = document.getElementById('chatResetBtn');
 const liveTimerEl = document.getElementById('liveTimer');
 const liveTimerText = document.getElementById('liveTimerText');
+const skipIntroBtn = document.getElementById('skipIntroBtn');
 
 // Voice / Text toggle: per the design handoff, these are two fully separate
 // views swapped via setUi(), not a composer bolted onto the avatar stage --
@@ -462,6 +467,16 @@ const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to nois
 function startMicAnalysis(stream) {
   try {
     micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // A new AudioContext can start 'suspended' when there's been no user
+    // gesture yet -- exactly the case here now that live mode starts
+    // listening automatically once Thimble's greeting ends, no click
+    // required. A suspended context never actually processes audio, so
+    // the analyser just reads silence forever: VAD level stays 0, the mic
+    // indicator never lights up, and a real turn never ends -- looks
+    // exactly like "the mic isn't hearing me" even though getUserMedia
+    // genuinely succeeded. Same fix as the TTS playback AudioContext
+    // already has in ensureAudioGraph(), just missing here.
+    if (micAudioCtx.state === 'suspended') micAudioCtx.resume().catch(() => {});
     const source = micAudioCtx.createMediaStreamSource(stream);
     micAnalyser = micAudioCtx.createAnalyser();
     micAnalyser.fftSize = 256;
@@ -718,7 +733,11 @@ const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 
 const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
+const BUSY_STATES = ['thinking', 'synthesizing', 'talking'];
 function updateStatePill() {
+  // Not gated by the early-return below -- this needs to react every
+  // frame avatarState could've changed, same as the label itself would.
+  skipIntroBtn.hidden = !BUSY_STATES.includes(avatarState);
   const word = STATE_WORDS[avatarState] || 'Listening…';
   if (word === lastStateWord) return;
   lastStateWord = word;
@@ -796,28 +815,59 @@ function playReplyAudio(url, text) {
 // label the whole time). This fetches audio in a second round trip, not
 // awaited by callers, so the input re-enables as soon as text arrives
 // instead of waiting on voice too.
+// Skip button (mainly for testing -- a reply's TTS, including the opening
+// greeting, can run well past 30s on a long one) needs to both cancel a
+// still-in-flight /api/speak fetch and suppress its result if it resolves
+// right after the click anyway -- an AbortController alone isn't enough,
+// since the fetch can win that race by a few ms.
+let speakAbortController = null;
+let skipRequested = false;
+
 async function speakReply(text) {
   if (!text) return;
+  // Skip can be clicked before this function is even called (still
+  // waiting on the reply *text*, not yet at the TTS stage) -- in that
+  // case skipRequested is already true by the time we get here, set by
+  // the click handler, and nothing in this function should run at all.
+  // Each new turn clears it at its own avatarState='thinking' point
+  // (sendText/onstop/start above), not here, specifically so a skip that
+  // arrives before this call isn't immediately wiped out by it.
+  if (skipRequested) return;
   // The reply text has already arrived by this point -- there's nothing
   // left to "think" about, just TTS synthesis left to wait on. Reusing
   // 'thinking' here (as this used to) made that wait look identical to
   // composing the reply itself, which read as nothing happening.
   if (avatarState === 'thinking') avatarState = 'synthesizing';
   statusEl.textContent = 'generating voice...';
+  speakAbortController = new AbortController();
   let audioUrl = null;
   try {
     const res = await fetch(apiPath('/api/speak'), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({text}),
+      signal: speakAbortController.signal,
     });
     const data = await res.json();
     audioUrl = data.audio_url || null;
   } catch (e) {
-    // no audio -- playReplyAudio(null, ...) below falls back to text-only
+    // aborted via skip, or genuinely no audio -- either way fall through;
+    // the skipRequested check below handles the skip case specifically
   }
   if (statusEl.textContent === 'generating voice...') statusEl.textContent = '';
+  if (skipRequested) return; // the click handler already moved on; don't also start playing audio
   playReplyAudio(audioUrl, text);
 }
+
+skipIntroBtn.addEventListener('click', () => {
+  skipRequested = true;
+  if (speakAbortController) speakAbortController.abort();
+  audioEl.pause();
+  audioEl.src = '';
+  captionEl.textContent = '';
+  avatarState = 'idle';
+  armLiveMode(); // no-op if already armed; just ensures liveMode is true
+  startRecordingTurnSafe();
+});
 
 // Voice view's transcript sidebar and Text view's chat panel render the same
 // shared message log in two different bubble styles (per the handoff), so
@@ -875,6 +925,7 @@ async function sendText() {
   addMessage(text, 'employee');
   setBusy(true);
   avatarState = 'thinking';
+  skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
   try {
     const res = await fetch(apiPath('/api/message'), {
       method: 'POST',
@@ -1030,6 +1081,7 @@ async function startRecordingTurn() {
     pendingTranscriptEl = null;
     setBusy(true);
     avatarState = 'thinking';
+    skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
     statusEl.textContent = 'transcribing...';
     try {
       const form = new FormData();
@@ -1201,6 +1253,7 @@ videoEndBtn.addEventListener('click', endVideoCall);
 async function start() {
   setBusy(true);
   avatarState = 'thinking';
+  skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
   try {
     // No mode param -- there's no mode selector anymore. Which track
     // applies (employee conflict vs. manager coaching) is something the
@@ -1217,8 +1270,18 @@ async function start() {
       speakReply(data.reply);
     } else {
       // /api/start is a no-op once `conversation` is already non-empty
-      // server-side (e.g. a reload after the session's already begun) --
-      // nothing to speak, so don't leave the avatar stuck mid "thinking".
+      // server-side (e.g. a reload after the session's already begun).
+      // Without replaying history here, this looked identical to a
+      // broken app: blank transcript, silent "Listening...", no trace
+      // a session was already in progress -- reported live more than
+      // once as "no intro, not reacting" before this existed.
+      try {
+        const histRes = await fetch(apiPath('/api/history'));
+        const hist = await histRes.json();
+        for (const turn of (hist.turns || [])) {
+          addMessage(turn.text, turn.role === 'user' ? 'employee' : 'facilitator');
+        }
+      } catch (e) {}
       avatarState = 'idle';
     }
   } finally {
