@@ -1211,7 +1211,7 @@ let liveMode = false;
 // immediately gets a threshold near their own volume, risking an early
 // mid-word cutoff) is far cheaper than a recording that never stops.
 const VAD_THRESHOLD = 0.06;
-const VAD_SILENCE_MS = 1800;
+const VAD_SILENCE_MS = 2600; // was 1800 -- reported live as a real turn ending after only ~3.9s of a longer thought ("cut off in the middle of me talking"), a natural reflective pause (common when describing a workplace conflict) outlasting the old grace window. Raised at the cost of a slightly longer wait after you're genuinely done talking before Thimble responds.
 const VAD_MIN_SPEECH_MS = 500;
 const VAD_CALIBRATION_MS = 400;
 const VAD_MAX_TURN_MS = 60000; // hard backstop, independent of VAD: no single turn should ever record this long uninterrupted (a real 290s clip happened once already, starving the whole server's CPU) -- force-ends the turn regardless of what's confusing the silence detection
