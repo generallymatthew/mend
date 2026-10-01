@@ -471,6 +471,79 @@ async def post_message(payload: dict):
     return await run_in_threadpool(facilitator_reply)
 
 
+def stream_message_reply():
+    """SSE stream of the facilitator's reply for /api/message/stream -- same
+    job as facilitator_reply() above, but yields visible text incrementally
+    instead of returning it all at once, so the frontend can show Thimble's
+    reply appearing as it's generated instead of the whole ~5-6s Claude call
+    passing in silence (reported live: "transcription was fine but the
+    thinking took 6sec"). A sync generator passed straight to
+    StreamingResponse, same as stream_facilitator_reply() below already does
+    for the Tavus path -- Starlette iterates it via its own threadpool
+    wrapper, so this doesn't block the event loop the way a raw blocking
+    call from an async def handler would (see facilitator_reply's own
+    docstring for why that distinction matters here).
+
+    Reuses stream_facilitator_reply's own marker-withholding logic (buffer
+    until certain text isn't the start of <mend_signal>) rather than
+    reinventing it, just shaped as {"text": ...} chunks for this app's own
+    frontend instead of the OpenAI chunk format Tavus needs."""
+    if client is None:
+        conversation.pop()
+        yield _sse({"text": "(server error: ANTHROPIC_API_KEY is not set in this shell)"})
+        yield _sse({"done": True, "signal": None})
+        return
+    marker = "<mend_signal>"
+    full_text = ""
+    flushed_len = 0
+    signal_started = False
+    try:
+        with client.messages.stream(
+            model=MODEL,
+            max_tokens=8192,
+            system=SYSTEM_PROMPT,
+            messages=conversation,
+        ) as stream:
+            for delta in stream.text_stream:
+                full_text += delta
+                if signal_started:
+                    continue
+                tag_at = full_text.find(marker, flushed_len)
+                if tag_at != -1:
+                    if tag_at > flushed_len:
+                        yield _sse({"text": full_text[flushed_len:tag_at]})
+                    flushed_len = tag_at
+                    signal_started = True
+                    continue
+                safe_len = max(flushed_len, len(full_text) - (len(marker) - 1))
+                if safe_len > flushed_len:
+                    yield _sse({"text": full_text[flushed_len:safe_len]})
+                    flushed_len = safe_len
+    except Exception as e:
+        conversation.pop()
+        yield _sse({"error": f"server error calling Claude: {e}"})
+        return
+    if not full_text:
+        conversation.pop()
+        yield _sse({"error": "server error: no text in response"})
+        return
+    # visible text is already fully delivered via the "text" deltas above
+    # (the marker-withholding loop never streams the <mend_signal> block
+    # itself) -- only the parsed signal still needs to reach the frontend.
+    _, signal = strip_signal(full_text)
+    conversation.append({"role": "assistant", "content": full_text})
+    yield _sse({"done": True, "signal": signal})
+
+
+@app.post("/api/message/stream")
+async def post_message_stream(payload: dict):
+    text = payload.get("text", "").strip()
+    if not text:
+        return JSONResponse({"error": "empty message"}, status_code=400)
+    conversation.append({"role": "user", "content": text})
+    return StreamingResponse(stream_message_reply(), media_type="text/event-stream")
+
+
 @app.post("/api/voice/partial")
 async def post_voice_partial(file: UploadFile):
     """Live preview only, called repeatedly while the employee is still

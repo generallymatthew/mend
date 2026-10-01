@@ -395,6 +395,15 @@ function pauseSession() {
   liveMode = false;
   setLiveLayout(false);
   statusEl.textContent = 'paused';
+  // Without this, avatarState stayed whatever it was before Pause (almost
+  // always 'listening'), and STATE_WORDS maps BOTH 'listening' and 'idle'
+  // to the same "Listening..." label -- the big avatar pill kept saying
+  // "Listening..." the whole time paused, with only the small, easy-to-
+  // miss statusEl line actually saying "paused". Reported live as "when I
+  // hit pause it's still listening but not reacting" -- same failure shape
+  // as the earlier mic-blocked-banner bug (a stuck label indistinguishable
+  // from the real state it's supposed to differ from).
+  avatarState = 'paused';
 }
 function resumeSession() {
   if (!sessionPaused) return;
@@ -884,8 +893,8 @@ function computeCaptionStarts() {
   });
 }
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Talking…', empathizing: 'Empathizing…'};
-const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', paused: 'Paused', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Talking…', empathizing: 'Empathizing…'};
+const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', paused: 'Paused.', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
 const BUSY_STATES = ['transcribing', 'thinking', 'synthesizing', 'talking'];
@@ -1067,6 +1076,52 @@ function handleSignal(signal) {
   } catch (e) {}
 }
 
+// POSTs to /api/message/stream and reads the SSE body as it arrives, so
+// Thimble's reply can appear while it's still being generated instead of
+// the whole ~5-6s Claude call passing in silence (reported live:
+// "transcription was fine but the thinking took 6sec"). onDelta is called
+// with the FULL accumulated text so far each time more arrives (not just
+// the new fragment) -- callers just set a bubble's textContent to it
+// directly, no manual concatenation needed. Resolves to {reply, signal},
+// matching the shape the old one-shot /api/message JSON response had, so
+// call sites barely change.
+async function streamFacilitatorReply(text, onDelta) {
+  const res = await fetch(apiPath('/api/message/stream'), {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text}),
+  });
+  if (!res.ok || !res.body) {
+    let msg = `request failed (${res.status})`;
+    try { const data = await res.json(); if (data.error) msg = data.error; } catch (e) {}
+    throw new Error(msg);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  let full = '';
+  let signal = null;
+  let errorMsg = null;
+  while (true) {
+    const {done, value} = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, {stream: true});
+    let idx;
+    while ((idx = buf.indexOf('\n\n')) !== -1) {
+      const raw = buf.slice(0, idx);
+      buf = buf.slice(idx + 2);
+      if (!raw.startsWith('data: ')) continue;
+      let payload;
+      try { payload = JSON.parse(raw.slice(6)); } catch (e) { continue; }
+      if (payload.error) { errorMsg = payload.error; continue; }
+      if (payload.text) { full += payload.text; onDelta(full); }
+      if (payload.done) signal = payload.signal;
+    }
+  }
+  if (errorMsg && !full) throw new Error(errorMsg);
+  return {reply: full, signal};
+}
+
 function setBusy(busy) {
   chatSendBtn.disabled = busy;
   chatInput.disabled = busy;
@@ -1081,16 +1136,20 @@ async function sendText() {
   setBusy(true);
   avatarState = 'thinking';
   skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
+  let replyBubble = null;
   try {
-    const res = await fetch(apiPath('/api/message'), {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text}),
+    const {reply, signal} = await streamFacilitatorReply(text, (partial) => {
+      // First delta creates the bubble (same addMessage() every other
+      // reply uses); later ones just update its text in place, same
+      // pattern the live voice-transcript bubble already uses.
+      if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator'); return; }
+      replyBubble.textContent = partial;
+      if (replyBubble.chatBubble) replyBubble.chatBubble.textContent = partial;
+      thread.scrollTop = thread.scrollHeight;
+      chatThread.scrollTop = chatThread.scrollHeight;
     });
-    const data = await res.json();
-    if (data.reply) addMessage(data.reply, 'facilitator');
-    handleSignal(data.signal);
-    speakReply(data.reply);
+    handleSignal(signal);
+    speakReply(reply);
   } catch (e) {
     statusEl.textContent = 'error: ' + e.message;
     avatarState = 'idle';
@@ -1289,15 +1348,16 @@ async function startRecordingTurn() {
       }
       avatarState = 'thinking';
       statusEl.textContent = 'thimble is responding...';
-      const msgRes = await fetch(apiPath('/api/message'), {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({text: transcript}),
+      let replyBubble = null;
+      const {reply, signal} = await streamFacilitatorReply(transcript, (partial) => {
+        if (statusEl.textContent === 'thimble is responding...') statusEl.textContent = '';
+        if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator'); return; }
+        replyBubble.textContent = partial;
+        if (replyBubble.chatBubble) replyBubble.chatBubble.textContent = partial;
+        thread.scrollTop = thread.scrollHeight;
       });
-      const data = await msgRes.json();
-      if (statusEl.textContent === 'thimble is responding...') statusEl.textContent = '';
-      if (data.reply) addMessage(data.reply, 'facilitator');
-      handleSignal(data.signal);
-      speakReply(data.reply);
+      handleSignal(signal);
+      speakReply(reply);
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
       avatarState = 'idle';
