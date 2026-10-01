@@ -1,0 +1,15 @@
+# Render deploy variant of ../Caddyfile: same path-prefix scheme (demo-app
+# at root, intake-app under /intake/), but listens on Render's injected
+# $PORT instead of a fixed local port, and only proxies the two apps this
+# deploy actually runs. Add more handle_path blocks here as more apps join
+# the Render deploy, mirroring ../Caddyfile.
+
+:{$PORT} {
+	handle_path /intake/* {
+		reverse_proxy 127.0.0.1:8420
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8423
+	}
+}

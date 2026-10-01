@@ -18,15 +18,19 @@
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
   .wrap{max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-direction:column; height:100vh;}
-  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:12px;}
-  .eyebrow::before{content:'';display:inline-block;width:14px;height:10px;margin-right:6px;vertical-align:-1px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{height:26px; width:auto; display:block;}
+  .brand-name{font-weight:800; font-size:22px; letter-spacing:-0.01em; color:var(--ink);}
+  .privacy-pill{display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; background:#17372E0D; font-size:14px; font-weight:500; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
+  .privacy-pill svg{flex-shrink:0;}
+  .disclaimer-footer{margin-top:14px; padding:0 4px; font-size:11.5px; line-height:1.5; color:var(--ink-soft); opacity:.65; text-align:center;}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
   .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
   .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
   .msg.employee{background:var(--accent); color:#fff; align-self:flex-end;}
   .msg.transcript{font-style:italic; opacity:.7;}
   .msg.pending{opacity:.45;} /* live partial transcript, not yet the finalized turn -- same bubble, corrected in place once real */
-  .composer{display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--border); padding-top:12px;}
   textarea{flex:1; resize:none; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; background:var(--card); color:var(--ink);}
   button{border:1.5px solid var(--border); background:var(--card); color:var(--ink); border-radius:10px; padding:10px 14px; font:inherit; font-weight:600; cursor:pointer;}
   button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
@@ -38,31 +42,56 @@
   .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
   .video-toggle{display:flex; justify-content:flex-end; margin-bottom:8px;}
   .video-toggle button{font-size:12.5px; padding:6px 10px;}
-  .mode-toggle{display:flex; gap:6px; margin-bottom:12px;}
-  .mode-toggle button{flex:1; padding:9px 12px; font-size:13.5px; text-align:left;}
-  .mode-toggle button .sub{display:block; font-weight:400; font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
-  .mode-toggle button.active{background:var(--accent); color:#fff; border-color:var(--accent);}
-  .mode-toggle button.active .sub{color:rgba(255,255,255,.8);}
-  .roleplay-badge{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; margin-bottom:2px;}
+  .mode-toggle{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:16px;}
+  .mode-toggle button, .mode-toggle a{text-align:left; padding:16px 18px; font-size:16px; font-weight:700; border-radius:14px; line-height:1.3; text-decoration:none; display:block; border:1.5px solid var(--border); background:var(--card); color:var(--ink); cursor:pointer;}
+  .mode-toggle button .sub, .mode-toggle a .sub{display:block; font-weight:400; font-size:13.5px; color:var(--ink-soft); margin-top:4px; line-height:1.4;}
+  .mode-toggle button.active{background:var(--accent); color:var(--paper); border-color:var(--accent);}
+  .mode-toggle button.active .sub{color:rgba(246,241,231,.8);}
+  .roleplay-badge{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent); border-radius:999px; padding:4px 12px; position:absolute; top:16px; left:50%; transform:translateX(-50%);}
   .video-area{flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;}
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
-  /* Fixed 200x200 footprint (matching avatarCanvas's own size) so the
-     facilitator's canvas and the employee's plain circle -- drawn at
-     different diameters, see below -- still occupy identical space and
-     land on the same center point once live mode top-anchors both tiles. */
   .avatar-row{display:flex; align-items:center; justify-content:center; width:200px; height:200px;}
-  #avatarCanvas{display:block;}
-  .caption{min-height:44px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:16px; font-weight:600; line-height:1.4; padding:0 12px 10px; color:var(--ink); max-width:480px;}
-  .live-row{display:flex; align-items:center; gap:10px; margin-top:8px;}
-  .live-row button{font-size:13px; padding:7px 12px; flex-shrink:0;}
-  .live-row button.recording{background:#8C3B2E; color:#fff; border-color:#8C3B2E;}
-  .live-hint{font-size:11.5px; color:var(--ink-soft); line-height:1.4;}
+  /* Thimble avatar: a direct port of the design handoff's avatar(st,...)
+     geometry (egg-shaped listening, morphing blob thinking, bobbing+rippling
+     talking, nodding honey-blend empathizing) -- DOM/CSS border-radius
+     shapes, not the old canvas circle, so the exact shapes/keyframes match
+     the handoff instead of an older, different avatar system's motion. */
+  .thimble-avatar{position:relative; width:200px; height:200px; transition:transform .7s cubic-bezier(.3,1.4,.5,1);}
+  .thimble-avatar.mini{width:48px; height:48px;}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
+  .thimble-ripple.b{animation-delay:.8s;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease;}
+  .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
+  .thimble-mouth.dots{display:flex; align-items:center; justify-content:center; background:none !important;}
+  .thimble-mouth .dot{width:9px; height:9px; border-radius:50%; background:#F6F1E7; animation:thimble-dot 1.2s ease-in-out infinite;}
+  @keyframes thimble-blob{0%,100%{border-radius:50%; transform:scale(.95);} 25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%; transform:scale(.92) rotate(-3deg);} 50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%; transform:scale(.95);} 75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%; transform:scale(.92) rotate(3deg);}}
+  @keyframes thimble-bob{0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-1.5%) scale(1.015,.99);}}
+  @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
+  @keyframes thimble-dot{0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-35%);}}
+  @keyframes thimble-ripple{0%{transform:scale(1); opacity:.45;} 100%{transform:scale(1.6); opacity:0;}}
+  /* Caption sits left-aligned pinned to the stage's bottom-left, not
+     centered under the avatar -- matches the design handoff's call-frame
+     layout, where the avatar centers on its own and the caption anchors to
+     the corner instead. The state pill and live timer live at the stage's
+     top-left instead (see .stage-top-left), the Voice/Text toggle at
+     top-right (see .stage-top-right). */
+  .caption-stack{position:absolute; left:28px; right:170px; bottom:24px;}
+  .caption{font-size:clamp(17px,1.6vw,22px); font-weight:500; line-height:1.4; color:var(--ink); text-align:left;}
+  .stage-top-left{position:absolute; top:16px; left:16px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; z-index:2;}
+  .stage-top-right{position:absolute; top:16px; right:16px; z-index:2;}
+  .state-pill{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-size:13px; white-space:nowrap;}
+  .state-pill b{font-weight:700;}
+  .state-pill .state-word{opacity:.72; font-weight:500;}
   /* Simple "yes, I can hear you" indicator -- shown only while recording.
      The dot actually lights up on real mic input above a small threshold
      (see updateMicIndicator()), not just on "recording" state, so it's
      proof sound is being picked up, not just that the button was pressed. */
+  /* Superseded by the You-tile's own circle lighting up on mic input (see
+     .employee-circle.lit) -- kept in the DOM only so the existing JS that
+     toggles it keeps working untouched; permanently hidden via [hidden]. */
   .mic-indicator{display:none; align-items:center; gap:7px; margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
-  .mic-indicator.active{display:flex;}
   .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
   .mic-indicator-dot.lit{background:#8C3B2E; transform:scale(1.15);}
 
@@ -76,46 +105,94 @@
      facilitator tile-label vanish invisibly instead of just being scrolled
      past. overflow-x stays clipped for the rounded corners. */
   .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow-y:auto; overflow-x:hidden; background:var(--card);}
-  .call-main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper); overflow-y:auto;}
-  .call-controls{width:100%; max-width:480px; display:flex; flex-direction:column; gap:8px;}
+  .call-main{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--paper); overflow-y:auto;}
+  .stage{position:relative; flex:1; display:flex; align-items:center; justify-content:center; padding:32px; min-width:0; min-height:280px; background:#FBF8F3; border-radius:18px;}
+  .call-controls{width:100%; max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:8px; padding:14px 24px 20px;}
   .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
   .transcript-header{padding:14px 16px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
   .transcript-header button{font-size:11px; padding:5px 9px; text-transform:none; letter-spacing:normal; font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
   .transcript-panel .thread{flex:1; min-height:0; overflow-y:auto; padding:16px; margin:0;}
 
-  /* Live mode: two matching tiles (facilitator | you) instead of one avatar
-     plus a side transcript log -- each side's spoken words show as a single
-     current-sentence subtitle under its own circle, never also logged as a
-     separate full message. See setLiveLayout(). The two circles need to
-     land at the same height regardless of how long either side's caption
-     text is, so live mode pins label+circle to the top of each tile
-     (flex-start) instead of centering each tile's content as its own block
-     -- centering independently is what let them drift out of alignment
-     whenever one caption ran longer than the other. */
-  .tile-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);}
-  .call-layout.live .call-main, .call-layout.live .employee-tile{justify-content:flex-start;}
-  .employee-tile{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:safe center; gap:14px; padding:24px; min-width:0; min-height:0; background:var(--paper); border-left:1px solid var(--border); overflow-y:auto;}
-  /* 160px, not the 200x200 canvas's own box size: drawAvatarFrame() draws
-     the facilitator's circle at radius 80*scale (~160px diameter) inset
-     within its 200x200 canvas, not edge-to-edge -- matching this to that
-     drawn diameter, not the canvas's outer box, is what actually makes the
-     two circles read as the same size. */
-  .employee-circle{width:160px; height:160px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
-  .employee-circle.lit{background:#8C3B2E; transform:scale(1.03);}
+  /* PiP-style "You" tile, bottom-right of the stage, video-call style --
+     avatar centers in the tile on its own, "You" (+ mute icon) overlays the
+     tile's own bottom-left corner as a label, not stacked below the circle
+     in normal flow -- matching how a real video tile labels its participant. */
+  .you-tile{position:absolute; right:20px; bottom:20px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden;}
+  .you-tile-avatar-wrap{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
+  .you-tile-label-row{position:absolute; left:10px; bottom:8px;}
+  .you-tile-label{font-size:12px; font-weight:600; color:var(--ink-soft);}
+  .you-caption{position:absolute; left:10px; right:10px; bottom:26px; font-size:10.5px; text-align:left; line-height:1.3; color:var(--ink-soft); max-height:2.6em; overflow:hidden;}
+  /* Honey, matching the facilitator/Employee-A/Employee-B tile scheme in
+     joint-session-app -- the employee's own circle is always Honey, not a
+     neutral placeholder that only colors in once "lit" by mic input. */
+  .employee-circle{width:48px; height:48px; border-radius:50%; background:#E9B949; transition:transform 80ms linear;}
+  .employee-circle.lit{transform:scale(1.08);}
+  /* Default = evergreen/"on" (matches the design handoff's control-button
+     spec: active = evergreen bg + oat icon). .inactive is the explicit OFF
+     look (white bg + evergreen icon) -- used for transcript (starts
+     collapsed) and captions-off, not for a separate hover/press state. */
+  .ctrl-btn{width:44px; height:44px; border-radius:50%; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; background:var(--accent); color:var(--paper); border-color:var(--accent);}
+  .ctrl-btn.inactive{background:var(--card); color:var(--accent); border-color:var(--border);}
+  .control-bar{display:flex; align-items:center; justify-content:center; gap:10px;}
+  /* Voice/Text segmented toggle -- appears both in the voice control bar and
+     the text/chat header, always in sync (see setUi()). Per the design
+     handoff, voice mode has no text input at all: typing only happens in
+     Text, talking only happens in Voice (via Go live), switched here. */
+  .ui-toggle{display:flex; padding:4px; border-radius:999px; background:#17372E0D; gap:2px; flex-shrink:0;}
+  .ui-tab{font:inherit; font-size:13px; font-weight:700; padding:8px 16px; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
+  .ui-tab.active{background:var(--accent); color:var(--paper);}
+  .live-timer{display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-family:'IBM Plex Mono',monospace; font-size:12px;}
+  .you-tile-label-row{display:flex; align-items:center; gap:4px;}
+  /* Text mode: a separate full chat panel, not just a composer bar bolted
+     onto the avatar stage -- swapped in for the whole call-frame via setUi(),
+     not layered on top of it. */
+  .chat-panel{flex:1; display:flex; flex-direction:column; min-height:420px; border-radius:18px; background:var(--card); border:1px solid #17372E14; overflow:hidden;}
+  .chat-header{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid #17372E14; flex-wrap:wrap;}
+  .chat-header-left{display:flex; align-items:center; gap:12px;}
+  .chat-avatar-small{width:48px; height:48px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .chat-header-text{display:flex; flex-direction:column; gap:2px;}
+  .chat-name{font-weight:700; font-size:15px;}
+  .chat-status{font-size:12.5px; opacity:.6;}
+  .chat-header-right{display:flex; align-items:center; gap:8px;}
+  .outline-pill{font:inherit; font-size:13px; font-weight:600; padding:8px 14px; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--ink); cursor:pointer; white-space:nowrap;}
+  .chat-thread{flex:1; overflow-y:auto; padding:24px 16px; display:flex; flex-direction:column;}
+  .chat-thread-inner{max-width:720px; width:100%; margin:0 auto; display:flex; flex-direction:column; gap:14px;}
+  .chat-msg-wrap{display:flex; flex-direction:column; gap:4px;}
+  .chat-msg-wrap.mine{align-items:flex-end;}
+  .chat-msg-wrap.theirs{align-items:flex-start;}
+  .chat-who{font-size:11.5px; font-weight:600; opacity:.55;}
+  .chat-bubble{padding:12px 16px; border-radius:16px; font-size:15.5px; line-height:1.6; white-space:pre-wrap; max-width:80%;}
+  .chat-bubble.mine{background:var(--accent); color:var(--paper); border-bottom-right-radius:4px;}
+  .chat-bubble.theirs{background:var(--paper); color:var(--ink); border-bottom-left-radius:4px;}
+  .chat-typing{display:flex; gap:5px; padding:14px 16px; border-radius:14px; border-bottom-left-radius:4px; background:var(--paper); align-self:flex-start;}
+  .chat-typing span{width:7px; height:7px; border-radius:50%; background:#17372E66; animation:thimble-dot 1.2s ease-in-out infinite;}
+  .chat-typing span:nth-child(2){animation-delay:.2s;}
+  .chat-typing span:nth-child(3){animation-delay:.4s;}
+  .chat-composer{padding:12px 16px 16px; border-top:1px solid #17372E14;}
+  .chat-input-row{max-width:720px; margin:0 auto; display:flex; align-items:flex-end; gap:8px; background:var(--card); border:1px solid var(--border); border-radius:18px; padding:8px 8px 8px 16px;}
+  .chat-input-row textarea{flex:1; min-width:0; border:none; outline:none; resize:none; font:inherit; font-size:15px; line-height:1.5; color:var(--ink); background:transparent; padding:6px 0;}
+  .chat-input-row .send-btn{height:44px; padding:0 20px; border-radius:12px; flex-shrink:0;}
+  .chat-hint{max-width:720px; margin:8px auto 0; font-size:12px; opacity:.55; text-align:center;}
   @media (max-width: 760px){
     .call-layout{flex-direction:column;}
     .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
-    .employee-tile{border-left:none; border-top:1px solid var(--border);}
   }
   [hidden]{display:none !important;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Mend &middot; intake (local prototype, text + voice memo)</div>
+  <div class="header">
+    <div class="brand">
+      <img class="brand-mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E" alt="">
+      <span class="brand-name">Mend</span>
+    </div>
+    <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private. Nothing is recorded.</div>
+  </div>
   <div class="mode-toggle">
-    <button id="modeTalkBtn" class="active">Talk<span class="sub">Talk to the facilitator</span></button>
-    <button id="modePracticeBtn">Practice<span class="sub">Rehearse the hard conversation first</span></button>
+    <button id="modeTalkBtn" class="active">Talk it through<span class="sub">Tell Thimble what happened, in your own words</span></button>
+    <button id="modePracticeBtn">Rehearse<span class="sub">Practice the hard conversation before you have it</span></button>
+    <a href="/coach/">For managers<span class="sub">Get advice on a hard conversation with someone you manage</span></a>
   </div>
 
   <div class="video-toggle" id="videoToggle" hidden>
@@ -123,40 +200,101 @@
   </div>
 
   <div id="textMode" class="video-area" style="flex-direction:column;">
-    <div class="call-layout">
+    <div class="call-layout" id="voicePanel">
       <div class="call-main">
-        <div class="tile-label" id="facilitatorLabel" hidden>Facilitator</div>
-        <div class="avatar-row"><canvas id="avatarCanvas" width="200" height="200"></canvas></div>
-        <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
-        <div class="caption" id="caption"></div>
+        <div class="stage">
+          <div class="stage-top-left">
+            <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
+            <div class="live-timer" id="liveTimer" hidden>Live &middot; <span id="liveTimerText">00:00</span></div>
+          </div>
+          <div class="stage-top-right">
+            <div class="ui-toggle">
+              <button class="ui-tab active" data-ui="voice">Voice</button>
+              <button class="ui-tab" data-ui="text">Text</button>
+            </div>
+          </div>
+          <div class="avatar-row">
+            <div class="thimble-avatar" id="thimbleAvatar">
+              <div class="thimble-ripple" id="thimbleRippleA" hidden></div>
+              <div class="thimble-ripple b" id="thimbleRippleB" hidden></div>
+              <div class="thimble-ring" id="thimbleRing">
+                <div class="thimble-body" id="thimbleBody">
+                  <div class="thimble-blend" id="thimbleBlend"></div>
+                  <div class="thimble-mouth" id="thimbleMouth"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
+          <div class="caption-stack">
+            <div class="caption" id="caption"></div>
+          </div>
+          <div class="you-tile" id="employeeTile">
+            <div class="you-tile-avatar-wrap"><div class="employee-circle" id="employeeCircle"></div></div>
+            <div class="you-caption" id="employeeCaption"></div>
+            <div class="you-tile-label-row"><span class="you-tile-label">You</span> <svg id="youMuteIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" hidden><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></div>
+          </div>
+        </div>
         <div class="call-controls">
-          <div class="composer" id="composer">
-            <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
-            <button id="recordBtn" title="Record a voice memo">&#127908;</button>
-            <button id="sendBtn" class="primary">Send</button>
+          <div class="control-bar">
+            <button id="muteBtn" class="ctrl-btn" title="Mute"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
+            <button id="captionsToggleBtn" class="ctrl-btn" title="Toggle captions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"></path></svg></button>
+            <button id="transcriptToggleBtn" class="ctrl-btn inactive" title="Show/hide transcript">&#9776;</button>
           </div>
-          <div class="live-row">
-            <button id="liveBtn">Go live</button>
-            <span class="live-hint">Hands-free: it listens, replies, then listens again automatically until you end it.</span>
-          </div>
-          <div class="mic-indicator" id="micIndicator">
+          <div class="mic-indicator" id="micIndicator" hidden>
             <span class="mic-indicator-dot" id="micIndicatorDot"></span>
             <span>Listening&hellip;</span>
           </div>
           <div class="status" id="status"></div>
         </div>
       </div>
-      <div class="employee-tile" id="employeeTile" hidden>
-        <div class="tile-label">You</div>
-        <div class="avatar-row"><div class="employee-circle" id="employeeCircle"></div></div>
-        <div class="caption" id="employeeCaption"></div>
-      </div>
-      <div class="transcript-panel" id="transcriptPanel">
+      <div class="transcript-panel" id="transcriptPanel" hidden>
         <div class="transcript-header">
           <span>Transcript</span>
           <button id="resetBtn" title="Start a new conversation">Reset</button>
         </div>
         <div class="thread" id="thread"></div>
+      </div>
+    </div>
+    <div class="chat-panel" id="chatPanel" hidden>
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <div class="chat-avatar-small">
+            <div class="thimble-avatar mini" id="thimbleMiniAvatar">
+              <div class="thimble-ripple" id="thimbleMiniRippleA" hidden></div>
+              <div class="thimble-ripple b" id="thimbleMiniRippleB" hidden></div>
+              <div class="thimble-ring" id="thimbleMiniRing">
+                <div class="thimble-body" id="thimbleMiniBody">
+                  <div class="thimble-blend" id="thimbleMiniBlend"></div>
+                  <div class="thimble-mouth" id="thimbleMiniMouth"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-header-text">
+            <span class="chat-name">Thimble</span>
+            <span class="chat-status" id="chatStatus">Here to listen. Private, nothing is recorded.</span>
+          </div>
+        </div>
+        <div class="chat-header-right">
+          <div class="ui-toggle">
+            <button class="ui-tab" data-ui="voice">Voice</button>
+            <button class="ui-tab active" data-ui="text">Text</button>
+          </div>
+          <button id="chatResetBtn" class="outline-pill" title="Start a new conversation">Start over</button>
+        </div>
+      </div>
+      <div class="chat-thread" id="chatThread">
+        <div class="chat-thread-inner" id="chatThreadInner">
+          <div class="chat-typing" id="chatTyping" hidden><span></span><span></span><span></span></div>
+        </div>
+      </div>
+      <div class="chat-composer">
+        <div class="chat-input-row">
+          <textarea id="chatInput" rows="2" placeholder="Tell Thimble what happened&hellip;"></textarea>
+          <button id="chatSendBtn" class="primary send-btn">Send</button>
+        </div>
+        <div class="chat-hint">Enter to send &middot; Shift+Enter for a new line</div>
       </div>
     </div>
   </div>
@@ -167,9 +305,11 @@
   </div>
 
   <div class="banner" id="banner" hidden>
-    <span>Facilitator says you're ready for a joint session.</span>
+    <span>Thimble says you're ready for a joint session.</span>
     <a href="/joint/" target="_blank" rel="noopener"><button>Continue &rarr;</button></a>
   </div>
+
+  <div class="disclaimer-footer">Not legal or HR advice. Mend is a prototype &mdash; Thimble is an AI assistant, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
 </div>
 
 <script>
@@ -183,49 +323,104 @@ const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location
 function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
 
 const thread = document.getElementById('thread');
-const input = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
-const recordBtn = document.getElementById('recordBtn');
 const statusEl = document.getElementById('status');
 const micIndicator = document.getElementById('micIndicator');
 const micIndicatorDot = document.getElementById('micIndicatorDot');
-const facilitatorLabel = document.getElementById('facilitatorLabel');
-const employeeTile = document.getElementById('employeeTile');
 const employeeCircle = document.getElementById('employeeCircle');
 const employeeCaption = document.getElementById('employeeCaption');
+const youMuteIcon = document.getElementById('youMuteIcon');
 const transcriptPanel = document.getElementById('transcriptPanel');
-const composer = document.getElementById('composer');
+const transcriptToggleBtn = document.getElementById('transcriptToggleBtn');
 const callLayout = document.querySelector('.call-layout');
+const voicePanel = document.getElementById('voicePanel');
+const chatPanel = document.getElementById('chatPanel');
+const chatThread = document.getElementById('chatThread');
+const chatThreadInner = document.getElementById('chatThreadInner');
+const chatTyping = document.getElementById('chatTyping');
+const chatStatusEl = document.getElementById('chatStatus');
+const chatInput = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSendBtn');
+const chatResetBtn = document.getElementById('chatResetBtn');
+const liveTimerEl = document.getElementById('liveTimer');
+const liveTimerText = document.getElementById('liveTimerText');
 
-// Live mode swaps the single avatar + side transcript log for two matching
-// tiles (facilitator | you), each showing only its own current subtitle --
-// see the CSS comment above .employee-tile. Non-live Talk/Practice mode is
-// unaffected, still the original avatar + transcript-panel layout.
+// Voice / Text toggle: per the design handoff, these are two fully separate
+// views swapped via setUi(), not a composer bolted onto the avatar stage --
+// Voice has no text input at all (Go live or nothing), Text is its own chat
+// panel. Both read/write the same shared message log (see addMessage()).
+let ui = 'voice';
+function setUi(next) {
+  if (next === ui) return;
+  ui = next;
+  voicePanel.hidden = ui !== 'voice';
+  chatPanel.hidden = ui !== 'text';
+  document.querySelectorAll('.ui-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.ui === ui));
+  if (ui === 'voice') enterVoiceLive(); else exitVoiceLive();
+}
+document.querySelectorAll('.ui-tab').forEach(btn => btn.addEventListener('click', () => setUi(btn.dataset.ui)));
+
+let micMuted = false;
+const muteBtn = document.getElementById('muteBtn');
+muteBtn.addEventListener('click', () => {
+  micMuted = !micMuted;
+  muteBtn.classList.toggle('inactive', micMuted);
+  muteBtn.querySelector('.slash').style.display = micMuted ? '' : 'none';
+  youMuteIcon.hidden = !micMuted;
+  if (micMuted) { employeeCircle.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
+});
+
+let liveTimerInterval = null, liveSeconds = 0;
+function startLiveTimer() {
+  liveSeconds = 0;
+  liveTimerText.textContent = '00:00';
+  liveTimerEl.hidden = false;
+  liveTimerInterval = setInterval(() => {
+    liveSeconds++;
+    liveTimerText.textContent = String(Math.floor(liveSeconds / 60)).padStart(2, '0') + ':' + String(liveSeconds % 60).padStart(2, '0');
+  }, 1000);
+}
+function stopLiveTimer() {
+  clearInterval(liveTimerInterval);
+  liveTimerEl.hidden = true;
+}
+
+// The "You" PiP tile and the Thimble state pill stay on screen at all times
+// (video-call style), not just in live mode. Only the text mic indicator
+// (the tile's own circle does that job live) and the live timer toggle here.
 function setLiveLayout(active) {
   callLayout.classList.toggle('live', active);
-  facilitatorLabel.hidden = !active;
-  employeeTile.hidden = !active;
-  transcriptPanel.hidden = active;
-  micIndicator.hidden = active; // the employee tile's circle + subtitle now do this job
-  composer.hidden = active; // hands-free: nothing to type or manually record while live
+  micIndicator.hidden = active;
+  if (active) startLiveTimer(); else stopLiveTimer();
 }
+
+transcriptToggleBtn.addEventListener('click', () => {
+  transcriptPanel.hidden = !transcriptPanel.hidden;
+  transcriptToggleBtn.classList.toggle('inactive', transcriptPanel.hidden);
+});
+
+let captionsOn = true;
+const captionsToggleBtn = document.getElementById('captionsToggleBtn');
+captionsToggleBtn.addEventListener('click', () => {
+  captionsOn = !captionsOn;
+  captionsToggleBtn.classList.toggle('inactive', !captionsOn);
+  if (!captionsOn) { captionEl.textContent = ''; employeeCaption.textContent = ''; }
+});
 
 const audioEl = new Audio();
 
-// Abstract avatar: a plain shape with a mouth, in place of a realistic
-// video face. Geometry, colours and per-state motion match the design
-// handoff in design_handoff_simple_agent_presence/ exactly. States used
-// here: idle (resting, before anything's happened -- the handoff has no
-// rest state of its own, so this borrows Listening's look), listening
-// (recording the employee's own voice memo), thinking (waiting on the
-// facilitator), talking (reacts to the facilitator's own TTS audio, i.e.
-// the handoff's "Speaking"). empathizing/calming are implemented below
-// per the handoff but not yet wired to any trigger in this prototype.
+// Thimble avatar states: idle (resting, before anything's happened -- the
+// design handoff has no rest state of its own, so this borrows Listening's
+// look), listening (recording the employee's own voice memo -- body wobbles
+// and leans off the employee's own real mic level, per the handoff's
+// "active listening" spec), thinking (waiting on the facilitator),
+// talking (reacts to the facilitator's own real TTS amplitude -- the
+// handoff's "Speaking" uses a canned mouth loop instead, but driving it off
+// real audio is strictly more faithful lip-sync, not a deviation from the
+// state's look). empathizing is implemented per the handoff but not yet
+// wired to any trigger in this prototype.
 let avatarState = 'idle';
 let audioCtx = null, analyser = null, avatarData = null;
 let micAudioCtx = null, micAnalyser = null, micData = null;
-const avatarCanvas = document.getElementById('avatarCanvas');
-const avatarCtx = avatarCanvas.getContext('2d');
 
 function ensureAudioGraph() {
   if (audioCtx) return;
@@ -353,7 +548,8 @@ async function maybeSendPartial(now) {
     if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
       pendingTranscriptEl.textContent = '"' + data.partial + '"';
       thread.scrollTop = thread.scrollHeight;
-      employeeCaption.textContent = data.partial; // plain, no quotes -- matches the facilitator's own #caption style
+      if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = data.partial;
+      if (captionsOn) employeeCaption.textContent = data.partial; // plain, no quotes -- matches the facilitator's own #caption style
     }
   } catch (e) {
     // best-effort preview only -- a failed partial never interrupts the turn
@@ -362,84 +558,111 @@ async function maybeSendPartial(now) {
   }
 }
 
-// Geometry and motion below are a direct port of target()/apply() from
-// design_handoff_simple_agent_presence/Simple Agent.dc.html, adapted from
-// SVG to canvas. Defined on the handoff's 200x200 viewBox and scaled
-// uniformly to this canvas's actual size. w = mouth half-width, o = mouth
-// height, dx/dy = mouth offset from centre, s = circle scale.
-// Pink-family now (the facilitator's own brand color, see joint-session-app's
-// tile scheme for the same "facilitator = Pink" convention) -- generated by
-// preserving each original state's lightness *offset* from its old
-// Evergreen-family base, reapplied to Mend Pink's own H/S, so the relative
-// mood relationships (thinking darker, empathizing/calming lighter/softer)
-// survive the rebrand instead of being hand-guessed.
-const AVATAR_COLORS = {
-  listening:   [0xf3, 0x82, 0x9a],
-  idle:        [0xf3, 0x82, 0x9a], // handoff has no rest state; borrows Listening's colour too
-  talking:     [0xf3, 0x82, 0x9a], // "Speaking" in the handoff
-  thinking:    [0xf1, 0x6c, 0x88],
-  empathizing: [0xf5, 0x9a, 0xad],
-  calming:     [0xf8, 0xb5, 0xc3],
+// Direct port of the design handoff's avatar(st,...) shape table: body
+// border-radius + CSS animation name, outer lean, and mouth box per state.
+// mouthW/mouthH are fractions of the avatar's own size (handoff's s),
+// mouthTop is a % from the top -- all taken verbatim from the handoff.
+const THIMBLE_SHAPES = {
+  listening:   {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  idle:        {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  thinking:    {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
+  talking:     {radius: '50%', anim: 'thimble-bob .8s ease-in-out infinite', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
+  empathizing: {radius: '50% 50% 50% 50% / 62% 62% 38% 38%', anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
 };
-const AVATAR_MOUTH_FILL = '#F6F1E7';
+// Two instances share one avatarState: the big call-stage avatar (voice
+// view) and a 48px mini copy in the text/chat header -- same per-frame
+// motion, just scaled, so switching Voice/Text never looks like a
+// different character.
+function thimbleInstance(prefix, size) {
+  return {
+    size,
+    el: document.getElementById(prefix + 'Avatar'),
+    ring: document.getElementById(prefix + 'Ring'),
+    body: document.getElementById(prefix + 'Body'),
+    blend: document.getElementById(prefix + 'Blend'),
+    mouth: document.getElementById(prefix + 'Mouth'),
+    rippleA: document.getElementById(prefix + 'RippleA'),
+    rippleB: document.getElementById(prefix + 'RippleB'),
+    renderedState: null, nodFiredAt: null, wasSpeaking: false, lastNod: 0,
+  };
+}
+const thimbleBig = thimbleInstance('thimble', 200);
+const thimbleMini = thimbleInstance('thimbleMini', 48);
 
-function avatarTarget(state, t, level) {
-  if (state === 'listening' || state === 'idle') {
-    // side (dx) would drift toward whichever participant is currently
-    // speaking; this prototype only has one employee, so it stays centred.
-    const nod = Math.max(0, Math.sin(t * 1.6)) ** 8 * Math.max(0, Math.sin(t * 0.4));
-    return {w: 28, o: 6, dx: 0, dy: nod * 4, s: 1 + 0.012 * Math.sin(t * 1.1)};
-  }
+function renderThimbleMouth(inst, state) {
+  const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+  const s = inst.size;
+  inst.mouth.style.top = shape.mouthTop + '%';
   if (state === 'thinking') {
-    return {w: 12, o: 6, dx: 12 * Math.sin(t * 0.8), dy: -5, s: 0.97};
+    inst.mouth.className = 'thimble-mouth dots';
+    inst.mouth.style.width = inst.mouth.style.height = 'auto';
+    inst.mouth.style.gap = (0.04 * s) + 'px';
+    inst.mouth.innerHTML = '';
+    for (let k = 0; k < 3; k++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.width = dot.style.height = (0.045 * s) + 'px';
+      dot.style.animationDelay = (k * 0.2) + 's';
+      inst.mouth.appendChild(dot);
+    }
+    return;
   }
-  if (state === 'talking') { // "Speaking": driven by the facilitator's real TTS amplitude
-    const v = level;
-    return {w: 28 - 6 * v, o: 6 + 24 * v, dx: 0, dy: 0, s: 1 + 0.01 * v};
-  }
+  inst.mouth.className = 'thimble-mouth';
+  inst.mouth.innerHTML = '';
+  inst.mouth.style.width = (shape.mouthW * s) + 'px';
+  inst.mouth.style.height = (shape.mouthH * s) + 'px';
+  inst.mouth.style.boxSizing = 'border-box';
   if (state === 'empathizing') {
-    return {w: 22, o: 12, dx: 0, dy: 2.5 * Math.sin(t * 1.3), s: 1.025};
+    inst.mouth.style.background = 'none';
+    inst.mouth.style.borderBottom = (0.028 * s) + 'px solid #F6F1E7';
+    inst.mouth.style.borderRadius = '0 0 999px 999px';
+  } else {
+    inst.mouth.style.background = '#F6F1E7';
+    inst.mouth.style.borderBottom = 'none';
+    inst.mouth.style.borderRadius = state === 'talking' ? '50%' : '999px';
   }
-  // calming: slow 4s-in/6s-out breath cycle
-  const p = t % 10;
-  const b = p < 4 ? (1 - Math.cos(Math.PI * p / 4)) / 2 : (1 + Math.cos(Math.PI * (p - 4) / 6)) / 2;
-  return {w: 24 + 8 * b, o: 6, dx: 0, dy: 0, s: 0.98 + 0.07 * b};
 }
 
-let avatarCur = {w: 28, o: 6, dx: 0, dy: 0, s: 1, col: AVATAR_COLORS.idle.slice()};
-let avatarLastFrame = performance.now();
+function applyThimbleState(inst, state) {
+  if (state === inst.renderedState) return;
+  inst.renderedState = state;
+  const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+  inst.el.style.transform = shape.lean;
+  inst.body.style.animation = shape.anim;
+  inst.body.style.borderRadius = shape.radius;
+  inst.blend.style.opacity = state === 'empathizing' ? '.85' : '0';
+  const talking = state === 'talking';
+  inst.rippleA.hidden = !talking;
+  inst.rippleB.hidden = !talking;
+  renderThimbleMouth(inst, state);
+}
 
-function drawAvatarFrame(now) {
-  const dt = Math.min(0.05, (now - avatarLastFrame) / 1000);
-  avatarLastFrame = now;
-  const t = now / 1000;
-  const level = (avatarState === 'talking' && analyser && !audioEl.paused)
-    ? rmsLevel(analyser, avatarData) : 0;
-  const target = avatarTarget(avatarState, t, level);
-  const k = Math.min(1, dt * (avatarState === 'talking' ? 14 : 4));
-  for (const key of ['w', 'o', 'dx', 'dy', 's']) {
-    avatarCur[key] += (target[key] - avatarCur[key]) * k;
+// Active-listening wobble/lean/nod: a direct port of the handoff's per-frame
+// loop, driven by the employee's own real mic level (startMicAnalysis's
+// analyser) while actually recording -- same "L" the handoff's own listening
+// avatar reacts to, just real input here instead of its simulated fallback.
+function updateThimbleMotion(inst, now, level, listening) {
+  applyThimbleState(inst, avatarState);
+  if (!listening) { inst.ring.style.transform = 'none'; }
+  else {
+    const spk = level > 0.15;
+    if (inst.wasSpeaking && !spk) inst.nodFiredAt = now;
+    if (spk && now - inst.lastNod > 1700) { inst.nodFiredAt = now; inst.lastNod = now; }
+    inst.wasSpeaking = spk;
+    const np = inst.nodFiredAt !== null ? (now - inst.nodFiredAt) / 620 : 2;
+    const nod = np < 1 ? Math.abs(Math.sin(np * Math.PI * 2)) * (1 - np * .45) : 0;
+    inst.ring.style.transform = `rotate(${-level * 7}deg) translate(${level * 3}%,${nod * 5}%) scale(${1 + nod * .02},${1 - nod * .05})`;
+    const amp = 5 + level * 16;
+    const w1 = Math.sin(now / 240), w2 = Math.sin(now / 330 + 1), w3 = Math.sin(now / 290 + 2);
+    inst.body.style.borderRadius = `${50 + w1 * amp * .5}% ${47 - level * 14 + w2 * amp * .5}% ${53 - level * 14 + w3 * amp * .5}% ${50 - w1 * amp * .5}% / ${58 + w2 * amp * .4}% ${58 - level * 8 + w3 * amp * .4}% ${42 - level * 8 - w2 * amp * .4}% ${42 - w3 * amp * .4}%`;
   }
-  const targetCol = AVATAR_COLORS[avatarState] || AVATAR_COLORS.idle;
-  const kc = Math.min(1, dt * 2);
-  avatarCur.col = avatarCur.col.map((v, i) => v + (targetCol[i] - v) * kc);
-
-  const w = avatarCanvas.width, h = avatarCanvas.height;
-  const scale = w / 200; // handoff geometry is defined on a 200x200 viewBox
-  avatarCtx.clearRect(0, 0, w, h);
-  const r = 80 * avatarCur.s * scale;
-  const cx = w / 2, cy = h / 2 + avatarCur.dy * 0.3 * scale;
-  avatarCtx.fillStyle = `rgb(${avatarCur.col.map(Math.round).join(',')})`;
-  avatarCtx.beginPath();
-  avatarCtx.arc(cx, cy, r, 0, Math.PI * 2);
-  avatarCtx.fill();
-
-  const mx = w / 2 + avatarCur.dx * scale;
-  const my = h / 2 + avatarCur.dy * scale + 30 * avatarCur.s * scale;
-  avatarCtx.fillStyle = AVATAR_MOUTH_FILL;
-  avatarCtx.beginPath();
-  avatarCtx.ellipse(mx, my, Math.max(0, avatarCur.w * scale), Math.max(0, (avatarCur.o / 2) * scale), 0, 0, Math.PI * 2);
-  avatarCtx.fill();
+  // Talking mouth: real TTS amplitude drives the open/close height directly,
+  // rather than the handoff's canned "talk" loop -- real lip-sync instead of
+  // a fixed alternation, same oval-mouth-plus-ripples visual language.
+  if (avatarState === 'talking') {
+    const v = (analyser && !audioEl.paused) ? rmsLevel(analyser, avatarData) : 0;
+    inst.mouth.style.height = (inst.size * (0.02 + 0.10 * v)) + 'px';
+  }
 }
 
 // Captions: no real per-word timing from either TTS backend, so the reply
@@ -482,8 +705,22 @@ function computeCaptionStarts() {
   });
 }
 
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
+const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
+const stateWordEl = document.getElementById('stateWord');
+let lastStateWord = null;
+function updateStatePill() {
+  const word = STATE_WORDS[avatarState] || 'Listening…';
+  if (word === lastStateWord) return;
+  lastStateWord = word;
+  stateWordEl.textContent = word;
+  chatStatusEl.textContent = CHAT_STATUS[avatarState] || CHAT_STATUS.idle;
+  chatTyping.hidden = avatarState !== 'thinking';
+}
+
 function updateCaption() {
-  if (avatarState !== 'talking' || !captionChunks.length) {
+  updateStatePill();
+  if (!captionsOn || avatarState !== 'talking' || !captionChunks.length) {
     captionEl.textContent = '';
     return;
   }
@@ -498,17 +735,20 @@ function updateCaption() {
 function animateAvatar(now) {
   requestAnimationFrame(animateAvatar);
   const t = now || performance.now();
-  drawAvatarFrame(t);
-  if (micAnalyser && recordBtn.classList.contains('recording')) {
-    const level = rmsLevel(micAnalyser, micData);
+  const listening = avatarState === 'listening' || avatarState === 'idle';
+  const recording = mediaRecorder && mediaRecorder.state === 'recording';
+  const rawLevel = (recording && micAnalyser) ? rmsLevel(micAnalyser, micData) : 0;
+  const level = micMuted ? 0 : rawLevel;
+  updateThimbleMotion(thimbleBig, t, level, listening);
+  updateThimbleMotion(thimbleMini, t, level, listening);
+  if (recording) {
     micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
     employeeCircle.classList.toggle('lit', level > VAD_THRESHOLD);
-    if (liveMode) checkVad(level, t);
-    maybeSendPartial(t);
+    if (liveMode && !micMuted) checkVad(level, t);
+    if (!micMuted) maybeSendPartial(t);
   }
   updateCaption();
 }
-animateAvatar();
 
 audioEl.addEventListener('loadedmetadata', computeCaptionStarts);
 audioEl.addEventListener('play', () => { avatarState = 'talking'; });
@@ -552,12 +792,33 @@ async function speakReply(text) {
   playReplyAudio(audioUrl, text);
 }
 
+// Voice view's transcript sidebar and Text view's chat panel render the same
+// shared message log in two different bubble styles (per the handoff), so
+// every message gets mirrored into both -- `div.chatBubble` stashes the
+// mirror so call sites correcting a pending bubble in place (live partial
+// transcript, final transcript) can update both without duplicating that logic.
 function addMessage(text, cls) {
   const div = document.createElement('div');
   div.className = 'msg ' + cls;
   div.textContent = text;
   thread.appendChild(div);
   thread.scrollTop = thread.scrollHeight;
+
+  const mine = cls.includes('employee');
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-msg-wrap ' + (mine ? 'mine' : 'theirs');
+  const who = document.createElement('span');
+  who.className = 'chat-who';
+  who.textContent = mine ? 'You' : 'Thimble';
+  wrap.appendChild(who);
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble ' + (mine ? 'mine' : 'theirs');
+  bubble.textContent = text;
+  wrap.appendChild(bubble);
+  chatThreadInner.insertBefore(wrap, chatTyping);
+  chatThread.scrollTop = chatThread.scrollHeight;
+  div.chatWrap = wrap;
+  div.chatBubble = bubble;
   return div;
 }
 
@@ -575,15 +836,15 @@ function handleSignal(signal) {
 }
 
 function setBusy(busy) {
-  sendBtn.disabled = busy;
-  input.disabled = busy;
+  chatSendBtn.disabled = busy;
+  chatInput.disabled = busy;
   statusEl.textContent = busy ? 'facilitator is responding...' : '';
 }
 
 async function sendText() {
-  const text = input.value.trim();
+  const text = chatInput.value.trim();
   if (!text) return;
-  input.value = '';
+  chatInput.value = '';
   addMessage(text, 'employee');
   setBusy(true);
   avatarState = 'thinking';
@@ -605,8 +866,8 @@ async function sendText() {
   }
 }
 
-sendBtn.addEventListener('click', sendText);
-input.addEventListener('keydown', (e) => {
+chatSendBtn.addEventListener('click', sendText);
+chatInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendText();
@@ -710,15 +971,14 @@ async function startRecordingTurnSafe() {
   // For live mode's own auto-continue points: if the mic fails partway
   // through a conversation (permission revoked, device unplugged, another
   // app grabs it), fall back to ending live mode cleanly instead of an
-  // unhandled rejection that leaves the button stuck saying "End live
-  // conversation" while nothing is actually listening.
+  // unhandled rejection that leaves Voice view looking like it's still
+  // listening while nothing actually is.
   try {
     await startRecordingTurn();
   } catch (e) {
     liveMode = false;
-    liveBtn.textContent = 'Go live';
     setLiveLayout(false);
-    statusEl.textContent = 'lost microphone access, live mode ended: ' + e.message;
+    statusEl.textContent = 'lost microphone access: ' + e.message;
   }
 }
 
@@ -734,11 +994,9 @@ async function startRecordingTurn() {
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
     partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
-    recordBtn.classList.remove('recording');
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
     employeeCircle.classList.remove('lit');
-    liveBtn.classList.remove('recording');
     const blob = new Blob(chunks, {type: 'audio/webm'});
     const bubble = pendingTranscriptEl;
     pendingTranscriptEl = null;
@@ -753,16 +1011,18 @@ async function startRecordingTurn() {
       if (data.error) {
         statusEl.textContent = data.error;
         avatarState = 'idle';
-        if (bubble) bubble.remove(); // nothing usable was actually said -- don't leave a stale live-preview bubble behind
+        if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); } // nothing usable was actually said -- don't leave a stale live-preview bubble behind
         employeeCaption.textContent = '';
         if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
       } else {
         if (data.transcript && bubble) {
           bubble.textContent = '"' + data.transcript + '"';
           bubble.classList.remove('pending');
-          employeeCaption.textContent = data.transcript;
+          if (bubble.chatBubble) bubble.chatBubble.textContent = data.transcript;
+          if (captionsOn) employeeCaption.textContent = data.transcript;
         } else if (bubble) {
           bubble.remove();
+          if (bubble.chatWrap) bubble.chatWrap.remove();
           employeeCaption.textContent = '';
         }
         if (data.reply) addMessage(data.reply, 'facilitator');
@@ -772,7 +1032,7 @@ async function startRecordingTurn() {
     } catch (e) {
       statusEl.textContent = 'error: ' + e.message;
       avatarState = 'idle';
-      if (bubble) bubble.remove();
+      if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); }
       employeeCaption.textContent = '';
       if (liveMode) startRecordingTurnSafe();
     } finally {
@@ -786,54 +1046,36 @@ async function startRecordingTurn() {
   pendingTranscriptEl = addMessage('…', 'employee transcript pending');
   employeeCaption.textContent = '';
   startVadCalibration(performance.now());
-  recordBtn.classList.add('recording');
   micIndicator.classList.add('active');
-  if (liveMode) liveBtn.classList.add('recording');
 }
 
-async function toggleRecording() {
-  if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
-    return;
-  }
-  try {
-    await startRecordingTurn();
-  } catch (e) {
-    statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
-  }
-}
-
-recordBtn.addEventListener('click', toggleRecording);
-
-const liveBtn = document.getElementById('liveBtn');
-
-async function toggleLiveMode() {
-  if (liveMode) {
-    liveMode = false;
-    liveBtn.textContent = 'Go live';
-    setLiveLayout(false);
-    if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-    return;
-  }
+// No more explicit "Go live" toggle -- being in Voice view simply means
+// Thimble is listening (per the design handoff's own call-frame metaphor),
+// and Mute is the one control for pausing that without leaving Voice. See
+// setUi(): entering 'voice' calls enterVoiceLive(), entering 'text' calls
+// exitVoiceLive().
+async function enterVoiceLive() {
+  if (liveMode) return;
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     liveMode = true;
-    liveBtn.textContent = 'End live conversation';
     setLiveLayout(true);
     return;
   }
   try {
     await startRecordingTurn();
     liveMode = true;
-    liveBtn.textContent = 'End live conversation';
     setLiveLayout(true);
   } catch (e) {
     statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
-    // liveMode stays off and the button stays "Go live" -- nothing to clean up,
-    // startRecordingTurn never got far enough to create a recorder or start listening
   }
 }
 
-liveBtn.addEventListener('click', toggleLiveMode);
+function exitVoiceLive() {
+  if (!liveMode) return;
+  liveMode = false;
+  setLiveLayout(false);
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+}
 
 const videoToggle = document.getElementById('videoToggle');
 const videoStartBtn = document.getElementById('videoStartBtn');
@@ -896,9 +1138,16 @@ async function start() {
       body: JSON.stringify({mode: currentMode}),
     });
     const data = await res.json();
-    if (data.reply) addMessage(data.reply, 'facilitator');
-    handleSignal(data.signal);
-    speakReply(data.reply);
+    if (data.reply) {
+      addMessage(data.reply, 'facilitator');
+      handleSignal(data.signal);
+      speakReply(data.reply);
+    } else {
+      // /api/start is a no-op once `conversation` is already non-empty
+      // server-side (e.g. a reload after the session's already begun) --
+      // nothing to speak, so don't leave the avatar stuck mid "thinking".
+      avatarState = 'idle';
+    }
   } finally {
     setBusy(false);
   }
@@ -907,7 +1156,7 @@ async function start() {
 const resetBtn = document.getElementById('resetBtn');
 
 async function resetAndStart() {
-  if (liveMode) await toggleLiveMode(); // stop the live loop before wiping state under it
+  exitVoiceLive(); // stop the live loop before wiping state under it
   if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
   audioEl.pause();
   audioEl.src = '';
@@ -918,17 +1167,21 @@ async function resetAndStart() {
   try {
     await fetch(apiPath('/api/reset'), {method: 'POST'});
     thread.innerHTML = '';
+    chatThreadInner.querySelectorAll('.chat-msg-wrap').forEach(el => el.remove());
     banner.hidden = true;
     await start();
+    if (ui === 'voice') enterVoiceLive(); // resume listening after the reset, same as being in Voice view normally does
   } finally {
     resetBtn.disabled = false;
   }
 }
 
 resetBtn.addEventListener('click', resetAndStart);
+chatResetBtn.addEventListener('click', resetAndStart);
 
 const modeTalkBtn = document.getElementById('modeTalkBtn');
 const modePracticeBtn = document.getElementById('modePracticeBtn');
+const PLACEHOLDERS = {talk: 'Tell Thimble what happened…', practice: 'Say it the way you’d say it to them…'};
 
 async function switchMode(mode) {
   if (mode === currentMode) return;
@@ -938,6 +1191,7 @@ async function switchMode(mode) {
   currentMode = mode;
   modeTalkBtn.classList.toggle('active', mode === 'talk');
   modePracticeBtn.classList.toggle('active', mode === 'practice');
+  chatInput.placeholder = PLACEHOLDERS[mode] || '';
   await resetAndStart();
 }
 
@@ -945,6 +1199,14 @@ modeTalkBtn.addEventListener('click', () => switchMode('talk'));
 modePracticeBtn.addEventListener('click', () => switchMode('practice'));
 
 start();
+if (ui === 'voice') enterVoiceLive(); // Voice is the default view, so start listening immediately
+
+// Called here, not right after its own definition: the body references
+// mediaRecorder/liveMode (declared further down), and this first call runs
+// synchronously at its call site (requestAnimationFrame inside only
+// schedules the *next* call) -- calling it before those exist throws a TDZ
+// ReferenceError that silently aborts the rest of the script.
+animateAvatar();
 </script>
 </body>
 </html>
