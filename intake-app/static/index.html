@@ -460,9 +460,12 @@ let pcmSampleRate = 16000;
 let partialTurnId = 0;
 let partialInFlight = false;
 let partialSentSamples = 0;
+let lastPartialText = '';
 let pendingTranscriptEl = null;
 const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny sliver of new audio
 const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
+const TAIL_NEGLIGIBLE_SEC = 0.15; // on stop: audio this short since the last partial isn't worth a whole extra Whisper call
+const TAIL_OVERLAP_SEC = 1.0; // include this much audio BEFORE the cut point in the tail clip -- a hard cut with zero context corrupts the word straddling it (confirmed live: "caught" -> "Cockme" with no overlap); mergeTranscripts() below de-duplicates the resulting overlapping words
 
 function startMicAnalysis(stream) {
   try {
@@ -496,6 +499,7 @@ function startMicAnalysis(stream) {
 function resetPartialCapture() {
   pcmChunks = [];
   partialSentSamples = 0;
+  lastPartialText = '';
   partialTurnId++; // invalidates any in-flight partial response from the turn just ended
 }
 
@@ -550,6 +554,73 @@ function concatFloat32(chunks) {
   return out;
 }
 
+// On stop, finalizing used to always re-transcribe the WHOLE clip from
+// scratch via /api/voice -- pure waste when the partial pipeline above had
+// already transcribed nearly all of that same audio seconds earlier, and
+// the real cause of the lag reported between "finished speaking" and
+// Thimble responding. Whisper has no real incremental/streaming decode, so
+// this reuses the last partial result as the base and only transcribes the
+// small audio tail recorded since that partial fired, instead of the full
+// clip again -- cuts the final transcription step down to (at most) a
+// fraction of a second of new audio. Falls back to the original full-clip
+// path whenever there's no usable partial to build on (short utterances
+// under PARTIAL_MIN_TOTAL_SEC never get one), so nothing regresses there.
+// Stitches a tail transcript (from an overlapping clip, see TAIL_OVERLAP_SEC)
+// onto the base transcript it was cut from, trimming the duplicated words in
+// the overlap rather than repeating them. Matches the longest run of words
+// shared between the base's own end and the tail's own start (case/
+// punctuation-insensitive); falls back to a blind join if no overlap is
+// found (e.g. Whisper rendered the same word differently on each pass).
+function mergeTranscripts(base, tail) {
+  const baseWords = base.trim().split(/\s+/);
+  const tailWords = tail.trim().split(/\s+/);
+  const norm = (w) => w.toLowerCase().replace(/[^a-z0-9']/g, '');
+  const maxOverlap = Math.min(8, baseWords.length, tailWords.length);
+  for (let n = maxOverlap; n > 0; n--) {
+    const baseEnd = baseWords.slice(-n).map(norm).join(' ');
+    const tailStart = tailWords.slice(0, n).map(norm).join(' ');
+    if (baseEnd && baseEnd === tailStart) {
+      return (baseWords.join(' ') + ' ' + tailWords.slice(n).join(' ')).replace(/\s+/g, ' ').trim();
+    }
+  }
+  return (base + ' ' + tail).replace(/\s+/g, ' ').trim();
+}
+
+async function getFinalTranscript(blob) {
+  const allSamples = concatFloat32(pcmChunks);
+  const newSamples = allSamples.length - partialSentSamples;
+  if (!lastPartialText || partialInFlight || newSamples > allSamples.length) {
+    // No partial to build on (too-short turn), or one is still mid-flight
+    // (rare -- stop fired right as a partial request was in progress) --
+    // safest to just re-transcribe the whole clip as before.
+    const form = new FormData();
+    form.append('file', blob, 'memo.webm');
+    const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
+    const data = await res.json();
+    return data.error ? {error: data.error} : {transcript: data.transcript};
+  }
+  // Whisper marks a clip that trails off mid-sentence (exactly what every
+  // partial clip is, by definition) with a literal "..." -- real artifact,
+  // confirmed live, that a clean one-shot final transcript never had.
+  // Strip it before reusing the partial as the final transcript's base.
+  const base = lastPartialText.replace(/\.{2,}\s*$/, '').trim();
+  if (newSamples < pcmSampleRate * TAIL_NEGLIGIBLE_SEC) {
+    // Nothing meaningfully new since the last partial -- it already covers
+    // the whole turn, skip an extra network round trip entirely.
+    return {transcript: base};
+  }
+  const overlapStart = Math.max(0, partialSentSamples - pcmSampleRate * TAIL_OVERLAP_SEC);
+  const tailSamples = allSamples.slice(overlapStart);
+  const wav = encodeWavBlob(tailSamples, pcmSampleRate);
+  const form = new FormData();
+  form.append('file', wav, 'tail.wav');
+  const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
+  const data = await res.json();
+  const tailText = (data.partial || '').trim();
+  if (!tailText) return {transcript: base}; // tail transcribed to nothing (silence/noise) -- base alone is still correct
+  return {transcript: mergeTranscripts(base, tailText)};
+}
+
 async function maybeSendPartial(now) {
   if (partialInFlight || !pendingTranscriptEl) return;
   const totalSamples = pcmChunks.reduce((n, c) => n + c.length, 0);
@@ -565,6 +636,7 @@ async function maybeSendPartial(now) {
     const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
     const data = await res.json();
     if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
+      lastPartialText = data.partial; // reused as the final-transcript base on stop -- see onstop's tail-patch
       pendingTranscriptEl.textContent = '"' + data.partial + '"';
       thread.scrollTop = thread.scrollHeight;
       if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = data.partial;
@@ -1090,19 +1162,17 @@ async function startRecordingTurn() {
     skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
     statusEl.textContent = 'transcribing...';
     try {
-      // Two round trips, not one: /api/voice now only transcribes (fast,
-      // a couple seconds on this hardware) and returns. The Claude reply
-      // is a separate call to /api/message -- the same path typed text
-      // already takes -- so "transcribing..." only covers the part that
-      // actually is transcribing, instead of silently also covering
-      // however long the Claude call after it takes. Mirrors the
+      // Finalizing reuses the last partial transcript plus a tail-patch of
+      // just the new audio since then, instead of re-transcribing the
+      // whole clip -- see getFinalTranscript's own docstring. The Claude
+      // reply is still a separate call to /api/message -- the same path
+      // typed text already takes -- so "transcribing..." only covers the
+      // part that actually is transcribing, instead of silently also
+      // covering however long the Claude call after it takes. Mirrors the
       // existing TTS split (see facilitator_reply's docstring).
-      const form = new FormData();
-      form.append('file', blob, 'memo.webm');
-      const voiceRes = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
-      const voiceData = await voiceRes.json();
-      if (voiceData.error) {
-        statusEl.textContent = voiceData.error;
+      const voiceData = await getFinalTranscript(blob);
+      if (voiceData.error || !voiceData.transcript) {
+        statusEl.textContent = voiceData.error || "couldn't transcribe audio";
         avatarState = 'idle';
         if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); } // nothing usable was actually said -- don't leave a stale live-preview bubble behind
         employeeCaption.textContent = '';
