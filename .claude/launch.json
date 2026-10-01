@@ -24,6 +24,18 @@
       "runtimeExecutable": "joint-session-audio/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--reload", "--port", "8424", "--app-dir", "joint-session-audio"],
       "port": 8424
+    },
+    {
+      "name": "mend-demo-app",
+      "runtimeExecutable": "demo-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--reload", "--port", "8423", "--app-dir", "demo-app"],
+      "port": 8423
+    },
+    {
+      "name": "mend-launchpad",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8000"],
+      "port": 8000
     }
   ]
 }

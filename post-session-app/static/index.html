@@ -5,45 +5,73 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mend post-session (local prototype)</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* Mend brand kit: Evergreen ink, Oat paper, Evergreen as primary UI
-       accent -- Pink is reserved for the logo mark/single CTAs, not general
-       chrome (fails as text/fill-with-light-text at this lightness,
-       verified via WCAG contrast calc: 2.2:1 on Oat). */
-    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
-    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    /* Mend brand kit: Pink mark, Evergreen ink + primary buttons/your
+       bubbles, Honey for highlights, Oat paper/facilitator bubbles. Pink
+       stays off general chrome -- reserved for the mark and the rare
+       single accent CTA (fails WCAG as text/fill on Oat at this lightness). */
+    --pink:#F3829A; --ink:#17372E; --ink-soft:#3C4C49; --honey:#E9B949;
+    --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC;
+    --border:#17372E1F; --border-soft:#17372E14;
   }
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
-  .wrap{max-width:640px; margin:0 auto; padding:20px 16px; display:flex; flex-direction:column; height:100vh;}
-  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px;}
-  .eyebrow::before{content:'';display:inline-block;width:14px;height:10px;margin-right:6px;vertical-align:-1px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
-  .setup{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px; display:flex; flex-direction:column; gap:10px;}
-  .setup label{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; display:block; margin-bottom:4px;}
-  .setup select, .setup input{width:100%; padding:7px 9px; border:1.5px solid var(--border); border-radius:8px; font:inherit; font-size:13px; background:var(--paper); color:var(--ink);}
+  .wrap{max-width:680px; margin:0 auto; padding:20px 16px; display:flex; flex-direction:column; height:100vh;}
+  header.top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .brand{display:flex; align-items:center; gap:9px;}
+  .brand svg{height:17px; width:auto; display:block;}
+  .brand span{font-weight:800; font-size:16px; letter-spacing:-0.03em;}
+  .brand .sub{font-weight:500; font-size:12.5px; letter-spacing:0; color:var(--ink-soft); margin-left:2px;}
+  .privacy-pill{display:flex; align-items:center; gap:7px; padding:6px 12px; border-radius:999px; background:var(--accent-soft); font-size:12px; font-weight:500; color:var(--ink-soft); white-space:nowrap;}
+  .privacy-pill svg{flex-shrink:0;}
+  .setup{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:18px; margin-bottom:14px; display:flex; flex-direction:column; gap:12px;}
+  .setup label{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.08em; opacity:.75; display:block; margin-bottom:6px;}
+  .setup select, .setup input{width:100%; padding:9px 11px; border:1.5px solid var(--border); border-radius:10px; font:inherit; font-size:13px; background:var(--paper); color:var(--ink);}
+  .setup select:focus, .setup input:focus{outline:none; border-color:var(--ink); background:var(--card);}
   .setup-row{display:flex; gap:10px;}
   .setup-row > div{flex:1;}
-  button.start{align-self:flex-start; background:var(--accent); color:#fff; border:none; border-radius:8px; padding:8px 16px; font:inherit; font-weight:600; cursor:pointer; font-size:13px;}
-  .signal{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:10px; white-space:pre-wrap;}
-  .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
-  .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
-  .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
-  .msg.employee{background:var(--accent); color:#fff; align-self:flex-end;}
-  .msg.transcript{font-style:italic; opacity:.7;}
-  .composer{display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--border); padding-top:12px;}
-  textarea{flex:1; resize:none; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; background:var(--card); color:var(--ink);}
-  button{border:1.5px solid var(--border); background:var(--card); color:var(--ink); border-radius:10px; padding:10px 14px; font:inherit; font-weight:600; cursor:pointer;}
-  button.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  button.start{align-self:flex-start; background:var(--accent); color:var(--paper); border:none; border-radius:999px; padding:10px 20px; font:inherit; font-weight:700; cursor:pointer; font-size:13.5px;}
+  button.start:hover{opacity:.9;}
+  .signal{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:10px; padding:8px 11px; margin-bottom:10px; white-space:pre-wrap;}
+  .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:14px; padding-bottom:16px;}
+  .msg-wrap{display:flex; flex-direction:column; gap:3px; max-width:80%;}
+  .msg-wrap.facilitator{align-items:flex-start; align-self:flex-start;}
+  .msg-wrap.employee{align-items:flex-end; align-self:flex-end;}
+  .msg-sender{font-size:11px; font-weight:600; opacity:.55; padding:0 4px;}
+  .msg{padding:12px 15px; border-radius:14px; line-height:1.55; font-size:14.5px; white-space:pre-wrap;}
+  .msg.facilitator{background:var(--paper); border:1px solid var(--border); color:var(--ink); border-bottom-left-radius:4px;}
+  .msg.employee{background:var(--accent); color:var(--paper); border-bottom-right-radius:4px;}
+  .msg.transcript{font-style:italic; opacity:.75;}
+  .composer{display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--border); padding-top:14px;}
+  textarea{flex:1; resize:none; border:1.5px solid var(--border); border-radius:14px; padding:11px 14px; font:inherit; font-size:14.5px; background:var(--card); color:var(--ink);}
+  textarea:focus{outline:none; border-color:var(--ink);}
+  button{border:1px solid var(--border); background:var(--card); color:var(--ink); border-radius:999px; padding:10px 16px; font:inherit; font-weight:700; cursor:pointer; font-size:13.5px; transition:opacity .15s, border-color .15s;}
+  button:hover{border-color:var(--ink);}
+  button.primary{background:var(--accent); color:var(--paper); border-color:var(--accent);}
+  button.primary:hover{opacity:.9;}
   button:disabled{opacity:.5; cursor:default;}
-  .status{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:6px;}
+  #recordBtn{width:44px; height:44px; padding:0; display:flex; align-items:center; justify-content:center; flex-shrink:0; border-radius:999px;}
+  .status{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:6px;}
   [hidden]{display:none !important;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Mend &middot; post-session follow-up (local prototype)</div>
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#F3829A"></path></svg>
+      <span>mend</span>
+      <span class="sub">Post-session follow-up</span>
+    </div>
+    <div class="privacy-pill">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+      Private. Nothing is recorded.
+    </div>
+  </header>
 
   <div class="setup" id="setup">
     <div class="setup-row">
@@ -76,7 +104,7 @@
   <div class="thread" id="thread"></div>
   <div class="composer" id="composer" hidden>
     <textarea id="input" rows="2" placeholder="Type a message..."></textarea>
-    <button id="recordBtn" title="Record a voice memo">&#127908;</button>
+    <button id="recordBtn" title="Record a voice memo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
     <button id="sendBtn" class="primary">Send</button>
   </div>
   <div class="status" id="status"></div>
@@ -103,10 +131,18 @@ const startBtn = document.getElementById('startBtn');
 const audioEl = new Audio();
 
 function addMessage(text, cls) {
+  const side = cls.indexOf('employee') !== -1 ? 'employee' : 'facilitator';
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap ' + side;
+  const sender = document.createElement('div');
+  sender.className = 'msg-sender';
+  sender.textContent = side === 'employee' ? 'You' : 'Thimble';
   const div = document.createElement('div');
   div.className = 'msg ' + cls;
   div.textContent = text;
-  thread.appendChild(div);
+  wrap.appendChild(sender);
+  wrap.appendChild(div);
+  thread.appendChild(wrap);
   thread.scrollTop = thread.scrollHeight;
 }
 
@@ -236,6 +272,8 @@ async function toggleRecording() {
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
     recordBtn.style.background = '';
+    recordBtn.style.color = '';
+    recordBtn.style.borderColor = '';
     const blob = new Blob(chunks, {type: 'audio/webm'});
     addMessage('[voice memo]', 'employee transcript');
     setBusy(true);
@@ -260,7 +298,9 @@ async function toggleRecording() {
     }
   };
   mediaRecorder.start();
-  recordBtn.style.background = '#8C3B2E';
+  recordBtn.style.background = 'var(--pink)';
+  recordBtn.style.color = '#fff';
+  recordBtn.style.borderColor = 'var(--pink)';
 }
 
 recordBtn.addEventListener('click', toggleRecording);

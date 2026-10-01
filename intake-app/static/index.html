@@ -765,7 +765,15 @@ function playReplyAudio(url, text) {
   ensureAudioGraph();
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   audioEl.src = apiPath(url);
-  audioEl.play().catch(() => {}); // autoplay can be blocked before first user gesture; harmless if so
+  audioEl.play().catch(() => {
+    // Autoplay can be blocked before the first user gesture (e.g. Voice
+    // mode auto-starts listening on load, so Thimble's very first reply
+    // has no gesture to ride on). The 'play' event never fires in that
+    // case, so avatarState would otherwise stay stuck on 'thinking'
+    // forever -- fall back the same way 'ended' does.
+    if (avatarState === 'thinking' || avatarState === 'talking') avatarState = 'idle';
+    if (liveMode) startRecordingTurnSafe();
+  });
 }
 
 // Reply text now arrives without audio (see server.py's facilitator_reply
