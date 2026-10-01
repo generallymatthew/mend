@@ -3,13 +3,22 @@
 # reads ../facilitator-intake-system-prompt.md and ../product-spec.html at
 # runtime -- the whole repo ships, not just the two app folders.
 #
-# Caddy comes from its own official image (copied binary), not apt --
-# Cloudsmith's Debian apt repo for Caddy has an expired signing subkey,
-# which fails OpenPGP verification on current Debian (trixie) base images.
-FROM caddy:2 AS caddy
-
+# Caddy is fetched as a plain release binary, not via apt or copied from
+# the official Caddy image. apt: Cloudsmith's Debian repo for Caddy has an
+# expired signing subkey, failing OpenPGP verification on current Debian
+# (trixie) base images. The official image's binary carries a Linux file
+# capability (cap_net_bind_service) that Render's sandboxed build/runtime
+# won't honor on a multi-stage COPY -- "Operation not permitted" on exec.
+# A plain release tarball has no such capability set.
 FROM python:3.11-slim
-COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && CADDY_VERSION=2.8.4 \
+    && curl -fsSL "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_amd64.tar.gz" -o /tmp/caddy.tar.gz \
+    && tar -xzf /tmp/caddy.tar.gz -C /usr/local/bin caddy \
+    && chmod +x /usr/local/bin/caddy \
+    && rm /tmp/caddy.tar.gz \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY . .
