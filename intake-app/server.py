@@ -27,6 +27,7 @@ import httpx
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -167,6 +168,13 @@ def get_whisper():
     return _whisper_model
 
 
+def transcribe_file(path: str) -> str:
+    """Synchronous, CPU-bound -- always call via run_in_threadpool from a
+    route handler, never directly, same reason as facilitator_reply() below."""
+    segments, _ = get_whisper().transcribe(path, beam_size=WHISPER_BEAM_SIZE)
+    return " ".join(seg.text.strip() for seg in segments).strip()
+
+
 def load_system_prompt() -> str:
     text = SYSTEM_PROMPT_FILE.read_text()
     match = re.search(r"```\n(.*?)\n```", text, re.S)
@@ -191,7 +199,18 @@ def strip_signal(reply_text: str) -> tuple[str, str | None]:
 
 
 def facilitator_reply(synthesize: bool = False) -> dict:
-    """Assumes the latest turn just appended to `conversation` is the user's.
+    """Synchronous, blocking network call (client.messages.create) -- always
+    call via run_in_threadpool from a route handler, never directly. uvicorn
+    runs a single-threaded asyncio event loop by default; calling this
+    straight from an `async def` handler blocks that whole event loop for
+    the call's full duration, which means every other request -- including
+    totally unrelated ones, from any user -- stalls or hangs until Anthropic
+    responds. A slow or stuck Claude call used to be able to freeze the
+    entire app, not just the one request waiting on it; confirmed live (a
+    single request queued behind a stuck call long enough to make a plain
+    `GET /` take 9s instead of its normal <0.2s).
+
+    Assumes the latest turn just appended to `conversation` is the user's.
     On any failure, rolls that turn back off so conversation always ends on
     an assistant turn (or is empty) -- Anthropic's API rejects consecutive
     same-role turns, so a dangling unanswered user turn would break the
@@ -399,7 +418,7 @@ async def start(payload: dict = None):
                 "skip the usual disclosures, so this is fast to click through repeatedly.)"
             )
         conversation.append({"role": "user", "content": kickoff})
-        return facilitator_reply()
+        return await run_in_threadpool(facilitator_reply)
     return {"reply": None, "signal": None}
 
 
@@ -409,7 +428,7 @@ async def post_message(payload: dict):
     if not text:
         return JSONResponse({"error": "empty message"}, status_code=400)
     conversation.append({"role": "user", "content": text})
-    return facilitator_reply()
+    return await run_in_threadpool(facilitator_reply)
 
 
 @app.post("/api/voice/partial")
@@ -423,8 +442,7 @@ async def post_voice_partial(file: UploadFile):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
         tmp.write(await file.read())
         tmp.flush()
-        segments, _ = get_whisper().transcribe(tmp.name, beam_size=WHISPER_BEAM_SIZE)
-        transcript = " ".join(seg.text.strip() for seg in segments).strip()
+        transcript = await run_in_threadpool(transcribe_file, tmp.name)
     return {"partial": transcript}
 
 
@@ -433,12 +451,11 @@ async def post_voice(file: UploadFile):
     with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:
         tmp.write(await file.read())
         tmp.flush()
-        segments, _ = get_whisper().transcribe(tmp.name, beam_size=WHISPER_BEAM_SIZE)
-        transcript = " ".join(seg.text.strip() for seg in segments).strip()
+        transcript = await run_in_threadpool(transcribe_file, tmp.name)
     if not transcript:
         return JSONResponse({"error": "couldn't transcribe audio"}, status_code=400)
     conversation.append({"role": "user", "content": transcript})
-    result = facilitator_reply()
+    result = await run_in_threadpool(facilitator_reply)
     result["transcript"] = transcript
     return result
 
@@ -451,7 +468,7 @@ async def speak(payload: dict):
     text = (payload.get("text") or "").strip()
     if not text:
         return JSONResponse({"error": "empty text"}, status_code=400)
-    return {"audio_url": synthesize_speech(text)}
+    return {"audio_url": await run_in_threadpool(synthesize_speech, text)}
 
 
 @app.post("/api/reset")
