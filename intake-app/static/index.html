@@ -1529,9 +1529,18 @@ chatResetBtn.addEventListener('click', resetAndStart);
 // waiting on the user with no introduction at all. Awaiting start() fixed
 // that ordering, but armLiveMode() (not enterVoiceLive()) is what actually
 // avoids re-recording over Thimble's own greeting -- see its own comment.
+//
+// Reload used to RESUME an in-progress conversation (server-side
+// `conversation` survives a reload; /api/start no-ops and /api/history
+// replays what was already said) -- built that way on purpose, for a
+// genuine mid-session reload. Explicitly asked to change during repeated
+// live testing this session ("I want when I hit reload to have a new
+// session -- I think things get weird"): every reload during active
+// testing now starts clean via resetAndStart(), the same path the Reset
+// button already uses -- Thimble's intro can always be skipped (see the
+// Skip button) if it's in the way.
 (async () => {
-  await start();
-  if (ui === 'voice') armLiveMode();
+  await resetAndStart();
 })();
 
 // Called here, not right after its own definition: the body references

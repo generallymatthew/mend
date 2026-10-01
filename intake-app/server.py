@@ -69,11 +69,21 @@ client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 RATE_LIMIT_MAX = int(os.environ.get("RATE_LIMIT_MAX", "20"))
 RATE_LIMIT_WINDOW = int(os.environ.get("RATE_LIMIT_WINDOW", "60"))
 _rate_hits: dict[str, list[float]] = {}
+# /api/voice/partial calls local Whisper only -- never a paid API, exactly
+# what this limiter exists to protect -- and is deliberately chatty by
+# design (fires every ~1-2s of new audio during live listening, see
+# static/index.html's maybeSendPartial). Counting it against the same
+# budget as /api/message's real Claude calls meant a single long voice turn
+# could burn the whole window on its own free, local partial traffic and
+# then get the actual paid reply call rejected with 429 right after --
+# confirmed live: a turn's partials ate the budget, then /api/message came
+# back 429 and Thimble never replied at all.
+RATE_LIMIT_EXEMPT_PATHS = {"/api/voice/partial"}
 
 
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
-    if request.url.path.startswith("/api/") or request.url.path.startswith("/chat/"):
+    if (request.url.path.startswith("/api/") or request.url.path.startswith("/chat/")) and request.url.path not in RATE_LIMIT_EXEMPT_PATHS:
         ip = request.client.host if request.client else "unknown"
         now = time.time()
         hits = [t for t in _rate_hits.get(ip, []) if now - t < RATE_LIMIT_WINDOW]
@@ -541,3 +551,20 @@ async def index():
 
 
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
+
+
+# No explicit Cache-Control on index.html/static/* meant browsers were
+# applying their own heuristic freshness lifetime and sometimes serving a
+# stale cached copy on an ordinary reload without even revalidating with
+# the server -- confirmed live more than once this session (a page-load
+# behavior fix silently not taking effect; a browser tab caught directly
+# serving JS from before a fix had landed, a hard refresh needed to see
+# it). During active development this app changes every few minutes, so
+# unlike a stable production asset, no caching at all is the right default
+# here -- a reload should always reflect whatever's actually on disk.
+@app.middleware("http")
+async def no_cache_static(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path == "/" or request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
