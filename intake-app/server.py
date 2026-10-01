@@ -171,8 +171,25 @@ def get_whisper():
 def transcribe_file(path: str) -> str:
     """Synchronous, CPU-bound -- always call via run_in_threadpool from a
     route handler, never directly, same reason as facilitator_reply() below."""
-    segments, _ = get_whisper().transcribe(path, beam_size=WHISPER_BEAM_SIZE)
-    return " ".join(seg.text.strip() for seg in segments).strip()
+    t0 = time.monotonic()
+    model_already_loaded = _whisper_model is not None
+    model = get_whisper()
+    t1 = time.monotonic()
+    segments, info = model.transcribe(path, beam_size=WHISPER_BEAM_SIZE)
+    text = " ".join(seg.text.strip() for seg in segments).strip()
+    t2 = time.monotonic()
+    # Real timing, not a guess -- "transcription is slow" reports so far
+    # have mostly turned out to be something else entirely (mislabeled
+    # status text, a mid-request server restart). This settles it either
+    # way next time: if transcribe_s is itself large relative to
+    # audio_duration_s, that's genuinely this old CPU being the bottleneck;
+    # if it's small, the slowness is happening somewhere else again.
+    print(
+        f"[transcribe_file] model_load_s={t1 - t0:.2f} (already_loaded={model_already_loaded}) "
+        f"transcribe_s={t2 - t1:.2f} audio_duration_s={getattr(info, 'duration', None)} "
+        f"beam_size={WHISPER_BEAM_SIZE} cpu_threads={WHISPER_CPU_THREADS} model={WHISPER_MODEL_NAME}"
+    )
+    return text
 
 
 def load_system_prompt() -> str:
