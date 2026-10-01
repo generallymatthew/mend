@@ -461,6 +461,7 @@ let partialTurnId = 0;
 let partialInFlight = false;
 let partialSentSamples = 0;
 let lastPartialText = '';
+let partialInFlightPromise = null; // the in-flight partial request itself, so a stop that lands mid-request can await and reuse it instead of discarding it
 let pendingTranscriptEl = null;
 const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny sliver of new audio
 const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
@@ -587,12 +588,28 @@ function mergeTranscripts(base, tail) {
 }
 
 async function getFinalTranscript(blob) {
+  if (partialInFlight && partialInFlightPromise) {
+    // A partial was still mid-request when the turn ended -- most likely
+    // under exactly the CPU contention that makes this matter (confirmed
+    // live: Google Drive syncing stole enough CPU that partials fell
+    // behind, and the old fallback here threw away the 95% already
+    // transcribed and started a second, fully redundant full-clip
+    // transcription on top of an already-overloaded CPU, which is what
+    // actually produced the 18s wait. Awaiting the SAME in-flight request
+    // instead costs nothing extra and gives us a real base to tail-patch
+    // from, rather than discarding real progress and doubling the work.
+    const inFlightResult = await partialInFlightPromise;
+    if (inFlightResult) {
+      lastPartialText = inFlightResult.text;
+      partialSentSamples = inFlightResult.sentSamples;
+    }
+  }
   const allSamples = concatFloat32(pcmChunks);
   const newSamples = allSamples.length - partialSentSamples;
-  if (!lastPartialText || partialInFlight || newSamples > allSamples.length) {
-    // No partial to build on (too-short turn), or one is still mid-flight
-    // (rare -- stop fired right as a partial request was in progress) --
-    // safest to just re-transcribe the whole clip as before.
+  if (!lastPartialText || newSamples > allSamples.length) {
+    // No partial ever completed to build on (too-short turn, or the one
+    // in-flight request we just waited on still failed outright) --
+    // only remaining option is to re-transcribe the whole clip.
     const form = new FormData();
     form.append('file', blob, 'memo.webm');
     const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
@@ -627,26 +644,36 @@ async function maybeSendPartial(now) {
   if (totalSamples < pcmSampleRate * PARTIAL_MIN_TOTAL_SEC) return;
   if (totalSamples - partialSentSamples < pcmSampleRate * PARTIAL_MIN_NEW_SAMPLES_SEC) return;
   const turnId = partialTurnId;
+  const sentSamples = totalSamples;
   partialInFlight = true;
   partialSentSamples = totalSamples;
-  try {
-    const wav = encodeWavBlob(concatFloat32(pcmChunks), pcmSampleRate);
-    const form = new FormData();
-    form.append('file', wav, 'partial.wav');
-    const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
-    const data = await res.json();
-    if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
-      lastPartialText = data.partial; // reused as the final-transcript base on stop -- see onstop's tail-patch
-      pendingTranscriptEl.textContent = '"' + data.partial + '"';
-      thread.scrollTop = thread.scrollHeight;
-      if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = data.partial;
-      if (captionsOn) employeeCaption.textContent = data.partial; // plain, no quotes -- matches the facilitator's own #caption style
+  partialInFlightPromise = (async () => {
+    try {
+      const wav = encodeWavBlob(concatFloat32(pcmChunks), pcmSampleRate);
+      const form = new FormData();
+      form.append('file', wav, 'partial.wav');
+      const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
+      const data = await res.json();
+      // The turnId check below only guards the live UI update -- it's
+      // stale once the turn has ended (onstop bumps partialTurnId before
+      // this promise can resolve), but the transcript itself is still
+      // real and still worth returning to getFinalTranscript's awaiter.
+      if (turnId === partialTurnId && data.partial && pendingTranscriptEl) {
+        lastPartialText = data.partial; // reused as the final-transcript base on stop -- see onstop's tail-patch
+        pendingTranscriptEl.textContent = '"' + data.partial + '"';
+        thread.scrollTop = thread.scrollHeight;
+        if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = data.partial;
+        if (captionsOn) employeeCaption.textContent = data.partial; // plain, no quotes -- matches the facilitator's own #caption style
+      }
+      return data.partial ? {text: data.partial, sentSamples} : null;
+    } catch (e) {
+      // best-effort preview only -- a failed partial never interrupts the turn
+      return null;
+    } finally {
+      partialInFlight = false;
     }
-  } catch (e) {
-    // best-effort preview only -- a failed partial never interrupts the turn
-  } finally {
-    partialInFlight = false;
-  }
+  })();
+  await partialInFlightPromise;
 }
 
 // Direct port of the design handoff's avatar(st,...) shape table: body
