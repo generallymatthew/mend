@@ -150,7 +150,16 @@ def synthesize_speech_openai(text: str) -> str | None:
             json={"model": OPENAI_TTS_MODEL, "voice": OPENAI_TTS_VOICE, "input": text},
         )
         resp.raise_for_status()
-    except httpx.HTTPError:
+    except httpx.HTTPError as e:
+        # Deployed audio_url:null with no explanation anywhere (confirmed
+        # live on Render -- every /api/speak call came back audio_url:null,
+        # no TTS, intro never played) was undiagnosable from the outside:
+        # this swallowed the real reason (bad/missing key, quota, network)
+        # and the macOS `say` fallback below is a silent no-op on Linux, so
+        # the failure had zero visible trace anywhere. stdout-only, same as
+        # the other timing diagnostics -- visible via Render's Logs tab.
+        body = getattr(e, "response", None)
+        print(f"[synthesize_speech_openai] failed: {e!r}" + (f" body={body.text[:300]!r}" if body is not None else ""), flush=True)
         return None
     file_id = uuid.uuid4().hex
     mp3_path = AUDIO_DIR / f"{file_id}.mp3"
