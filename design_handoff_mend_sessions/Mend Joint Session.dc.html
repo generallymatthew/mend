@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F1E7;font-family:Manrope,sans-serif;color:#17372E}
+a{color:#17372E}a:hover{color:#F3829A}
+input::placeholder{color:#17372E88}
+@keyframes blob{0%,100%{border-radius:50%;transform:scale(.95)}25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%;transform:scale(.92) rotate(-3deg)}50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%;transform:scale(.95)}75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%;transform:scale(.92) rotate(3deg)}}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1.5%) scale(1.015,.99)}}
+@keyframes nod{0%,100%{transform:translateY(6%) scale(1,.88)}40%{transform:translateY(11%) scale(1,.8)}}
+@keyframes talk{0%{transform:scaleY(.3)}20%{transform:scaleY(1)}40%{transform:scaleY(.5)}60%{transform:scaleY(.9)}80%{transform:scaleY(.4)}100%{transform:scaleY(.75)}}
+@keyframes dot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-35%)}}
+@keyframes listenIn{0%{transform:scale(1.5);opacity:0}50%{opacity:.35}100%{transform:scale(1.03);opacity:0}}
+@keyframes glow{0%,100%{transform:translate(-30%,6%) scale(1,.86)}50%{transform:translate(-34%,6%) scale(1.04,.88)}}
+@keyframes spinM{from{transform:rotate(0)}to{transform:rotate(-140deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes ripple{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.6);opacity:0}}
+</style>
+</helmet>
+<div style="min-height:100vh;box-sizing:border-box;padding:24px clamp(16px,3vw,44px);display:flex;flex-direction:column;gap:16px;max-width:1400px;margin:0 auto">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="mend-brand-kit/logo/mend-mark-pink.svg" alt="Mend" style="height:20px;width:auto">
+      <span style="font-weight:700;font-size:18px;letter-spacing:-0.01em">Mend</span>
+      <span style="font-size:14px;opacity:.6">Joint session with Sam</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#17372E0D;font-size:13px;font-weight:500"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private. Nothing is recorded.</div>
+  </header>
+  <main style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FFFFFF80;border:1px solid #17372E1A;border-radius:24px;padding:12px;min-height:calc(100vh - 140px);box-sizing:border-box">
+    <div style="flex:1;min-height:460px;position:relative;border-radius:18px;background:#FFFFFF;border:1px solid #17372E14;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 16px 16px;box-sizing:border-box">
+      <div style="position:absolute;top:14px;left:16px;display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:10px;background:#0F2620B3;color:#F6F1E7;font-size:13px">
+        <span style="font-weight:700">Thimble</span><span style="opacity:.75">{{ stateLabel }}</span>
+      </div>
+      <sc-if value="{{ caucusOn }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;border-radius:18px;box-shadow:inset 0 0 0 3px #E9B949;background:#E9B9490F;pointer-events:none"></div>
+        <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:#E9B949;color:#17372E;font-size:13px;font-weight:700;white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>{{ caucusText }}</div>
+      </sc-if>
+      <div style="{{ thimbleWrap }}">{{ bigAvatar }}</div>
+      <div style="min-height:84px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;text-align:center;padding:12px 0 16px">
+          <sc-if value="{{ showCaption }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:12px;font-weight:700;letter-spacing:.02em;opacity:.55">{{ captionWho }}</span>
+            <span style="max-width:640px;font-size:clamp(17px,1.6vw,21px);font-weight:500;line-height:1.45;text-wrap:pretty">{{ caption }}</span>
+          </sc-if>
+      </div>
+      <div style="width:100%;display:grid;grid-template-columns:clamp(150px,20vw,260px) minmax(0,1fr) clamp(150px,20vw,260px);align-items:end;gap:16px">
+        <sc-for list="{{ tilesL }}" as="t" hint-placeholder-count="1">
+          <div style="{{ t.style }}">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">{{ t.av }}</div>
+            <sc-if value="{{ t.note }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#17372E"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>{{ t.note }}</div></sc-if>
+            <div style="position:absolute;left:8px;bottom:8px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#17372EB3">{{ t.name }}<sc-if value="{{ t.muted }}" hint-placeholder-val="{{ false }}"><span style="display:flex"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-opacity=".6" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></span></sc-if></div>
+          </div>
+        </sc-for>
+        <div></div>
+        <sc-for list="{{ tilesR }}" as="t" hint-placeholder-count="1">
+          <div style="{{ t.style }}">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">{{ t.av }}</div>
+            <sc-if value="{{ t.note }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#17372E"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>{{ t.note }}</div></sc-if>
+            <div style="position:absolute;left:8px;bottom:8px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#17372EB3">{{ t.name }}<sc-if value="{{ t.muted }}" hint-placeholder-val="{{ false }}"><span style="display:flex"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-opacity=".6" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></span></sc-if></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 4px">
+      <div style="flex:1;min-width:260px;display:flex;align-items:center;gap:8px;background:#FFFFFF;border:1px solid #17372E26;border-radius:999px;padding:6px 6px 6px 18px">
+        <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="Type to the room…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;color:#17372E;font:inherit;font-size:15px;height:40px">
+        <button onClick="{{ send }}" style="height:40px;padding:0 18px;border-radius:999px;border:none;background:#17372E;color:#F6F1E7;font:inherit;font-weight:700;font-size:14px;cursor:pointer">Send</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+      <button onClick="{{ toggleMute }}" aria-label="Mute" title="Mute" style="{{ toggleMuteStyle }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><sc-if value="{{ muted }}" hint-placeholder-val="{{ false }}"><path d="M4 4l16 16"></path></sc-if></svg></button>
+      <button onClick="{{ toggleCaptions }}" aria-label="Subtitles" title="Subtitles" style="{{ toggleCaptionsStyle }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"></path></svg></button>
+      <button onClick="{{ togglePause }}" aria-label="Ask for a pause" title="Ask for a pause" style="{{ togglePauseStyle }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6v12M15 6v12"></path></svg></button>
+      <button style="height:52px;padding:0 22px;border-radius:999px;border:none;cursor:pointer;font:inherit;font-weight:700;font-size:15px;white-space:nowrap;background:#F3829A;color:#17372E">Leave session</button>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/dc" data-dc-script>
+function avatar(st, s, refs, col, label, dir) {
+  dir = dir || 1;
+  col = col || '#F3829A';
+  const e = React.createElement, oat = '#F6F1E7', r = refs || {};
+  const shape = {
+    listening: { anim: 'none', radius: '50% 50% 47% 53% / 58% 58% 42% 42%', lean: 'rotate(' + (-10 * dir) + 'deg) translate(' + (2 * dir) + '%,1%)' },
+    thinking: { anim: 'blob 4s ease-in-out infinite', radius: '50%', lean: 'none' },
+    talking: { anim: 'bob .8s ease-in-out infinite', radius: '50%', lean: 'none' },
+    empathizing: { anim: 'nod 2.8s ease-in-out infinite', radius: '50% 50% 50% 50% / 62% 62% 38% 38%', lean: 'none' }
+  }[st];
+  const mouthBox = { listening: [.11, .028], talking: [.19, .12], empathizing: [.22, .1] }[st];
+  let mouth;
+  if (st === 'thinking') {
+    mouth = e('div', { style: { display: 'flex', gap: .04 * s } }, [0, 1, 2].map(k => e('div', { key: k, style: { width: .045 * s, height: .045 * s, borderRadius: '50%', background: oat, animation: 'dot 1.2s ease-in-out infinite', animationDelay: (k * .2) + 's' } })));
+  } else {
+    const ms = { width: mouthBox[0] * s, height: mouthBox[1] * s, transition: 'all .35s ease', transformOrigin: 'center', boxSizing: 'border-box' };
+    if (st === 'empathizing') Object.assign(ms, { borderBottom: (.028 * s) + 'px solid ' + oat, borderRadius: '0 0 999px 999px' });
+    else if (st === 'listening') Object.assign(ms, { background: oat, borderRadius: 999 });
+    else Object.assign(ms, { background: oat, borderRadius: '50%', animation: 'talk .7s ease-in-out infinite alternate' });
+    mouth = e('div', { style: ms });
+  }
+  if (label) mouth = e('span', { style: { fontWeight: 700, fontSize: s * .24, color: '#17372E', lineHeight: 1 } }, label);
+  const mouthTop = label ? '50%' : { listening: '60%', thinking: '62%', talking: '63%', empathizing: '68%' }[st];
+  const talkRing = (d, k) => e('div', { key: k, style: { position: 'absolute', inset: 0, borderRadius: '50%', background: col, animation: 'ripple 1.6s ease-out infinite', animationDelay: d + 's' } });
+  return e('div', { style: { position: 'relative', width: s, height: s, transform: shape.lean, transition: 'transform .7s cubic-bezier(.3,1.4,.5,1)' } },
+    ...(st === 'talking' ? [talkRing(0, 'a'), talkRing(.8, 'b')] : []),
+    e('div', { ref: st === 'listening' ? r.ring1 : null, style: { position: 'absolute', inset: 0, transformOrigin: '50% 90%', transition: 'transform .18s ease-out' } },
+    e('div', { ref: st === 'listening' ? r.body : null, style: { position: 'absolute', inset: 0, borderRadius: shape.radius, background: col, animation: shape.anim, overflow: 'hidden', transition: 'border-radius .6s ease' } },
+      e('div', { style: { position: 'absolute', width: '80%', height: '80%', left: '-38%', top: '30%', borderRadius: '50%', background: '#E9B949', mixBlendMode: 'multiply', opacity: st === 'empathizing' ? .85 : 0, transition: 'opacity .8s ease' } }),
+      e('div', { style: { position: 'absolute', left: '50%', top: mouthTop, transform: 'translate(-50%,-50%)' + (st === 'listening' ? ' translateX(' + (.03 * s * dir) + 'px)' : ''), transition: 'all .45s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, mouth))));
+}
+const STATES = { listening: 'Listening', thinking: 'Thinking', talking: 'Talking', empathizing: 'Empathizing' };
+const SCENES = [
+  { label: 'Sam speaks', st: 'listening', dir: -1, speaker: 'sam', ms: 6500, who: 'Sam', text: 'Honestly, it felt like my work on the launch just disappeared once the update went out.' },
+  { label: 'Thimble reflects', st: 'empathizing', dir: -1, ms: 3400, who: 'Thimble · to Sam', text: 'Sam, it sounds like you felt unseen after putting a lot into it.' },
+  { label: 'Thimble asks', st: 'talking', dir: 1, ms: 5200, who: 'Thimble · to you', text: 'Before you respond, can you say back what you heard from Sam?' },
+  { label: 'You speak', st: 'listening', dir: 1, speaker: 'you', ms: 6500, who: 'You', text: 'I heard that the update made it look like I did it alone. That wasn’t what I meant.' },
+  { label: '', st: 'talking', dir: -1, caucus: 'sam', ms: 5200, who: '', text: '' },
+  { label: '', st: 'talking', dir: 1, caucus: 'you', ms: 5200, who: 'Thimble · just you', text: 'This part is just between us. How are you feeling about how this is going?' },
+  { label: '', st: 'listening', dir: 1, speaker: 'you', caucus: 'you', ms: 5600, who: 'You · private', text: 'Honestly, I’m worried Sam thinks I did it on purpose.' },
+  { label: '', st: 'empathizing', dir: 1, caucus: 'you', ms: 4200, who: 'Thimble · just you', text: 'That’s a fair worry. Would you like help saying that to Sam directly when we come back together?' },
+  { label: 'Thimble summarizes', st: 'thinking', dir: 1, ms: 2200, who: '', text: '' },
+  { label: '', st: 'talking', dir: 1, ms: 5600, who: 'Thimble · to both', text: 'It sounds like you both want the same thing: credit the team can actually see. Can we work out what that looks like?' }
+];
+const ctrl = on => 'width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;' + (on ? 'background:#17372E;color:#F6F1E7' : 'background:#FFFFFF;color:#17372E;box-shadow:inset 0 0 0 1px #17372E33');
+const mirror = r => { const [h, v] = r.split(' / ').map(x => x.split(' ')); return [h[1], h[0], h[3], h[2]].join(' ') + ' / ' + [v[1], v[0], v[3], v[2]].join(' '); };
+const chip = on => 'font:inherit;font-size:12px;font-weight:600;padding:6px 10px;border-radius:999px;border:none;cursor:pointer;background:' + (on ? '#F6F1E7' : 'transparent') + ';color:' + (on ? '#17372E' : '#F6F1E7');
+class Component extends DCLogic {
+  state = { i: 0, auto: true, muted: false, captions: true, paused: false, draft: '', over: null };
+  refs = { body: React.createRef(), ring1: React.createRef(), ring2: React.createRef() };
+  level = 0;
+  componentDidMount() {
+    this.next();
+    const loop = t => {
+      const sc = this.state.over || SCENES[this.state.i], lis = sc.st === 'listening', d = sc.dir;
+      const ph = (t / 1000) % 4.2;
+      const raw = lis && ph < 3.4 ? Math.max(0, Math.sin(t / 90) * .5 + Math.sin(t / 37) * .3 + .25) : 0;
+      this.level += (raw - this.level) * (raw > this.level ? .5 : .12);
+      const L = this.level, N = this.refs, b = N.body.current, r1 = N.ring1.current;
+      const spk = L > .15; if (N.was && !spk) N.nod = t; if (spk && t - (N.last || 0) > 1700) { N.nod = t; N.last = t; } N.was = spk;
+      const np = N.nod ? (t - N.nod) / 620 : 2, nod = np < 1 ? Math.abs(Math.sin(np * Math.PI * 2)) * (1 - np * .45) : 0;
+      if (r1) r1.style.transform = lis ? 'rotate(' + (-L * 7 * d) + 'deg) translate(' + (L * 3 * d) + '%,' + (nod * 5) + '%) scale(' + (1 + nod * .02) + ',' + (1 - nod * .05) + ')' : 'none';
+      if (b) { const amp = 5 + L * 16, w1 = Math.sin(t / 240), w2 = Math.sin(t / 330 + 1), w3 = Math.sin(t / 290 + 2);
+        const rr = (50 + w1 * amp * .5) + '% ' + (47 - L * 14 + w2 * amp * .5) + '% ' + (53 - L * 14 + w3 * amp * .5) + '% ' + (50 - w1 * amp * .5) + '% / ' + (58 + w2 * amp * .4) + '% ' + (58 - L * 8 + w3 * amp * .4) + '% ' + (42 - L * 8 - w2 * amp * .4) + '% ' + (42 - w3 * amp * .4) + '%';
+        b.style.borderRadius = lis ? (d < 0 ? mirror(rr) : rr) : ''; }
+      this.raf = requestAnimationFrame(loop);
+    };
+    this.raf = requestAnimationFrame(loop);
+  }
+  send = () => {
+    const t = this.state.draft.trim(); if (!t) return;
+    clearTimeout(this.ot1); clearTimeout(this.ot2); clearTimeout(this.ot3);
+    this.setState({ draft: '', over: { st: 'listening', dir: 1, speaker: 'you', who: 'You', text: t } });
+    this.ot1 = setTimeout(() => this.setState({ over: { st: 'thinking', dir: 1, who: '', text: '' } }), 3500);
+    this.ot2 = setTimeout(() => this.setState({ over: { st: 'talking', dir: -1, who: 'Thimble · to Sam', text: 'Sam, what did you hear in that?' } }), 5500);
+    this.ot3 = setTimeout(() => this.setState({ over: null }), 9500);
+  };
+  componentWillUnmount() { clearTimeout(this.ot1); clearTimeout(this.ot2); clearTimeout(this.ot3); cancelAnimationFrame(this.raf); clearTimeout(this.tm); }
+  next = () => { clearTimeout(this.tm); this.tm = setTimeout(() => { if (this.state.auto && !this.state.paused && !this.state.over) this.setState(s => ({ i: (s.i + 1) % SCENES.length })); this.next(); }, SCENES[this.state.i].ms); };
+  renderVals() {
+    const { i, auto, muted, captions, paused, draft, over } = this.state, sc = over || SCENES[i];
+    const big = typeof window !== 'undefined' ? Math.max(140, Math.min(window.innerHeight - 520, window.innerWidth * .28, 360)) : 300;
+    const cc = sc.caucus;
+    const tile = (id, name, col) => { const out = cc && cc !== id; return { name, muted: id === 'you' && muted, note: out ? 'Can’t hear right now' : '', av: avatar(sc.speaker === id ? 'talking' : 'listening', 60, null, col),
+      style: 'position:relative;aspect-ratio:16/10;border-radius:14px;background:#F6F1E7;border:1px solid ' + (cc === id ? '#E9B949' : '#17372E1A') + ';overflow:hidden;transition:opacity .5s ease;opacity:' + (out ? .4 : 1) }; };
+    const scenes = SCENES.map((x, k) => ({ label: x.label, k })).filter(x => x.label).map(x => ({ label: x.label, pick: () => this.setState({ i: x.k, auto: false }), style: chip(!auto && (i === x.k || (x.k === 4 && i === 5))) }));
+    scenes.push({ label: 'Auto', pick: () => this.setState({ auto: true }), style: chip(auto) });
+    return {
+      bigAvatar: avatar(sc.st, big, this.refs, null, null, sc.dir),
+      stateLabel: cc === 'sam' ? 'With Sam' : STATES[sc.st] + (sc.st === 'listening' ? (sc.speaker === 'sam' ? ' to Sam' : ' to you') : ''),
+      tilesL: [tile('sam', 'Sam', '#A9C4B4')], tilesR: [tile('you', 'You', '#E9B949')],
+      caucusOn: !!cc, caucusText: cc === 'sam' ? 'Thimble is talking privately with Sam. You can’t hear this.' : 'Private with you. Sam can’t hear this.',
+      thimbleWrap: 'flex:1;display:flex;align-items:center;justify-content:center;min-height:0;transition:opacity .5s ease;opacity:' + (cc === 'sam' ? .35 : 1),
+      caption: sc.text, captionWho: sc.who, showCaption: captions && !!sc.text,
+      scenes, muted, draft,
+      onDraft: e => this.setState({ draft: e.target.value }),
+      onKey: e => { if (e.key === 'Enter') this.send(); },
+      send: this.send,
+      toggleMute: () => this.setState(s => ({ muted: !s.muted })), toggleMuteStyle: ctrl(!muted),
+      toggleCaptions: () => this.setState(s => ({ captions: !s.captions })), toggleCaptionsStyle: ctrl(captions),
+      togglePause: () => this.setState(s => ({ paused: !s.paused })), togglePauseStyle: ctrl(paused)
+    };
+  }
+}
+</script>
+</body>
+</html>

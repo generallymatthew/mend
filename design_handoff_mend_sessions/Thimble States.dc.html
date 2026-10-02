@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0F2620;font-family:Manrope,sans-serif;color:#F6F1E7}
+a{color:#F6F1E7}a:hover{color:#F3829A}
+@keyframes blob{0%,100%{border-radius:50%;transform:scale(.95)}25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%;transform:scale(.92) rotate(-3deg)}50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%;transform:scale(.95)}75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%;transform:scale(.92) rotate(3deg)}}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1.5%) scale(1.015,.99)}}
+@keyframes nod{0%,100%{transform:translateY(6%) scale(1,.88)}40%{transform:translateY(11%) scale(1,.8)}}
+@keyframes talk{0%{transform:scaleY(.3)}20%{transform:scaleY(1)}40%{transform:scaleY(.5)}60%{transform:scaleY(.9)}80%{transform:scaleY(.4)}100%{transform:scaleY(.75)}}
+@keyframes dot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-35%)}}
+@keyframes listenIn{0%{transform:scale(1.5);opacity:0}50%{opacity:.35}100%{transform:scale(1.03);opacity:0}}
+@keyframes glow{0%,100%{transform:translate(-30%,6%) scale(1,.86)}50%{transform:translate(-34%,6%) scale(1.04,.88)}}
+@keyframes spinM{from{transform:rotate(0)}to{transform:rotate(-140deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes ripple{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.6);opacity:0}}
+</style>
+</helmet>
+<div style="min-height:100vh;box-sizing:border-box;padding:40px clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:28px;max-width:1500px;margin:0 auto">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.6">Thimble · avatar states</span>
+    <span style="font-size:28px;font-weight:700;letter-spacing:-0.01em">Four states, side by side</span>
+  </div>
+  <sc-for list="{{ rows }}" as="row" hint-placeholder-count="2">
+  <div style="display:flex;flex-direction:column;gap:14px">
+  <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7">{{ row.label }}</span>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+    <sc-for list="{{ row.items }}" as="it" hint-placeholder-count="4">
+      <div style="background:#17372E;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:20px;min-height:380px">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:28px 0">{{ it.el }}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:18px;font-weight:700">{{ it.name }}</span>
+          <span style="font-size:14px;line-height:1.5;opacity:.75;text-wrap:pretty">{{ it.desc }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  </div>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/dc" data-dc-script>
+function avatar(st, s, refs) {
+  const e = React.createElement, oat = '#F6F1E7', r = refs || {};
+  const shape = {
+    listening: { anim: 'none', radius: '50% 50% 47% 53% / 58% 58% 42% 42%', lean: 'rotate(-10deg) translate(2%,1%)' },
+    thinking: { anim: 'blob 4s ease-in-out infinite', radius: '50%', lean: 'none' },
+    talking: { anim: 'bob .8s ease-in-out infinite', radius: '50%', lean: 'none' },
+    empathizing: { anim: 'nod 2.8s ease-in-out infinite', radius: '50% 50% 50% 50% / 62% 62% 38% 38%', lean: 'none' }
+  }[st];
+  const mouthBox = { listening: [.11, .028], talking: [.19, .12], empathizing: [.22, .1] }[st];
+  let mouth;
+  if (st === 'thinking') {
+    mouth = e('div', { style: { display: 'flex', gap: .04 * s } }, [0, 1, 2].map(k => e('div', { key: k, style: { width: .045 * s, height: .045 * s, borderRadius: '50%', background: oat, animation: 'dot 1.2s ease-in-out infinite', animationDelay: (k * .2) + 's' } })));
+  } else {
+    const ms = { width: mouthBox[0] * s, height: mouthBox[1] * s, transition: 'all .35s ease', transformOrigin: 'center', boxSizing: 'border-box' };
+    if (st === 'empathizing') Object.assign(ms, { borderBottom: (.028 * s) + 'px solid ' + oat, borderRadius: '0 0 999px 999px' });
+    else if (st === 'listening') Object.assign(ms, { background: oat, borderRadius: 999 });
+    else Object.assign(ms, { background: oat, borderRadius: '50%', animation: 'talk .7s ease-in-out infinite alternate' });
+    mouth = e('div', { style: ms });
+  }
+  const mouthTop = { listening: '60%', thinking: '62%', talking: '63%', empathizing: '68%' }[st];
+  const talkRing = (d, k) => e('div', { key: k, style: { position: 'absolute', inset: 0, borderRadius: '50%', background: '#F3829A', animation: 'ripple 1.6s ease-out infinite', animationDelay: d + 's' } });
+  return e('div', { style: { position: 'relative', width: s, height: s, transform: shape.lean, transition: 'transform .7s cubic-bezier(.3,1.4,.5,1)' } },
+    ...(st === 'talking' ? [talkRing(0, 'a'), talkRing(.8, 'b')] : []),
+    e('div', { ref: st === 'listening' ? r.ring1 : null, style: { position: 'absolute', inset: 0, transformOrigin: '50% 90%', transition: 'transform .18s ease-out' } },
+    e('div', { ref: st === 'listening' ? r.body : null, style: { position: 'absolute', inset: 0, borderRadius: shape.radius, background: '#F3829A', animation: shape.anim, overflow: 'hidden', transition: 'border-radius .6s ease' } },
+      e('div', { style: { position: 'absolute', width: '80%', height: '80%', left: '-38%', top: '30%', borderRadius: '50%', background: '#E9B949', mixBlendMode: 'multiply', opacity: st === 'empathizing' ? .85 : 0, transition: 'opacity .8s ease' } }),
+      e('div', { style: { position: 'absolute', left: '50%', top: mouthTop, transform: 'translate(-50%,-50%)' + (st === 'listening' ? ' translateX(' + (.03 * s) + 'px)' : ''), transition: 'all .45s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, mouth))));
+}
+const INFO = [
+  ['listening', 'Listening', 'Leans toward you and turns slightly egg-shaped. The mouth stays closed. Wobbles gently while it listens. As you speak, the wobble grows, it tilts toward you and its side flattens toward the sound. It gives small double nods while you talk and when you pause, like an “mm-hm” (voice simulated here).'],
+  ['thinking', 'Thinking', 'Morphs into a slowly turning blob. The mouth becomes three pulsing dots.'],
+  ['talking', 'Talking', 'Round and bobbing. The mouth opens and closes, and rings ripple outward. This is the only state that reaches past the shape.'],
+  ['empathizing', 'Empathizing', 'Settles lower in a slow nod with a soft smile. A honey circle blends in from the side, echoing the logo overlap.']
+];
+class Component extends DCLogic {
+  mk = () => ({ body: React.createRef(), ring1: React.createRef(), ring2: React.createRef() });
+  refsA = this.mk(); refsB = this.mk();
+  level = 0;
+  componentDidMount() {
+    const loop = t => {
+      const ph = (t / 1000) % 5;
+      const raw = ph < 3.6 ? Math.max(0, Math.sin(t / 90) * .5 + Math.sin(t / 37) * .3 + .25) : 0;
+      this.level += (raw - this.level) * (raw > this.level ? .5 : .12);
+      const L = this.level;
+      [this.refsA, this.refsB].forEach(R => { const lis = true, b = R.body.current, r1 = R.ring1.current;
+const N = R, spk = L > .15; if (N.was && !spk) N.nod = t; if (spk && t - (N.last || 0) > 1700) { N.nod = t; N.last = t; } N.was = spk;
+      const np = N.nod ? (t - N.nod) / 620 : 2, nod = np < 1 ? Math.abs(Math.sin(np * Math.PI * 2)) * (1 - np * .45) : 0;
+      if (r1) r1.style.transform = lis ? 'rotate(' + (-L * 7) + 'deg) translate(' + (L * 3) + '%,' + (nod * 5) + '%) scale(' + (1 + nod * .02) + ',' + (1 - nod * .05) + ')' : 'none';
+      if (b) { const amp = 5 + L * 16, w1 = Math.sin(t / 240), w2 = Math.sin(t / 330 + 1), w3 = Math.sin(t / 290 + 2); b.style.borderRadius = lis ? (50 + w1 * amp * .5) + '% ' + (47 - L * 14 + w2 * amp * .5) + '% ' + (53 - L * 14 + w3 * amp * .5) + '% ' + (50 - w1 * amp * .5) + '% / ' + (58 + w2 * amp * .4) + '% ' + (58 - L * 8 + w3 * amp * .4) + '% ' + (42 - L * 8 - w2 * amp * .4) + '% ' + (42 - w3 * amp * .4) + '%' : ''; }
+      
+      });
+      this.raf = requestAnimationFrame(loop);
+    };
+    this.raf = requestAnimationFrame(loop);
+  }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); }
+  renderVals() {
+    const row = (label, eyes, refs) => ({ label, items: INFO.map(([k, name, desc]) => ({ name, desc, el: avatar(k, 160, k === 'listening' ? refs : null) })) });
+    return { rows: [row('States', false, this.refsA)] };
+  }
+}
+</script>
+</body>
+</html>

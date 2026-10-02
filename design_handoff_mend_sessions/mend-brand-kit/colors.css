@@ -1,0 +1,7 @@
+:root {
+  --mend-pink: #F3829A;      /* Primary: logo, fills, icons */
+  --mend-evergreen: #17372E; /* Ink: text, dark backgrounds, primary buttons */
+  --mend-honey: #E9B949;     /* Accent: highlights, "resolved" states */
+  --mend-oat: #F6F1E7;       /* Surface: page background */
+  --mend-font: 'Manrope', sans-serif;
+}

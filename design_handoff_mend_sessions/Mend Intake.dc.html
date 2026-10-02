@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F6F1E7;font-family:Manrope,sans-serif;color:#17372E}
+a{color:#17372E}a:hover{color:#F3829A}
+@keyframes blob{0%,100%{border-radius:50%;transform:scale(.95)}25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%;transform:scale(.92) rotate(-3deg)}50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%;transform:scale(.95)}75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%;transform:scale(.92) rotate(3deg)}}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1.5%) scale(1.015,.99)}}
+@keyframes nod{0%,100%{transform:translateY(6%) scale(1,.88)}40%{transform:translateY(11%) scale(1,.8)}}
+@keyframes talk{0%{transform:scaleY(.3)}20%{transform:scaleY(1)}40%{transform:scaleY(.5)}60%{transform:scaleY(.9)}80%{transform:scaleY(.4)}100%{transform:scaleY(.75)}}
+@keyframes dot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-35%)}}
+@keyframes listenIn{0%{transform:scale(1.5);opacity:0}50%{opacity:.35}100%{transform:scale(1.03);opacity:0}}
+@keyframes glow{0%,100%{transform:translate(-30%,6%) scale(1,.86)}50%{transform:translate(-34%,6%) scale(1.04,.88)}}
+@keyframes spinM{from{transform:rotate(0)}to{transform:rotate(-140deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes ripple{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.6);opacity:0}}
+input::placeholder,textarea::placeholder{color:#17372E88}
+</style>
+</helmet>
+<div style="min-height:100vh;box-sizing:border-box;padding:24px clamp(16px,3vw,44px);display:flex;flex-direction:column;gap:20px;max-width:1400px;margin:0 auto">
+  <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="mend-brand-kit/logo/mend-mark-pink.svg" alt="Mend" style="height:20px;width:auto">
+      <span style="font-weight:700;font-size:18px;letter-spacing:-0.01em">Mend</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#17372E0D;font-size:13px;font-weight:500">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+      Private. Nothing is recorded.
+    </div>
+  </header>
+
+  <nav style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+    <sc-for list="{{ modes }}" as="m" hint-placeholder-count="3">
+      <button onClick="{{ m.select }}" style="{{ m.style }}">
+        <span style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="display:block;font-size:16px;font-weight:700;line-height:1.3">{{ m.title }}</span>
+          <sc-if value="{{ m.tag }}" hint-placeholder-val="{{ false }}">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;flex-shrink:0;line-height:1.4;padding:3px 7px;border-radius:4px;background:#E9B949;color:#17372E">{{ m.tag }}</span>
+          </sc-if>
+        </span>
+        <span style="display:block;font-size:13.5px;line-height:1.4;opacity:.8">{{ m.sub }}</span>
+      </button>
+    </sc-for>
+  </nav>
+
+  <main style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FFFFFF80;border:1px solid #17372E1A;color:#17372E;border-radius:24px;padding:12px;min-height:calc(100vh - 200px);box-sizing:border-box">
+    <sc-if value="{{ isVoice }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:420px;display:flex;gap:12px">
+      <div style="flex:1;min-width:0;position:relative;border-radius:18px;background:#FFFFFF;border:1px solid #17372E14;overflow:hidden;display:flex;align-items:center;justify-content:center;padding-bottom:110px;box-sizing:border-box">
+        {{ bigAvatar }}
+        <div style="position:absolute;top:14px;left:16px;display:flex;align-items:center;gap:8px;font-size:13px">
+          <sc-if value="{{ live }}" hint-placeholder-val="{{ false }}">
+            <span style="display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:999px;background:#0F2620B3;color:#F6F1E7;font-family:'JetBrains Mono',monospace;font-size:12px">Live · {{ timer }}</span>
+          </sc-if>
+        </div>
+        <sc-if value="{{ live }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;top:14px;right:16px;display:flex;gap:4px;padding:4px;border-radius:999px;background:#0F2620B3;color:#F6F1E7;flex-wrap:wrap">
+            <sc-for list="{{ statePicks }}" as="p" hint-placeholder-count="5">
+              <button onClick="{{ p.pick }}" style="{{ p.style }}">{{ p.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="position:absolute;left:16px;bottom:16px;display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:10px;background:#0F2620B3;color:#F6F1E7;font-size:13px">
+          <span style="font-weight:700">Thimble</span><span style="opacity:.7">{{ stateLabel }}</span>
+        </div>
+        <sc-if value="{{ showCaption }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;left:16px;right:calc(clamp(150px,18vw,260px) + 32px);bottom:60px;margin:0 auto;max-width:720px;box-sizing:border-box;padding:12px 18px;color:#17372E;font-size:clamp(17px,1.6vw,21px);font-weight:500;line-height:1.45;text-align:center;text-wrap:pretty">{{ caption }}</div>
+        </sc-if>
+        <div ref="{{ tileRef }}" style="position:absolute;right:16px;bottom:16px;width:clamp(150px,18vw,260px);aspect-ratio:16/10;border-radius:14px;background:#F6F1E7;color:#17372E;border:1px solid #17372E1A;overflow:hidden;box-shadow:none;transition:box-shadow .15s ease">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">{{ youAvatar }}</div>
+          <div style="position:absolute;left:8px;bottom:8px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#17372EB3">You<sc-if value="{{ muted }}" hint-placeholder-val="{{ false }}"><span style="display:flex"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-opacity=".6" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></span></sc-if></div>
+          
+        </div>
+      </div>
+      <sc-if value="{{ showTranscript }}" hint-placeholder-val="{{ false }}">
+        <div style="width:min(360px,34vw);border-radius:18px;background:#F6F1E7;color:#17372E;display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #17372E14">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.6;white-space:nowrap">This session only</span>
+            <button onClick="{{ reset }}" style="font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid #17372E26;background:transparent;color:#17372E;cursor:pointer;white-space:nowrap;flex-shrink:0">Start over</button>
+          </div>
+          <div ref="{{ scrollRef }}" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ messages }}" as="msg" hint-placeholder-count="2">
+              <div style="{{ msg.wrap }}"><span style="font-size:11.5px;font-weight:600;opacity:.55">{{ msg.who }}</span><div style="{{ msg.bubble }}">{{ msg.text }}</div></div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 4px">
+      <div style="display:flex;padding:4px;border-radius:999px;background:#17372E0D;gap:2px">
+          <button onClick="{{ toVoice }}" style="{{ voiceTab }}">Voice</button>
+          <button onClick="{{ toText }}" style="{{ textTab }}">Text</button>
+        </div>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onClick="{{ toggleMute }}" aria-label="Mute" title="{{ muteTitle }}" style="{{ muteStyle }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><sc-if value="{{ muted }}" hint-placeholder-val="{{ false }}"><path d="M4 4l16 16"></path></sc-if></svg></button>
+        <button onClick="{{ toggleCaptions }}" aria-label="Subtitles" title="Subtitles" style="{{ ccStyle }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"></path></svg></button>
+        <button onClick="{{ toggleTranscript }}" aria-label="Transcript" title="Transcript" style="{{ trStyle }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5h14M5 10h14M5 15h9M5 20h6"></path></svg></button>
+        <button onClick="{{ toggleLive }}" style="{{ liveStyle }}">{{ liveLabel }}</button>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ isText }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;min-height:420px;display:flex;flex-direction:column;border-radius:18px;background:#FFFFFF;border:1px solid #17372E14;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #17372E14">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ chatAvatar }}</div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <span style="font-weight:700;font-size:15px">Thimble</span>
+              <span style="font-size:12.5px;opacity:.6">{{ chatStatus }}</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="display:flex;padding:4px;border-radius:999px;background:#17372E0D;gap:2px">
+          <button onClick="{{ toVoice }}" style="{{ voiceTab }}">Voice</button>
+          <button onClick="{{ toText }}" style="{{ textTab }}">Text</button>
+        </div>
+            <button onClick="{{ reset }}" style="font:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:999px;border:1px solid #17372E26;background:transparent;color:#17372E;cursor:pointer;white-space:nowrap">Start over</button>
+          </div>
+        </div>
+        <div ref="{{ scrollRef }}" style="flex:1;overflow-y:auto;padding:24px 16px">
+          <div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ messages }}" as="msg" hint-placeholder-count="3">
+              <div style="{{ msg.wrap }}"><span style="font-size:11.5px;font-weight:600;opacity:.55">{{ msg.who }}</span><div style="{{ msg.chatBubble }}">{{ msg.text }}</div></div>
+            </sc-for>
+            <sc-if value="{{ thinking }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:5px;padding:14px 16px;border-radius:14px;border-bottom-left-radius:4px;background:#F6F1E7;align-self:flex-start">
+                <span style="width:7px;height:7px;border-radius:50%;background:#17372E66;animation:dot 1.2s ease-in-out infinite"></span>
+                <span style="width:7px;height:7px;border-radius:50%;background:#17372E66;animation:dot 1.2s ease-in-out .2s infinite"></span>
+                <span style="width:7px;height:7px;border-radius:50%;background:#17372E66;animation:dot 1.2s ease-in-out .4s infinite"></span>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="padding:12px 16px 16px;border-top:1px solid #17372E14">
+          <div style="max-width:720px;margin:0 auto;display:flex;align-items:flex-end;gap:8px;background:#FFFFFF;border:1px solid #17372E26;border-radius:18px;padding:8px 8px 8px 16px">
+            <textarea value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="{{ placeholder }}" rows="2" style="flex:1;border:none;outline:none;resize:none;font:inherit;font-size:15px;line-height:1.5;color:#17372E;background:transparent;padding:6px 0"></textarea>
+            <button onClick="{{ send }}" style="height:44px;padding:0 20px;border-radius:12px;border:none;background:#17372E;color:#F6F1E7;font:inherit;font-weight:700;font-size:15px;cursor:pointer">Send</button>
+          </div>
+          <div style="max-width:720px;margin:8px auto 0;font-size:12px;opacity:.55;text-align:center">Enter to send · Shift+Enter for a new line</div>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const MODES = {
+  talk: { title: 'Talk it through', sub: 'Tell Thimble what happened, in your own words', label: 'Talk it through', ph: 'Tell Thimble what happened…',
+    welcome: ["Welcome to Mend. This might feel a little strange, talking through a conflict with an AI instead of a person, and that’s fair. It’s built this way on purpose: so you can get this resolved without becoming vulnerable to retaliation, for having had the conflict at all, or for how you chose to handle it.",
+      "A few things before we start: I’m here to represent your interests, not the company’s. Nothing in this conversation is recorded — there’s no transcript. The one exception is a small, fixed set of things — harassment or discrimination based on a protected characteristic, threats or violence, illegal activity, or an immediate safety risk — those get escalated to HR regardless of anything else. If that ever comes up, I’ll tell you directly; nothing gets reported silently. Otherwise, no manager at any company learns this conversation even happened.",
+      "So — what’s going on? What happened, from your side?"] },
+  practice: { title: 'Rehearse', sub: 'Practice the hard conversation before you have it', label: 'Rehearsal', ph: 'Say it the way you’d say it to them…',
+    welcome: ["Let’s rehearse. I’ll play the other person, using what you tell me about how they tend to respond. Stop me any time to try a line again or ask how it landed.",
+      "Who are you talking to, and what’s the one thing you need them to hear?"] },
+  manager: { title: 'For managers', sub: 'Get advice on a hard conversation with someone you manage', label: 'Manager advice', ph: 'Describe what’s going on with your report…',
+    welcome: ["This is for when you need to talk to someone who reports to you and aren’t sure how to say it. You don’t need to name them, and none of this goes to HR or your own manager.",
+      "We’ll work out what you’ve observed, what you need from them, and how to say it so it lands without putting them on the defensive. When you’re ready, you can rehearse it in Rehearse.",
+      "What’s the conversation you need to have?"] }
+};
+const bubbleBase = 'padding:12px 14px;border-radius:14px;font-size:14.5px;line-height:1.55;text-wrap:pretty;white-space:pre-wrap;max-width:88%';
+const STATES = { listening: 'Listening', thinking: 'Thinking', talking: 'Talking', empathizing: 'Empathizing' };
+const SEQ = [['listening', 6000], ['thinking', 2400], ['empathizing', 3400], ['talking', 5200]];
+const LINES = { empathizing: 'That sounds exhausting. It makes sense you’d feel worn down by it.', talking: 'So — what’s going on? What happened, from your side?' };
+const ctrl = on => 'width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;' + (on ? 'background:#17372E;color:#F6F1E7' : 'background:#FFFFFF;color:#17372E;box-shadow:inset 0 0 0 1px #17372E33');
+function avatar(st, s, refs, col, label) {
+  col = col || '#F3829A';
+  const e = React.createElement, oat = '#F6F1E7', r = refs || {};
+  const shape = {
+    listening: { anim: 'none', radius: '50% 50% 47% 53% / 58% 58% 42% 42%', lean: 'rotate(-10deg) translate(2%,1%)' },
+    thinking: { anim: 'blob 4s ease-in-out infinite', radius: '50%', lean: 'none' },
+    talking: { anim: 'bob .8s ease-in-out infinite', radius: '50%', lean: 'none' },
+    empathizing: { anim: 'nod 2.8s ease-in-out infinite', radius: '50% 50% 50% 50% / 62% 62% 38% 38%', lean: 'none' }
+  }[st];
+  const mouthBox = { listening: [.11, .028], talking: [.19, .12], empathizing: [.22, .1] }[st];
+  let mouth;
+  if (st === 'thinking') {
+    mouth = e('div', { style: { display: 'flex', gap: .04 * s } }, [0, 1, 2].map(k => e('div', { key: k, style: { width: .045 * s, height: .045 * s, borderRadius: '50%', background: oat, animation: 'dot 1.2s ease-in-out infinite', animationDelay: (k * .2) + 's' } })));
+  } else {
+    const ms = { width: mouthBox[0] * s, height: mouthBox[1] * s, transition: 'all .35s ease', transformOrigin: 'center', boxSizing: 'border-box' };
+    if (st === 'empathizing') Object.assign(ms, { borderBottom: (.028 * s) + 'px solid ' + oat, borderRadius: '0 0 999px 999px' });
+    else if (st === 'listening') Object.assign(ms, { background: oat, borderRadius: 999 });
+    else Object.assign(ms, { background: oat, borderRadius: '50%', animation: 'talk .7s ease-in-out infinite alternate' });
+    mouth = e('div', { style: ms });
+  }
+  if (label) mouth = e('span', { style: { fontWeight: 700, fontSize: s * .24, color: '#17372E', lineHeight: 1 } }, label);
+  const mouthTop = label ? '50%' : { listening: '60%', thinking: '62%', talking: '63%', empathizing: '68%' }[st];
+  const talkRing = (d, k) => e('div', { key: k, style: { position: 'absolute', inset: 0, borderRadius: '50%', background: col, animation: 'ripple 1.6s ease-out infinite', animationDelay: d + 's' } });
+  return e('div', { style: { position: 'relative', width: s, height: s, transform: shape.lean, transition: 'transform .7s cubic-bezier(.3,1.4,.5,1)' } },
+    ...(st === 'talking' ? [talkRing(0, 'a'), talkRing(.8, 'b')] : []),
+    e('div', { ref: st === 'listening' ? r.ring1 : null, style: { position: 'absolute', inset: 0, transformOrigin: '50% 90%', transition: 'transform .18s ease-out' } },
+    e('div', { ref: st === 'listening' ? r.body : null, style: { position: 'absolute', inset: 0, borderRadius: shape.radius, background: col, animation: shape.anim, overflow: 'hidden', transition: 'border-radius .6s ease' } },
+      e('div', { style: { position: 'absolute', width: '80%', height: '80%', left: '-38%', top: '30%', borderRadius: '50%', background: '#E9B949', mixBlendMode: 'multiply', opacity: st === 'empathizing' ? .85 : 0, transition: 'opacity .8s ease' } }),
+      e('div', { style: { position: 'absolute', left: '50%', top: mouthTop, transform: 'translate(-50%,-50%)' + (st === 'listening' ? ' translateX(' + (.03 * s) + 'px)' : ''), transition: 'all .45s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, mouth))));
+}
+class Component extends DCLogic {
+  state = { ui: 'voice', mode: 'talk', draft: '', live: false, thinking: false, stage: 'listening', callState: 'listening', auto: true, secs: 0, muted: false, cam: false, captions: true, transcript: false, log: { talk: [], practice: [], manager: [] } };
+  scrollRef = React.createRef(); videoRef = React.createRef(); tileRef = React.createRef();
+  avRefs = { body: React.createRef(), ring1: React.createRef(), ring2: React.createRef() };
+  level = 0;
+  startAudio = async (withMic) => {
+    if (withMic) try {
+      this.mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.actx = new (window.AudioContext || window.webkitAudioContext)();
+      this.an = this.actx.createAnalyser(); this.an.fftSize = 512;
+      this.actx.createMediaStreamSource(this.mic).connect(this.an);
+      this.buf = new Uint8Array(this.an.fftSize);
+    } catch (e) { this.an = null; }
+    const loop = t => {
+      let raw = 0;
+      if (this.an) { this.an.getByteTimeDomainData(this.buf); let sum = 0; for (let i = 0; i < this.buf.length; i++) { const v = (this.buf[i] - 128) / 128; sum += v * v; } raw = Math.min(1, Math.sqrt(sum / this.buf.length) * 6); }
+      else if (this.state.live && this.state.callState === 'listening') { const ph = (t / 1000) % 5; raw = ph < 3.6 ? Math.max(0, Math.sin(t / 90) * .5 + Math.sin(t / 37) * .3 + .25) : 0; }
+      if (this.state.muted) raw = 0;
+      this.level += (raw - this.level) * (raw > this.level ? .5 : .12);
+      const L = this.level, lis = (this.state.live ? this.state.callState : this.state.stage) === 'listening';
+      const b = this.avRefs.body.current; 
+      const r1 = this.avRefs.ring1.current, r2 = this.avRefs.ring2.current;
+      const N = this.avRefs, spk = L > .15; if (N.was && !spk) N.nod = t; if (spk && t - (N.last || 0) > 1700) { N.nod = t; N.last = t; } N.was = spk;
+      const np = N.nod ? (t - N.nod) / 620 : 2, nod = np < 1 ? Math.abs(Math.sin(np * Math.PI * 2)) * (1 - np * .45) : 0;
+      if (r1) r1.style.transform = lis ? 'rotate(' + (-L * 7) + 'deg) translate(' + (L * 3) + '%,' + (nod * 5) + '%) scale(' + (1 + nod * .02) + ',' + (1 - nod * .05) + ')' : 'none';
+      if (b) { const amp = 5 + L * 16, w1 = Math.sin(t / 240), w2 = Math.sin(t / 330 + 1), w3 = Math.sin(t / 290 + 2); b.style.borderRadius = lis ? (50 + w1 * amp * .5) + '% ' + (47 - L * 14 + w2 * amp * .5) + '% ' + (53 - L * 14 + w3 * amp * .5) + '% ' + (50 - w1 * amp * .5) + '% / ' + (58 + w2 * amp * .4) + '% ' + (58 - L * 8 + w3 * amp * .4) + '% ' + (42 - L * 8 - w2 * amp * .4) + '% ' + (42 - w3 * amp * .4) + '%' : ''; }
+      
+      const on = lis && L > .12, off = L < .06; if (on && !this.state.youTalk) this.setState({ youTalk: true }); else if ((off || !lis) && this.state.youTalk) this.setState({ youTalk: false });
+      this.raf = requestAnimationFrame(loop);
+    };
+    this.raf = requestAnimationFrame(loop);
+  };
+  stopAudio = () => { cancelAnimationFrame(this.raf); if (this.mic) this.mic.getTracks().forEach(t => t.stop()); if (this.actx) this.actx.close(); this.mic = this.actx = this.an = null; this.level = 0; };
+  componentDidUpdate() {
+    const el = this.scrollRef.current; if (el) el.scrollTop = el.scrollHeight;
+    const v = this.videoRef.current; if (v && this.stream && v.srcObject !== this.stream) v.srcObject = this.stream;
+  }
+  componentWillUnmount() { this.unmounting = true; this.stopCall(); }
+  step = i => { const [st, ms] = SEQ[i % SEQ.length]; if (this.state.auto) this.setState({ callState: st }); this.seqT = setTimeout(() => this.step(i + 1), ms); };
+  startCall = () => { this.setState({ live: true, secs: 0, auto: true, callState: 'listening' }); this.tick = setInterval(() => this.setState(s => ({ secs: s.secs + 1 })), 1000); this.step(0); this.stopAudio(); this.startAudio(true); };
+  stopCall = () => { clearInterval(this.tick); clearTimeout(this.seqT); this.stopCam(); this.stopAudio(); if (!this.unmounting) this.startAudio(false); };
+  componentDidMount() { this.startAudio(false); }
+  stopCam = () => { if (this.stream) this.stream.getTracks().forEach(t => t.stop()); this.stream = null; };
+  toggleCam = async () => {
+    if (this.state.cam) { this.stopCam(); return this.setState({ cam: false }); }
+    try { this.stream = await navigator.mediaDevices.getUserMedia({ video: true }); this.setState({ cam: true }); } catch (e) { this.setState({ cam: false }); }
+  };
+  send = () => {
+    const t = this.state.draft.trim(); if (!t) return;
+    const m = this.state.mode;
+    this.setState(s => ({ draft: '', thinking: true, stage: 'thinking', log: { ...s.log, [m]: [...s.log[m], { me: true, text: t }] } }));
+    setTimeout(() => {
+      this.setState(s => ({ thinking: false, stage: 'talking', log: { ...s.log, [m]: [...s.log[m], { me: false, text: 'Thank you for telling me. Take your time — what happened next?' }] } }));
+      setTimeout(() => this.setState({ stage: 'listening' }), 2600);
+    }, 1600);
+  };
+  renderVals() {
+    const { mode, live, draft, callState, secs, muted, cam, captions, transcript, stage, auto } = this.state;
+    const M = MODES[mode];
+    const msgs = [...M.welcome.map(text => ({ me: false, text })), ...this.state.log[mode]];
+    const disp = live ? callState : stage;
+    const lastT = [...msgs].reverse().find(x => !x.me);
+    const big = typeof window !== 'undefined' ? Math.max(140, Math.min(window.innerHeight - 400, window.innerWidth * .3, 420)) : 360;
+    const picks = [['auto', 'Auto'], ...Object.entries(STATES)];
+    return {
+      modes: Object.entries(MODES).map(([k, v]) => {
+        const on = k === mode;
+        return { ...v, tag: v.tag || '', select: () => this.setState({ mode: k }),
+          style: 'text-align:left;display:flex;flex-direction:column;justify-content:flex-start;gap:6px;min-width:0;padding:16px 18px;border-radius:14px;cursor:pointer;font:inherit;border:1px solid ' + (on ? '#17372E' : '#17372E1F') + ';background:' + (on ? '#17372E' : '#FFFFFF') + ';color:' + (on ? '#F6F1E7' : '#17372E') + ';min-height:44px' };
+      }),
+      modeLabel: M.label, placeholder: M.ph, draft,
+      status: { listening: 'Type or tap the mic to start', thinking: 'Thimble is thinking…', talking: 'Thimble is replying' }[stage] || '',
+      onDraft: e => this.setState({ draft: e.target.value }),
+      onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
+      send: this.send,
+      toggleLive: () => live ? (this.stopCall(), this.setState({ live: false, cam: false })) : this.startCall(),
+      liveLabel: live ? 'End live' : 'Go live',
+      liveStyle: 'display:flex;align-items:center;gap:8px;height:52px;padding:0 22px;border-radius:999px;border:none;cursor:pointer;font:inherit;font-weight:700;font-size:15px;white-space:nowrap;background:' + (live ? '#F3829A' : '#17372E') + ';color:' + (live ? '#17372E' : '#F6F1E7'),
+      liveDot: 'width:8px;height:8px;border-radius:50%;background:' + (live ? '#17372E' : '#F3829A'),
+      isVoice: this.state.ui === 'voice', isText: this.state.ui === 'text', thinking: this.state.thinking,
+      toVoice: () => this.setState({ ui: 'voice' }),
+      toText: () => { if (live) { this.stopCall(); } this.setState({ ui: 'text', live: false }); },
+      voiceTab: 'font:inherit;font-size:13px;font-weight:700;padding:8px 16px;border-radius:999px;border:none;cursor:pointer;background:' + (this.state.ui === 'voice' ? '#17372E' : 'transparent') + ';color:' + (this.state.ui === 'voice' ? '#F6F1E7' : '#17372E'), textTab: 'font:inherit;font-size:13px;font-weight:700;padding:8px 16px;border-radius:999px;border:none;cursor:pointer;background:' + (this.state.ui === 'text' ? '#17372E' : 'transparent') + ';color:' + (this.state.ui === 'text' ? '#F6F1E7' : '#17372E'),
+      chatAvatar: avatar(stage, 44),
+      chatStatus: { listening: 'Here to listen. Private, nothing is recorded.', thinking: 'Thinking…', talking: 'Replying…' }[stage] || '',
+      reset: () => this.setState(s => ({ draft: '', log: { ...s.log, [mode]: [] } })),
+      scrollRef: this.scrollRef, videoRef: this.videoRef,
+      live, bigAvatar: avatar(disp, big, this.avRefs),
+      youAvatar: avatar(this.state.youTalk ? 'talking' : 'listening', 64, null, '#E9B949'), tileRef: this.tileRef,
+      timer: String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0'),
+      stateLabel: STATES[disp] + (disp === 'listening' ? '…' : ''),
+      caption: live ? (LINES[callState] || '') : (disp === 'thinking' ? '' : lastT.text), showCaption: captions && (live ? !!LINES[callState] : disp !== 'thinking'),
+      statePicks: picks.map(([k, label]) => {
+        const on = k === 'auto' ? auto : !auto && callState === k;
+        return { label, pick: () => k === 'auto' ? this.setState({ auto: true }) : this.setState({ auto: false, callState: k }),
+          style: 'font:inherit;font-size:12px;font-weight:600;padding:6px 10px;border-radius:999px;border:none;cursor:pointer;background:' + (on ? '#F6F1E7' : 'transparent') + ';color:' + (on ? '#17372E' : '#F6F1E7') };
+      }),
+      muted, camOn: cam, camOff: !cam, showTranscript: transcript,
+      toggleMute: () => this.setState(s => ({ muted: !s.muted })), muteTitle: muted ? 'Unmute' : 'Mute', muteStyle: ctrl(!muted),
+      toggleCam: this.toggleCam, camTitle: cam ? 'Turn camera off' : 'Turn camera on', camStyle: ctrl(cam),
+      toggleCaptions: () => this.setState(s => ({ captions: !s.captions })), ccStyle: ctrl(captions),
+      toggleTranscript: () => this.setState(s => ({ transcript: !s.transcript })), trStyle: ctrl(transcript),
+      messages: msgs.map(x => ({ text: x.text, who: x.me ? 'You' : 'Thimble',
+        wrap: 'display:flex;flex-direction:column;gap:4px;align-items:' + (x.me ? 'flex-end' : 'flex-start'),
+        bubble: bubbleBase + (x.me ? ';background:#17372E;color:#F6F1E7;border-bottom-right-radius:4px' : ';background:#FFFFFF;color:#17372E;border-bottom-left-radius:4px'),
+        chatBubble: 'padding:12px 16px;border-radius:16px;font-size:15.5px;line-height:1.6;text-wrap:pretty;white-space:pre-wrap;max-width:80%' + (x.me ? ';background:#17372E;color:#F6F1E7;border-bottom-right-radius:4px' : ';background:#F6F1E7;color:#17372E;border-bottom-left-radius:4px') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

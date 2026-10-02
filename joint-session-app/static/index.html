@@ -20,21 +20,23 @@
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
   .wrap{max-width:760px; margin:0 auto; padding:20px 16px; display:flex; flex-direction:column; height:100vh;}
+  .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:4px;}
+  .brand{display:flex; align-items:center; gap:9px;}
+  .brand-mark{height:22px; width:auto; display:block;}
+  .brand-name{font-weight:800; font-size:19px; letter-spacing:-0.01em; color:var(--ink);}
   .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
-  /* CSS background, not an inline <svg> child -- #roleLabel's JS sets
-     .textContent (see below), which would silently wipe out any child
-     markup. A ::before background survives that. */
-  .eyebrow::before{content:'';display:inline-block;width:14px;height:10px;margin-right:6px;vertical-align:-1px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .privacy-pill{display:flex; align-items:center; gap:7px; padding:6px 12px; border-radius:999px; background:var(--accent-soft); font-size:12px; font-weight:500; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
+  .privacy-pill svg{flex-shrink:0;}
   .signal{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:10px; white-space:pre-wrap;}
 
   .stage{display:flex; gap:10px; margin-bottom:10px;}
   .tile{flex:1; min-width:0; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 8px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; opacity:.55; position:relative; transition:opacity .2s ease, box-shadow .2s ease;}
   .tile.unlocked{opacity:1;}
   .tile.speaking{box-shadow:0 0 0 2px var(--accent);}
-  .tile .avatar{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; color:#fff; flex:none;}
+  .tile .avatar{width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:19px; color:#fff; flex:none;}
   .tile.a .avatar{background:var(--a);} /* Evergreen fill, white letter passes at 12.9:1 */
   .tile.b .avatar{background:var(--b); color:var(--ink);} /* Honey fill needs dark letter -- white fails at 1.8:1, Evergreen passes at 7.1:1 */
-  .tile.facilitator .avatar{background:var(--facilitator); color:var(--ink); font-size:18px;} /* Pink fill, same reasoning: Evergreen letter passes at 5.2:1 */
+  .tile.facilitator .avatar{background:var(--facilitator); color:var(--ink); font-size:16px;} /* Pink fill, same reasoning: Evergreen letter passes at 5.2:1 */
   .tile.facilitator{opacity:1;}
   .tile .name{font-size:11.5px; font-weight:600; line-height:1.3;}
   .tile .you{position:absolute; top:6px; right:8px; font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.03em; color:var(--accent);}
@@ -60,7 +62,17 @@
   .banner{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:10px 14px; margin-bottom:10px; font-size:13.5px;}
   .banner a{text-decoration:none;}
   .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
-  .overlay{background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:22px 18px; text-align:center; color:var(--ink-soft); margin-bottom:10px;}
+  .overlay{display:flex; align-items:center; justify-content:center; gap:8px; background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:22px 18px; text-align:center; color:var(--ink-soft); margin-bottom:10px;}
+  .overlay svg{flex-shrink:0;}
+  /* Paused-for-privacy (the facilitator checking in with just one side) gets
+     the brand's honey "private/caucus" tint -- same color language as the
+     design handoff's caucus banner -- instead of the neutral waiting-for-
+     the-other-participant-to-join dash border. Text itself stays as
+     generic as the "waiting" state (see server.py's broadcast_result
+     privacy comment): this client is never told WHO the private check-in
+     is with, only shown that one exists, so the styling adds a visual cue
+     without the copy claiming to know more than it's actually told. */
+  .overlay.private{border-style:solid; border-color:#E9B949; background:#E9B9491A; color:var(--ink);}
   [hidden]{display:none !important;}
 
   /* landing / link-generator view */
@@ -78,7 +90,7 @@
 <div class="landing" id="landing" hidden>
   <div class="eyebrow">Mend &middot; joint session (local prototype)</div>
   <h1>Start a two-person session</h1>
-  <p>Send the Employee B link to whoever's testing the other role &mdash; a second tester, or your own second browser tab/profile. Whoever opens a link becomes that role; the facilitator won't start until both are connected.</p>
+  <p>Send the Employee B link to whoever's testing the other role &mdash; a second tester, or your own second browser tab/profile. Whoever opens a link becomes that role; Thimble won't start until both are connected.</p>
   <div class="linkcard">
     <span class="label">Employee A</span>
     <div class="linkrow"><input id="linkA" readonly></div>
@@ -90,6 +102,13 @@
 </div>
 
 <div class="wrap" id="room" hidden>
+  <div class="header">
+    <div class="brand">
+      <img class="brand-mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E" alt="">
+      <span class="brand-name">Mend</span>
+    </div>
+    <div class="privacy-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private. Nothing is recorded.</div>
+  </div>
   <div class="eyebrow" id="roleLabel">Mend &middot; joint session</div>
   <div class="signal" id="signal">no signal yet</div>
 
@@ -101,7 +120,7 @@
     </div>
     <div class="tile facilitator" id="tileF">
       <div class="avatar">&#9670;</div>
-      <div class="name">Facilitator</div>
+      <div class="name">Thimble</div>
     </div>
     <div class="tile b" id="tileB">
       <span class="you" id="youB" hidden>you</span>
@@ -109,7 +128,10 @@
       <div class="name">Employee B</div>
     </div>
   </div>
-  <div class="overlay" id="overlay" hidden><span id="overlayText"></span></div>
+  <div class="overlay" id="overlay" hidden>
+    <svg id="overlayLock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" hidden><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+    <span id="overlayText"></span>
+  </div>
 
   <div class="banner" id="banner" hidden>
     <span id="bannerText">Session ended.</span>
@@ -166,6 +188,7 @@ function initRoom() {
   const stage = document.getElementById('stage');
   const overlay = document.getElementById('overlay');
   const overlayText = document.getElementById('overlayText');
+  const overlayLock = document.getElementById('overlayLock');
   const tileA = document.getElementById('tileA');
   const tileB = document.getElementById('tileB');
   const tileF = document.getElementById('tileF');
@@ -194,8 +217,10 @@ function initRoom() {
   let ended = false;
   let lastSignal = null;
 
-  function showOverlay(text) {
+  function showOverlay(text, isPrivate) {
     overlayText.textContent = text;
+    overlay.classList.toggle('private', !!isPrivate);
+    overlayLock.hidden = !isPrivate;
     overlay.hidden = false;
     stage.hidden = true;
   }
@@ -280,7 +305,7 @@ function initRoom() {
     setSpeaking(data.from);
     if (data.from === 'facilitator') {
       const cls = data.private ? 'private' : 'facilitator';
-      const label = 'Facilitator' + (data.private ? ' (private, just for you)' : '');
+      const label = 'Thimble' + (data.private ? ' (private, just for you)' : '');
       addMessage(data.text, cls, label);
       // Audio arrives separately now, via the 'audio' case below (see
       // server.py's send_audio_followup) -- text doesn't wait on TTS.
@@ -351,7 +376,7 @@ function initRoom() {
           // specific than "one moment" would leak that by omission.
           paused = true;
           thinking = false;
-          showOverlay('One moment — the facilitator is checking in privately with the other participant.');
+          showOverlay('One moment — Thimble is checking in privately with the other participant.', true);
           updateComposer();
           break;
         case 'resumed':

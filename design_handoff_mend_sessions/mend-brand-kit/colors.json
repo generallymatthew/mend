@@ -1,0 +1,22 @@
+{
+  "pink": {
+    "hex": "#F3829A",
+    "rgb": "243,130,154",
+    "role": "Primary"
+  },
+  "evergreen": {
+    "hex": "#17372E",
+    "rgb": "23,55,46",
+    "role": "Ink / text"
+  },
+  "honey": {
+    "hex": "#E9B949",
+    "rgb": "233,185,73",
+    "role": "Accent"
+  },
+  "oat": {
+    "hex": "#F6F1E7",
+    "rgb": "246,241,231",
+    "role": "Surface"
+  }
+}
