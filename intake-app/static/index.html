@@ -77,14 +77,13 @@
   @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
   @keyframes thimble-dot{0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-35%);}}
   @keyframes thimble-ripple{0%{transform:scale(1); opacity:.45;} 100%{transform:scale(1.6); opacity:0;}}
-  /* Caption is horizontally centered within the full stage width (equal
-     left/right insets), not reserving asymmetric space for the you-tile --
-     reported live as visibly off-center. The state pill lives directly
-     under the avatar instead (see .state-pill-row); the live timer stays
-     at the stage's top-left (see .stage-top-left), the Voice/Text toggle
-     at top-right (see .stage-top-right). */
-  .caption-stack{position:absolute; left:28px; right:28px; bottom:24px; display:flex; justify-content:center;}
-  .caption{max-width:480px; font-size:clamp(15px,1.1vw,18px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
+  /* Caption sits in normal flow right under the state pill now, not
+     pinned to the stage's bottom -- reported live as needing to be
+     "underneath the listening, speaking thing" instead of floating lower
+     down near the controls. Smaller font + narrower max-width per the
+     same report ("be smaller"). */
+  .caption-stack{display:flex; justify-content:center; margin-top:10px; padding:0 28px;}
+  .caption{max-width:420px; font-size:clamp(13px,0.9vw,15px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
   .stage-top-left{position:absolute; top:16px; left:16px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; z-index:2;}
   .stage-top-right{position:absolute; top:16px; right:16px; z-index:2;}
   /* State pill ("Thimble Listening...") sits directly under the avatar
@@ -287,15 +286,15 @@
             <div class="state-pill-row">
               <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
             </div>
+            <div class="caption-stack">
+              <div class="caption" id="caption"></div>
+            </div>
           </div>
           <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
           <div class="mic-error-banner" id="micErrorBanner" hidden>
             <div class="title">Microphone blocked</div>
             <div class="desc" id="micErrorDesc">Allow microphone access for this site in your browser, then try again.</div>
             <button id="micRetryBtn">Try again</button>
-          </div>
-          <div class="caption-stack">
-            <div class="caption" id="caption"></div>
           </div>
         </div>
         <!-- Controls center within this row's full width; the you-tile is
