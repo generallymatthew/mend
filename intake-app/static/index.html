@@ -118,7 +118,7 @@
      facilitator tile-label vanish invisibly instead of just being scrolled
      past. overflow-x stays clipped for the rounded corners. */
   .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow-y:auto; overflow-x:hidden; background:var(--card);}
-  .call-main{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--stage-bg); overflow-y:auto;}
+  .call-main{position:relative; flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--stage-bg); overflow-y:auto;}
   .stage{position:relative; flex:1; display:flex; align-items:center; justify-content:center; padding:32px; min-width:0; min-height:280px; background:var(--stage-bg); border-radius:18px;}
   .call-controls{width:100%; max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:8px; padding:14px 24px 20px;}
   .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
@@ -130,7 +130,11 @@
      avatar centers in the tile on its own, "You" (+ mute icon) overlays the
      tile's own bottom-left corner as a label, not stacked below the circle
      in normal flow -- matching how a real video tile labels its participant. */
-  .you-tile{position:absolute; right:20px; bottom:20px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden;}
+  /* bottom:108px = roughly .call-controls' own rendered height (~92px) plus
+     a 16px gap -- positioned relative to .call-main now (see its own
+     comment at the markup), so this sits just above the control bar in the
+     card's real bottom-right corner, not .stage's content-driven one. */
+  .you-tile{position:absolute; right:20px; bottom:108px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden; z-index:2;}
   .you-tile-avatar-wrap{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
   .you-tile-label-row{position:absolute; left:10px; bottom:8px;}
   .you-tile-label{font-size:12px; font-weight:600; color:var(--ink-soft);}
@@ -267,11 +271,20 @@
           <div class="caption-stack">
             <div class="caption" id="caption"></div>
           </div>
-          <div class="you-tile" id="employeeTile">
-            <div class="you-tile-avatar-wrap"><div class="employee-circle" id="employeeCircle"></div></div>
-            <div class="you-caption" id="employeeCaption"></div>
-            <div class="you-tile-label-row"><span class="you-tile-label">You</span> <svg id="youMuteIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" hidden><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></div>
-          </div>
+        </div>
+        <!-- You tile lives in .call-main, not .stage: .stage's own height
+             is driven by its content (avatar + pill) and centers that
+             content vertically, so on a tall viewport .stage ends up much
+             taller than the avatar needs -- a tile pinned to ITS bottom
+             then lands well above the control bar, with a visible gap
+             below it, instead of sitting in the true bottom-right corner
+             of the card. .call-main spans the full card height (stage +
+             controls together), so anchoring here puts it in the actual
+             corner regardless of how tall .stage's content makes it. -->
+        <div class="you-tile" id="employeeTile">
+          <div class="you-tile-avatar-wrap"><div class="employee-circle" id="employeeCircle"></div></div>
+          <div class="you-caption" id="employeeCaption"></div>
+          <div class="you-tile-label-row"><span class="you-tile-label">You</span> <svg id="youMuteIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" hidden><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></div>
         </div>
         <div class="call-controls">
           <div class="control-bar">
