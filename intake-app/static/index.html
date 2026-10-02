@@ -126,15 +126,17 @@
   .transcript-header button{font-size:11px; padding:5px 9px; text-transform:none; letter-spacing:normal; font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
   .transcript-panel .thread{flex:1; min-height:0; overflow-y:auto; padding:16px; margin:0;}
 
-  /* PiP-style "You" tile, bottom-right of the stage, video-call style --
-     avatar centers in the tile on its own, "You" (+ mute icon) overlays the
-     tile's own bottom-left corner as a label, not stacked below the circle
-     in normal flow -- matching how a real video tile labels its participant. */
-  /* bottom:108px = roughly .call-controls' own rendered height (~92px) plus
-     a 16px gap -- positioned relative to .call-main now (see its own
-     comment at the markup), so this sits just above the control bar in the
-     card's real bottom-right corner, not .stage's content-driven one. */
-  .you-tile{position:absolute; right:20px; bottom:108px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden; z-index:2; transition:border-color 80ms linear, box-shadow 80ms linear;}
+  /* PiP-style "You" tile, video-call style -- avatar centers in the tile on
+     its own, "You" (+ mute icon) overlays the tile's own bottom-left corner
+     as a label, not stacked below the circle in normal flow -- matching
+     how a real video tile labels its participant.
+     Sits below the control buttons (normal flow, last child of .call-main,
+     right-aligned via align-self), per explicit direction, but still
+     inside .call-main's own lighter stage background rather than spilling
+     into the page behind it -- .call-main's background covers this whole
+     area, controls included, so staying its last child keeps the tile on
+     that same lighter surface automatically. */
+  .you-tile{position:relative; align-self:flex-end; margin:0 24px 20px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden; transition:border-color 80ms linear, box-shadow 80ms linear;}
   /* Reported live: the only "yes, the app can hear you" feedback was the
      employee-circle's own 1.08x scale -- 48px, easy to miss entirely next
      to everything else on screen. A border + glow around the WHOLE tile
@@ -280,20 +282,6 @@
             <div class="caption" id="caption"></div>
           </div>
         </div>
-        <!-- You tile lives in .call-main, not .stage: .stage's own height
-             is driven by its content (avatar + pill) and centers that
-             content vertically, so on a tall viewport .stage ends up much
-             taller than the avatar needs -- a tile pinned to ITS bottom
-             then lands well above the control bar, with a visible gap
-             below it, instead of sitting in the true bottom-right corner
-             of the card. .call-main spans the full card height (stage +
-             controls together), so anchoring here puts it in the actual
-             corner regardless of how tall .stage's content makes it. -->
-        <div class="you-tile" id="employeeTile">
-          <div class="you-tile-avatar-wrap"><div class="employee-circle" id="employeeCircle"></div></div>
-          <div class="you-caption" id="employeeCaption"></div>
-          <div class="you-tile-label-row"><span class="you-tile-label">You</span> <svg id="youMuteIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" hidden><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></div>
-        </div>
         <div class="call-controls">
           <div class="control-bar">
             <button id="pauseBtn" class="ctrl-btn" title="Pause"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg></button>
@@ -306,6 +294,15 @@
             <span>Listening&hellip;</span>
           </div>
           <div class="status" id="status"></div>
+        </div>
+        <!-- You tile sits below the control buttons, per explicit direction
+             -- normal flow (not absolute), right-aligned, so it's robustly
+             below them on any viewport height instead of math'd to sit
+             just above. -->
+        <div class="you-tile" id="employeeTile">
+          <div class="you-tile-avatar-wrap"><div class="employee-circle" id="employeeCircle"></div></div>
+          <div class="you-caption" id="employeeCaption"></div>
+          <div class="you-tile-label-row"><span class="you-tile-label">You</span> <svg id="youMuteIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" hidden><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></div>
         </div>
       </div>
       <div class="transcript-panel" id="transcriptPanel" hidden>
