@@ -92,7 +92,14 @@
      top-left live timer is for), so it reads better anchored to the thing
      it's describing. */
   .avatar-stack{display:flex; flex-direction:column; align-items:center;}
-  .state-pill-row{display:flex; justify-content:center; margin-top:14px;}
+  /* position:relative + z-index, not a layout move -- reported live as
+     the radiating ripple circles painting on top of the pill. The ripples
+     are position:absolute (.thimble-ripple); any positioned element
+     paints above plain static siblings in the same stacking context
+     regardless of DOM order, so the pill (previously static) lost
+     despite coming later in the markup. Doesn't move the pill's actual
+     position in the page at all, just its paint order. */
+  .state-pill-row{position:relative; z-index:3; display:flex; justify-content:center; margin-top:14px;}
   /* White/paper background with Evergreen ink text, not pink text -- Pink
      (#F3829A, the Thimble avatar's own fill) on white measures ~2.2:1
      contrast (same value already documented above for pink-as-fill with
