@@ -1555,7 +1555,11 @@ async function startRecordingTurnSafe() {
   } catch (e) {
     liveMode = false;
     setLiveLayout(false);
-    statusEl.textContent = 'lost microphone access: ' + e.message;
+    // showMicError(e) already puts the title + a real description on the
+    // mic-error banner itself -- this line used to also repeat a shorter
+    // version of the same thing in the small status line below the
+    // controls, reported live as redundant ("a lot of times that message
+    // is duplicative of the info next to thimble's name").
     showMicError(e);
   }
 }
@@ -1710,7 +1714,8 @@ async function enterVoiceLive() {
     setLiveLayout(true);
     hideMicError();
   } catch (e) {
-    statusEl.textContent = 'couldn\'t access the microphone: ' + e.message;
+    // Same redundancy as startRecordingTurnSafe's catch above -- the
+    // mic-error banner already says this.
     showMicError(e);
   }
 }
