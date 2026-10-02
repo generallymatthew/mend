@@ -93,7 +93,17 @@
      it's describing. */
   .avatar-stack{display:flex; flex-direction:column; align-items:center;}
   .state-pill-row{display:flex; justify-content:center; margin-top:14px;}
-  .state-pill{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-size:13px; white-space:nowrap;}
+  /* White/paper background with Evergreen ink text, not pink text -- Pink
+     (#F3829A, the Thimble avatar's own fill) on white measures ~2.2:1
+     contrast (same value already documented above for pink-as-fill with
+     light text -- contrast ratio is symmetric regardless of which side is
+     foreground/background), well under WCAG AA's 4.5:1 floor for text
+     this small. Ties to Thimble's own color via a small pink dot instead
+     of the text itself, so the pill reads as "Thimble" while staying
+     readable -- ink text is the same accessible color already used
+     everywhere else in the app. */
+  .state-pill{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--border); color:var(--ink); font-size:13px; white-space:nowrap; box-shadow:0 2px 8px rgba(23,55,46,.08);}
+  .state-pill::before{content:''; width:8px; height:8px; border-radius:50%; background:#F3829A; flex-shrink:0;}
   .state-pill b{font-weight:700;}
   .state-pill .state-word{opacity:.72; font-weight:500;}
   /* Simple "yes, I can hear you" indicator -- shown only while recording.
@@ -218,6 +228,15 @@
   .chat-input-row .send-btn{height:44px; padding:0 20px; border-radius:12px; flex-shrink:0;}
   .chat-hint{max-width:720px; margin:8px auto 0; font-size:12px; opacity:.55; text-align:center;}
   @media (max-width: 760px){
+    /* Reported live: "Private. Nothing is recorded." runs off the right
+       edge of the screen -- .privacy-pill's desktop sizing (14px,
+       white-space:nowrap) is wider than a phone viewport has room for
+       next to the logo/wordmark, and .header never wraps. Smaller text +
+       tighter padding + allowing the text itself to wrap (still inside
+       one pill, just two lines instead of one) keeps it on screen without
+       needing a shorter message. */
+    .privacy-pill{font-size:12px; padding:7px 12px; white-space:normal; text-align:left;}
+    .header{flex-wrap:wrap; row-gap:8px;}
     .call-layout{flex-direction:column;}
     .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
     /* The you-tile's bottom:20px anchors to .stage's own box, which on a
@@ -483,15 +502,11 @@ function pauseSession() {
   }
   liveMode = false;
   setLiveLayout(false);
-  statusEl.textContent = 'paused';
-  // Without this, avatarState stayed whatever it was before Pause (almost
-  // always 'listening'), and STATE_WORDS maps BOTH 'listening' and 'idle'
-  // to the same "Listening..." label -- the big avatar pill kept saying
-  // "Listening..." the whole time paused, with only the small, easy-to-
-  // miss statusEl line actually saying "paused". Reported live as "when I
-  // hit pause it's still listening but not reacting" -- same failure shape
-  // as the earlier mic-blocked-banner bug (a stuck label indistinguishable
-  // from the real state it's supposed to differ from).
+  // avatarState = 'paused' alone already makes the big state pill say
+  // "Paused" (STATE_WORDS.paused) -- a separate statusEl "paused" line
+  // used to repeat the same word in the small text below the controls,
+  // reported live as duplicative, same class of redundancy as the
+  // mic-error banner's own fix above.
   avatarState = 'paused';
 }
 function resumeSession() {
@@ -499,7 +514,6 @@ function resumeSession() {
   sessionPaused = false;
   pauseBtn.classList.remove('inactive');
   pauseBtn.title = 'Pause';
-  if (statusEl.textContent === 'paused') statusEl.textContent = '';
   if (pausedMidReply) {
     pausedMidReply = false;
     armLiveMode(); // re-arms liveMode/the live timer so finishSpeechCycle resumes listening once this (and any still-queued) sentence finishes playing, same as if never paused
