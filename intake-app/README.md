@@ -101,6 +101,25 @@ Several real fixes, not just tuning:
 
 Reloading and sitting through the full multi-paragraph opening every time you test gets old fast. Set `TEST_SHORT_INTRO=1` in `.env` and the opening line collapses to one short sentence (still a real model call, still gets a real `mend_signal`, just less to read and less TTS to wait on per reload). Leave it unset for anything where the actual scripted opening matters.
 
+## Post-session feedback survey
+
+A separate page (`static/survey.html`, served at `/survey`) collects an overall rating plus a set of research questions -- trust/safety (felt safe being honest, trusted the privacy claim, whether Thimble seemed to take sides), whether it actually understood the situation and changed how the tester plans to approach it, a comparison against talking to an HR rep/manager/friend instead, an NPS-style recommend score, an emotional-shift check, two open "what stood out"/"what would build more trust" questions, plus technical issues and general comments. Always reachable via the "Leave feedback" link in the header; also shown automatically -- a toast, then a redirect -- once Thimble signals the conversation has reached its natural end point (`ready_for_joint_session` or `conversation_structured` in its `mend_signal`), timed to wait until it's actually done talking so it never interrupts a reply.
+
+Every response is logged locally (`survey_responses.jsonl`, git-ignored, and also printed to stdout) regardless of setup below -- that's the fallback. The real durable store, meant to actually be checked later, is a Google Sheet. One-time setup, done in Google Cloud Console/Sheets, not in this repo:
+
+1. In [Google Cloud Console](https://console.cloud.google.com), create or reuse a project, then enable the **Google Sheets API** for it.
+2. Create a **Service Account** (IAM & Admin → Service Accounts), then generate a JSON key for it and download the file.
+3. Create a new Google Sheet (or reuse one) with a header row matching the columns this app appends, in this exact order: `timestamp, overall_rating, felt_fair, felt_safe, trusted_privacy, sided, understood_situation, changed_approach, readiness, comparison, would_reuse, nps, emotional_shift, standout_moment, trust_improvement, issues, comments`.
+4. Share that Sheet with the service account's own email (looks like `...@...iam.gserviceaccount.com`, found in the downloaded key file's `client_email` field) as an **Editor**.
+5. Add to `.env` (and to Render's Environment tab for the live deploy):
+   ```
+   GOOGLE_SHEET_ID=...        # the id segment of the Sheet's URL, between /d/ and /edit
+   GOOGLE_SERVICE_ACCOUNT_JSON=...   # the ENTIRE downloaded JSON key file's contents, as one line
+   ```
+   Never commit the key file or paste its contents anywhere other than these env vars -- it's a real credential with write access to that Sheet.
+
+Without those two env vars set, `get_survey_sheet()` just logs why and returns `None`; the survey still works end to end, it just only lands in the local file/stdout log instead of the Sheet.
+
 ## Optional: realistic video avatar (Tavus)
 
 A separate, parked path if a photorealistic video face is ever wanted instead of the abstract shape above. More setup (its own account, a public tunnel, a custom-LLM shim), so it's kept as an independent option rather than the default.

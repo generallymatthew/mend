@@ -19,19 +19,22 @@
   .brand-mark{height:26px; width:auto; display:block;}
   .brand-name{font-weight:800; font-size:22px; letter-spacing:-0.01em; color:var(--ink);}
   h1{font-size:22px; margin:0 0 6px;}
-  .sub{color:var(--ink-soft); font-size:14.5px; line-height:1.5; margin:0 0 28px;}
-  .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px 22px 24px; margin-bottom:18px;}
+  .sub{color:var(--ink-soft); font-size:14.5px; line-height:1.5; margin:0 0 10px;}
+  .section-label{font-weight:800; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:30px 2px 12px;}
+  .section-label:first-of-type{margin-top:22px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px 22px 24px; margin-bottom:14px;}
   .q-label{font-weight:700; font-size:15px; margin-bottom:12px;}
   .q-hint{font-weight:500; font-size:13px; color:var(--ink-soft); margin:-8px 0 14px;}
-  .scale{display:flex; gap:8px;}
-  .scale button{flex:1; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); border-radius:999px; padding:10px 0; font:inherit; font-weight:700; font-size:15px; cursor:pointer;}
+  .scale{display:flex; gap:8px; flex-wrap:wrap;}
+  .scale button{flex:1; min-width:36px; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); border-radius:999px; padding:10px 0; font:inherit; font-weight:700; font-size:15px; cursor:pointer;}
+  .scale.scale-11 button{font-size:13px; padding:9px 0;}
   .scale button.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
   .scale-labels{display:flex; justify-content:space-between; font-size:12px; color:var(--ink-soft); margin-top:8px;}
   .choice-row{display:flex; flex-direction:column; gap:8px;}
   .choice{display:flex; align-items:center; gap:10px; border:1.5px solid var(--border); border-radius:12px; padding:11px 14px; cursor:pointer; font-size:14.5px;}
   .choice.sel{border-color:var(--accent); background:var(--accent-soft);}
-  .choice input{accent-color:var(--accent);}
-  textarea{width:100%; resize:vertical; min-height:90px; border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
+  .choice input{accent-color:var(--accent); flex-shrink:0;}
+  textarea{width:100%; resize:vertical; min-height:80px; border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
   .submit-row{display:flex; justify-content:flex-end; margin-top:6px;}
   button.primary{border:1.5px solid var(--accent); background:var(--accent); color:#fff; border-radius:999px; padding:13px 26px; font:inherit; font-weight:700; font-size:15px; cursor:pointer;}
   button.primary:disabled{opacity:.5; cursor:default;}
@@ -52,11 +55,11 @@
 
   <div id="form-view">
     <h1>How did that go?</h1>
-    <p class="sub">Two minutes, anonymous, and it goes straight to the people building this &mdash; nothing here is shared with your employer.</p>
+    <p class="sub">Ten minutes, anonymous, and it goes straight to the people building this &mdash; nothing here is shared with your employer.</p>
 
     <div class="card">
       <div class="q-label">Overall, how was your experience?</div>
-      <div class="scale" id="overallScale">
+      <div class="scale" id="q-overall">
         <button type="button" data-val="1">1</button>
         <button type="button" data-val="2">2</button>
         <button type="button" data-val="3">3</button>
@@ -66,13 +69,134 @@
       <div class="scale-labels"><span>Not good</span><span>Excellent</span></div>
     </div>
 
+    <div class="section-label">Trust &amp; safety</div>
+
     <div class="card">
-      <div class="q-label">Did Thimble feel helpful and fair?</div>
-      <div class="choice-row" id="fairChoices">
-        <label class="choice"><input type="radio" name="fair" value="yes"> Yes, it felt helpful and neutral</label>
-        <label class="choice"><input type="radio" name="fair" value="somewhat"> Somewhat &mdash; it had moments that felt off</label>
-        <label class="choice"><input type="radio" name="fair" value="no"> No, it didn't feel helpful or fair</label>
+      <div class="q-label">Did you feel safe being completely honest with Thimble?</div>
+      <div class="choice-row" data-radio="felt_safe">
+        <label class="choice"><input type="radio" name="felt_safe" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="felt_safe" value="somewhat"> Somewhat</label>
+        <label class="choice"><input type="radio" name="felt_safe" value="no"> No</label>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Did you trust that this conversation was actually private?</div>
+      <div class="choice-row" data-radio="trusted_privacy">
+        <label class="choice"><input type="radio" name="trusted_privacy" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="trusted_privacy" value="somewhat"> Somewhat</label>
+        <label class="choice"><input type="radio" name="trusted_privacy" value="no"> No</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Did Thimble ever feel like it was taking sides?</div>
+      <div class="choice-row" data-radio="sided">
+        <label class="choice"><input type="radio" name="sided" value="neutral"> No, it felt neutral</label>
+        <label class="choice"><input type="radio" name="sided" value="me"> Somewhat &mdash; it leaned toward me</label>
+        <label class="choice"><input type="radio" name="sided" value="other"> Somewhat &mdash; it leaned toward the other person</label>
+        <label class="choice"><input type="radio" name="sided" value="clear"> Yes, it clearly sided with someone</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Did Thimble feel helpful and fair overall?</div>
+      <div class="choice-row" data-radio="felt_fair">
+        <label class="choice"><input type="radio" name="felt_fair" value="yes"> Yes, it felt helpful and neutral</label>
+        <label class="choice"><input type="radio" name="felt_fair" value="somewhat"> Somewhat &mdash; it had moments that felt off</label>
+        <label class="choice"><input type="radio" name="felt_fair" value="no"> No, it didn't feel helpful or fair</label>
+      </div>
+    </div>
+
+    <div class="section-label">Did it actually work</div>
+
+    <div class="card">
+      <div class="q-label">Did Thimble understand your situation accurately?</div>
+      <div class="choice-row" data-radio="understood_situation">
+        <label class="choice"><input type="radio" name="understood_situation" value="well"> Understood it well</label>
+        <label class="choice"><input type="radio" name="understood_situation" value="mostly"> Mostly, needed some corrections</label>
+        <label class="choice"><input type="radio" name="understood_situation" value="poorly"> I had to correct it a lot</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Did this conversation change how you're planning to approach the situation?</div>
+      <div class="choice-row" data-radio="changed_approach">
+        <label class="choice"><input type="radio" name="changed_approach" value="clarified"> Yes, it clarified my thinking</label>
+        <label class="choice"><input type="radio" name="changed_approach" value="changed_mind"> Yes, it changed my mind</label>
+        <label class="choice"><input type="radio" name="changed_approach" value="no_difference"> No real difference</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Do you feel more ready for the hard conversation than before?</div>
+      <div class="choice-row" data-radio="readiness">
+        <label class="choice"><input type="radio" name="readiness" value="more"> More ready</label>
+        <label class="choice"><input type="radio" name="readiness" value="same"> About the same</label>
+        <label class="choice"><input type="radio" name="readiness" value="less"> Less ready</label>
+      </div>
+    </div>
+
+    <div class="section-label">Compared to the alternative</div>
+
+    <div class="card">
+      <div class="q-label">Compared to talking to an HR rep, a manager, or a friend about this &mdash; was this...</div>
+      <div class="choice-row" data-radio="comparison">
+        <label class="choice"><input type="radio" name="comparison" value="better"> Better</label>
+        <label class="choice"><input type="radio" name="comparison" value="same"> About the same</label>
+        <label class="choice"><input type="radio" name="comparison" value="worse"> Worse</label>
+        <label class="choice"><input type="radio" name="comparison" value="na"> I wouldn't have talked to anyone about this</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Would you use this again for a similar situation?</div>
+      <div class="choice-row" data-radio="would_reuse">
+        <label class="choice"><input type="radio" name="would_reuse" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="would_reuse" value="maybe"> Maybe</label>
+        <label class="choice"><input type="radio" name="would_reuse" value="no"> No</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">How likely are you to recommend this to a coworker dealing with something similar?</div>
+      <div class="scale scale-11" id="q-nps">
+        <button type="button" data-val="0">0</button>
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+        <button type="button" data-val="4">4</button>
+        <button type="button" data-val="5">5</button>
+        <button type="button" data-val="6">6</button>
+        <button type="button" data-val="7">7</button>
+        <button type="button" data-val="8">8</button>
+        <button type="button" data-val="9">9</button>
+        <button type="button" data-val="10">10</button>
+      </div>
+      <div class="scale-labels"><span>Not at all likely</span><span>Extremely likely</span></div>
+    </div>
+
+    <div class="section-label">How you're feeling now</div>
+
+    <div class="card">
+      <div class="q-label">How are you feeling right now compared to before this conversation?</div>
+      <div class="choice-row" data-radio="emotional_shift">
+        <label class="choice"><input type="radio" name="emotional_shift" value="calmer"> Calmer or clearer</label>
+        <label class="choice"><input type="radio" name="emotional_shift" value="same"> About the same</label>
+        <label class="choice"><input type="radio" name="emotional_shift" value="worse"> Worse</label>
+      </div>
+    </div>
+
+    <div class="section-label">In your own words</div>
+
+    <div class="card">
+      <div class="q-label">What's one moment in this conversation that stood out &mdash; good or bad?</div>
+      <textarea id="standout_moment" placeholder="Optional"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="q-label">What would have made you trust this more?</div>
+      <textarea id="trust_improvement" placeholder="Optional"></textarea>
     </div>
 
     <div class="card">
@@ -112,22 +236,44 @@
 const BASE_PATH = location.pathname.replace(/[^/]*$/, '');
 function apiPath(p) { return BASE_PATH.replace(/\/$/, '') + '/' + p.replace(/^\//, ''); }
 
-let overallRating = null;
-document.querySelectorAll('#overallScale button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    overallRating = Number(btn.dataset.val);
-    document.querySelectorAll('#overallScale button').forEach(b => b.classList.toggle('sel', b === btn));
+function wireScale(id) {
+  let val = null;
+  const buttons = document.querySelectorAll(`#${id} button`);
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      val = Number(btn.dataset.val);
+      buttons.forEach(b => b.classList.toggle('sel', b === btn));
+    });
+  });
+  return () => val;
+}
+const getOverall = wireScale('q-overall');
+const getNps = wireScale('q-nps');
+
+// Every single-choice question block shares the same radio + highlight
+// pattern -- wire them all generically off data-radio instead of repeating
+// per-question listener code for each of the ~10 of them.
+document.querySelectorAll('[data-radio]').forEach(row => {
+  row.querySelectorAll('.choice').forEach(label => {
+    const input = label.querySelector('input');
+    input.addEventListener('change', () => {
+      row.querySelectorAll('.choice').forEach(l => l.classList.toggle('sel', l.querySelector('input').checked));
+    });
   });
 });
+function getRadio(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
 
-document.querySelectorAll('#fairChoices .choice, #issueChoices .choice').forEach(label => {
+document.querySelectorAll('#issueChoices .choice').forEach(label => {
   const input = label.querySelector('input');
   const sync = () => label.classList.toggle('sel', input.checked);
   input.addEventListener('change', () => {
-    if (input.type === 'checkbox' && input.value === 'none' && input.checked) {
+    if (input.value === 'none' && input.checked) {
       // "No issues" is exclusive -- picking it clears any other checked issue
       label.closest('.choice-row').querySelectorAll('input[type=checkbox]').forEach(cb => { if (cb !== input) { cb.checked = false; cb.closest('.choice').classList.remove('sel'); } });
-    } else if (input.type === 'checkbox' && input.value !== 'none' && input.checked) {
+    } else if (input.value !== 'none' && input.checked) {
       const noneBox = label.closest('.choice-row').querySelector('input[value=none]');
       if (noneBox) { noneBox.checked = false; noneBox.closest('.choice').classList.remove('sel'); }
     }
@@ -138,15 +284,27 @@ document.querySelectorAll('#fairChoices .choice, #issueChoices .choice').forEach
 const submitBtn = document.getElementById('submitBtn');
 const errorMsg = document.getElementById('errorMsg');
 submitBtn.addEventListener('click', async () => {
+  const overallRating = getOverall();
   if (!overallRating) { errorMsg.hidden = false; return; }
   errorMsg.hidden = true;
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
-  const fairEl = document.querySelector('#fairChoices input:checked');
   const issues = Array.from(document.querySelectorAll('#issueChoices input:checked')).map(i => i.value);
   const payload = {
     overall_rating: overallRating,
-    felt_fair: fairEl ? fairEl.value : null,
+    felt_fair: getRadio('felt_fair'),
+    felt_safe: getRadio('felt_safe'),
+    trusted_privacy: getRadio('trusted_privacy'),
+    sided: getRadio('sided'),
+    understood_situation: getRadio('understood_situation'),
+    changed_approach: getRadio('changed_approach'),
+    readiness: getRadio('readiness'),
+    comparison: getRadio('comparison'),
+    would_reuse: getRadio('would_reuse'),
+    nps: getNps(),
+    emotional_shift: getRadio('emotional_shift'),
+    standout_moment: document.getElementById('standout_moment').value.trim(),
+    trust_improvement: document.getElementById('trust_improvement').value.trim(),
     issues,
     comments: document.getElementById('comments').value.trim(),
   };

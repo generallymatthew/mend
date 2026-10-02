@@ -7,3 +7,5 @@ python-dotenv>=1.0
 httpx>=0.27
 watchfiles>=0.21  # lets `uvicorn --reload --reload-include '*.md'` (see ../.claude/launch.json) actually watch the system prompt files, not just *.py -- uvicorn's built-in fallback watcher ignores --reload-include entirely
 websockets>=12  # /ws/voice: both the server side of that route (uvicorn has no WebSocket support at all without this or wsproto installed) and the outbound client connection to Deepgram's streaming API
+gspread>=6  # appends each /api/survey response to a Google Sheet -- see server.py's append_to_sheet() for the required GOOGLE_SHEET_ID/GOOGLE_SERVICE_ACCOUNT_JSON env vars and setup steps
+google-auth>=2.30

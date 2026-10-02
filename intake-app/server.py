@@ -32,6 +32,8 @@ from fastapi import FastAPI, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from google.oauth2.service_account import Credentials as GoogleCredentials
+import gspread
 
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
@@ -791,18 +793,78 @@ async def reset():
     return {"ok": True}
 
 
-# Post-session feedback -- deliberately the one thing this app writes to
-# disk. Everything else here follows "nothing is recorded" (see the
-# module docstring and the header's own privacy pill): conversation
-# content/audio only ever live in process memory. A survey response isn't
-# session content, it's the tester volunteering feedback about the product
-# through a separate page (static/survey.html), with no conversation text
-# attached -- the whole point is to actually be able to read it back after
-# the process restarts. Appended as JSON Lines, not a database, same "keep
-# it as simple as the rest of this prototype" convention as everywhere else
-# here.
+# Post-session feedback -- deliberately the one thing this app persists
+# outside process memory. Everything else here follows "nothing is
+# recorded" (see the module docstring and the header's own privacy pill):
+# conversation content/audio only ever live in memory. A survey response
+# isn't session content, it's the tester volunteering feedback about the
+# product through a separate page (static/survey.html), with no
+# conversation text attached -- the whole point is to actually be able to
+# read it back later. The real durable store is a Google Sheet (Render's
+# own container disk is ephemeral -- see the git history around this
+# comment for the stdout-logging stopgap that predated this); SURVEY_FILE
+# and the stdout print below are now just a local-dev/fallback safety net
+# for whenever Sheets access isn't configured or a single write fails.
+GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
+GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 SURVEY_FILE = ROOT / "survey_responses.jsonl"
 VALID_ISSUES = {"voice", "audio", "captions", "other", "none"}
+# Every single-choice survey question (everything except overall_rating, nps,
+# issues, and the two free-text fields) validates the same way: null or one
+# of a fixed option set. Declared once here instead of a hand-written if/else
+# per field, both in this file and in static/survey.html's own radio names.
+SURVEY_RADIO_FIELDS = {
+    "felt_fair": {"yes", "somewhat", "no"},
+    "felt_safe": {"yes", "somewhat", "no"},
+    "trusted_privacy": {"yes", "somewhat", "no"},
+    "sided": {"neutral", "me", "other", "clear"},
+    "understood_situation": {"well", "mostly", "poorly"},
+    "changed_approach": {"clarified", "changed_mind", "no_difference"},
+    "readiness": {"more", "same", "less"},
+    "comparison": {"better", "same", "worse", "na"},
+    "would_reuse": {"yes", "maybe", "no"},
+    "emotional_shift": {"calmer", "same", "worse"},
+}
+
+_sheet = None
+_sheet_init_failed = False
+
+
+def get_survey_sheet():
+    """Returns the first worksheet of GOOGLE_SHEET_ID, authenticated via a
+    service account whose JSON key lives in GOOGLE_SERVICE_ACCOUNT_JSON (the
+    whole key file's contents, not a path -- Render's env vars and this
+    app's own .env are the only places this credential should ever live,
+    never committed to the repo or pasted into chat). Returns None, logging
+    why, if either env var is unset or auth fails -- a survey submission
+    still succeeds either way, falling back to SURVEY_FILE/stdout below.
+
+    One-time setup, done once in Google Cloud Console / Sheets, not here:
+    enable the Sheets API, create a service account, generate a JSON key,
+    create (or reuse) a Sheet with a header row matching the columns
+    appended below, and share that Sheet with the service account's own
+    client_email as an Editor. Then set GOOGLE_SHEET_ID (the id segment of
+    the Sheet's URL) and GOOGLE_SERVICE_ACCOUNT_JSON (the raw key file
+    contents, as a single-line value) as env vars, both locally (.env) and
+    in Render's dashboard.
+    """
+    global _sheet, _sheet_init_failed
+    if _sheet is not None or _sheet_init_failed:
+        return _sheet
+    if not GOOGLE_SHEET_ID or not GOOGLE_SERVICE_ACCOUNT_JSON:
+        _sheet_init_failed = True
+        return None
+    try:
+        info = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+        creds = GoogleCredentials.from_service_account_info(
+            info, scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        _sheet = gspread.authorize(creds).open_by_key(GOOGLE_SHEET_ID).sheet1
+    except Exception as e:
+        print(f"[survey] Google Sheets auth/open failed, falling back to local log: {e}", flush=True)
+        _sheet_init_failed = True
+        return None
+    return _sheet
 
 
 @app.post("/api/survey")
@@ -811,29 +873,72 @@ async def submit_survey(request: Request):
     rating = data.get("overall_rating")
     if not isinstance(rating, int) or not (1 <= rating <= 5):
         return JSONResponse({"error": "overall_rating must be an integer 1-5"}, status_code=400)
-    felt_fair = data.get("felt_fair")
-    if felt_fair not in (None, "yes", "somewhat", "no"):
-        return JSONResponse({"error": "invalid felt_fair value"}, status_code=400)
+    radios = {}
+    for field, valid_values in SURVEY_RADIO_FIELDS.items():
+        value = data.get(field)
+        if value not in valid_values and value is not None:
+            return JSONResponse({"error": f"invalid {field} value"}, status_code=400)
+        radios[field] = value
+    nps = data.get("nps")
+    if nps is not None and (not isinstance(nps, int) or not (0 <= nps <= 10)):
+        return JSONResponse({"error": "nps must be an integer 0-10"}, status_code=400)
     issues = data.get("issues") or []
     if not isinstance(issues, list) or not all(i in VALID_ISSUES for i in issues):
         return JSONResponse({"error": "invalid issues value"}, status_code=400)
-    comments = str(data.get("comments") or "")[:4000]  # generous cap, not unbounded -- this is open free text from an unauthenticated page
+    # Generous caps, not unbounded -- this is open free text from an
+    # unauthenticated page.
+    standout_moment = str(data.get("standout_moment") or "")[:2000]
+    trust_improvement = str(data.get("trust_improvement") or "")[:2000]
+    comments = str(data.get("comments") or "")[:4000]
     record = {
         "ts": time.time(),
         "overall_rating": rating,
-        "felt_fair": felt_fair,
+        **radios,
+        "nps": nps,
         "issues": issues,
+        "standout_moment": standout_moment,
+        "trust_improvement": trust_improvement,
         "comments": comments,
     }
+    sheet = get_survey_sheet()
+    if sheet is not None:
+        try:
+            # gspread's append_row is a blocking HTTP call -- same
+            # threadpool-offload reasoning as every other blocking call in
+            # this file (see transcribe_file/facilitator_reply), so it
+            # doesn't freeze the single-threaded event loop for every other
+            # concurrent request while it runs. Column order here must match
+            # the Sheet's own header row -- see README.md's survey setup
+            # section.
+            await run_in_threadpool(
+                sheet.append_row,
+                [
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(record["ts"])) + " UTC",
+                    rating,
+                    radios["felt_fair"] or "",
+                    radios["felt_safe"] or "",
+                    radios["trusted_privacy"] or "",
+                    radios["sided"] or "",
+                    radios["understood_situation"] or "",
+                    radios["changed_approach"] or "",
+                    radios["readiness"] or "",
+                    radios["comparison"] or "",
+                    radios["would_reuse"] or "",
+                    nps if nps is not None else "",
+                    radios["emotional_shift"] or "",
+                    standout_moment,
+                    trust_improvement,
+                    ", ".join(issues),
+                    comments,
+                ],
+            )
+        except Exception as e:
+            # A real write failure (quota, revoked share, transient network
+            # error) shouldn't lose the response -- it still lands in the
+            # fallback log below.
+            print(f"[survey] Sheets append failed, response saved to local log only: {e}", flush=True)
     with SURVEY_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
-    # Render's own filesystem is ephemeral -- this process has no persistent
-    # disk mounted (see render.yaml), so SURVEY_FILE alone is wiped on every
-    # redeploy/restart there, even though it's durable for local dev. Also
-    # logging each response to stdout means it survives in Render's own log
-    # retention independent of the container's disk -- the real durable copy
-    # on the live site until a persistent disk (or an external store) is
-    # wired up instead.
     print(f"[survey] {json.dumps(record)}", flush=True)
     return {"ok": True}
 
