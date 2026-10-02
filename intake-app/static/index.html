@@ -386,7 +386,7 @@ function pauseSession() {
   sessionPaused = true;
   pauseBtn.classList.add('inactive');
   pauseBtn.title = 'Resume';
-  skipRequested = true; // suppress any reply audio that's still in flight from starting once it lands
+  endReplyCycle(); // aborts any in-flight reply/TTS and releases the barge-in monitor's mic stream too, not just the turn recorder below
   audioEl.pause();
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     discardNextStop = true;
@@ -507,7 +507,7 @@ let partialTurnId = 0;
 let partialInFlight = false;
 let partialSentSamples = 0;
 let lastPartialText = '';
-let partialInFlightPromise = null; // the in-flight partial request itself, so a stop that lands mid-request can await and reuse it instead of discarding it
+let partialInFlightPromise = null; // the in-flight partial request itself -- getFinalTranscript no longer awaits this (see its own comment on why), kept only so maybeSendPartial can avoid firing an overlapping second call
 let pendingTranscriptEl = null;
 const PARTIAL_MIN_NEW_SAMPLES_SEC = 1.0; // don't re-transcribe for every tiny sliver of new audio
 const PARTIAL_MIN_TOTAL_SEC = 0.6; // clips shorter than this transcribe to noise, not worth sending
@@ -631,17 +631,21 @@ function mergeTranscripts(base, tail) {
 }
 
 async function getFinalTranscript(blob) {
-  if (partialInFlight && partialInFlightPromise) {
-    // A partial was still mid-request when the turn ended -- awaiting the
-    // SAME in-flight request costs nothing extra and gives us a real base
-    // to tail-patch from, rather than discarding real progress and
-    // starting a second, redundant full-clip transcription.
-    const inFlightResult = await partialInFlightPromise;
-    if (inFlightResult) {
-      lastPartialText = inFlightResult.text;
-      partialSentSamples = inFlightResult.sentSamples;
-    }
-  }
+  // Deliberately does NOT await an in-flight partial anymore. Every partial
+  // call re-transcribes the WHOLE clip so far (see maybeSendPartial's own
+  // comment on why), so on anything but a short turn, the in-flight one is
+  // the single most expensive Whisper call of the entire exchange --
+  // confirmed live via server-side timing, regularly costing 2-3s+ right
+  // when it was blocking the reply from even starting. lastPartialText and
+  // partialSentSamples already hold the PREVIOUS completed partial's
+  // result at this exact moment (partialSentSamples is bumped synchronously
+  // the instant a new partial call starts, before it's awaited -- see
+  // maybeSendPartial -- so it's already the correct cut point even with
+  // one in flight right now). Using those directly means finalize always
+  // does exactly one bounded tail-patch call, same cost every time,
+  // instead of sometimes blocking on a full-clip re-transcription. Any
+  // partial still in flight is simply left to finish on its own; its
+  // result is never used for finalization.
   const allSamples = concatFloat32(pcmChunks);
   const newSamples = allSamples.length - partialSentSamples;
   if (!lastPartialText || newSamples > allSamples.length) {
@@ -743,10 +747,11 @@ const THIMBLE_SHAPES = {
   listening:   {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   idle:        {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   thinking:    {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
-  // Same look as thinking (reply text has already arrived -- there's
-  // nothing left to think about) but a distinct state so the status label
-  // can say "Getting ready to talk..." instead of the misleading
-  // "Thinking..." during the separate TTS round trip. See speakReply().
+  // Same look as thinking. Defined for STATE_WORDS/CHAT_STATUS completeness
+  // but not currently reached -- TTS now starts per-sentence, concurrently
+  // with the rest of the reply still generating (see the sentence-streamed
+  // TTS section), so there's no longer a distinct "reply text arrived,
+  // now waiting on voice" gap between 'thinking' and 'talking' to label.
   synthesizing: {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
   // Same look again -- distinct state so the real transcription step (a
   // couple seconds) doesn't share a label with the Claude reply wait
@@ -862,36 +867,11 @@ function updateThimbleMotion(inst, now, level, listening) {
 // most of it has actually been said. A single long sentence still gets
 // split further on clause breaks so no one chunk sits on screen too long.
 const captionEl = document.getElementById('caption');
+// One queued sentence (see the sentence-streamed TTS section below) at a
+// time -- each playing audio clip IS exactly one sentence now, so the
+// caption is just that sentence, no proportional within-clip timing to
+// estimate the way a single whole-reply audio file used to need.
 let captionChunks = [];
-let captionStarts = [];
-
-function splitCaptionChunks(text) {
-  const sentences = (text || '').replace(/\s+/g, ' ').trim().split(/(?<=[.!?])\s+/).filter(Boolean);
-  const chunks = [];
-  for (const s of sentences) {
-    if (s.length <= 90) { chunks.push(s); continue; }
-    const clauses = s.split(/(?<=[,;:])\s+/);
-    let cur = '';
-    for (const c of clauses) {
-      if (cur && (cur + ' ' + c).length > 90) { chunks.push(cur); cur = c; }
-      else { cur = cur ? cur + ' ' + c : c; }
-    }
-    if (cur) chunks.push(cur);
-  }
-  return chunks;
-}
-
-function computeCaptionStarts() {
-  if (!captionChunks.length || !isFinite(audioEl.duration) || audioEl.duration <= 0) return;
-  const lens = captionChunks.map(c => c.length);
-  const total = lens.reduce((a, b) => a + b, 0) || 1;
-  let acc = 0;
-  captionStarts = lens.map((len) => {
-    const start = (acc / total) * audioEl.duration;
-    acc += len;
-    return start;
-  });
-}
 
 const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', paused: 'Paused', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Talking…', empathizing: 'Empathizing…'};
 const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', paused: 'Paused.', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
@@ -916,12 +896,7 @@ function updateCaption() {
     captionEl.textContent = '';
     return;
   }
-  if (captionStarts.length !== captionChunks.length) computeCaptionStarts();
-  let idx = 0;
-  for (let i = 0; i < captionStarts.length; i++) {
-    if (audioEl.currentTime >= captionStarts[i]) idx = i;
-  }
-  captionEl.textContent = captionChunks[idx] || '';
+  captionEl.textContent = captionChunks[0] || '';
 }
 
 function animateAvatar(now) {
@@ -942,89 +917,142 @@ function animateAvatar(now) {
   updateCaption();
 }
 
-audioEl.addEventListener('loadedmetadata', computeCaptionStarts);
 audioEl.addEventListener('play', () => { avatarState = 'talking'; });
 audioEl.addEventListener('pause', () => { if (avatarState === 'talking') avatarState = 'idle'; });
-audioEl.addEventListener('ended', () => {
-  if (avatarState === 'talking') avatarState = 'idle';
-  if (liveMode) startRecordingTurnSafe();
-});
+audioEl.addEventListener('ended', () => { advanceSpeechQueue(); });
 
-function playReplyAudio(url, text) {
-  captionChunks = splitCaptionChunks(text);
-  captionStarts = [];
-  if (!url) {
-    avatarState = 'idle';
-    if (liveMode) startRecordingTurnSafe(); // no TTS available -- nothing to wait for, listen now
-    return;
+// Sentence-streamed TTS. The old flow waited for the ENTIRE reply to finish
+// generating, then waited AGAIN for the ENTIRE thing to synthesize as one
+// /api/speak call, before any audio played at all -- for a ~60-word reply,
+// measured 6-9s of silence before Thimble's voice started even though the
+// text itself streamed in under 2s (reported live, comparing against typing
+// into Claude directly: "the response I get back is much faster than the
+// response Thimble is giving back"). This synthesizes and plays sentence by
+// sentence instead: each complete sentence gets its own /api/speak call
+// fired off immediately as Claude finishes it (concurrently with the rest
+// of the reply still generating), and playback starts as soon as the
+// FIRST sentence's audio comes back, not the last one. Sentences play
+// back-to-back in order off a single queue, reusing the one `audioEl` (and
+// its one WebAudio analyser graph -- a MediaElementSource can only ever be
+// attached to an element once, so this deliberately never creates a second
+// Audio() per sentence).
+let speechItems = [];         // [{text, url, ready}] in order
+let speechConsumedLen = 0;    // how much of the growing reply text has already been split into queued sentences
+let speechPlayIndex = 0;      // next item in speechItems due to play
+let speechPlaying = false;
+let speechStreamDone = false; // true once the reply's text stream (plus the trailing-fragment flush) are both done -- no more sentences are coming
+let speechCycleGen = null;    // snapshot of replyGen this queue belongs to; every function below checks it against the live replyGen so a stale queue (superseded by an interrupt, skip, or new reply) silently stops instead of racing
+let speechAbortController = null;
+
+function resetSpeechQueue(myGen) {
+  speechItems = [];
+  speechConsumedLen = 0;
+  speechPlayIndex = 0;
+  speechPlaying = false;
+  speechStreamDone = false;
+  speechCycleGen = myGen;
+  speechAbortController = new AbortController();
+}
+
+// Splits any newly-complete sentences out of the growing reply text,
+// leaving a trailing partial fragment (no terminal punctuation yet)
+// unconsumed until more text arrives. Call once more with final=true after
+// the reply stream itself finishes, to flush whatever's left as the final
+// sentence regardless of punctuation.
+function extractCompleteSentences(fullText, consumedLen) {
+  const re = /[.!?]+(?:["')\]]*)(\s+)/g;
+  re.lastIndex = consumedLen;
+  const sentences = [];
+  let lastEnd = consumedLen;
+  let m;
+  while ((m = re.exec(fullText)) !== null) {
+    const end = m.index + m[0].length;
+    sentences.push(fullText.slice(lastEnd, end).trim());
+    lastEnd = end;
   }
-  ensureAudioGraph();
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-  audioEl.src = apiPath(url);
-  audioEl.play().catch(() => {
-    // Autoplay can be blocked before the first user gesture (e.g. Voice
-    // mode auto-starts listening on load, so Thimble's very first reply
-    // has no gesture to ride on). The 'play' event never fires in that
-    // case, so avatarState would otherwise stay stuck on 'synthesizing'
-    // (or 'thinking', if speakReply's own state change above didn't run)
-    // forever -- fall back the same way 'ended' does.
-    if (avatarState === 'thinking' || avatarState === 'synthesizing' || avatarState === 'talking') avatarState = 'idle';
-    if (liveMode) startRecordingTurnSafe();
+  return {sentences, consumedLen: lastEnd};
+}
+
+function feedSpeechText(fullText, final) {
+  if (speechCycleGen !== replyGen) return;
+  const {sentences, consumedLen} = extractCompleteSentences(fullText, speechConsumedLen);
+  speechConsumedLen = consumedLen;
+  sentences.forEach(queueSentence);
+  if (final) {
+    const trailing = fullText.slice(speechConsumedLen).trim();
+    speechConsumedLen = fullText.length;
+    if (trailing) queueSentence(trailing);
+    speechStreamDone = true;
+    maybeAdvancePlayback(); // the queue may already be empty and just waiting on this flag
+  }
+}
+
+function queueSentence(text) {
+  if (!text) return;
+  const myGen = speechCycleGen;
+  const item = {text, url: null, ready: false};
+  speechItems.push(item);
+  fetch(apiPath('/api/speak'), {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text}),
+    signal: speechAbortController ? speechAbortController.signal : undefined,
+  }).then(res => res.json()).then(data => {
+    if (myGen !== replyGen) return;
+    item.url = data.audio_url || null;
+    item.ready = true;
+    maybeAdvancePlayback();
+  }).catch(() => {
+    if (myGen !== replyGen) return;
+    item.ready = true; // TTS failed for just this one sentence -- skip it, don't block the rest of the queue
+    item.url = null;
+    maybeAdvancePlayback();
   });
 }
 
-// Reply text now arrives without audio (see server.py's facilitator_reply
-// docstring: TTS alone measured ~12-14s, previously bundled into one
-// blocking request with a misleading "transcribing..."/"responding..."
-// label the whole time). This fetches audio in a second round trip, not
-// awaited by callers, so the input re-enables as soon as text arrives
-// instead of waiting on voice too.
-// Skip button (mainly for testing -- a reply's TTS, including the opening
-// greeting, can run well past 30s on a long one) needs to both cancel a
-// still-in-flight /api/speak fetch and suppress its result if it resolves
-// right after the click anyway -- an AbortController alone isn't enough,
-// since the fetch can win that race by a few ms.
-let speakAbortController = null;
-let skipRequested = false;
-
-async function speakReply(text) {
-  if (!text) return;
-  // Skip can be clicked before this function is even called (still
-  // waiting on the reply *text*, not yet at the TTS stage) -- in that
-  // case skipRequested is already true by the time we get here, set by
-  // the click handler, and nothing in this function should run at all.
-  // Each new turn clears it at its own avatarState='thinking' point
-  // (sendText/onstop/start above), not here, specifically so a skip that
-  // arrives before this call isn't immediately wiped out by it.
-  if (skipRequested) return;
-  // The reply text has already arrived by this point -- there's nothing
-  // left to "think" about, just TTS synthesis left to wait on. Reusing
-  // 'thinking' here (as this used to) made that wait look identical to
-  // composing the reply itself, which read as nothing happening.
-  if (avatarState === 'thinking') avatarState = 'synthesizing';
-  statusEl.textContent = 'generating voice...';
-  speakAbortController = new AbortController();
-  let audioUrl = null;
-  try {
-    const res = await fetch(apiPath('/api/speak'), {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text}),
-      signal: speakAbortController.signal,
-    });
-    const data = await res.json();
-    audioUrl = data.audio_url || null;
-  } catch (e) {
-    // aborted via skip, or genuinely no audio -- either way fall through;
-    // the skipRequested check below handles the skip case specifically
+function maybeAdvancePlayback() {
+  if (speechCycleGen !== replyGen || speechPlaying) return;
+  const item = speechItems[speechPlayIndex];
+  if (!item) {
+    if (speechStreamDone) finishSpeechCycle();
+    return;
   }
-  if (statusEl.textContent === 'generating voice...') statusEl.textContent = '';
-  if (skipRequested) return; // the click handler already moved on; don't also start playing audio
-  playReplyAudio(audioUrl, text);
+  if (!item.ready) return; // still waiting on this sentence's TTS -- maybeAdvancePlayback() runs again once it resolves
+  speechPlaying = true;
+  playSpeechItem(item);
+}
+
+function playSpeechItem(item) {
+  captionChunks = [item.text];
+  if (!item.url) { advanceSpeechQueue(); return; } // nothing to play for this one (TTS unavailable/failed) -- move straight to the next
+  ensureAudioGraph();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  avatarState = 'talking';
+  audioEl.src = apiPath(item.url);
+  audioEl.play().catch(() => {
+    // Autoplay can be blocked before the first user gesture (e.g. Voice
+    // mode auto-starts listening on load, so Thimble's very first reply
+    // has no gesture to ride on) -- the 'play' event never fires in that
+    // case. Fall back the same way 'ended' does instead of stalling the
+    // whole queue on one blocked sentence.
+    advanceSpeechQueue();
+  });
+}
+
+function advanceSpeechQueue() {
+  if (speechCycleGen !== replyGen) return;
+  speechPlayIndex++;
+  speechPlaying = false;
+  maybeAdvancePlayback();
+}
+
+function finishSpeechCycle() {
+  if (avatarState === 'talking') avatarState = 'idle';
+  endReplyCycle();
+  if (liveMode) startRecordingTurnSafe();
 }
 
 skipIntroBtn.addEventListener('click', () => {
-  skipRequested = true;
-  if (speakAbortController) speakAbortController.abort();
+  endReplyCycle();
   audioEl.pause();
   audioEl.src = '';
   captionEl.textContent = '';
@@ -1085,11 +1113,12 @@ function handleSignal(signal) {
 // directly, no manual concatenation needed. Resolves to {reply, signal},
 // matching the shape the old one-shot /api/message JSON response had, so
 // call sites barely change.
-async function streamFacilitatorReply(text, onDelta) {
+async function streamFacilitatorReply(text, onDelta, abortSignal) {
   const res = await fetch(apiPath('/api/message/stream'), {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({text}),
+    signal: abortSignal,
   });
   if (!res.ok || !res.body) {
     let msg = `request failed (${res.status})`;
@@ -1135,7 +1164,10 @@ async function sendText() {
   addMessage(text, 'employee');
   setBusy(true);
   avatarState = 'thinking';
-  skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
+  const myGen = ++replyGen;
+  startInterruptMonitor(myGen);
+  resetSpeechQueue(myGen);
+  replyAbortController = new AbortController();
   let replyBubble = null;
   try {
     const {reply, signal} = await streamFacilitatorReply(text, (partial) => {
@@ -1147,12 +1179,15 @@ async function sendText() {
       if (replyBubble.chatBubble) replyBubble.chatBubble.textContent = partial;
       thread.scrollTop = thread.scrollHeight;
       chatThread.scrollTop = chatThread.scrollHeight;
-    });
+      feedSpeechText(partial, false);
+    }, replyAbortController.signal);
     handleSignal(signal);
-    speakReply(reply);
+    feedSpeechText(reply, true);
   } catch (e) {
+    if (myGen !== replyGen) return; // cut off by a barge-in interrupt; already handled there
     statusEl.textContent = 'error: ' + e.message;
     avatarState = 'idle';
+    endReplyCycle();
   } finally {
     setBusy(false);
   }
@@ -1211,7 +1246,7 @@ let liveMode = false;
 // immediately gets a threshold near their own volume, risking an early
 // mid-word cutoff) is far cheaper than a recording that never stops.
 const VAD_THRESHOLD = 0.06;
-const VAD_SILENCE_MS = 2600; // was 1800 -- reported live as a real turn ending after only ~3.9s of a longer thought ("cut off in the middle of me talking"), a natural reflective pause (common when describing a workplace conflict) outlasting the old grace window. Raised at the cost of a slightly longer wait after you're genuinely done talking before Thimble responds.
+const VAD_SILENCE_MS = 1400; // was 500, before that 1000/2600/1800. 500ms (pushed close to the ~200ms natural human gap specifically because barge-in existed to recover a wrong guess) was reported live as cutting off and starting to transcribe before the user was actually done, repeatedly, badly enough that the barge-in recovery wasn't making up for it -- a real turn getting cut this early isn't a brief mid-thought pause, it's genuinely still-talking. Raised partway back; still well under the original 2600/1800ms, and barge-in still covers whatever this misjudges.
 const VAD_MIN_SPEECH_MS = 500;
 const VAD_CALIBRATION_MS = 400;
 const VAD_MAX_TURN_MS = 60000; // hard backstop, independent of VAD: no single turn should ever record this long uninterrupted (a real 290s clip happened once already, starving the whole server's CPU) -- force-ends the turn regardless of what's confusing the silence detection
@@ -1274,6 +1309,94 @@ function checkVad(level, now) {
   }
 }
 
+// Barge-in. The turn recorder's own mic stream closes the moment a turn
+// ends (mediaRecorder.onstop stops its tracks) and stays closed through
+// transcribing/thinking/synthesizing/talking -- lowering VAD_SILENCE_MS
+// above means that window now starts sooner and more often on a pause that
+// wasn't really the end of a thought. This opens a second, independent mic
+// stream for just that window and watches for the user talking again; if
+// they do, it cancels whatever Thimble is doing (TTS fetch, reply stream,
+// playback) and goes straight back to listening, same as a real
+// conversation interrupt.
+//
+// replyGen is the guard against races: every reply cycle grabs the current
+// value with ++replyGen before starting, and the monitor's own loop (plus
+// the stream-fetch callers) recheck it before acting. Whichever path ends
+// the cycle first -- a real interrupt, or the reply finishing normally --
+// bumps it, so the other path's next check sees it's stale and backs off
+// instead of double-handling the same turn.
+let interruptStream = null, interruptAnalyser = null, interruptData = null, interruptCtx = null;
+let interruptAboveSince = null;
+let replyGen = 0;
+const INTERRUPT_MIN_MS = 300; // sustained speech required, not a cough/click/chair creak
+let replyAbortController = null;
+
+function stopInterruptMonitor() {
+  if (interruptStream) interruptStream.getTracks().forEach(t => t.stop());
+  interruptStream = null;
+  interruptAnalyser = null;
+  interruptData = null;
+  if (interruptCtx) interruptCtx.close().catch(() => {});
+  interruptCtx = null;
+  interruptAboveSince = null;
+}
+
+// Call once at the start of a reply cycle (text submit or voice turn
+// finalize). No-op outside live voice mode -- text-only chat has no mic
+// armed and shouldn't grab one just to watch for an interrupt.
+async function startInterruptMonitor(myGen) {
+  if (!liveMode || micMuted || sessionPaused) return;
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio: true});
+  } catch (e) {
+    return; // no mic access -- no barge-in this turn, nothing else breaks
+  }
+  if (myGen !== replyGen) { stream.getTracks().forEach(t => t.stop()); return; }
+  interruptStream = stream;
+  interruptCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const source = interruptCtx.createMediaStreamSource(interruptStream);
+  interruptAnalyser = interruptCtx.createAnalyser();
+  interruptAnalyser.fftSize = 256;
+  interruptData = new Uint8Array(interruptAnalyser.frequencyBinCount);
+  source.connect(interruptAnalyser);
+  const threshold = vadThreshold || VAD_THRESHOLD;
+  const tick = () => {
+    if (myGen !== replyGen || !interruptAnalyser) return; // cycle ended elsewhere -- monitor already torn down
+    if (!liveMode || micMuted || sessionPaused) { stopInterruptMonitor(); return; }
+    const level = rmsLevel(interruptAnalyser, interruptData);
+    const now = performance.now();
+    if (level > threshold) {
+      if (interruptAboveSince === null) interruptAboveSince = now;
+      if (now - interruptAboveSince >= INTERRUPT_MIN_MS) { interruptNow(myGen); return; }
+    } else {
+      interruptAboveSince = null;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function interruptNow(myGen) {
+  if (myGen !== replyGen) return;
+  endReplyCycle();
+  audioEl.pause();
+  avatarState = 'idle';
+  startRecordingTurnSafe();
+}
+
+// Call at every end of a reply cycle -- a real interrupt, TTS finishing
+// playing, no TTS available, autoplay blocked, skip clicked, pause, or a
+// real error -- so the monitor releases its mic, any in-flight
+// /api/message/stream or /api/speak calls for this cycle are cancelled,
+// and future checks against replyGen see a stale value and back off.
+function endReplyCycle() {
+  replyGen++;
+  stopInterruptMonitor();
+  if (replyAbortController) replyAbortController.abort();
+  if (speechAbortController) speechAbortController.abort();
+}
+
 async function startRecordingTurnSafe() {
   // For live mode's own auto-continue points: if the mic fails partway
   // through a conversation (permission revoked, device unplugged, another
@@ -1319,8 +1442,8 @@ async function startRecordingTurn() {
     pendingTranscriptEl = null;
     setBusy(true);
     avatarState = 'transcribing';
-    skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
     statusEl.textContent = 'transcribing...';
+    let myGen = null; // set once the reply cycle (post-transcription) actually starts; null means any catch below is a transcription failure, not an interrupted reply
     try {
       // Finalizing reuses the last partial transcript plus a tail-patch of
       // just the new audio since then, instead of re-transcribing the
@@ -1348,6 +1471,10 @@ async function startRecordingTurn() {
       }
       avatarState = 'thinking';
       statusEl.textContent = 'thimble is responding...';
+      myGen = ++replyGen;
+      startInterruptMonitor(myGen);
+      resetSpeechQueue(myGen);
+      replyAbortController = new AbortController();
       let replyBubble = null;
       const {reply, signal} = await streamFacilitatorReply(transcript, (partial) => {
         if (statusEl.textContent === 'thimble is responding...') statusEl.textContent = '';
@@ -1355,12 +1482,15 @@ async function startRecordingTurn() {
         replyBubble.textContent = partial;
         if (replyBubble.chatBubble) replyBubble.chatBubble.textContent = partial;
         thread.scrollTop = thread.scrollHeight;
-      });
+        feedSpeechText(partial, false);
+      }, replyAbortController.signal);
       handleSignal(signal);
-      speakReply(reply);
+      feedSpeechText(reply, true);
     } catch (e) {
+      if (myGen !== null && myGen !== replyGen) return; // cut off by a barge-in interrupt; already handled there
       statusEl.textContent = 'error: ' + e.message;
       avatarState = 'idle';
+      if (myGen !== null) endReplyCycle();
       if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); }
       employeeCaption.textContent = '';
       if (liveMode) startRecordingTurnSafe();
@@ -1391,10 +1521,10 @@ async function startRecordingTurn() {
 // started, and it said it was transcribing while still talking" was.
 // armLiveMode() only flips the live-mode flag/UI; it deliberately does NOT
 // touch the mic. The actual startRecordingTurn() call is deferred to
-// whichever of these fires first: the reply's TTS audio finishing
-// ('ended' below), TTS failing outright (playReplyAudio's `!url` branch),
-// or autoplay being blocked (playReplyAudio's catch) -- all three already
-// call startRecordingTurnSafe() once liveMode is true.
+// finishSpeechCycle(), reached once the sentence queue finishes playing,
+// has nothing to play for a sentence, or never gets anything queued at
+// all -- all paths already call startRecordingTurnSafe() once liveMode is
+// true.
 function armLiveMode() {
   if (liveMode) return;
   liveMode = true;
@@ -1502,7 +1632,9 @@ videoEndBtn.addEventListener('click', endVideoCall);
 async function start() {
   setBusy(true);
   avatarState = 'thinking';
-  skipRequested = false; // a fresh turn started -- clear any earlier skip so it doesn't suppress this one's TTS
+  const myGen = ++replyGen;
+  startInterruptMonitor(myGen);
+  resetSpeechQueue(myGen);
   try {
     // No mode param -- there's no mode selector anymore. Which track
     // applies (employee conflict vs. manager coaching) is something the
@@ -1516,7 +1648,7 @@ async function start() {
     if (data.reply) {
       addMessage(data.reply, 'facilitator');
       handleSignal(data.signal);
-      speakReply(data.reply);
+      feedSpeechText(data.reply, true);
     } else {
       // /api/start is a no-op once `conversation` is already non-empty
       // server-side (e.g. a reload, or a second tab, after the session's
@@ -1541,9 +1673,10 @@ async function start() {
         }
       } catch (e) {}
       avatarState = 'idle';
+      endReplyCycle(); // this branch never gets a reply to speak -- release the monitor/queue this call just armed above
       // Resuming (this branch) never gets a fresh reply to speak, so
-      // none of speakReply/playReplyAudio's own "start listening once
-      // we're done talking" paths ever fire here -- armLiveMode() (called
+      // none of the sentence-queue's own "start listening once we're
+      // done talking" paths ever fire here -- armLiveMode() (called
       // by our caller right after this) only arms liveMode/the UI, it
       // doesn't grab the mic by itself. Without this, a resumed session
       // showed "Listening..." and the live timer running while the mic
@@ -1561,6 +1694,7 @@ const resetBtn = document.getElementById('resetBtn');
 async function resetAndStart() {
   exitVoiceLive(); // stop the live loop before wiping state under it
   if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  endReplyCycle(); // tear down any in-flight reply/speech queue from before this reset
   audioEl.pause();
   audioEl.src = '';
   captionEl.textContent = '';

@@ -79,11 +79,21 @@ _rate_hits: dict[str, list[float]] = {}
 # confirmed live: a turn's partials ate the budget, then /api/message came
 # back 429 and Thimble never replied at all.
 RATE_LIMIT_EXEMPT_PATHS = {"/api/voice/partial"}
+# /api/audio/<filename> just serves an mp3/m4a this process already
+# generated and has sitting on disk -- zero marginal cost, same free-local
+# reasoning as /api/voice/partial above, but it's a dynamic per-file path so
+# the exact-match set above never matched it. Sentence-streamed TTS (see
+# static/index.html's queueSentence) now fetches several of these per
+# reply instead of one, so it hit the shared budget fast enough to get a
+# real audio clip 429'd mid-reply -- confirmed live.
+RATE_LIMIT_EXEMPT_PREFIXES = ("/api/audio/",)
 
 
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
-    if (request.url.path.startswith("/api/") or request.url.path.startswith("/chat/")) and request.url.path not in RATE_LIMIT_EXEMPT_PATHS:
+    path = request.url.path
+    exempt = path in RATE_LIMIT_EXEMPT_PATHS or path.startswith(RATE_LIMIT_EXEMPT_PREFIXES)
+    if (path.startswith("/api/") or path.startswith("/chat/")) and not exempt:
         ip = request.client.host if request.client else "unknown"
         now = time.time()
         hits = [t for t in _rate_hits.get(ip, []) if now - t < RATE_LIMIT_WINDOW]
@@ -94,16 +104,34 @@ async def rate_limit(request: Request, call_next):
     return await call_next(request)
 
 
+# A fresh httpx.post() opens a new connection (full TCP+TLS handshake)
+# every single call -- fine for one TTS call per reply, but now that
+# sentence-streamed TTS fires several /api/speak calls per reply (see
+# static/index.html's queueSentence), that handshake cost was paid again
+# and again. Measured live: a 16-char and a 224-char call both took
+# ~1.3-2s, barely different despite 14x the text -- almost entirely fixed
+# per-request overhead, not synthesis time. A persistent client reuses the
+# same keep-alive connection across calls instead.
+#
+# timeout=8, not 30: a real sentence-length call has never measured above
+# ~3s even at its worst in this session's own timing logs, so a call still
+# running past 8s is already hung, not just slow -- confirmed live, one
+# call sat for the full 30s before falling back to macOS `say`, directly
+# causing one of this turn's reported "took a long time" waits. Failing
+# fast here means a stuck OpenAI call costs 8s and a `say` fallback instead
+# of 30s and a `say` fallback -- same eventual outcome, much shorter stall.
+_openai_http_client = httpx.Client(timeout=8)
+
+
 def synthesize_speech_openai(text: str) -> str | None:
     """Speaks `text` with OpenAI's TTS, saves the returned mp3, and returns
     a URL path to fetch it. Returns None on any failure so the caller falls
     back to macOS `say`."""
     try:
-        resp = httpx.post(
+        resp = _openai_http_client.post(
             "https://api.openai.com/v1/audio/speech",
             headers={"Authorization": f"Bearer {OPENAI_API_KEY}"},
             json={"model": OPENAI_TTS_MODEL, "voice": OPENAI_TTS_VOICE, "input": text},
-            timeout=30,
         )
         resp.raise_for_status()
     except httpx.HTTPError:
@@ -211,6 +239,17 @@ def load_system_prompt() -> str:
 
 
 SYSTEM_PROMPT = load_system_prompt()
+# Claude's own prompt caching needs the system prompt as a content block with
+# an explicit cache_control breakpoint, not a plain string -- without this,
+# every single turn reprocesses the whole ~8k-token system prompt from
+# scratch before generating a single token of reply, which is the real gap
+# behind "the response I get back from Claude directly is much faster than
+# Thimble's" (reported live). A plain top-level system string is never
+# cached, no matter how many turns reuse the identical text. With this, only
+# the first turn in a conversation pays full cost; every later turn reuses
+# the cached prefix (5min TTL, refreshed on each hit) and only has to
+# process the new message on top of it.
+SYSTEM_PROMPT_BLOCKS = [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}]
 
 # In-memory conversation state -- a prototype, not a persistence layer.
 conversation: list[dict] = []
@@ -259,7 +298,7 @@ def facilitator_reply(synthesize: bool = False) -> dict:
         response = client.messages.create(
             model=MODEL,
             max_tokens=8192,
-            system=SYSTEM_PROMPT,
+            system=SYSTEM_PROMPT_BLOCKS,
             messages=conversation,
         )
     except Exception as e:
@@ -374,7 +413,7 @@ def stream_facilitator_reply(messages: list[dict]):
         with client.messages.stream(
             model=MODEL,
             max_tokens=8192,
-            system=SYSTEM_PROMPT,
+            system=SYSTEM_PROMPT_BLOCKS,
             messages=[m for m in messages if m.get("role") in ("user", "assistant")],
         ) as stream:
             for delta in stream.text_stream:
@@ -497,14 +536,18 @@ def stream_message_reply():
     full_text = ""
     flushed_len = 0
     signal_started = False
+    t0 = time.time()
+    t_first_token = None
     try:
         with client.messages.stream(
             model=MODEL,
             max_tokens=8192,
-            system=SYSTEM_PROMPT,
+            system=SYSTEM_PROMPT_BLOCKS,
             messages=conversation,
         ) as stream:
             for delta in stream.text_stream:
+                if t_first_token is None:
+                    t_first_token = time.time()
                 full_text += delta
                 if signal_started:
                     continue
@@ -519,6 +562,19 @@ def stream_message_reply():
                 if safe_len > flushed_len:
                     yield _sse({"text": full_text[flushed_len:safe_len]})
                     flushed_len = safe_len
+            # Diagnostic only (reported live: "still took a long time" after
+            # prompt caching was added) -- logs to stdout, not sent to the
+            # client, so it's visible via `preview_logs`/the terminal without
+            # changing anything the frontend sees. Confirms or rules out a
+            # cache miss as the actual cause of a given slow turn.
+            final = stream.get_final_message()
+            u = final.usage
+            print(
+                f"[timing] /api/message/stream: first_token={t_first_token - t0:.2f}s "
+                f"total={time.time() - t0:.2f}s cache_read={getattr(u, 'cache_read_input_tokens', None)} "
+                f"cache_creation={getattr(u, 'cache_creation_input_tokens', None)} input={u.input_tokens}",
+                flush=True,
+            )
     except Exception as e:
         conversation.pop()
         yield _sse({"error": f"server error calling Claude: {e}"})
@@ -589,7 +645,13 @@ async def speak(payload: dict):
     text = (payload.get("text") or "").strip()
     if not text:
         return JSONResponse({"error": "empty text"}, status_code=400)
-    return {"audio_url": await run_in_threadpool(synthesize_speech, text)}
+    t0 = time.time()
+    url = await run_in_threadpool(synthesize_speech, text)
+    # Diagnostic only (reported live: still slow after prompt caching and
+    # sentence-streamed TTS both landed) -- stdout only, see stream_message_reply's
+    # own timing log for the matching Claude-side half of this.
+    print(f"[timing] /api/speak: {time.time() - t0:.2f}s for {len(text)} chars: {text[:60]!r}", flush=True)
+    return {"audio_url": url}
 
 
 @app.post("/api/reset")
