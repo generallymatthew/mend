@@ -827,6 +827,14 @@ async def submit_survey(request: Request):
     }
     with SURVEY_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
+    # Render's own filesystem is ephemeral -- this process has no persistent
+    # disk mounted (see render.yaml), so SURVEY_FILE alone is wiped on every
+    # redeploy/restart there, even though it's durable for local dev. Also
+    # logging each response to stdout means it survives in Render's own log
+    # retention independent of the container's disk -- the real durable copy
+    # on the live site until a persistent disk (or an external store) is
+    # wired up instead.
+    print(f"[survey] {json.dumps(record)}", flush=True)
     return {"ok": True}
 
 
