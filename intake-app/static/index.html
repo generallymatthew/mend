@@ -84,7 +84,7 @@
      at the stage's top-left (see .stage-top-left), the Voice/Text toggle
      at top-right (see .stage-top-right). */
   .caption-stack{position:absolute; left:28px; right:28px; bottom:24px; display:flex; justify-content:center;}
-  .caption{max-width:720px; font-size:clamp(17px,1.6vw,22px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
+  .caption{max-width:480px; font-size:clamp(15px,1.1vw,18px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
   .stage-top-left{position:absolute; top:16px; left:16px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; z-index:2;}
   .stage-top-right{position:absolute; top:16px; right:16px; z-index:2;}
   /* State pill ("Thimble Listening...") sits directly under the avatar
@@ -1033,11 +1033,30 @@ function updateThimbleMotion(inst, now, level, listening) {
 // most of it has actually been said. A single long sentence still gets
 // split further on clause breaks so no one chunk sits on screen too long.
 const captionEl = document.getElementById('caption');
-// One queued sentence (see the sentence-streamed TTS section below) at a
-// time -- each playing audio clip IS exactly one sentence now, so the
-// caption is just that sentence, no proportional within-clip timing to
-// estimate the way a single whole-reply audio file used to need.
+// One queued sentence (see the sentence-streamed TTS section below) is one
+// playing audio clip, but a long sentence (e.g. with a clause break) still
+// reads as a wall of text if shown all at once -- reported live as
+// subtitles letting people "read ahead" instead of following along with
+// speech, the opposite of how real captions should feel. Split each
+// sentence into short, line-sized parts and step through them using the
+// REAL clip's own currentTime/duration -- more accurate than the old
+// (deleted) whole-reply proportional-character-count estimate, since this
+// is driven by the actual audio actually playing right now, not a guess
+// at total reply timing.
 let captionChunks = [];
+const CAPTION_MAX_CHARS = 42; // targets ~1-2 lines in the caption box at the smaller font size below
+function splitCaptionParts(text) {
+  const words = text.trim().split(/\s+/);
+  const parts = [];
+  let cur = '';
+  for (const w of words) {
+    const next = cur ? cur + ' ' + w : w;
+    if (cur && next.length > CAPTION_MAX_CHARS) { parts.push(cur); cur = w; }
+    else cur = next;
+  }
+  if (cur) parts.push(cur);
+  return parts.length ? parts : [text];
+}
 
 const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', paused: 'Paused', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Talking…', empathizing: 'Empathizing…'};
 const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', paused: 'Paused.', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
@@ -1062,7 +1081,11 @@ function updateCaption() {
     captionEl.textContent = '';
     return;
   }
-  captionEl.textContent = captionChunks[0] || '';
+  if (captionChunks.length === 1) { captionEl.textContent = captionChunks[0] || ''; return; }
+  const dur = audioEl.duration;
+  const frac = (dur && isFinite(dur) && dur > 0) ? Math.min(1, audioEl.currentTime / dur) : 0;
+  const idx = Math.min(captionChunks.length - 1, Math.floor(frac * captionChunks.length));
+  captionEl.textContent = captionChunks[idx];
 }
 
 function animateAvatar(now) {
@@ -1189,7 +1212,7 @@ function maybeAdvancePlayback() {
 }
 
 function playSpeechItem(item) {
-  captionChunks = [item.text];
+  captionChunks = splitCaptionParts(item.text);
   if (!item.url) { advanceSpeechQueue(); return; } // nothing to play for this one (TTS unavailable/failed) -- move straight to the next
   ensureAudioGraph();
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
