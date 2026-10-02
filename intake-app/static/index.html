@@ -134,7 +134,15 @@
      a 16px gap -- positioned relative to .call-main now (see its own
      comment at the markup), so this sits just above the control bar in the
      card's real bottom-right corner, not .stage's content-driven one. */
-  .you-tile{position:absolute; right:20px; bottom:108px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden; z-index:2;}
+  .you-tile{position:absolute; right:20px; bottom:108px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden; z-index:2; transition:border-color 80ms linear, box-shadow 80ms linear;}
+  /* Reported live: the only "yes, the app can hear you" feedback was the
+     employee-circle's own 1.08x scale -- 48px, easy to miss entirely next
+     to everything else on screen. A border + glow around the WHOLE tile
+     is the same "active speaker" treatment real video-call UIs use
+     (Zoom/Meet highlight the speaking tile's frame, not just their
+     avatar), unmissable at a glance instead of requiring you to be
+     looking right at the small circle. */
+  .you-tile.lit{border-color:#E9B949; box-shadow:0 0 0 3px #E9B94966;}
   .you-tile-avatar-wrap{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
   .you-tile-label-row{position:absolute; left:10px; bottom:8px;}
   .you-tile-label{font-size:12px; font-weight:600; color:var(--ink-soft);}
@@ -379,6 +387,7 @@ const statusEl = document.getElementById('status');
 const micIndicator = document.getElementById('micIndicator');
 const micIndicatorDot = document.getElementById('micIndicatorDot');
 const employeeCircle = document.getElementById('employeeCircle');
+const employeeTile = document.getElementById('employeeTile');
 const employeeCaption = document.getElementById('employeeCaption');
 const youMuteIcon = document.getElementById('youMuteIcon');
 const transcriptPanel = document.getElementById('transcriptPanel');
@@ -490,7 +499,7 @@ muteBtn.addEventListener('click', () => {
   muteBtn.classList.toggle('inactive', micMuted);
   muteBtn.querySelector('.slash').style.display = micMuted ? '' : 'none';
   youMuteIcon.hidden = !micMuted;
-  if (micMuted) { employeeCircle.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
+  if (micMuted) { employeeCircle.classList.remove('lit'); employeeTile.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
 });
 
 let liveTimerInterval = null, liveSeconds = 0;
@@ -1071,6 +1080,7 @@ function animateAvatar(now) {
   if (recording) {
     micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
     employeeCircle.classList.toggle('lit', level > VAD_THRESHOLD);
+    employeeTile.classList.toggle('lit', level > VAD_THRESHOLD);
     if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage
     if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
   }
@@ -1595,6 +1605,7 @@ async function startRecordingTurn() {
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
     employeeCircle.classList.remove('lit');
+    employeeTile.classList.remove('lit');
     if (discardNextStop) {
       // Pause fired mid-turn -- this stop is a hard abort, not a real end
       // of speech. Nothing was actually finished, so there's nothing to
