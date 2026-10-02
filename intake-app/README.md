@@ -52,6 +52,33 @@ OPENAI_API_KEY=sk-...
 
 That's it: `synthesize_speech` tries OpenAI's TTS (`gpt-4o-mini-tts`) first when the key is set, and only falls back to `say` if that call fails. Pick a different built-in voice with `OPENAI_TTS_VOICE` in `.env` (default `alloy`; also available: `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse`, `marin`, `cedar`).
 
+## Streaming STT (Deepgram), replacing local-Whisper VAD/partials
+
+By default, voice turns use local `faster-whisper` plus a client-side silence
+timer (VAD) to guess when you've stopped talking -- see "Live conversation"
+below. Add a Deepgram key to `.env` to switch to real streaming transcription
+instead:
+
+```
+DEEPGRAM_API_KEY=...
+```
+
+With that set, the browser streams raw mic audio to the server over a
+WebSocket (`/ws/voice`), which relays it straight through to Deepgram's live
+API and forwards transcripts back. Deepgram's own server-side endpointing
+(from the real audio, not a fixed client-side silence timer) decides when a
+turn ends, so there's no more guessing at `VAD_SILENCE_MS`, and the turn's
+transcript is already fully available the instant it ends -- no separate
+transcription round trip, no VAD cutoff/false-trigger tuning. Without a key,
+`/api/voice/config` reports `deepgram: false` and the frontend falls back to
+the local-Whisper path entirely, unchanged -- this is additive, not a
+replacement for the OPENAI_API_KEY-free, fully-local setup above it.
+
+Not yet verified with real speech/a real mic in this environment (same
+sandboxed-browser limitation as the rest of Voice view, see STATUS.md) --
+verified only that the relay correctly refuses a connection when no key is
+set and that the rest of the app is unaffected either way.
+
 ## Live conversation (hands-free)
 
 The "Go live" button next to the mic turns voice memo's click-to-record/click-to-stop into an automatic loop: it listens, detects when you've stopped talking (voice-activity detection on your mic volume, not a real speech model), sends and gets a reply, plays it back, then starts listening again on its own. Click "End live conversation" to leave the loop.

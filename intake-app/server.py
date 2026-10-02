@@ -14,6 +14,7 @@ Run:
     export ANTHROPIC_API_KEY=...   # your own key, set in your shell/.env, never pasted into chat
     uvicorn server:app --reload --port 8420
 """
+import asyncio
 import json
 import os
 import re
@@ -24,9 +25,10 @@ import uuid
 from pathlib import Path
 
 import httpx
+import websockets
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, UploadFile
+from fastapi import FastAPI, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -48,6 +50,20 @@ OPENAI_TTS_VOICE = os.environ.get("OPENAI_TTS_VOICE", "alloy")
 # not a strict improvement -- override with OPENAI_TTS_MODEL if the more
 # natural voice matters more than speed for what you're testing.
 OPENAI_TTS_MODEL = os.environ.get("OPENAI_TTS_MODEL", "tts-1")
+
+# Optional streaming STT via Deepgram, replacing the local-Whisper VAD/partial
+# pipeline (/api/voice/partial, the client's maybeSendPartial/getFinalTranscript)
+# with a server-relayed WebSocket to Deepgram's own live transcription, which
+# does endpointing (knowing when a turn ended) server-side instead of the
+# client's own fixed-silence-timer VAD. Scoped in STATUS.md as the next real
+# lever on voice latency: local Whisper's per-call overhead (1.7-3.4s on this
+# machine, regardless of clip length) and the VAD silence-wait are the two
+# biggest remaining serial stages in a voice turn, and both go away at once
+# with this. Absent DEEPGRAM_API_KEY, /ws/voice refuses the connection and the
+# frontend falls back to the existing local-Whisper path entirely -- this is
+# additive, not a replacement, so a tester without a Deepgram key still gets
+# a working (just slower) voice path.
+DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
 
 # Optional video-avatar mode (Tavus Conversational Video Interface). All four
 # must be set -- see README.md's "Optional: video avatar" section for how to
@@ -332,6 +348,14 @@ async def video_enabled():
     return {"enabled": VIDEO_ENABLED}
 
 
+@app.get("/api/voice/config")
+async def voice_config():
+    """Tells the frontend whether /ws/voice (Deepgram streaming) is usable,
+    so it can pick that path over the local-Whisper VAD/partial pipeline
+    without hardcoding the choice client-side."""
+    return {"deepgram": bool(DEEPGRAM_API_KEY)}
+
+
 @app.post("/api/video/start")
 async def video_start():
     global video_conversation_id, latest_video_signal
@@ -598,6 +622,89 @@ async def post_message_stream(payload: dict):
         return JSONResponse({"error": "empty message"}, status_code=400)
     conversation.append({"role": "user", "content": text})
     return StreamingResponse(stream_message_reply(), media_type="text/event-stream")
+
+
+DEEPGRAM_URL = (
+    "wss://api.deepgram.com/v1/listen"
+    "?encoding=linear16&channels=1&model=nova-2"
+    "&interim_results=true&smart_format=true"
+    "&endpointing=500&utterance_end_ms=1500&vad_events=true"
+)
+
+
+@app.websocket("/ws/voice")
+async def ws_voice(websocket: WebSocket):
+    """Relays the browser's raw PCM16 mic stream straight through to
+    Deepgram's live streaming API and forwards Deepgram's transcript/
+    utterance events back as JSON -- replaces the local-Whisper
+    partial-transcription round trip (/api/voice/partial) and the client's
+    own fixed-silence VAD entirely when this path is active: Deepgram does
+    endpointing (knowing when a turn ended) server-side from the real audio
+    stream, not from a client-side timer guessing at silence. See
+    DEEPGRAM_API_KEY's own comment for why this is additive, not a
+    replacement, for anyone running without a Deepgram key.
+
+    Client protocol: connects with ?sample_rate=<hz> (the browser mic's own
+    native rate -- resampling client-side isn't needed, Deepgram takes any
+    rate you tell it), then sends raw Int16 PCM frames as binary WebSocket
+    messages (little-endian, mono) for the duration of one listening
+    session, and a close frame to end it. Server sends back
+    {"type": "transcript", "text": ..., "is_final": bool, "speech_final": bool}
+    per Deepgram result, and {"type": "utterance_end"} when Deepgram's own
+    VAD detects the turn ended with no further speech."""
+    await websocket.accept()
+    if not DEEPGRAM_API_KEY:
+        await websocket.close(code=1008, reason="Deepgram isn't configured on this server")
+        return
+    sample_rate = websocket.query_params.get("sample_rate", "16000")
+    url = f"{DEEPGRAM_URL}&sample_rate={sample_rate}"
+
+    try:
+        async with websockets.connect(url, additional_headers={"Authorization": f"Token {DEEPGRAM_API_KEY}"}) as dg:
+            async def browser_to_deepgram():
+                try:
+                    while True:
+                        chunk = await websocket.receive_bytes()
+                        await dg.send(chunk)
+                except WebSocketDisconnect:
+                    pass
+                finally:
+                    try:
+                        await dg.send(json.dumps({"type": "CloseStream"}))
+                    except websockets.exceptions.ConnectionClosed:
+                        pass
+
+            async def deepgram_to_browser():
+                async for raw in dg:
+                    msg = json.loads(raw)
+                    msg_type = msg.get("type")
+                    if msg_type == "Results":
+                        alt = msg.get("channel", {}).get("alternatives", [{}])[0]
+                        text = alt.get("transcript", "")
+                        if not text:
+                            continue
+                        await websocket.send_json({
+                            "type": "transcript",
+                            "text": text,
+                            "is_final": bool(msg.get("is_final")),
+                            "speech_final": bool(msg.get("speech_final")),
+                        })
+                    elif msg_type == "UtteranceEnd":
+                        await websocket.send_json({"type": "utterance_end"})
+
+            await asyncio.gather(browser_to_deepgram(), deepgram_to_browser())
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_json({"type": "error", "message": str(e)})
+        except Exception:
+            pass
+    finally:
+        try:
+            await websocket.close()
+        except RuntimeError:
+            pass  # already closed
 
 
 @app.post("/api/voice/partial")

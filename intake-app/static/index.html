@@ -501,6 +501,65 @@ function ensureAudioGraph() {
 // call, which already hands it raw browser-native-rate webm) -- no client-
 // side resampling needed, just a WAV header.
 let micProcessor = null;
+// Deepgram path (see deepgramEnabled above): a second WebSocket, one per
+// turn, fed the same raw PCM this ScriptProcessor already taps for the
+// local-Whisper path below -- both run in parallel so a mid-turn Deepgram
+// disconnect still has the Whisper pcmChunks to fall back to via
+// getFinalTranscript(). dgFinalText accumulates Deepgram's own "is_final"
+// segments for the turn so far; dgInterimText is the latest not-yet-final
+// guess, shown live but never counted as settled.
+let dgSocket = null;
+let dgFinalText = '';
+let dgInterimText = '';
+
+function floatToInt16(float32) {
+  const out = new Int16Array(float32.length);
+  for (let i = 0; i < float32.length; i++) {
+    const s = Math.max(-1, Math.min(1, float32[i]));
+    out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+  return out;
+}
+
+function startDeepgramSocket(sampleRate) {
+  dgFinalText = '';
+  dgInterimText = '';
+  const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${wsProto}//${location.host}${apiPath('/ws/voice')}?sample_rate=${sampleRate}`);
+  ws.onmessage = (ev) => {
+    if (ws !== dgSocket) return; // a stale socket from a turn that already ended
+    let msg;
+    try { msg = JSON.parse(ev.data); } catch (e) { return; }
+    if (msg.type === 'transcript') {
+      if (msg.is_final) {
+        if (msg.text) dgFinalText = (dgFinalText + ' ' + msg.text).trim();
+        dgInterimText = '';
+      } else {
+        dgInterimText = msg.text;
+      }
+      const shown = (dgFinalText + ' ' + dgInterimText).trim();
+      if (shown && pendingTranscriptEl) {
+        pendingTranscriptEl.textContent = '"' + shown + '"';
+        thread.scrollTop = thread.scrollHeight;
+        if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = shown;
+        if (captionsOn) employeeCaption.textContent = shown;
+      }
+      // speech_final means Deepgram itself has decided this utterance is
+      // over (its own endpointing, from the real audio) -- same role
+      // checkVad's silence timer plays for the local-Whisper path, just
+      // server-side and from the actual stream instead of a client guess.
+      // mediaRecorder.stop() fires the existing onstop handler, which
+      // picks up dgFinalText directly -- Pause/Mute/manual-stop all
+      // already call mediaRecorder.stop() too, so this reuses every one
+      // of those paths unchanged instead of needing its own copy of each.
+      if (msg.speech_final && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    } else if (msg.type === 'utterance_end') {
+      if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    }
+  };
+  return ws;
+}
+
 let pcmChunks = [];
 let pcmSampleRate = 16000;
 let partialTurnId = 0;
@@ -537,7 +596,9 @@ function startMicAnalysis(stream) {
     pcmSampleRate = micAudioCtx.sampleRate;
     micProcessor = micAudioCtx.createScriptProcessor(4096, 1, 1);
     micProcessor.onaudioprocess = (e) => {
-      pcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      const samples = new Float32Array(e.inputBuffer.getChannelData(0));
+      pcmChunks.push(samples); // kept regardless of deepgramEnabled -- the Whisper fallback path needs it if Deepgram's socket drops mid-turn
+      if (dgSocket && dgSocket.readyState === WebSocket.OPEN) dgSocket.send(floatToInt16(samples).buffer);
     };
     source.connect(micProcessor);
     micProcessor.connect(micAudioCtx.destination); // some browsers only fire onaudioprocess once connected to a destination; silent since we never write to outputBuffer
@@ -911,8 +972,8 @@ function animateAvatar(now) {
   if (recording) {
     micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
     employeeCircle.classList.toggle('lit', level > VAD_THRESHOLD);
-    if (liveMode && !micMuted && !sessionPaused) checkVad(level, t);
-    if (!micMuted && !sessionPaused) maybeSendPartial(t);
+    if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage
+    if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
   }
   updateCaption();
 }
@@ -1424,6 +1485,9 @@ async function startRecordingTurn() {
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
+    const dg = dgSocket;
+    dgSocket = null; // clear first so a message already in flight from this socket is ignored by its own `ws !== dgSocket` check
+    if (dg && dg.readyState === WebSocket.OPEN) dg.close();
     partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
@@ -1445,15 +1509,29 @@ async function startRecordingTurn() {
     statusEl.textContent = 'transcribing...';
     let myGen = null; // set once the reply cycle (post-transcription) actually starts; null means any catch below is a transcription failure, not an interrupted reply
     try {
-      // Finalizing reuses the last partial transcript plus a tail-patch of
-      // just the new audio since then, instead of re-transcribing the
-      // whole clip -- see getFinalTranscript's own docstring. The Claude
-      // reply is still a separate call to /api/message -- the same path
-      // typed text already takes -- so "transcribing..." only covers the
-      // part that actually is transcribing, instead of silently also
-      // covering however long the Claude call after it takes. Mirrors the
-      // existing TTS split (see facilitator_reply's docstring).
-      const voiceData = await getFinalTranscript(blob);
+      // Deepgram already has the transcript by the time this turn ends --
+      // it was streaming it live the whole time (see startDeepgramSocket),
+      // so there's nothing left to transcribe. Falls through to the local
+      // Whisper path below only if Deepgram came back empty (e.g. its
+      // socket dropped mid-turn before any final text arrived) -- pcmChunks
+      // was still being collected the whole time regardless, see
+      // startMicAnalysis, so getFinalTranscript(blob) still works as a
+      // real fallback, not just a silent failure.
+      const dgText = (dgFinalText + ' ' + dgInterimText).trim();
+      let voiceData;
+      if (deepgramEnabled && dgText) {
+        voiceData = {transcript: dgText};
+      } else {
+        // Finalizing reuses the last partial transcript plus a tail-patch of
+        // just the new audio since then, instead of re-transcribing the
+        // whole clip -- see getFinalTranscript's own docstring. The Claude
+        // reply is still a separate call to /api/message -- the same path
+        // typed text already takes -- so "transcribing..." only covers the
+        // part that actually is transcribing, instead of silently also
+        // covering however long the Claude call after it takes. Mirrors the
+        // existing TTS split (see facilitator_reply's docstring).
+        voiceData = await getFinalTranscript(blob);
+      }
       if (voiceData.error || !voiceData.transcript) {
         statusEl.textContent = voiceData.error || "couldn't transcribe audio";
         avatarState = 'idle';
@@ -1500,12 +1578,13 @@ async function startRecordingTurn() {
   };
   mediaRecorder.start();
   avatarState = 'listening';
-  startMicAnalysis(stream);
+  startMicAnalysis(stream); // sets pcmSampleRate from the real mic's native rate, needed below
   resetPartialCapture();
   pendingTranscriptEl = addMessage('…', 'employee transcript pending');
   employeeCaption.textContent = '';
-  startVadCalibration(performance.now());
+  startVadCalibration(performance.now()); // still runs even when deepgramEnabled -- only its own checkVad call site is skipped; harmless to compute
   micIndicator.classList.add('active');
+  if (deepgramEnabled) dgSocket = startDeepgramSocket(pcmSampleRate);
 }
 
 // No more explicit "Go live" toggle -- being in Voice view simply means
@@ -1626,6 +1705,24 @@ videoEndBtn.addEventListener('click', endVideoCall);
     const res = await fetch(apiPath('/api/video/enabled'));
     const data = await res.json();
     videoToggle.hidden = !data.enabled;
+  } catch (e) {}
+})();
+
+// Deepgram streaming STT (see /ws/voice on the server) replaces the local-
+// Whisper VAD/partial pipeline (checkVad's fixed-silence timer,
+// maybeSendPartial's periodic re-transcription) when a server key is
+// configured: Deepgram does endpointing from the real audio stream and
+// sends interim/final transcripts live, instead of a client-side timer
+// guessing when someone stopped talking. Fetched once at load; if this
+// comes back false (no DEEPGRAM_API_KEY on the server), every voice turn
+// just uses the existing local-Whisper path unchanged -- additive, not a
+// replacement, see DEEPGRAM_API_KEY's own comment server-side.
+let deepgramEnabled = false;
+(async function checkDeepgramEnabled() {
+  try {
+    const res = await fetch(apiPath('/api/voice/config'));
+    const data = await res.json();
+    deepgramEnabled = !!data.deepgram;
   } catch (e) {}
 })();
 
