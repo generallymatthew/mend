@@ -16,3 +16,5 @@ services:
         sync: false
       - key: ORG_ACCESS_CODE
         sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
