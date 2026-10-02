@@ -407,6 +407,13 @@ document.querySelectorAll('.ui-tab').forEach(btn => btn.addEventListener('click'
 // discardNextStop check), and freezes Thimble's own audio in place.
 let sessionPaused = false;
 let discardNextStop = false;
+// Set when Pause is hit while Thimble is actively talking (e.g. mid-intro)
+// -- resumeSession() uses this to continue the same reply/speech queue
+// from where it left off instead of discarding it and jumping back to
+// listening. Reported live as an explicit expectation: "if thimble is
+// still in the middle of the intro and you hit pause, it should resume
+// the intro when the live resumes."
+let pausedMidReply = false;
 const pauseBtn = document.getElementById('pauseBtn');
 pauseBtn.addEventListener('click', () => {
   if (sessionPaused) resumeSession(); else pauseSession();
@@ -416,7 +423,18 @@ function pauseSession() {
   sessionPaused = true;
   pauseBtn.classList.add('inactive');
   pauseBtn.title = 'Resume';
-  endReplyCycle(); // aborts any in-flight reply/TTS and releases the barge-in monitor's mic stream too, not just the turn recorder below
+  // endReplyCycle() bumps replyGen and aborts the reply/TTS
+  // AbortControllers -- maybeAdvancePlayback/advanceSpeechQueue both gate
+  // on speechCycleGen === replyGen, so bumping it would permanently
+  // orphan the speech queue, making a later resume impossible even though
+  // the audio itself is just paused, not actually gone. Skip all of that
+  // when pausing mid-talk; just release the barge-in mic (stopInterruptMonitor)
+  // and leave the queue/controllers intact for resumeSession() to pick
+  // back up. Any other pause point (still transcribing/thinking/
+  // synthesizing) has no audio in flight to resume yet, so the old
+  // hard-abort behavior stays correct there.
+  pausedMidReply = (avatarState === 'talking');
+  if (pausedMidReply) stopInterruptMonitor(); else endReplyCycle();
   audioEl.pause();
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     discardNextStop = true;
@@ -441,6 +459,14 @@ function resumeSession() {
   pauseBtn.classList.remove('inactive');
   pauseBtn.title = 'Pause';
   if (statusEl.textContent === 'paused') statusEl.textContent = '';
+  if (pausedMidReply) {
+    pausedMidReply = false;
+    armLiveMode(); // re-arms liveMode/the live timer so finishSpeechCycle resumes listening once this (and any still-queued) sentence finishes playing, same as if never paused
+    avatarState = 'talking';
+    startInterruptMonitor(replyGen); // barge-in should still work on the resumed portion, same as before pausing
+    audioEl.play().catch(() => advanceSpeechQueue()); // same autoplay-blocked fallback playSpeechItem itself uses
+    return;
+  }
   if (ui === 'voice') { armLiveMode(); startRecordingTurnSafe(); }
 }
 
