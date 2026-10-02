@@ -637,7 +637,19 @@ DEEPGRAM_URL = (
     "wss://api.deepgram.com/v1/listen"
     "?encoding=linear16&channels=1&model=nova-2"
     "&interim_results=true&smart_format=true"
-    "&endpointing=500&utterance_end_ms=1500&vad_events=true"
+    # endpointing=500 (Deepgram's own default-ish quick setting) reported
+    # live as "really fast but it keeps interrupting me" -- the same
+    # failure shape the local-Whisper VAD path already hit and fixed once
+    # (see VAD_SILENCE_MS's own history: 500ms cut people off mid-sentence
+    # repeatedly before landing on 1400ms as the real fix, not just a
+    # tuning tweak). Matching that same tuned value here instead of
+    # re-discovering it from scratch -- Deepgram's silence-to-speech_final
+    # window is the direct equivalent of VAD_SILENCE_MS, same tradeoff.
+    # utterance_end_ms is a separate backstop (fires on its own VAD-level
+    # silence detection even without a clean word boundary); kept
+    # comfortably above endpointing so it doesn't become the thing that
+    # ends turns early instead.
+    "&endpointing=1400&utterance_end_ms=2500&vad_events=true"
 )
 
 
