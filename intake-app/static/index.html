@@ -77,16 +77,23 @@
   @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
   @keyframes thimble-dot{0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-35%);}}
   @keyframes thimble-ripple{0%{transform:scale(1); opacity:.45;} 100%{transform:scale(1.6); opacity:0;}}
-  /* Caption sits left-aligned pinned to the stage's bottom-left, not
-     centered under the avatar -- matches the design handoff's call-frame
-     layout, where the avatar centers on its own and the caption anchors to
-     the corner instead. The state pill and live timer live at the stage's
-     top-left instead (see .stage-top-left), the Voice/Text toggle at
-     top-right (see .stage-top-right). */
-  .caption-stack{position:absolute; left:28px; right:170px; bottom:24px; display:flex; justify-content:center;}
+  /* Caption is horizontally centered within the full stage width (equal
+     left/right insets), not reserving asymmetric space for the you-tile --
+     reported live as visibly off-center. The state pill lives directly
+     under the avatar instead (see .state-pill-row); the live timer stays
+     at the stage's top-left (see .stage-top-left), the Voice/Text toggle
+     at top-right (see .stage-top-right). */
+  .caption-stack{position:absolute; left:28px; right:28px; bottom:24px; display:flex; justify-content:center;}
   .caption{max-width:720px; font-size:clamp(17px,1.6vw,22px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
   .stage-top-left{position:absolute; top:16px; left:16px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; z-index:2;}
   .stage-top-right{position:absolute; top:16px; right:16px; z-index:2;}
+  /* State pill ("Thimble Listening...") sits directly under the avatar
+     shape itself, not pinned to a stage corner -- it's reporting on
+     Thimble specifically, not the call as a whole (that's what the
+     top-left live timer is for), so it reads better anchored to the thing
+     it's describing. */
+  .avatar-stack{display:flex; flex-direction:column; align-items:center;}
+  .state-pill-row{display:flex; justify-content:center; margin-top:14px;}
   .state-pill{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-size:13px; white-space:nowrap;}
   .state-pill b{font-weight:700;}
   .state-pill .state-word{opacity:.72; font-weight:500;}
@@ -206,7 +213,6 @@
       <div class="call-main">
         <div class="stage">
           <div class="stage-top-left">
-            <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
             <div class="live-timer" id="liveTimer" hidden>Live &middot; <span id="liveTimerText">00:00</span></div>
             <button id="skipIntroBtn" class="skip-intro-btn" hidden>Skip &rarr;</button>
           </div>
@@ -216,16 +222,21 @@
               <button class="ui-tab" data-ui="text">Text</button>
             </div>
           </div>
-          <div class="avatar-row">
-            <div class="thimble-avatar" id="thimbleAvatar">
-              <div class="thimble-ripple" id="thimbleRippleA" hidden></div>
-              <div class="thimble-ripple b" id="thimbleRippleB" hidden></div>
-              <div class="thimble-ring" id="thimbleRing">
-                <div class="thimble-body" id="thimbleBody">
-                  <div class="thimble-blend" id="thimbleBlend"></div>
-                  <div class="thimble-mouth" id="thimbleMouth"></div>
+          <div class="avatar-stack">
+            <div class="avatar-row">
+              <div class="thimble-avatar" id="thimbleAvatar">
+                <div class="thimble-ripple" id="thimbleRippleA" hidden></div>
+                <div class="thimble-ripple b" id="thimbleRippleB" hidden></div>
+                <div class="thimble-ring" id="thimbleRing">
+                  <div class="thimble-body" id="thimbleBody">
+                    <div class="thimble-blend" id="thimbleBlend"></div>
+                    <div class="thimble-mouth" id="thimbleMouth"></div>
+                  </div>
                 </div>
               </div>
+            </div>
+            <div class="state-pill-row">
+              <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
             </div>
           </div>
           <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
