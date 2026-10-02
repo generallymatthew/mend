@@ -296,6 +296,11 @@
             <div class="desc" id="micErrorDesc">Allow microphone access for this site in your browser, then try again.</div>
             <button id="micRetryBtn">Try again</button>
           </div>
+          <div class="mic-error-banner" id="autoplayBanner" hidden>
+            <div class="title">Tap to continue</div>
+            <div class="desc">Your browser needs a tap before Thimble can play audio.</div>
+            <button id="autoplayRetryBtn">Tap to continue</button>
+          </div>
         </div>
         <!-- Controls center within this row's full width; the you-tile is
              positioned absolutely inside it (see its own CSS comment) so
@@ -1236,14 +1241,38 @@ function playSpeechItem(item) {
   avatarState = 'talking';
   audioEl.src = apiPath(item.url);
   audioEl.play().catch(() => {
-    // Autoplay can be blocked before the first user gesture (e.g. Voice
-    // mode auto-starts listening on load, so Thimble's very first reply
-    // has no gesture to ride on) -- the 'play' event never fires in that
-    // case. Fall back the same way 'ended' does instead of stalling the
-    // whole queue on one blocked sentence.
-    advanceSpeechQueue();
+    // Autoplay can be blocked before the first user gesture -- Voice mode
+    // auto-starts the intro on load with no tap to ride on, and mobile
+    // browsers enforce this far more strictly than desktop. The old
+    // fallback here silently skipped to the next queued sentence, which
+    // for a sentence-streamed reply meant EVERY remaining sentence also
+    // failed to play (no gesture ever arrived), racing straight through
+    // the whole queue in milliseconds and landing on listening with no
+    // audio ever heard -- reported live on mobile as "stopped talking in
+    // the middle of its intro and started to listen," no visible sign
+    // anything had gone wrong. Now shows a real "Tap to continue" prompt
+    // and waits for it instead of guessing the content away.
+    showAutoplayBanner(item);
   });
 }
+
+let pendingAutoplayItem = null;
+const autoplayBanner = document.getElementById('autoplayBanner');
+function showAutoplayBanner(item) {
+  pendingAutoplayItem = item;
+  autoplayBanner.hidden = false;
+}
+document.getElementById('autoplayRetryBtn').addEventListener('click', () => {
+  if (!pendingAutoplayItem) return;
+  const item = pendingAutoplayItem;
+  pendingAutoplayItem = null;
+  autoplayBanner.hidden = true;
+  // The click itself is a real user gesture, so this retry should succeed
+  // -- same src is already set from the original attempt, just needs a
+  // play() call riding on this gesture instead of the earlier gesture-less
+  // one.
+  audioEl.play().catch(() => showAutoplayBanner(item)); // still blocked somehow -- show it again rather than silently giving up
+});
 
 function advanceSpeechQueue() {
   if (speechCycleGen !== replyGen) return;
