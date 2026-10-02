@@ -918,6 +918,19 @@ function applyThimbleState(inst, state) {
   const talking = state === 'talking';
   inst.rippleA.hidden = !talking;
   inst.rippleB.hidden = !talking;
+  // .thimble-mouth's CSS transition (width/height/border-radius, .35s) is
+  // for smooth shape changes BETWEEN states (e.g. thinking's dots morphing
+  // into talking's oval) -- reported live as the talking mouth feeling
+  // sluggish even after the amplitude-envelope fix above, and this is why:
+  // updateThimbleMotion sets .style.height every animation frame (~16ms)
+  // to track real speech amplitude, but the CSS transition doesn't let it
+  // snap to each new value -- it eases toward it over 350ms, so a stream
+  // of 16ms-apart targets gets rendered as a heavily lagged blend of the
+  // last several, independent of how fast the JS-side envelope itself
+  // reacts. Height is excluded from the transition list while talking so
+  // real-time amplitude updates render immediately; width/border-radius
+  // stay animated for the state-to-state shape morph.
+  inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
   renderThimbleMouth(inst, state);
 }
 
@@ -943,21 +956,23 @@ function updateThimbleMotion(inst, now, level, listening) {
   // Talking mouth: real TTS amplitude drives the open/close height directly,
   // rather than the handoff's canned "talk" loop -- real lip-sync instead of
   // a fixed alternation, same oval-mouth-plus-ripples visual language.
-  // Reported live as "not following the words" -- the raw RMS level was
-  // mechanically wired up correctly (confirmed directly: sampled the real
-  // analyser during real playback, values genuinely tracked speech), but
-  // the actual pixel swing it drove was only ~4-15px on a 200px avatar,
-  // easy to read as barely moving at all next to the louder ripple
-  // animation around it. Two real changes, not just a bigger number: (1)
-  // sqrt(v) instead of v -- RMS speech amplitude sits low for most of a
-  // sentence with only occasional loud peaks, and sqrt boosts the quiet-
-  // but-still-voiced stretches so the mouth reads as continuously moving
-  // instead of mostly closed with rare twitches; (2) a light exponential
-  // smoothing (mouthLevel) so frame-to-frame jitter from the raw analyser
-  // reads as deliberate open/close motion instead of a flicker.
+  // Reported live as "not following the words," twice -- first that the
+  // movement was too subtle to read as lip-sync at all (fixed by widening
+  // the pixel range and sqrt-boosting quiet-but-voiced stretches, see
+  // mouthLevel below), then after that fix, that it still didn't feel
+  // synced TO SPEECH TIMING specifically. The symmetric smoothing from the
+  // first fix reacted the same speed opening and closing, which reads as
+  // laggy on fast syllables -- ears/eyes are very sensitive to AV-sync
+  // timing specifically, more than to the raw amount of movement. Replaced
+  // with an attack/release envelope (standard audio-reactive-animation
+  // technique): snaps open fast on a loud onset (rate .7), eases closed
+  // more gradually (rate .25) rather than symmetrically -- the asymmetry
+  // is what reads as "tracking" rather than "wobbling along behind."
   if (avatarState === 'talking') {
     const v = (analyser && !audioEl.paused) ? rmsLevel(analyser, avatarData) : 0;
-    inst.mouthLevel = inst.mouthLevel * 0.55 + Math.sqrt(v) * 0.45;
+    const target = Math.sqrt(v);
+    const rate = target > inst.mouthLevel ? 0.7 : 0.25;
+    inst.mouthLevel += (target - inst.mouthLevel) * rate;
     inst.mouth.style.height = (inst.size * (0.03 + 0.22 * inst.mouthLevel)) + 'px';
   } else {
     inst.mouthLevel = 0;
