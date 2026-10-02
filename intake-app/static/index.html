@@ -191,6 +191,25 @@
   @media (max-width: 760px){
     .call-layout{flex-direction:column;}
     .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
+    /* The you-tile's bottom:20px anchors to .stage's own box, which on a
+       tall narrow viewport ends up far taller than the avatar content
+       needs -- reported live as the tile floating in the middle of a lot
+       of empty space instead of sitting near the controls. Simplest real
+       fix, not a partial one: just don't show it on mobile, per explicit
+       direction, rather than re-deriving stage height to chase a tight
+       corner anchor there too. */
+    .you-tile{display:none;}
+    /* Same overlap problem as the you-tile above, same simplification:
+       caption-stack is bottom-anchored absolute and can grow tall enough on
+       a narrow viewport (a long clause wraps to 6-7 lines) to climb up and
+       overlap the state pill sitting right under the avatar -- confirmed
+       live. Re-chunking captions shorter would only narrow the window this
+       still breaks in, not close it (any single clause can still be long
+       enough on a narrow-enough screen). Hiding it outright on mobile is
+       the same real fix as the you-tile's, not a partial one -- the
+       transcript panel already shows the same text without this failure
+       mode. */
+    .caption-stack{display:none;}
   }
   [hidden]{display:none !important;}
 </style>
@@ -848,7 +867,7 @@ function thimbleInstance(prefix, size) {
     mouth: document.getElementById(prefix + 'Mouth'),
     rippleA: document.getElementById(prefix + 'RippleA'),
     rippleB: document.getElementById(prefix + 'RippleB'),
-    renderedState: null, nodFiredAt: null, wasSpeaking: false, lastNod: 0,
+    renderedState: null, nodFiredAt: null, wasSpeaking: false, lastNod: 0, mouthLevel: 0,
   };
 }
 const thimbleBig = thimbleInstance('thimble', 200);
@@ -924,9 +943,24 @@ function updateThimbleMotion(inst, now, level, listening) {
   // Talking mouth: real TTS amplitude drives the open/close height directly,
   // rather than the handoff's canned "talk" loop -- real lip-sync instead of
   // a fixed alternation, same oval-mouth-plus-ripples visual language.
+  // Reported live as "not following the words" -- the raw RMS level was
+  // mechanically wired up correctly (confirmed directly: sampled the real
+  // analyser during real playback, values genuinely tracked speech), but
+  // the actual pixel swing it drove was only ~4-15px on a 200px avatar,
+  // easy to read as barely moving at all next to the louder ripple
+  // animation around it. Two real changes, not just a bigger number: (1)
+  // sqrt(v) instead of v -- RMS speech amplitude sits low for most of a
+  // sentence with only occasional loud peaks, and sqrt boosts the quiet-
+  // but-still-voiced stretches so the mouth reads as continuously moving
+  // instead of mostly closed with rare twitches; (2) a light exponential
+  // smoothing (mouthLevel) so frame-to-frame jitter from the raw analyser
+  // reads as deliberate open/close motion instead of a flicker.
   if (avatarState === 'talking') {
     const v = (analyser && !audioEl.paused) ? rmsLevel(analyser, avatarData) : 0;
-    inst.mouth.style.height = (inst.size * (0.02 + 0.10 * v)) + 'px';
+    inst.mouthLevel = inst.mouthLevel * 0.55 + Math.sqrt(v) * 0.45;
+    inst.mouth.style.height = (inst.size * (0.03 + 0.22 * inst.mouthLevel)) + 'px';
+  } else {
+    inst.mouthLevel = 0;
   }
 }
 
