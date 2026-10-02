@@ -94,7 +94,7 @@ _rate_hits: dict[str, list[float]] = {}
 # then get the actual paid reply call rejected with 429 right after --
 # confirmed live: a turn's partials ate the budget, then /api/message came
 # back 429 and Thimble never replied at all.
-RATE_LIMIT_EXEMPT_PATHS = {"/api/voice/partial"}
+RATE_LIMIT_EXEMPT_PATHS = {"/api/voice/partial", "/api/survey"}
 # /api/audio/<filename> just serves an mp3/m4a this process already
 # generated and has sitting on disk -- zero marginal cost, same free-local
 # reasoning as /api/voice/partial above, but it's a dynamic per-file path so
@@ -789,6 +789,50 @@ async def reset():
         for f in AUDIO_DIR.glob(pattern):
             f.unlink(missing_ok=True)
     return {"ok": True}
+
+
+# Post-session feedback -- deliberately the one thing this app writes to
+# disk. Everything else here follows "nothing is recorded" (see the
+# module docstring and the header's own privacy pill): conversation
+# content/audio only ever live in process memory. A survey response isn't
+# session content, it's the tester volunteering feedback about the product
+# through a separate page (static/survey.html), with no conversation text
+# attached -- the whole point is to actually be able to read it back after
+# the process restarts. Appended as JSON Lines, not a database, same "keep
+# it as simple as the rest of this prototype" convention as everywhere else
+# here.
+SURVEY_FILE = ROOT / "survey_responses.jsonl"
+VALID_ISSUES = {"voice", "audio", "captions", "other", "none"}
+
+
+@app.post("/api/survey")
+async def submit_survey(request: Request):
+    data = await request.json()
+    rating = data.get("overall_rating")
+    if not isinstance(rating, int) or not (1 <= rating <= 5):
+        return JSONResponse({"error": "overall_rating must be an integer 1-5"}, status_code=400)
+    felt_fair = data.get("felt_fair")
+    if felt_fair not in (None, "yes", "somewhat", "no"):
+        return JSONResponse({"error": "invalid felt_fair value"}, status_code=400)
+    issues = data.get("issues") or []
+    if not isinstance(issues, list) or not all(i in VALID_ISSUES for i in issues):
+        return JSONResponse({"error": "invalid issues value"}, status_code=400)
+    comments = str(data.get("comments") or "")[:4000]  # generous cap, not unbounded -- this is open free text from an unauthenticated page
+    record = {
+        "ts": time.time(),
+        "overall_rating": rating,
+        "felt_fair": felt_fair,
+        "issues": issues,
+        "comments": comments,
+    }
+    with SURVEY_FILE.open("a") as f:
+        f.write(json.dumps(record) + "\n")
+    return {"ok": True}
+
+
+@app.get("/survey")
+async def survey_page():
+    return FileResponse(ROOT / "static" / "survey.html")
 
 
 @app.get("/api/audio/{filename}")

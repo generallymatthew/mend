@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mend feedback</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0; --pink:#F3829A;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
+  .wrap{max-width:640px; margin:0 auto; padding:28px 24px 60px;}
+  .header{display:flex; align-items:center; gap:10px; margin-bottom:28px;}
+  .brand-mark{height:26px; width:auto; display:block;}
+  .brand-name{font-weight:800; font-size:22px; letter-spacing:-0.01em; color:var(--ink);}
+  h1{font-size:22px; margin:0 0 6px;}
+  .sub{color:var(--ink-soft); font-size:14.5px; line-height:1.5; margin:0 0 28px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px 22px 24px; margin-bottom:18px;}
+  .q-label{font-weight:700; font-size:15px; margin-bottom:12px;}
+  .q-hint{font-weight:500; font-size:13px; color:var(--ink-soft); margin:-8px 0 14px;}
+  .scale{display:flex; gap:8px;}
+  .scale button{flex:1; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); border-radius:999px; padding:10px 0; font:inherit; font-weight:700; font-size:15px; cursor:pointer;}
+  .scale button.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .scale-labels{display:flex; justify-content:space-between; font-size:12px; color:var(--ink-soft); margin-top:8px;}
+  .choice-row{display:flex; flex-direction:column; gap:8px;}
+  .choice{display:flex; align-items:center; gap:10px; border:1.5px solid var(--border); border-radius:12px; padding:11px 14px; cursor:pointer; font-size:14.5px;}
+  .choice.sel{border-color:var(--accent); background:var(--accent-soft);}
+  .choice input{accent-color:var(--accent);}
+  textarea{width:100%; resize:vertical; min-height:90px; border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
+  .submit-row{display:flex; justify-content:flex-end; margin-top:6px;}
+  button.primary{border:1.5px solid var(--accent); background:var(--accent); color:#fff; border-radius:999px; padding:13px 26px; font:inherit; font-weight:700; font-size:15px; cursor:pointer;}
+  button.primary:disabled{opacity:.5; cursor:default;}
+  .error{color:#8C3B2E; font-size:13px; margin-top:10px; text-align:right;}
+  .thanks{text-align:center; padding:60px 20px;}
+  .thanks .mark{height:48px; margin-bottom:18px;}
+  .thanks h1{margin-bottom:10px;}
+  .thanks p{color:var(--ink-soft); font-size:15px; line-height:1.6;}
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <img class="brand-mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E" alt="">
+    <span class="brand-name">Mend</span>
+  </div>
+
+  <div id="form-view">
+    <h1>How did that go?</h1>
+    <p class="sub">Two minutes, anonymous, and it goes straight to the people building this &mdash; nothing here is shared with your employer.</p>
+
+    <div class="card">
+      <div class="q-label">Overall, how was your experience?</div>
+      <div class="scale" id="overallScale">
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+        <button type="button" data-val="4">4</button>
+        <button type="button" data-val="5">5</button>
+      </div>
+      <div class="scale-labels"><span>Not good</span><span>Excellent</span></div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Did Thimble feel helpful and fair?</div>
+      <div class="choice-row" id="fairChoices">
+        <label class="choice"><input type="radio" name="fair" value="yes"> Yes, it felt helpful and neutral</label>
+        <label class="choice"><input type="radio" name="fair" value="somewhat"> Somewhat &mdash; it had moments that felt off</label>
+        <label class="choice"><input type="radio" name="fair" value="no"> No, it didn't feel helpful or fair</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Did you run into any technical issues?</div>
+      <div class="q-hint">Select all that apply.</div>
+      <div class="choice-row" id="issueChoices">
+        <label class="choice"><input type="checkbox" value="voice"> Voice/microphone didn't work right</label>
+        <label class="choice"><input type="checkbox" value="audio"> Thimble's audio cut out or lagged</label>
+        <label class="choice"><input type="checkbox" value="captions"> Captions or transcript looked wrong</label>
+        <label class="choice"><input type="checkbox" value="other"> Something else</label>
+        <label class="choice"><input type="checkbox" value="none"> No issues</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Anything else you'd like to share?</div>
+      <textarea id="comments" placeholder="Optional &mdash; what worked, what didn't, what you'd change"></textarea>
+    </div>
+
+    <div class="submit-row">
+      <button type="button" class="primary" id="submitBtn">Submit feedback</button>
+    </div>
+    <div class="error" id="errorMsg" hidden>Please choose an overall rating before submitting.</div>
+  </div>
+
+  <div id="thanks-view" class="thanks" hidden>
+    <img class="mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E" alt="">
+    <h1>Thank you</h1>
+    <p>Your feedback was recorded. It genuinely shapes what gets fixed next.</p>
+  </div>
+</div>
+
+<script>
+// This page is served at "/survey" standalone or "/intake/survey" behind
+// the local Caddy proxy -- strip the last path segment to get the app's
+// own base, same approach as index.html's BASE_PATH.
+const BASE_PATH = location.pathname.replace(/[^/]*$/, '');
+function apiPath(p) { return BASE_PATH.replace(/\/$/, '') + '/' + p.replace(/^\//, ''); }
+
+let overallRating = null;
+document.querySelectorAll('#overallScale button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    overallRating = Number(btn.dataset.val);
+    document.querySelectorAll('#overallScale button').forEach(b => b.classList.toggle('sel', b === btn));
+  });
+});
+
+document.querySelectorAll('#fairChoices .choice, #issueChoices .choice').forEach(label => {
+  const input = label.querySelector('input');
+  const sync = () => label.classList.toggle('sel', input.checked);
+  input.addEventListener('change', () => {
+    if (input.type === 'checkbox' && input.value === 'none' && input.checked) {
+      // "No issues" is exclusive -- picking it clears any other checked issue
+      label.closest('.choice-row').querySelectorAll('input[type=checkbox]').forEach(cb => { if (cb !== input) { cb.checked = false; cb.closest('.choice').classList.remove('sel'); } });
+    } else if (input.type === 'checkbox' && input.value !== 'none' && input.checked) {
+      const noneBox = label.closest('.choice-row').querySelector('input[value=none]');
+      if (noneBox) { noneBox.checked = false; noneBox.closest('.choice').classList.remove('sel'); }
+    }
+    sync();
+  });
+});
+
+const submitBtn = document.getElementById('submitBtn');
+const errorMsg = document.getElementById('errorMsg');
+submitBtn.addEventListener('click', async () => {
+  if (!overallRating) { errorMsg.hidden = false; return; }
+  errorMsg.hidden = true;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+  const fairEl = document.querySelector('#fairChoices input:checked');
+  const issues = Array.from(document.querySelectorAll('#issueChoices input:checked')).map(i => i.value);
+  const payload = {
+    overall_rating: overallRating,
+    felt_fair: fairEl ? fairEl.value : null,
+    issues,
+    comments: document.getElementById('comments').value.trim(),
+  };
+  try {
+    const res = await fetch(apiPath('/api/survey'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('request failed');
+    document.getElementById('form-view').hidden = true;
+    document.getElementById('thanks-view').hidden = false;
+  } catch (e) {
+    errorMsg.textContent = "Couldn't submit just now -- please try again.";
+    errorMsg.hidden = false;
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit feedback';
+  }
+});
+</script>
+</body>
+</html>

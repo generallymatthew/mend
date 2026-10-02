@@ -5,3 +5,4 @@ __pycache__/
 classifier/output/
 classifier/data/gen_stderr.txt
 .run_logs/
+intake-app/survey_responses.jsonl
