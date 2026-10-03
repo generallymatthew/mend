@@ -16,6 +16,7 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 | [09_PRACTICE_SESSION_MEMORY_SCHEMA.md](09_PRACTICE_SESSION_MEMORY_SCHEMA.md) | Lightweight client-side schema so repeated practice sessions don't need full transcripts |
 | [10_LEGAL_COUNSEL_OUTREACH.md](10_LEGAL_COUNSEL_OUTREACH.md) | Outreach email + scoping memo template for finding employment/tech-liability counsel pre-pilot |
 | [11_PRODUCT_ARCHITECTURE_AND_STRATEGY_BLUEPRINT.md](11_PRODUCT_ARCHITECTURE_AND_STRATEGY_BLUEPRINT.md) | Standalone blueprint pass: brand manifesto/taglines, the dual-track (user vs. buyer) value prop, product/intake journey, Watcher audit rubric + practice-state schema, pricing, 3-cohort testing plan -- overlaps several docs above, written as one self-contained pass rather than split by topic |
+| [12_SYMMETRIC_VIDEO_PARITY_FEATURE.md](12_SYMMETRIC_VIDEO_PARITY_FEATURE.md) | Feature concept: if either joint-session participant's camera drops mid-session, both are symmetrically dropped to voice+avatar together, with neutral framing and facilitator non-intervention. Captured from an earlier exploratory code dump, not yet designed against this repo's real stack |
 
 ## Status
 
