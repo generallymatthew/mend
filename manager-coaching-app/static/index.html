@@ -213,7 +213,7 @@ const audioEl = new Audio();
 
 // Abstract avatar: a plain shape with a mouth, in place of a realistic
 // video face. Geometry, colours and per-state motion match the design
-// handoff in design_handoff_simple_agent_presence/ exactly. States used
+// handoff in design_handoffs/simple_agent_presence/ exactly. States used
 // here: idle (resting, before anything's happened -- the handoff has no
 // rest state of its own, so this borrows Listening's look), listening
 // (recording the manager's own voice memo), thinking (waiting on the
@@ -362,7 +362,7 @@ async function maybeSendPartial(now) {
 }
 
 // Geometry and motion below are a direct port of target()/apply() from
-// design_handoff_simple_agent_presence/Simple Agent.dc.html, adapted from
+// design_handoffs/simple_agent_presence/Simple Agent.dc.html, adapted from
 // SVG to canvas. Defined on the handoff's 200x200 viewBox and scaled
 // uniformly to this canvas's actual size. w = mouth half-width, o = mouth
 // height, dx/dy = mouth offset from centre, s = circle scale.

@@ -1,6 +1,6 @@
 # Mend: Pitch & Commercial Strategy Docs
 
-Business/commercial strategy notes, distinct from the interactive pitch decks in `../../Mend Pitch/` and `../../Mend Pitch standalone 2/`. Written up from a strategy conversation about go-to-market, pricing, positioning, and a couple of feature concepts (PIP navigator, live-meeting coach).
+Business/commercial strategy notes, distinct from the interactive pitch decks in `../../Mend Pitch/` (the current one) and `../../archive/pitch-legacy/` (old, superseded exports). Written up from a strategy conversation about go-to-market, pricing, positioning, and a couple of feature concepts (PIP navigator, live-meeting coach).
 
 | File | Covers |
 |---|---|
@@ -15,6 +15,7 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 | [08_PIP_NAVIGATOR_FEATURE.md](08_PIP_NAVIGATOR_FEATURE.md) | Feature concept for navigating a Performance Improvement Plan |
 | [09_PRACTICE_SESSION_MEMORY_SCHEMA.md](09_PRACTICE_SESSION_MEMORY_SCHEMA.md) | Lightweight client-side schema so repeated practice sessions don't need full transcripts |
 | [10_LEGAL_COUNSEL_OUTREACH.md](10_LEGAL_COUNSEL_OUTREACH.md) | Outreach email + scoping memo template for finding employment/tech-liability counsel pre-pilot |
+| [11_PRODUCT_ARCHITECTURE_AND_STRATEGY_BLUEPRINT.md](11_PRODUCT_ARCHITECTURE_AND_STRATEGY_BLUEPRINT.md) | Standalone blueprint pass: brand manifesto/taglines, the dual-track (user vs. buyer) value prop, product/intake journey, Watcher audit rubric + practice-state schema, pricing, 3-cohort testing plan -- overlaps several docs above, written as one self-contained pass rather than split by topic |
 
 ## Status
 

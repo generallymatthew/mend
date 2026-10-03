@@ -75,7 +75,11 @@
      talking, nodding honey-blend empathizing) -- DOM/CSS border-radius
      shapes, not the old canvas circle, so the exact shapes/keyframes match
      the handoff instead of an older, different avatar system's motion. */
-  .thimble-avatar{position:relative; width:200px; height:200px; transition:transform .7s cubic-bezier(.3,1.4,.5,1);}
+  .thimble-avatar{position:relative; width:200px; height:200px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
+  /* Mic muted: dim Thimble's own avatar too, same opacity the handoff uses
+     for its 'muted' state, so "your mic is off" reads on the avatar itself
+     and not only on the small You-tile icon. */
+  .thimble-avatar.muted{opacity:.5;}
   .thimble-avatar.mini{width:48px; height:48px;}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
   .thimble-ripple.b{animation-delay:.8s;}
@@ -86,7 +90,6 @@
   .thimble-mouth.dots{display:flex; align-items:center; justify-content:center; background:none !important;}
   .thimble-mouth .dot{width:9px; height:9px; border-radius:50%; background:#F6F1E7; animation:thimble-dot 1.2s ease-in-out infinite;}
   @keyframes thimble-blob{0%,100%{border-radius:50%; transform:scale(.95);} 25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%; transform:scale(.92) rotate(-3deg);} 50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%; transform:scale(.95);} 75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%; transform:scale(.92) rotate(3deg);}}
-  @keyframes thimble-bob{0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-1.5%) scale(1.015,.99);}}
   @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
   @keyframes thimble-dot{0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-35%);}}
   @keyframes thimble-ripple{0%{transform:scale(1); opacity:.45;} 100%{transform:scale(1.6); opacity:0;}}
@@ -202,8 +205,11 @@
   /* Honey, matching the facilitator/Employee-A/Employee-B tile scheme in
      joint-session-app -- the employee's own circle is always Honey, not a
      neutral placeholder that only colors in once "lit" by mic input. */
-  .employee-circle{width:48px; height:48px; border-radius:50%; background:#E9B949; transition:transform 80ms linear;}
-  .employee-circle.lit{transform:scale(1.08);}
+  /* Shape driven entirely by updateEmployeeMotion's clip-path/transform
+     (same thimblePolygon engine Thimble itself uses) while actually
+     speaking -- border-radius is only the plain-circle fallback for when
+     that isn't running (muted, not recording). */
+  .employee-circle{width:48px; height:48px; border-radius:50%; background:#E9B949;}
   /* Default = evergreen/"on" (matches the design handoff's control-button
      spec: active = evergreen bg + oat icon). .inactive is the explicit OFF
      look (white bg + evergreen icon) -- used for transcript (starts
@@ -571,7 +577,7 @@ muteBtn.addEventListener('click', () => {
   muteBtn.classList.toggle('inactive', micMuted);
   muteBtn.querySelector('.slash').style.display = micMuted ? '' : 'none';
   youMuteIcon.hidden = !micMuted;
-  if (micMuted) { employeeCircle.classList.remove('lit'); employeeTile.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
+  if (micMuted) { employeeTile.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
 });
 
 let liveTimerInterval = null, liveSeconds = 0;
@@ -957,21 +963,37 @@ async function maybeSendPartial(now) {
 const THIMBLE_SHAPES = {
   listening:   {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   idle:        {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
-  thinking:    {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
+  // No CSS blob anymore -- thinking's body motion is the same geometry
+  // engine as listening/talking (constant geo .6, slow spin, a head-tilt
+  // wiggle instead of a nod), ported from the handoff's 'thinking' state in
+  // updateThimbleMotion below, instead of a canned border-radius keyframe.
+  thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
   // Same look as thinking. Defined for STATE_WORDS/CHAT_STATUS completeness
   // but not currently reached -- TTS now starts per-sentence, concurrently
   // with the rest of the reply still generating (see the sentence-streamed
   // TTS section), so there's no longer a distinct "reply text arrived,
   // now waiting on voice" gap between 'thinking' and 'talking' to label.
-  synthesizing: {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
+  synthesizing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
   // Same look again -- distinct state so the real transcription step (a
   // couple seconds) doesn't share a label with the Claude reply wait
   // after it (several more seconds), the exact conflation that made
   // "transcribing" look like it was taking way longer than it actually
   // was. See the onstop handler in startRecordingTurn().
-  transcribing: {radius: '50%', anim: 'thimble-blob 4s ease-in-out infinite', lean: 'none', mouthTop: 62},
-  talking:     {radius: '50%', anim: 'thimble-bob .8s ease-in-out infinite', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
+  transcribing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
+  // No CSS bob anymore -- talking's body motion is the same amplitude-driven
+  // hexagon wobble + breathing as listening/thinking, just with its own
+  // breathe period and a constant (not threshold-gated) geo target, ported
+  // from the handoff's 'speaking' state in updateThimbleMotion below.
+  talking:     {radius: '50%', anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
   empathizing: {radius: '50% 50% 50% 50% / 62% 62% 38% 38%', anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
+  // Session paused: frozen (no breathing, no wobble -- see the `active`
+  // check in updateThimbleMotion, which excludes 'paused' from the motion
+  // branch entirely) and recolored grey via applyThimbleState below, same
+  // as the handoff's 'paused' state. Previously had no entry here at all,
+  // so it fell through to the listening shape (egg radius + tilt) while
+  // still paused -- wrong shape frozen mid-lean instead of a plain
+  // resting circle.
+  paused:      {radius: '50%', anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
 };
 // Two instances share one avatarState: the big call-stage avatar (voice
 // view) and a 48px mini copy in the text/chat header -- same per-frame
@@ -987,13 +1009,14 @@ function thimbleInstance(prefix, size) {
     mouth: document.getElementById(prefix + 'Mouth'),
     rippleA: document.getElementById(prefix + 'RippleA'),
     rippleB: document.getElementById(prefix + 'RippleB'),
-    renderedState: null, mouthLevel: 0, geo: 0,
+    renderedState: null, mouthLevel: 0, geo: 0, lvl: 0,
   };
 }
 
-// Rounded-hexagon outline: a direct port of design_handoff_thimble_avatar-
-// new-mow/thimble-avatar.js's _polygon(). `g` (0..1) is how "geometric" the
-// outline is (0 = perfect circle, 1 = full rounded hexagon); `lvl` (0..1)
+// Rounded-hexagon outline: a direct port of
+// design_handoffs/thimble_avatar-new-mow/thimble-avatar.js's _polygon().
+// `g` (0..1) is how "geometric" the outline is (0 = perfect circle, 1 =
+// full rounded hexagon); `lvl` (0..1)
 // is the driving audio level, which both deepens the facets and adds a
 // small ripple on the sides. 120 points, each a box-filtered average of 13
 // samples, is what turns the hexagon's sharp vertices into smoothly
@@ -1025,6 +1048,28 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed) {
 }
 const thimbleBig = thimbleInstance('thimble', 200);
 const thimbleMini = thimbleInstance('thimbleMini', 48);
+
+// The You-tile's own blob: wobbles with the same thimblePolygon engine and
+// the same constant-.8-geo/2.2s-breathe "speaking" profile Thimble uses
+// while talking, just mirrored onto the employee's mic level instead of
+// Thimble's TTS level -- previously this was just a flat 1.08x scale bump,
+// which read as a blunt on/off blip next to Thimble's own much livelier
+// motion. Reported live as needing the same treatment, not a stroke around
+// the call window (that's the existing .you-tile.lit border, unchanged).
+let employeeGeo = 0, employeeLvl = 0;
+function updateEmployeeMotion(now, level, lit) {
+  if (!lit) {
+    employeeLvl += (0 - employeeLvl) * 0.3;
+    employeeGeo += (0 - employeeGeo) * 0.12;
+    if (employeeGeo < 0.01) { employeeCircle.style.clipPath = 'none'; employeeCircle.style.transform = 'none'; return; }
+  } else {
+    employeeLvl += (level - employeeLvl) * 0.45;
+    employeeGeo += (0.8 - employeeGeo) * 0.12;
+  }
+  const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * (now / 1000)) / 2.2));
+  employeeCircle.style.transform = `scale(${breathe.toFixed(4)})`;
+  employeeCircle.style.clipPath = thimblePolygon(now / 1000, employeeGeo, employeeLvl, 6, 0.35);
+}
 
 function renderThimbleMouth(inst, state) {
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
@@ -1068,6 +1113,10 @@ function applyThimbleState(inst, state) {
   inst.body.style.animation = shape.anim;
   inst.body.style.borderRadius = shape.radius;
   inst.blend.style.opacity = state === 'empathizing' ? '.85' : '0';
+  // Paused recolors to the handoff's grey (#A9A39A) instead of the usual
+  // pink, so a frozen avatar reads as "paused," not as "stuck" -- cleared
+  // back to the CSS default pink for every other state.
+  inst.body.style.background = state === 'paused' ? '#A9A39A' : '';
   const talking = state === 'talking';
   inst.rippleA.hidden = !talking;
   inst.rippleB.hidden = !talking;
@@ -1088,8 +1137,9 @@ function applyThimbleState(inst, state) {
 }
 
 // Active-listening wobble/lean/nod. The outline itself (this function's
-// clip-path block below) is a direct port of design_handoff_thimble_avatar-
-// new-mow/thimble-avatar.js's _polygon() -- a real rounded-hexagon built
+// clip-path block below) is a direct port of
+// design_handoffs/thimble_avatar-new-mow/thimble-avatar.js's _polygon() --
+// a real rounded-hexagon built
 // from a 120-point, box-filtered clip-path, not the border-radius
 // approximation an earlier handoff draft used here. Driven by the
 // employee's own real mic level (startMicAnalysis's analyser) while
@@ -1097,7 +1147,19 @@ function applyThimbleState(inst, state) {
 // to, just real input here instead of its simulated fallback.
 function updateThimbleMotion(inst, now, level, listening) {
   applyThimbleState(inst, avatarState);
-  if (!listening) { inst.ring.style.transform = 'none'; inst.body.style.clipPath = 'none'; inst.geo = 0; }
+  const speaking = avatarState === 'talking';
+  const thinkingState = avatarState === 'thinking' || avatarState === 'synthesizing' || avatarState === 'transcribing';
+  // Mic-muted dims the avatar (handoff's 'muted' opacity .5) instead of
+  // leaving it full-strength while clearly not hearing anything -- applied
+  // as a class so it layers on top of whatever state is otherwise showing,
+  // same as the existing You-tile mute indicators.
+  inst.el.classList.toggle('muted', micMuted && listening && !speaking && !thinkingState);
+  // Real TTS amplitude, shared below by both the body wobble and the mouth --
+  // same signal the handoff's 'speaking' state drives its geo/mouth off of,
+  // just real playback level here instead of its simulated fallback.
+  const ttsLevel = speaking ? Math.sqrt((analyser && !audioEl.paused) ? rmsLevel(analyser, avatarData) : 0) : 0;
+  const active = listening || speaking || thinkingState;
+  if (!active) { inst.ring.style.transform = 'none'; inst.body.style.clipPath = 'none'; inst.geo = 0; inst.lvl = 0; }
   else {
     // Continuous nod, not pause-triggered: a direct port of the handoff's
     // "the nod runs the whole time the avatar is listening" -- a steady
@@ -1107,23 +1169,47 @@ function updateThimbleMotion(inst, now, level, listening) {
     // back as needing "a lot more movement," and this continuous cycle is
     // the actual source of that in the reference, not the shape wobble
     // (which stays subtle even at full level -- verified against the
-    // reference's own numbers). No head tilt during listening, per spec --
-    // idle gets neither the nod nor the tilt.
+    // reference's own numbers). No nod outside listening, per spec -- idle,
+    // talking and thinking all skip it (thinking gets a head-tilt wiggle
+    // instead, see below).
     const nodding = avatarState === 'listening';
     const y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
+    // Thinking gets a slow head-tilt wiggle instead of a nod, a direct port
+    // of the handoff's rotate(-10 + 2*sin(t*1.2))deg -- previously thinking
+    // had no JS-driven motion here at all, just a canned CSS blob keyframe
+    // on the body, so this tilt is new.
+    const wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
     // Breathing scale on top -- always running so the avatar never sits
-    // perfectly still even in silence. 3s period while listening, 4.5s
-    // while idle, per the handoff's own table; amplitude pushed past its
-    // baseline (0.0175) for a livelier feel per explicit request.
-    const breathePeriod = nodding ? 3 : 4.5;
+    // perfectly still even in silence. 3s period while listening or
+    // thinking, 2.2s while talking, 4.5s while idle, per the handoff's own
+    // BREATHE table; amplitude pushed past its baseline (0.0175) for a
+    // livelier feel per explicit request.
+    const breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
     const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * (now / 1000)) / breathePeriod));
-    inst.ring.style.transform = `translateY(${y.toFixed(2)}%) scale(${breathe.toFixed(4)})`;
+    inst.ring.style.transform = `translateY(${y.toFixed(2)}%) rotate(${wiggle.toFixed(2)}deg) scale(${breathe.toFixed(4)})`;
+    // Smoothed level driving the outline, same two-speed smoothing as the
+    // handoff (0.45/frame while speaking since TTS amplitude jumps faster
+    // than mic level, 0.3/frame otherwise). Thinking has no real input to
+    // react to, so it settles on the handoff's own fixed shapeLvl of .15.
+    const input = speaking ? ttsLevel : thinkingState ? 0.15 : level;
+    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
     // Circle at rest, rounded hexagon once actually hearing speech (not just
     // idle/silence) -- geo eases toward its target at 12%/frame, same as
     // the reference, so the shape always morphs smoothly and never snaps.
-    const geoTarget = (avatarState === 'listening' && level > 0.08) ? 1 : 0;
+    // Speaking's target is a constant .8 and thinking's a constant .6 (not
+    // threshold-gated on level, unlike listening), same as the handoff --
+    // both are always wobbling in their state, not just on loud syllables.
+    const geoTarget = avatarState === 'listening' ? (inst.lvl > 0.08 ? 1 : 0) : speaking ? 0.8 : thinkingState ? 0.6 : 0;
     inst.geo += (geoTarget - inst.geo) * 0.12;
-    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, level, 6, 0.35 + level * 0.4);
+    // Spin speed is constant per state (not boosted by level, as an earlier
+    // version here did for listening) -- reported live as making listening
+    // feel like it was running too fast whenever the employee spoke up; the
+    // reference keeps this at a flat 0.35 regardless of amplitude for
+    // listening/talking, which is what actually reads as "alive" rather
+    // than "sped up." Thinking spins much slower (0.12), same as the
+    // reference, since it's an idle wait rather than a reaction.
+    const spin = thinkingState ? 0.12 : 0.35;
+    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, inst.lvl, 6, spin);
   }
   // Talking mouth: real TTS amplitude drives the open/close height directly,
   // rather than the handoff's canned "talk" loop -- real lip-sync instead of
@@ -1140,11 +1226,9 @@ function updateThimbleMotion(inst, now, level, listening) {
   // technique): snaps open fast on a loud onset (rate .7), eases closed
   // more gradually (rate .25) rather than symmetrically -- the asymmetry
   // is what reads as "tracking" rather than "wobbling along behind."
-  if (avatarState === 'talking') {
-    const v = (analyser && !audioEl.paused) ? rmsLevel(analyser, avatarData) : 0;
-    const target = Math.sqrt(v);
-    const rate = target > inst.mouthLevel ? 0.7 : 0.25;
-    inst.mouthLevel += (target - inst.mouthLevel) * rate;
+  if (speaking) {
+    const rate = ttsLevel > inst.mouthLevel ? 0.7 : 0.25;
+    inst.mouthLevel += (ttsLevel - inst.mouthLevel) * rate;
     inst.mouth.style.height = (inst.size * (0.03 + 0.22 * inst.mouthLevel)) + 'px';
   } else {
     inst.mouthLevel = 0;
@@ -1257,10 +1341,11 @@ function animateAvatar(now) {
   const level = micMuted ? 0 : rawLevel;
   updateThimbleMotion(thimbleBig, t, level, listening);
   updateThimbleMotion(thimbleMini, t, level, listening);
+  const employeeLit = recording && level > VAD_THRESHOLD;
+  updateEmployeeMotion(t, level, employeeLit);
   if (recording) {
-    micIndicatorDot.classList.toggle('lit', level > VAD_THRESHOLD);
-    employeeCircle.classList.toggle('lit', level > VAD_THRESHOLD);
-    employeeTile.classList.toggle('lit', level > VAD_THRESHOLD);
+    micIndicatorDot.classList.toggle('lit', employeeLit);
+    employeeTile.classList.toggle('lit', employeeLit);
     if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage
     if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
   }
@@ -1819,7 +1904,6 @@ async function startRecordingTurn() {
     partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
-    employeeCircle.classList.remove('lit');
     employeeTile.classList.remove('lit');
     if (discardNextStop) {
       // Pause fired mid-turn -- this stop is a hard abort, not a real end
