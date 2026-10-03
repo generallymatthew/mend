@@ -187,6 +187,54 @@
       </div>
     </div>
 
+    <div class="section-label">You and Thimble</div>
+
+    <div class="card">
+      <div class="q-label">How did you relate to Thimble during this conversation?</div>
+      <div class="choice-row" data-radio="thimble_relation">
+        <label class="choice"><input type="radio" name="thimble_relation" value="tool"> Mostly like using a tool or app</label>
+        <label class="choice"><input type="radio" name="thimble_relation" value="presence"> Somewhat like there was a presence or character there</label>
+        <label class="choice"><input type="radio" name="thimble_relation" value="person"> At times, somewhat like talking to a person</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Did interacting with Thimble feel comforting?</div>
+      <div class="choice-row" data-radio="thimble_comforting">
+        <label class="choice"><input type="radio" name="thimble_comforting" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="thimble_comforting" value="somewhat"> Somewhat</label>
+        <label class="choice"><input type="radio" name="thimble_comforting" value="no"> No</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Did you find yourself treating Thimble's suggestions or framing as authoritative &mdash; something to defer to, the way you might a person's judgment?</div>
+      <div class="choice-row" data-radio="granted_authority">
+        <label class="choice"><input type="radio" name="granted_authority" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="granted_authority" value="somewhat"> Somewhat</label>
+        <label class="choice"><input type="radio" name="granted_authority" value="no"> No</label>
+        <label class="choice"><input type="radio" name="granted_authority" value="not_sure"> Not sure</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">If you did give Thimble some form of authority, what do you think it came from?</div>
+      <div class="q-hint">Its tone, its confidence, the fact it's AI, something else entirely -- or if you didn't grant it any, feel free to say why not.</div>
+      <textarea id="authority_source" placeholder="Optional"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Setting Thimble aside &mdash; in general, how comfortable are you talking to an AI about something personal or emotionally loaded?</div>
+      <div class="scale" id="q-ai-comfort">
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+        <button type="button" data-val="4">4</button>
+        <button type="button" data-val="5">5</button>
+      </div>
+      <div class="scale-labels"><span>Very uncomfortable</span><span>Very comfortable</span></div>
+    </div>
+
     <div class="section-label">In your own words</div>
 
     <div class="card">
@@ -249,6 +297,7 @@ function wireScale(id) {
 }
 const getOverall = wireScale('q-overall');
 const getNps = wireScale('q-nps');
+const getAiComfort = wireScale('q-ai-comfort');
 
 // Every single-choice question block shares the same radio + highlight
 // pattern -- wire them all generically off data-radio instead of repeating
@@ -303,6 +352,11 @@ submitBtn.addEventListener('click', async () => {
     would_reuse: getRadio('would_reuse'),
     nps: getNps(),
     emotional_shift: getRadio('emotional_shift'),
+    thimble_relation: getRadio('thimble_relation'),
+    thimble_comforting: getRadio('thimble_comforting'),
+    granted_authority: getRadio('granted_authority'),
+    authority_source: document.getElementById('authority_source').value.trim(),
+    ai_comfort_general: getAiComfort(),
     standout_moment: document.getElementById('standout_moment').value.trim(),
     trust_improvement: document.getElementById('trust_improvement').value.trim(),
     issues,

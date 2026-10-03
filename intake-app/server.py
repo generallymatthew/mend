@@ -824,6 +824,9 @@ SURVEY_RADIO_FIELDS = {
     "comparison": {"better", "same", "worse", "na"},
     "would_reuse": {"yes", "maybe", "no"},
     "emotional_shift": {"calmer", "same", "worse"},
+    "thimble_relation": {"tool", "presence", "person"},
+    "thimble_comforting": {"yes", "somewhat", "no"},
+    "granted_authority": {"yes", "somewhat", "no", "not_sure"},
 }
 
 _sheet = None
@@ -882,6 +885,9 @@ async def submit_survey(request: Request):
     nps = data.get("nps")
     if nps is not None and (not isinstance(nps, int) or not (0 <= nps <= 10)):
         return JSONResponse({"error": "nps must be an integer 0-10"}, status_code=400)
+    ai_comfort_general = data.get("ai_comfort_general")
+    if ai_comfort_general is not None and (not isinstance(ai_comfort_general, int) or not (1 <= ai_comfort_general <= 5)):
+        return JSONResponse({"error": "ai_comfort_general must be an integer 1-5"}, status_code=400)
     issues = data.get("issues") or []
     if not isinstance(issues, list) or not all(i in VALID_ISSUES for i in issues):
         return JSONResponse({"error": "invalid issues value"}, status_code=400)
@@ -889,15 +895,18 @@ async def submit_survey(request: Request):
     # unauthenticated page.
     standout_moment = str(data.get("standout_moment") or "")[:2000]
     trust_improvement = str(data.get("trust_improvement") or "")[:2000]
+    authority_source = str(data.get("authority_source") or "")[:2000]
     comments = str(data.get("comments") or "")[:4000]
     record = {
         "ts": time.time(),
         "overall_rating": rating,
         **radios,
         "nps": nps,
+        "ai_comfort_general": ai_comfort_general,
         "issues": issues,
         "standout_moment": standout_moment,
         "trust_improvement": trust_improvement,
+        "authority_source": authority_source,
         "comments": comments,
     }
     sheet = get_survey_sheet()
@@ -926,6 +935,11 @@ async def submit_survey(request: Request):
                     radios["would_reuse"] or "",
                     nps if nps is not None else "",
                     radios["emotional_shift"] or "",
+                    radios["thimble_relation"] or "",
+                    radios["thimble_comforting"] or "",
+                    radios["granted_authority"] or "",
+                    authority_source,
+                    ai_comfort_general if ai_comfort_general is not None else "",
                     standout_moment,
                     trust_improvement,
                     ", ".join(issues),
