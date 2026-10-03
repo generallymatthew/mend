@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E8;color:#1B3A32;font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1B3A32}a:hover{color:#C95A74}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes earIn{0%{transform:translate(-50%,-50%) scale(1);opacity:0}25%{opacity:.7}100%{transform:translate(-50%,-50%) scale(.08);opacity:0}}
+@keyframes earOut{0%{transform:translate(-50%,-50%) scale(.05);opacity:0}15%{opacity:.85}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+@keyframes talk{0%{transform:translateX(-50%) scaleY(.5)}15%{transform:translateX(-50%) scaleY(2.1)}30%{transform:translateX(-50%) scaleY(1)}48%{transform:translateX(-50%) scaleY(2.6)}62%{transform:translateX(-50%) scaleY(.7)}80%{transform:translateX(-50%) scaleY(1.8)}100%{transform:translateX(-50%) scaleY(.5)}}
+@keyframes ringOut{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.55);opacity:0}}
+@keyframes sweep{0%{transform:translateX(-120%) rotate(20deg)}100%{transform:translateX(120%) rotate(20deg)}}
+@keyframes nodSlow{0%,100%{transform:translateY(0)}35%{transform:translateY(4%)}55%{transform:translateY(-.5%)}75%{transform:translateY(1.5%)}}
+@keyframes nod{0%,70%,100%{transform:translateY(0)}78%{transform:translateY(5%)}86%{transform:translateY(-1%)}92%{transform:translateY(3%)}}
+</style>
+</helmet>
+<section style="padding:48px 48px 0;display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:760px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7C8782">Turn 5 · Full state set, one color</div>
+    <div style="font-size:28px;font-weight:700">All avatar states</div>
+    <p style="margin:0;font-size:15px;line-height:1.5;color:#5C6964;text-wrap:pretty">Single pink throughout — states are told apart by motion only. Listening is <a href="#4b">4b</a>.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px">
+    <sc-for list="{{ cards5 }}" as="c" hint-placeholder-count="6">
+      <div id="{{ c.id }}" style="width:300px;display:flex;flex-direction:column;gap:14px">
+        <div style="position:relative;height:300px;background:#1B3A32;border-radius:24px;display:flex;align-items:center;justify-content:center">
+          <span style="position:absolute;top:14px;left:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;background:#F5F0E8;color:#1B3A32">{{ c.id }}</span>
+          <span style="position:absolute;top:14px;right:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#CFD8D3">{{ c.tag }}</span>
+          <div style="width:180px;height:180px">{{ c.orb }}</div>
+          <sc-if value="{{ c.meter }}">
+            <div style="position:absolute;left:24px;right:24px;bottom:18px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden">{{ c.meter }}</div>
+          </sc-if>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+          <div style="font-size:17px;font-weight:700">{{ c.title }}</div>
+          <div style="font-size:14px;line-height:1.5;color:#5C6964;text-wrap:pretty">{{ c.desc }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:48px 48px 0;display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:760px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7C8782">Turn 4 · Listening ideas, cool blue</div>
+    <div style="font-size:28px;font-weight:700">Listening, in the new color system</div>
+    <p style="margin:0;font-size:15px;line-height:1.5;color:#5C6964;text-wrap:pretty">All six wobble and tilt their head with your voice (the bar). Each adds one cue on top.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px">
+    <sc-for list="{{ cards4 }}" as="c" hint-placeholder-count="6">
+      <div id="{{ c.id }}" style="width:300px;display:flex;flex-direction:column;gap:14px">
+        <div style="position:relative;height:300px;background:#1B3A32;border-radius:24px;display:flex;align-items:center;justify-content:center">
+          <span style="position:absolute;top:14px;left:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;background:#F5F0E8;color:#1B3A32">{{ c.id }}</span>
+          <div style="width:180px;height:180px">{{ c.orb }}</div>
+          <div style="position:absolute;left:24px;right:24px;bottom:18px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden">{{ c.meter }}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+          <div style="font-size:17px;font-weight:700">{{ c.title }}</div>
+          <div style="font-size:14px;line-height:1.5;color:#5C6964;text-wrap:pretty">{{ c.desc }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:48px 48px 0;display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:760px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7C8782">Turn 3 · Color per state + thinking ideas</div>
+    <div style="font-size:28px;font-weight:700">Cool when listening, lavender when thinking, pink when speaking</div>
+    <p style="margin:0;font-size:15px;line-height:1.5;color:#5C6964;text-wrap:pretty"><a href="#3a">3a</a> loops through all three states. <a href="#3b">3b</a>–<a href="#3f">3f</a> are ideas for the thinking state alone.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px">
+    <sc-for list="{{ cards3 }}" as="c" hint-placeholder-count="6">
+      <div id="{{ c.id }}" style="width:300px;display:flex;flex-direction:column;gap:14px">
+        <div style="position:relative;height:300px;background:#1B3A32;border-radius:24px;display:flex;align-items:center;justify-content:center">
+          <span style="position:absolute;top:14px;left:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;background:#F5F0E8;color:#1B3A32">{{ c.id }}</span>
+          <span style="position:absolute;top:14px;right:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#CFD8D3">{{ c.tag }}</span>
+          <div style="width:180px;height:180px">{{ c.orb }}</div>
+          <sc-if value="{{ c.meter }}">
+            <div style="position:absolute;left:24px;right:24px;bottom:18px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden">{{ c.meter }}</div>
+          </sc-if>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+          <div style="font-size:17px;font-weight:700">{{ c.title }}</div>
+          <div style="font-size:14px;line-height:1.5;color:#5C6964;text-wrap:pretty">{{ c.desc }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:48px 48px 0;display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:720px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7C8782">Turn 2 · Listening with the wobble, no rings</div>
+    <div style="font-size:28px;font-weight:700">Pair the wobble with one more cue</div>
+    <p style="margin:0;font-size:15px;line-height:1.5;color:#5C6964;text-wrap:pretty">All six use the rounded geometric wobble. Each adds one different signal that you’re being heard.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px">
+    <sc-for list="{{ cards2 }}" as="c" hint-placeholder-count="6">
+      <div id="{{ c.id }}" style="width:300px;display:flex;flex-direction:column;gap:14px">
+        <div style="position:relative;height:300px;background:#1B3A32;border-radius:24px;display:flex;align-items:center;justify-content:center">
+          <span style="position:absolute;top:14px;left:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;background:#F5F0E8;color:#1B3A32">{{ c.id }}</span>
+          <div style="width:180px;height:180px">{{ c.orb }}</div>
+          <div style="position:absolute;left:24px;right:24px;bottom:18px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden">{{ c.meter }}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+          <div style="font-size:17px;font-weight:700">{{ c.title }}</div>
+          <div style="font-size:14px;line-height:1.5;color:#5C6964;text-wrap:pretty">{{ c.desc }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+<section style="padding:48px;display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:720px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#7C8782">Turn 1 · Listening state</div>
+    <div style="font-size:28px;font-weight:700">How the avatar shows it’s hearing you</div>
+    <p style="margin:0;font-size:15px;line-height:1.5;color:#5C6964;text-wrap:pretty">A simulated voice talks in phrases with pauses, shown by the bar under each card, so you can see how each option reacts.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px">
+    <sc-for list="{{ cards }}" as="c" hint-placeholder-count="6">
+      <div id="{{ c.id }}" style="width:300px;display:flex;flex-direction:column;gap:14px">
+        <div style="position:relative;height:300px;background:#1B3A32;border-radius:24px;display:flex;align-items:center;justify-content:center">
+          <span style="position:absolute;top:14px;left:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;background:#F5F0E8;color:#1B3A32">{{ c.id }}</span>
+          <div style="width:180px;height:180px">{{ c.orb }}</div>
+          <div style="position:absolute;left:24px;right:24px;bottom:18px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden">{{ c.meter }}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+          <div style="font-size:17px;font-weight:700">{{ c.title }}</div>
+          <div style="font-size:14px;line-height:1.5;color:#5C6964;text-wrap:pretty">{{ c.desc }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;wobble&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;geometric&quot;,&quot;soft&quot;],&quot;default&quot;:&quot;geometric&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;facets&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:3,&quot;max&quot;:10,&quot;step&quot;:1,&quot;default&quot;:6,&quot;tsType&quot;:&quot;number&quot;}}">
+const h = React.createElement;
+const CREAM = '#F5F0E8', PINK = '#F4849C';
+class Component extends DCLogic {
+  state = { lvl: 0, talking: true, pauseTick: 0 };
+  componentDidMount() {
+    let talking = true, until = Date.now() + 2200, sm = 0;
+    this.iv = setInterval(() => {
+      const now = Date.now();
+      if (now > until) { talking = !talking; until = now + (talking ? 1800 + Math.random() * 1600 : 700 + Math.random() * 800); if (!talking) this.setState(s => ({ pauseTick: s.pauseTick + 1 })); }
+      const target = talking ? 0.35 + Math.random() * 0.65 : 0.03;
+      sm += (target - sm) * 0.45;
+      this.geo = (this.geo || 0) + ((talking ? 1 : 0) - (this.geo || 0)) * 0.25;
+      this.lagLvl = (this.lagLvl || 0) + (sm - (this.lagLvl || 0)) * 0.12;
+      const T = now / 1000;
+      const syl = Math.max(0, Math.sin(T * 8.5)) ** 0.7, phrase = Math.max(0, Math.sin(T * 1.3) + 0.35);
+      const sp = Math.min(1, syl * phrase * (0.75 + Math.random() * 0.4));
+      this.rings = (this.rings || []).filter(r => now - r.t < 1600);
+      if (sp > 0.5 && (this.prevSp || 0) <= 0.5 && now - (this.lastRing || 0) > 180) { this.rings.push({ t: now, a: sp }); this.lastRing = now; }
+      this.prevSp = sp; this.sp = sp;
+      this.inRings = (this.inRings || []).filter(r => now - r.t < 1300);
+      if (sm > 0.55 && (this.prevSm || 0) <= 0.55 && now - (this.lastIn || 0) > 220) { this.inRings.push({ t: now, a: sm }); this.lastIn = now; }
+      this.prevSm = sm;
+      if (!talking && this.wasTalking) this.tiltDir = -(this.tiltDir || 1);
+      this.wasTalking = talking;
+      this.setState({ lvl: sm, talking });
+    }, 70);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  orb(inner, face, faceStyle, o = {}) {
+    const t = Date.now() / 1000;
+    const talking = o.talking ?? this.state.talking, lvl = o.lvl ?? this.state.lvl;
+    const amt = talking ? 3 + lvl * 7 : 0;
+    const r = i => `${50 + amt * Math.sin(t * (2.6 + i * 0.7) + i * 1.9)}%`;
+    const radius = `${r(0)} ${r(1)} ${r(2)} ${r(3)} / ${r(4)} ${r(5)} ${r(6)} ${r(7)}`;
+    let shape = { borderRadius: radius, transition: 'border-radius .12s linear' };
+    if ((this.props.wobble ?? 'geometric') === 'geometric') {
+      const g = o.g ?? (this.geo || 0), N = o.N ?? (this.props.facets ?? 6), M = 120, pts = [], seg = 2 * Math.PI / N;
+      const phi = t * (o.spin ?? 0.35) + 0.15 * Math.sin(t * 1.7);
+      const poly = th => { const m = ((th - phi) % seg + seg) % seg; return Math.cos(seg / 2) / Math.cos(m - seg / 2); };
+      const depth = g * Math.min(1, 0.55 + lvl * 0.6);
+      for (let i = 0; i < M; i++) {
+        const th = (i / M) * 2 * Math.PI;
+        let s = 0; for (let w = -6; w <= 6; w++) s += poly(th + (w / 6) * seg * 0.42);
+        const smooth = s / 13;
+        const jitter = 1 + 0.025 * g * lvl * Math.sin(th * N + t * 5);
+        const rr = 50 * (1 - depth * (1 - smooth)) * jitter;
+        pts.push(`${(50 + rr * Math.cos(th)).toFixed(2)}% ${(50 + rr * Math.sin(th)).toFixed(2)}%`);
+      }
+      shape = { clipPath: `polygon(${pts.join(',')})` };
+    }
+    return h('div', { style: { position: 'relative', width: '100%', height: '100%', ...shape, background: PINK, overflow: 'hidden', animation: 'breathe 3s ease-in-out infinite', ...(this._extra || {}), ...(o.bg ? { background: o.bg, transition: 'background .8s ease' } : {}), ...(o.still ? { animation: 'none' } : {}) } },
+      inner,
+      h('div', { style: { position: 'absolute', inset: 0, transition: 'transform .35s ease-out', ...faceStyle } }, face));
+  }
+  ears(size, l) {
+    if (l == null) return null;
+    return ['9%', '91%'].map(x => h('span', { key: 'e' + x, style: { position: 'absolute', left: x, top: '50%', width: size, aspectRatio: '1', borderRadius: '50%', background: `radial-gradient(circle, rgba(245,240,232,${0.15 + l * 0.6}) 0%, rgba(245,240,232,0) 70%)`, transform: 'translate(-50%,-50%)', transition: 'all .12s' } }));
+  }
+  mouth(w = '34%', hgt = '4%') {
+    return h('span', { key: 'm', style: { position: 'absolute', left: '50%', bottom: '24%', width: w, height: hgt, borderRadius: '50%', background: CREAM, transform: 'translateX(-50%)', transition: 'all .3s' } });
+  }
+  loopRings() {
+    return ['0%', '100%'].flatMap(x => [0, 1, 2, 3].map(i => h('span', { key: x + i, style: { position: 'absolute', left: x, top: '50%', width: '80%', aspectRatio: '1', borderRadius: '50%', border: '5px solid rgba(245,240,232,.9)', boxSizing: 'border-box', opacity: 0, animation: `earOut 2.4s ${i * 0.6}s cubic-bezier(.2,.6,.4,1) infinite` } })));
+  }
+  reactiveRings(l) {
+    return ['9%', '91%'].flatMap(x => [3, 2, 1].map(i => {
+      const on = Math.max(0, Math.min(1, (l - (i - 1) * 0.25) * 2.2));
+      return h('span', { key: x + i, style: { position: 'absolute', left: x, top: '50%', width: `${12 + i * 16}%`, aspectRatio: '1', borderRadius: '50%', border: '5px solid ' + CREAM, boxSizing: 'border-box', transform: `translate(-50%,-50%) scale(${0.9 + on * 0.1})`, opacity: on * 0.8, transition: 'opacity .1s, transform .1s' } });
+    }));
+  }
+  renderVals() {
+    const l = this.state.lvl, talking = this.state.talking;
+    const meter = h('div', { style: { height: '100%', width: `${Math.round(l * 100)}%`, background: CREAM, opacity: .7, transition: 'width .07s' } });
+    const lean = talking ? { transform: 'translateY(4%) scale(1.04)' } : {};
+    const cards = [
+      { id: '1a', title: 'Ear ripples', desc: 'Rings radiate outward from each side edge on a steady loop, clipped by the circle. Moves the same whether you talk or not.',
+        orb: this.orb(this.loopRings(), [this.ears('7%'), this.mouth()]) },
+      { id: '1b', title: 'Voice-reactive ripples', desc: 'Same ears, but rings light up with your volume — loud speech fills all three, silence leaves them dark. Proof it actually hears you.',
+        orb: this.orb(this.reactiveRings(l), [this.ears('7%'), this.mouth()]) },
+      { id: '1c', title: 'Leaning in', desc: 'While you speak, the face drops slightly and grows, like someone leaning toward you. Settles back when you pause.',
+        orb: this.orb(null, [this.ears('7%'), this.mouth(talking ? '28%' : '34%', talking ? '5%' : '4%')], lean) },
+      { id: '1d', title: 'Nodding', desc: 'Each time you pause, a small double nod — the visual “mm-hm”. Quiet while you’re mid-sentence.',
+        orb: this.orb(null, h('div', { key: 'n' + this.state.pauseTick, style: { position: 'absolute', inset: 0, animation: 'nod 1.4s ease-out 1' } }, [this.ears('7%'), this.mouth()])) },
+      { id: '1e', title: 'Ear glow', desc: 'No rings — a soft haze at each side brightens and widens with your voice. The most minimal option.',
+        orb: this.orb(null, [this.ears(`${30 + l * 30}%`, l), this.mouth()]) },
+      { id: '1f', title: 'Combined: reactive ripples + lean-in + nod', desc: 'Rings follow your voice, the face leans in while you talk and nods when you stop. Strongest “I’m with you” signal.',
+        orb: this.orb(this.reactiveRings(l), h('div', { key: 'c' + this.state.pauseTick, style: { position: 'absolute', inset: 0, animation: 'nod 1.4s ease-out 1' } }, [this.ears('7%'), this.mouth(talking ? '28%' : '34%', talking ? '5%' : '4%')]), lean) }
+    ];
+    const lag = this.lagLvl || 0;
+    const face = (mw, mh) => [this.mouth(mw, mh)];
+    const withExtra = (extra, fn) => { this._extra = extra; const o = fn(); this._extra = null; return o; };
+    const tilt = (this.tiltDir || 1) * (talking ? 6 + l * 4 : 0);
+    const cards2 = [
+      { id: '2a', title: 'Wobble only', desc: 'Baseline. The shape alone carries “I hear you” — calm circle when you’re silent, faceted wobble when you talk.',
+        orb: this.orb(null, face()) },
+      { id: '2b', title: 'Head tilt', desc: 'The face tilts slightly to one side while you talk, the universal “I’m taking this in” gesture. Straightens on pauses.',
+        orb: this.orb(null, face(), { transform: `rotate(${tilt}deg) translateY(${talking ? 2 : 0}%)`, transformOrigin: '50% 40%', transition: 'transform .6s ease-out' }) },
+      { id: '2c', title: 'Warms up', desc: 'The fill shifts from soft pink to a warmer, brighter coral as your voice comes through, then cools when you stop.',
+        orb: withExtra({ background: `oklch(${0.76 + l * 0.04} ${0.11 + l * 0.07} ${8 + l * 22})`, transition: 'background .15s' }, () => this.orb(null, face())) },
+      { id: '2d', title: 'Inner echo', desc: 'A lighter copy of the shape sits inside and swells with a slight lag behind your voice — your words landing inside it.',
+        orb: this.orb(h('span', { key: 'echo', style: { position: 'absolute', left: '50%', top: '50%', width: `${40 + lag * 50}%`, aspectRatio: '1', borderRadius: '50%', background: 'rgba(245,240,232,.18)', transform: `translate(-50%,-50%) rotate(${Date.now() / 40 % 360}deg)`, transition: 'width .2s ease-out' } }), face()) },
+      { id: '2e', title: 'Edge glow', desc: 'A soft light builds from the outer edge inward as you speak, so the wobbling outline itself seems to catch your voice.',
+        orb: this.orb(h('span', { key: 'glow', style: { position: 'absolute', inset: 0, background: `radial-gradient(circle, rgba(255,236,225,0) ${Math.round(62 - l * 22)}%, rgba(255,236,225,${(0.12 + l * 0.6).toFixed(2)}) 72%)`, transition: 'background .1s' } }), face()) },
+      { id: '2f', title: 'Attentive mouth', desc: 'The mouth narrows into a small, focused shape while you talk — mid-“mm” — then relaxes to a wide, easy line in pauses.',
+        orb: this.orb(null, face(talking ? `${16 + (1 - l) * 6}%` : '34%', talking ? '7%' : '4%')) }
+    ];
+    const COOL = 'oklch(0.76 0.09 225)', THINK = 'oklch(0.74 0.1 295)';
+    const T = Date.now() / 1000;
+    const thinkMouth = (x = '50%') => h('span', { key: 'tm', style: { position: 'absolute', left: x, bottom: '26%', width: '12%', height: '7%', borderRadius: '50%', background: CREAM, transform: 'translateX(-50%)', transition: 'left .6s' } });
+    const ph = T % 10, cyc = ph < 4 ? 'listening' : ph < 6 ? 'thinking' : 'speaking';
+    const speakLvl = 0.5 + 0.4 * Math.sin(T * 9) * Math.sin(T * 2.3);
+    const cycleOrb = cyc === 'listening'
+      ? this.orb(null, face(), { transform: `rotate(${tilt}deg) translateY(${talking ? 2 : 0}%)`, transformOrigin: '50% 40%', transition: 'transform .6s ease-out' }, { bg: COOL })
+      : cyc === 'thinking'
+        ? this.orb(null, [thinkMouth('58%')], null, { bg: THINK, g: 0.7, lvl: 0.2, spin: 0.15 })
+        : h('div', { style: { position: 'relative', width: '100%', height: '100%' } },
+            (this.rings || []).map(r => { const age = (Date.now() - r.t) / 1600; return h('span', { key: 'ro' + r.t, style: { position: 'absolute', inset: 0, borderRadius: '50%', border: `${Math.round(3 + r.a * 5)}px solid ${PINK}`, boxSizing: 'border-box', transform: `scale(${(1 + age * (0.3 + r.a * 0.35)).toFixed(3)})`, opacity: ((1 - age) * (0.3 + r.a * 0.5)).toFixed(3) } }); }),
+            h('div', { key: 'core', style: { position: 'absolute', inset: 0 } },
+              this.orb(null, [h('span', { key: 'sm', style: { position: 'absolute', left: '50%', bottom: '24%', width: `${26 + (this.sp || 0) * 6}%`, height: `${3 + (this.sp || 0) * 14}%`, borderRadius: '50%', background: CREAM, transform: 'translate(-50%, 50%)', transition: 'height .07s, width .07s' } })], null, { bg: PINK, g: 0.8, lvl: this.sp || 0 })));
+    const hueDrift = 225 + 140 * (0.5 + 0.5 * Math.sin(T * 0.9));
+    const N2 = 4 + Math.round(2.5 + 2.5 * Math.sin(T * 0.6));
+    const cards3 = [
+      { id: '3a', tag: cyc, title: 'Full cycle', desc: 'Cool blue while listening (wobbles and tilts its head with your voice), lavender while thinking, pink while speaking. Color eases between states.', orb: cycleOrb },
+      { id: '3a·L', tag: 'listening', title: '3a — listening, held', desc: 'Cool blue. Wobbles and tilts its head while you talk, settles to a calm circle in pauses. Bar shows the simulated voice.',
+        orb: this.orb(null, face(), { transform: `rotate(${tilt}deg) translateY(${talking ? 2 : 0}%)`, transformOrigin: '50% 40%', transition: 'transform .6s ease-out' }, { bg: COOL }), meter },
+      { id: '3a·T', tag: 'thinking', title: '3a — thinking, held', desc: 'Lavender. A calm faceted shape slowly turning, mouth shifted to one side.',
+        orb: this.orb(null, [thinkMouth('58%')], null, { bg: THINK, g: 0.7, lvl: 0.2, spin: 0.15 }) },
+      { id: '3g', tag: 'thinking', title: 'Head tilt + hmm', desc: 'Holds a slow, deeper tilt the whole time it thinks, mouth pulled to the side — the classic “let me think about that” pose.',
+        orb: this.orb(null, [thinkMouth('58%')], { transform: `rotate(${(-10 + 2 * Math.sin(T * 1.2)).toFixed(2)}deg)`, transformOrigin: '50% 40%' }, { bg: THINK, g: 0.6, lvl: 0.15, spin: 0.12 }) },
+      { id: '3b', tag: 'thinking', title: 'Slow turn', desc: 'Holds a calm faceted shape and slowly rotates, as if turning your words over. Mouth shifts to one side, “hmm”.',
+        orb: this.orb(null, [thinkMouth('60%')], null, { bg: THINK, g: 0.75, lvl: 0.15, spin: 0.25 }) },
+      { id: '3c', tag: 'thinking', title: 'Color drift', desc: 'Hue slowly blends from listening-blue toward speaking-pink — what it heard is becoming a reply. Shape stays soft.',
+        orb: this.orb(null, [thinkMouth()], null, { bg: `oklch(0.75 0.1 ${hueDrift.toFixed(0)})`, g: 0.4, lvl: 0.1, spin: 0.1 }) },
+      { id: '3d', tag: 'thinking', title: 'Light sweep', desc: 'A soft band of light passes across the inside every couple of seconds — quietly working, like a scan.',
+        orb: this.orb(h('span', { key: 'sw', style: { position: 'absolute', top: '-20%', bottom: '-20%', left: '25%', width: '50%', background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.35), rgba(255,255,255,0))', animation: 'sweep 2.2s ease-in-out infinite' } }), [thinkMouth()], null, { bg: THINK, g: 0.5, lvl: 0.1, spin: 0.1 }) },
+      { id: '3e', tag: 'thinking', title: 'Facet shuffle', desc: 'The number of sides slowly changes — 4, 5, 6, 7 — like it’s trying shapes until the answer fits.',
+        orb: this.orb(null, [thinkMouth()], null, { bg: THINK, g: 0.85, lvl: 0.3, spin: 0.2, N: N2 }) },
+      { id: '3f', tag: 'thinking', title: 'Gather in', desc: 'Shrinks slightly and pulses slowly, pulling inward to concentrate, then expands back out when it starts to speak.',
+        orb: h('div', { style: { width: '100%', height: '100%', transform: `scale(${(0.86 + 0.04 * Math.sin(T * 2.4)).toFixed(3)})` } }, this.orb(null, [thinkMouth()], null, { bg: THINK, g: 0.6, lvl: 0.2, spin: 0.12 })) }
+    ];
+    const tiltFace = { transform: `rotate(${tilt}deg) translateY(${talking ? 2 : 0}%)`, transformOrigin: '50% 40%', transition: 'transform .6s ease-out' };
+    const coolL = `oklch(${(0.74 + l * 0.06).toFixed(3)} ${(0.07 + l * 0.07).toFixed(3)} ${(230 - l * 25).toFixed(0)})`;
+    const inward = (this.inRings || []).map(r => { const age = (Date.now() - r.t) / 1300; return h('span', { key: 'in' + r.t, style: { position: 'absolute', inset: 0, borderRadius: '50%', border: `${Math.round(3 + r.a * 5)}px solid ${COOL}`, boxSizing: 'border-box', transform: `scale(${(1.55 - age * 0.55).toFixed(3)})`, opacity: (Math.sin(age * Math.PI) * (0.3 + r.a * 0.5)).toFixed(3) } }); });
+    const wrapOut = (outer, core) => h('div', { style: { position: 'relative', width: '100%', height: '100%' } }, outer, h('div', { key: 'core', style: { position: 'absolute', inset: 0 } }, core));
+    const cards4 = [
+      { id: '4a', title: 'Incoming rings', desc: 'The mirror of speaking: rings travel inward from outside and land on the shape with each word you say. Your voice arriving.',
+        orb: wrapOut(inward, this.orb(null, face(), tiltFace, { bg: COOL })) },
+      { id: '4b', title: 'Wobble + tilt + nod', desc: 'Shape wobbles and the head tilts while you talk, then a small nod each time you pause — “mm-hm, go on”.',
+        orb: this.orb(null, h('div', { key: 'n4b' + this.state.pauseTick, style: { position: 'absolute', inset: 0, animation: 'nod 1.4s ease-out 1' } }, face()), tiltFace, { bg: COOL }) },
+      { id: '4c', title: 'Brightens with voice', desc: 'The blue gets brighter and more saturated as you get louder, dims back in pauses.',
+        orb: this.orb(null, face(), tiltFace, { bg: coolL }) },
+      { id: '4d', title: 'Inner echo', desc: 'A lighter blue shape inside swells just behind your voice — your words landing.',
+        orb: this.orb(h('span', { key: 'echo', style: { position: 'absolute', left: '50%', top: '50%', width: `${40 + lag * 50}%`, aspectRatio: '1', borderRadius: '50%', background: 'rgba(245,240,232,.2)', transform: 'translate(-50%,-50%)', transition: 'width .2s ease-out' } }), face(), tiltFace, { bg: COOL }) },
+      { id: '4e', title: 'Edge glow', desc: 'Light builds from the edge inward while you speak, so the outline itself catches your voice.',
+        orb: this.orb(h('span', { key: 'glow', style: { position: 'absolute', inset: 0, background: `radial-gradient(circle, rgba(235,248,255,0) ${Math.round(62 - l * 22)}%, rgba(235,248,255,${(0.12 + l * 0.6).toFixed(2)}) 72%)` } }), face(), tiltFace, { bg: COOL }) },
+      { id: '4f', title: 'Incoming rings + nod', desc: '4a plus a small nod each time you pause — “mm-hm, go on”.',
+        orb: wrapOut(inward, this.orb(null, h('div', { key: 'n4' + this.state.pauseTick, style: { position: 'absolute', inset: 0, animation: 'nod 1.4s ease-out 1' } }, face()), tiltFace, { bg: COOL })) }
+    ];
+    const nodFace = k => h('div', { key: k + this.state.pauseTick, style: { position: 'absolute', inset: 0, animation: 'nod 1.4s ease-out 1' } }, face());
+    const listenOrb = k => this.orb(null, h('div', { key: k, style: { position: 'absolute', inset: 0, animation: 'nodSlow 2.6s ease-in-out infinite' } }, face()), null, {});
+    const thinkOrb = () => this.orb(null, [thinkMouth('58%')], { transform: `rotate(${(-10 + 2 * Math.sin(T * 1.2)).toFixed(2)}deg)`, transformOrigin: '50% 40%' }, { g: 0.6, lvl: 0.15, spin: 0.12 });
+    const spS = this.spSmooth = (this.spSmooth || 0) + ((this.sp || 0) - (this.spSmooth || 0)) * 0.35;
+    const speakOrb = () => wrapOut(
+      null,
+      this.orb(null, [h('span', { key: 'sm', style: { position: 'absolute', left: '50%', bottom: '24%', width: `${26 + (this.sp || 0) * 6}%`, height: `${3 + (this.sp || 0) * 14}%`, borderRadius: '50%', background: CREAM, transform: 'translate(-50%, 50%)', transition: 'height .07s, width .07s' } })], null, { g: 0.8, lvl: this.sp || 0 }));
+    const idleOrb = () => this.orb(null, face('30%', '6%'), null, { g: 0, talking: false });
+    const mutedOrb = () => h('div', { style: { width: '100%', height: '100%', opacity: 0.5 } }, this.orb(null, face('26%', '3%'), null, { g: 0, talking: false }));
+    const cyc5 = ph < 4 ? 'listening' : ph < 6 ? 'thinking' : 'speaking';
+    const cards5 = [
+      { id: '5a', tag: cyc5, title: 'Full cycle', desc: 'Listening → thinking → speaking, looping. Same pink the whole time.', orb: cyc5 === 'listening' ? listenOrb('c5') : cyc5 === 'thinking' ? thinkOrb() : speakOrb(), meter: cyc5 === 'listening' ? meter : null },
+      { id: '5b', tag: 'idle', title: 'Idle', desc: 'Before the call or between sessions. Perfect circle, slow breathing, relaxed mouth.', orb: idleOrb() },
+      { id: '5c', tag: 'listening', title: 'Listening (4b)', desc: 'Wobbles with your voice, with a slow, steady nod the whole time it listens. No tilt.', orb: listenOrb('l5'), meter },
+      { id: '5d', tag: 'thinking', title: 'Thinking', desc: 'Holds a slow, deeper head tilt and a calm faceted turn, mouth pulled to the side — “hmm”.', orb: thinkOrb() },
+      { id: '5e', tag: 'speaking', title: 'Speaking', desc: 'Mouth opens with each syllable and the shape wobbles with the voice. No halos or rings.', orb: speakOrb() },
+      { id: '5f', tag: 'muted', title: 'Muted', desc: 'Your mic is off. Dimmed, still, flat mouth — clearly waiting rather than listening.', orb: mutedOrb() },
+      { id: '5g', tag: 'paused', title: 'Paused', desc: 'Session on hold. Fades to a warm grey and stops breathing entirely — frozen until you resume.',
+        orb: this.orb(null, face('28%', '4%'), null, { g: 0, talking: false, bg: '#A9A39A', still: true }) }
+    ];
+    return { cards: cards.map(c => ({ ...c, meter })), cards2: cards2.map(c => ({ ...c, meter })), cards3, cards4: cards4.map(c => ({ ...c, meter })), cards5 };
+  }
+}
+</script>
+</body>
+</html>

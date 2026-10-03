@@ -20,13 +20,16 @@
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
   .wrap{max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-direction:column; height:100vh;}
-  .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px;}
+  .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;}
   .brand{display:flex; align-items:center; gap:10px;}
   .brand-mark{height:26px; width:auto; display:block;}
   .brand-name{font-weight:800; font-size:22px; letter-spacing:-0.01em; color:var(--ink);}
-  .header-right{display:flex; align-items:center; gap:10px; flex-shrink:0;}
-  .feedback-link{font-size:13.5px; font-weight:600; color:var(--ink-soft); text-decoration:underline; white-space:nowrap;}
-  .privacy-pill{display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; background:#17372E0D; font-size:14px; font-weight:500; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
+  .feedback-link{font-size:13.5px; font-weight:600; color:var(--ink-soft); text-decoration:none; white-space:nowrap;}
+  .feedback-link-row{margin-top:14px; text-align:center;}
+  /* Same fixed height as .ui-toggle (see its own comment) so the pill and
+     the Voice/Text toggle -- the two pill-shaped controls on the page --
+     read as the same size even though their padding/font differ. */
+  .privacy-pill{display:flex; align-items:center; gap:8px; height:38px; margin-left:4px; padding:0 16px; border-radius:999px; background:#17372E0D; font-size:14px; font-weight:500; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
   .privacy-pill svg{flex-shrink:0;}
   .disclaimer-footer{margin-top:14px; padding:0 4px; font-size:11.5px; line-height:1.5; color:var(--ink-soft); opacity:.65; text-align:center;}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
@@ -77,7 +80,7 @@
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
   .thimble-ripple.b{animation-delay:.8s;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
   .thimble-mouth.dots{display:flex; align-items:center; justify-content:center; background:none !important;}
@@ -92,10 +95,9 @@
      "underneath the listening, speaking thing" instead of floating lower
      down near the controls. Smaller font + narrower max-width per the
      same report ("be smaller"). */
-  .caption-stack{display:flex; justify-content:center; margin-top:10px; padding:0 28px;}
+  .caption-stack{position:absolute; left:0; right:0; display:flex; justify-content:center; padding:0 28px; pointer-events:none;}
   .caption{max-width:420px; font-size:clamp(13px,0.9vw,15px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
   .stage-top-left{position:absolute; top:16px; left:16px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; z-index:2;}
-  .stage-top-right{position:absolute; top:16px; right:16px; z-index:2;}
   /* State pill ("Thimble Listening...") sits directly under the avatar
      shape itself, not pinned to a stage corner -- it's reporting on
      Thimble specifically, not the call as a whole (that's what the
@@ -145,6 +147,12 @@
      past. overflow-x stays clipped for the rounded corners. */
   .call-layout{flex:1; display:flex; min-height:0; border:1px solid var(--border); border-radius:14px; overflow-y:auto; overflow-x:hidden; background:var(--card);}
   .call-main{position:relative; flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--stage-bg); overflow-y:auto;}
+  /* Grid, not a single centered flex item: row 1 is a blank spacer, row 2
+     holds the avatar+pill (sized to its own content), row 3 is the rest of
+     the stage's height down to the control bar just below it -- the
+     caption sits centered in that row 3, i.e. vertically centered in the
+     gap between the state pill and the pause/mute/caption control row,
+     not glued directly under the pill. */
   .stage{position:relative; flex:1; display:flex; align-items:center; justify-content:center; padding:32px; min-width:0; min-height:280px; background:var(--stage-bg); border-radius:18px;}
   /* .call-controls centers within the FULL row width, not narrowed by the
      you-tile's own width -- reported live: centering should ignore the
@@ -207,10 +215,17 @@
      the text/chat header, always in sync (see setUi()). Per the design
      handoff, voice mode has no text input at all: typing only happens in
      Text, talking only happens in Voice (via Go live), switched here. */
-  .ui-toggle{display:flex; padding:4px; border-radius:999px; background:#17372E0D; gap:2px; flex-shrink:0;}
-  .ui-tab{font:inherit; font-size:13px; font-weight:700; padding:8px 16px; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
+  /* Fixed 38px height, same as .privacy-pill, so the two pill controls
+     match -- the 4px outer padding leaves a 30px-tall tab, centered via
+     align-items so the shorter tab height doesn't throw off the toggle's
+     own vertical centering. */
+  .ui-toggle{display:flex; align-items:center; height:38px; padding:4px; border-radius:999px; background:#17372E0D; gap:2px; flex-shrink:0;}
+  .ui-tab{font:inherit; font-size:13px; font-weight:700; height:30px; padding:0 16px; display:flex; align-items:center; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
   .ui-tab.active{background:var(--accent); color:var(--paper);}
-  .live-timer{display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:rgba(15,38,32,.7); color:var(--paper); font-family:'JetBrains Mono',monospace; font-size:12px;}
+  /* Hidden for now -- the pink dot on the state pill already signals
+     live/active, so this duplicated that. JS still tracks/updates it
+     underneath; delete this override to bring it back. */
+  .live-timer{display:none !important;}
   .skip-intro-btn{display:inline-flex; align-items:center; gap:4px; padding:5px 10px; border-radius:999px; background:rgba(15,38,32,.55); color:var(--paper); font:inherit; font-size:12px; font-weight:600; border:1px solid rgba(246,241,231,.3); cursor:pointer;}
   .skip-intro-btn:hover{background:rgba(15,38,32,.75);}
   .you-tile-label-row{display:flex; align-items:center; gap:4px;}
@@ -285,10 +300,11 @@
     <div class="brand">
       <img class="brand-mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E" alt="">
       <span class="brand-name">Mend</span>
+      <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span>Private<span class="privacy-pill-rest">. Nothing is recorded.</span></span></div>
     </div>
-    <div class="header-right">
-      <a class="feedback-link" href="survey" target="_blank" rel="noopener">Leave feedback</a>
-      <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private.<span class="privacy-pill-rest"> Nothing is recorded.</span></div>
+    <div class="ui-toggle">
+      <button class="ui-tab active" data-ui="voice">Voice</button>
+      <button class="ui-tab" data-ui="text">Text</button>
     </div>
   </div>
   <div class="video-toggle" id="videoToggle" hidden>
@@ -302,12 +318,6 @@
           <div class="stage-top-left">
             <div class="live-timer" id="liveTimer" hidden>Live &middot; <span id="liveTimerText">00:00</span></div>
             <button id="skipIntroBtn" class="skip-intro-btn" hidden>Skip &rarr;</button>
-          </div>
-          <div class="stage-top-right">
-            <div class="ui-toggle">
-              <button class="ui-tab active" data-ui="voice">Voice</button>
-              <button class="ui-tab" data-ui="text">Text</button>
-            </div>
           </div>
           <div class="avatar-stack">
             <div class="avatar-row">
@@ -325,9 +335,6 @@
             <div class="state-pill-row">
               <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
             </div>
-            <div class="caption-stack">
-              <div class="caption" id="caption"></div>
-            </div>
           </div>
           <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
           <div class="mic-error-banner" id="micErrorBanner" hidden>
@@ -340,6 +347,16 @@
             <div class="desc">Your browser needs a tap before Thimble can play audio.</div>
             <button id="autoplayRetryBtn">Tap to continue</button>
           </div>
+        </div>
+        <!-- Lives outside .stage, directly in .call-main (position:relative),
+             so it can be positioned at the true vertical midpoint between the
+             state pill (inside .stage) and the control bar (inside
+             .call-bottom-row, a separate box below .stage) -- see
+             positionCaptionStack() in the script, which sets its `top` to
+             that midpoint on every frame. A span this can't reach with CSS
+             alone, since the two reference points sit in different boxes. -->
+        <div class="caption-stack">
+          <div class="caption" id="caption"></div>
         </div>
         <!-- Controls center within this row's full width; the you-tile is
              positioned absolutely inside it (see its own CSS comment) so
@@ -395,10 +412,6 @@
           </div>
         </div>
         <div class="chat-header-right">
-          <div class="ui-toggle">
-            <button class="ui-tab" data-ui="voice">Voice</button>
-            <button class="ui-tab active" data-ui="text">Text</button>
-          </div>
           <button id="chatResetBtn" class="outline-pill" title="Start a new conversation">Start over</button>
         </div>
       </div>
@@ -416,6 +429,8 @@
       </div>
     </div>
   </div>
+
+  <div class="feedback-link-row"><a class="feedback-link" href="survey" target="_blank" rel="noopener">Leave feedback</a></div>
 
   <div id="videoMode" class="video-area" hidden>
     <iframe id="videoFrame" allow="camera; microphone; autoplay; display-capture" title="Mend facilitator video call"></iframe>
@@ -972,8 +987,41 @@ function thimbleInstance(prefix, size) {
     mouth: document.getElementById(prefix + 'Mouth'),
     rippleA: document.getElementById(prefix + 'RippleA'),
     rippleB: document.getElementById(prefix + 'RippleB'),
-    renderedState: null, nodFiredAt: null, wasSpeaking: false, lastNod: 0, mouthLevel: 0,
+    renderedState: null, mouthLevel: 0, geo: 0,
   };
+}
+
+// Rounded-hexagon outline: a direct port of design_handoff_thimble_avatar-
+// new-mow/thimble-avatar.js's _polygon(). `g` (0..1) is how "geometric" the
+// outline is (0 = perfect circle, 1 = full rounded hexagon); `lvl` (0..1)
+// is the driving audio level, which both deepens the facets and adds a
+// small ripple on the sides. 120 points, each a box-filtered average of 13
+// samples, is what turns the hexagon's sharp vertices into smoothly
+// rounded corners instead of a flat-edged polygon.
+// AMOUNT scales the whole wobble's contrast beyond the handoff's own
+// values, per explicit request to make it read more clearly at a glance --
+// the handoff's own numbers stay as the baseline shape math (polygon math,
+// smoothing, easing), just pushed further from the circle.
+const THIMBLE_WOBBLE_AMOUNT = 2.6;
+function thimblePolygon(t, g, lvl, facets, spinSpeed) {
+  const N = facets, M = 120, seg = (2 * Math.PI) / N, pts = [];
+  const phi = t * spinSpeed + 0.15 * Math.sin(t * 1.7);
+  const poly = th => { const m = (((th - phi) % seg) + seg) % seg; return Math.cos(seg / 2) / Math.cos(m - seg / 2); };
+  const depth = Math.min(1, g * Math.min(1, 0.55 + lvl * 0.6) * THIMBLE_WOBBLE_AMOUNT);
+  for (let i = 0; i < M; i++) {
+    const th = (i / M) * 2 * Math.PI;
+    let sum = 0; for (let w = -6; w <= 6; w++) sum += poly(th + (w / 6) * seg * 0.32);
+    const smooth = sum / 13;
+    // Two ripple frequencies layered, not one -- a single sine term moves
+    // in lockstep all the way round the outline, which reads as a pulse
+    // more than real movement; the second, slower, counter-phased term
+    // breaks that symmetry so the wobble looks alive instead of
+    // mechanical.
+    const jitter = 1 + 0.05 * g * lvl * Math.sin(th * N + t * 5) + 0.03 * g * lvl * Math.sin(th * N * 0.5 - t * 3.2);
+    const r = 50 * (1 - depth * (1 - smooth)) * jitter;
+    pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
+  }
+  return `polygon(${pts.join(',')})`;
 }
 const thimbleBig = thimbleInstance('thimble', 200);
 const thimbleMini = thimbleInstance('thimbleMini', 48);
@@ -1039,24 +1087,43 @@ function applyThimbleState(inst, state) {
   renderThimbleMouth(inst, state);
 }
 
-// Active-listening wobble/lean/nod: a direct port of the handoff's per-frame
-// loop, driven by the employee's own real mic level (startMicAnalysis's
-// analyser) while actually recording -- same "L" the handoff's own listening
-// avatar reacts to, just real input here instead of its simulated fallback.
+// Active-listening wobble/lean/nod. The outline itself (this function's
+// clip-path block below) is a direct port of design_handoff_thimble_avatar-
+// new-mow/thimble-avatar.js's _polygon() -- a real rounded-hexagon built
+// from a 120-point, box-filtered clip-path, not the border-radius
+// approximation an earlier handoff draft used here. Driven by the
+// employee's own real mic level (startMicAnalysis's analyser) while
+// actually recording -- same "L" the handoff's own listening avatar reacts
+// to, just real input here instead of its simulated fallback.
 function updateThimbleMotion(inst, now, level, listening) {
   applyThimbleState(inst, avatarState);
-  if (!listening) { inst.ring.style.transform = 'none'; }
+  if (!listening) { inst.ring.style.transform = 'none'; inst.body.style.clipPath = 'none'; inst.geo = 0; }
   else {
-    const spk = level > 0.15;
-    if (inst.wasSpeaking && !spk) inst.nodFiredAt = now;
-    if (spk && now - inst.lastNod > 1700) { inst.nodFiredAt = now; inst.lastNod = now; }
-    inst.wasSpeaking = spk;
-    const np = inst.nodFiredAt !== null ? (now - inst.nodFiredAt) / 620 : 2;
-    const nod = np < 1 ? Math.abs(Math.sin(np * Math.PI * 2)) * (1 - np * .45) : 0;
-    inst.ring.style.transform = `rotate(${-level * 7}deg) translate(${level * 3}%,${nod * 5}%) scale(${1 + nod * .02},${1 - nod * .05})`;
-    const amp = 5 + level * 16;
-    const w1 = Math.sin(now / 240), w2 = Math.sin(now / 330 + 1), w3 = Math.sin(now / 290 + 2);
-    inst.body.style.borderRadius = `${50 + w1 * amp * .5}% ${47 - level * 14 + w2 * amp * .5}% ${53 - level * 14 + w3 * amp * .5}% ${50 - w1 * amp * .5}% / ${58 + w2 * amp * .4}% ${58 - level * 8 + w3 * amp * .4}% ${42 - level * 8 - w2 * amp * .4}% ${42 - w3 * amp * .4}%`;
+    // Continuous nod, not pause-triggered: a direct port of the handoff's
+    // "the nod runs the whole time the avatar is listening" -- a steady
+    // 2.6s-cycle bob, up to 4% of size, regardless of whether there's
+    // sound right now. The earlier version here only nodded right after a
+    // speech-end transient, so it sat still almost all the time; reported
+    // back as needing "a lot more movement," and this continuous cycle is
+    // the actual source of that in the reference, not the shape wobble
+    // (which stays subtle even at full level -- verified against the
+    // reference's own numbers). No head tilt during listening, per spec --
+    // idle gets neither the nod nor the tilt.
+    const nodding = avatarState === 'listening';
+    const y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
+    // Breathing scale on top -- always running so the avatar never sits
+    // perfectly still even in silence. 3s period while listening, 4.5s
+    // while idle, per the handoff's own table; amplitude pushed past its
+    // baseline (0.0175) for a livelier feel per explicit request.
+    const breathePeriod = nodding ? 3 : 4.5;
+    const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * (now / 1000)) / breathePeriod));
+    inst.ring.style.transform = `translateY(${y.toFixed(2)}%) scale(${breathe.toFixed(4)})`;
+    // Circle at rest, rounded hexagon once actually hearing speech (not just
+    // idle/silence) -- geo eases toward its target at 12%/frame, same as
+    // the reference, so the shape always morphs smoothly and never snaps.
+    const geoTarget = (avatarState === 'listening' && level > 0.08) ? 1 : 0;
+    inst.geo += (geoTarget - inst.geo) * 0.12;
+    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, level, 6, 0.35 + level * 0.4);
   }
   // Talking mouth: real TTS amplitude drives the open/close height directly,
   // rather than the handoff's canned "talk" loop -- real lip-sync instead of
@@ -1093,6 +1160,22 @@ function updateThimbleMotion(inst, now, level, listening) {
 // most of it has actually been said. A single long sentence still gets
 // split further on clause breaks so no one chunk sits on screen too long.
 const captionEl = document.getElementById('caption');
+const captionStackEl = document.querySelector('.caption-stack');
+const statePillRowEl = document.querySelector('.state-pill-row');
+const controlBarEl = document.querySelector('.control-bar');
+const callMainEl = document.querySelector('.call-main');
+// caption-stack lives directly in .call-main (see its own markup comment),
+// not inside .stage, so it can be placed at the real vertical midpoint
+// between the state pill and the control bar below -- two reference points
+// in different boxes that plain CSS centering can't span on its own.
+function positionCaptionStack() {
+  const pillRect = statePillRowEl.getBoundingClientRect();
+  const controlsRect = controlBarEl.getBoundingClientRect();
+  const mainRect = callMainEl.getBoundingClientRect();
+  const midY = (pillRect.bottom + controlsRect.top) / 2 - mainRect.top;
+  captionStackEl.style.top = midY + 'px';
+  captionStackEl.style.transform = 'translateY(-50%)';
+}
 // One queued sentence (see the sentence-streamed TTS section below) is one
 // playing audio clip, but a long sentence (e.g. with a clause break) still
 // reads as a wall of text if shown all at once -- reported live as
@@ -1153,6 +1236,7 @@ function checkSurveyRedirect() {
 function updateCaption() {
   updateStatePill();
   checkSurveyRedirect();
+  positionCaptionStack();
   if (!captionsOn || avatarState !== 'talking' || !captionChunks.length) {
     captionEl.textContent = '';
     return;
