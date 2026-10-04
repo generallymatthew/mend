@@ -56,6 +56,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).parent
+PITCH_DIR = ROOT.parent / "Mend Pitch"
 load_dotenv(ROOT / ".env")
 
 ORG_ACCESS_CODE = os.environ.get("ORG_ACCESS_CODE", "")
@@ -277,4 +278,11 @@ async def index():
     return FileResponse(ROOT / "static" / "index.html")
 
 
+@app.get("/pitch")
+@app.get("/pitch/")
+async def pitch_index():
+    return FileResponse(PITCH_DIR / "Mend Pitch v2.dc.html")
+
+
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
+app.mount("/pitch", StaticFiles(directory=PITCH_DIR), name="pitch")
