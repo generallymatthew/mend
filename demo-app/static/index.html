@@ -60,11 +60,9 @@
   [hidden]{display:none !important;}
 
   /* "Before you start" hero: one quiet, centered card instead of several
-     stacked ones (explainer + bullet list + CTA + footer) -- simplified
-     per explicit direction to cut it down to a single piece of information
-     at a time. Thimble's own resting shape (egg radius + lean, straight
-     from intake-app's THIMBLE_SHAPES.idle) stands in for the real avatar
-     here since this page has no live call to animate. */
+     stacked ones -- simplified per explicit direction to cut it down to a
+     single piece of information at a time. The avatar is a port of the
+     real pitch animation's Ball() component, see below. */
   .hero-card{background:var(--card); border:1px solid var(--border); border-radius:24px; padding:48px 32px 40px; margin-top:28px; text-align:center;}
   /* Straight port of Mend Pitch/mend-opening.jsx's Ball() -- the actual
      Thimble visual used in the real pitch animation (radial-gradient
@@ -76,7 +74,10 @@
   .hero-avatar{width:120px; height:120px; margin:0 auto 28px; position:relative; border-radius:50%; background:radial-gradient(circle at 34% 30%, #7fb3a7 0%, var(--pink) 55%, #8c0d28 100%); box-shadow:0 10px 26px rgba(27,52,47,.22);}
   .hero-avatar::after{content:''; position:absolute; left:50%; top:58%; width:24px; height:4px; border-radius:999px; background:var(--card); transform:translate(-50%,-50%);}
   .hero-h1{font-family:'Fraunces',Georgia,serif; font-weight:800; font-size:2.3rem; line-height:1.1; letter-spacing:-0.01em; margin:0 0 16px;}
-  .hero-lede{color:var(--ink-soft); font-size:15.5px; line-height:1.6; max-width:420px; margin:0 auto 32px;}
+  .hero-lede{color:var(--ink-soft); font-size:15.5px; line-height:1.6; max-width:420px; margin:0 auto 24px;}
+  .hero-options{list-style:none; margin:0 auto 32px; padding:0; max-width:380px; text-align:left; display:flex; flex-direction:column; gap:12px;}
+  .hero-options li{display:flex; align-items:flex-start; gap:11px; font-size:14.5px; color:var(--ink); line-height:1.45;}
+  .hero-options li::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--pink); margin-top:7px; flex-shrink:0;}
   .hero-card button.primary{padding:14px 30px; font-size:15px;}
   .hero-caption{font-size:12.5px; color:var(--ink-soft); margin-top:14px;}
 </style>
@@ -130,7 +131,12 @@
     <div class="hero-card">
       <div class="hero-avatar"></div>
       <h1 class="hero-h1">Before you start</h1>
-      <p class="hero-lede">A private, one-on-one conversation with Thimble about a workplace conflict &mdash; no HR, no manager, nothing saved. Just you, working through what happened.</p>
+      <p class="hero-lede">A private, one-on-one conversation with Thimble &mdash; no HR, no manager, nothing saved. A few ways people use it:</p>
+      <ul class="hero-options">
+        <li>Discuss a conflict you had with a coworker, teammate, or manager.</li>
+        <li>Role-play a difficult conversation before having it in person.</li>
+        <li>Get help managing direct reports.</li>
+      </ul>
       <a class="linkbtn" href="/intake/" target="_blank" rel="noopener"><button class="primary">Start your session &rarr;</button></a>
       <div class="hero-caption">Opens in a new tab &middot; 10&ndash;20 minutes</div>
     </div>
