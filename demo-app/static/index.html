@@ -32,30 +32,12 @@
   p.lede{color:var(--ink-soft); margin-top:0; line-height:1.5;}
   .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px; margin-top:16px;}
   .callout{background:var(--honey-soft); border:1px solid #E9B94966; border-radius:14px; padding:13px 15px; font-size:13.5px; line-height:1.5; margin-bottom:16px;}
-  label{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.08em; opacity:.75; display:block; margin-bottom:6px;}
-  input[type=text], input[type=email]{width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:12px; font:inherit; font-size:14px; background:var(--paper); color:var(--ink);}
-  input[type=text]:focus, input[type=email]:focus{outline:none; border-color:var(--ink); background:var(--card);}
-  .field{margin-bottom:14px;}
   button{border:1px solid var(--border); background:var(--card); color:var(--ink); border-radius:999px; padding:11px 18px; font:inherit; font-weight:700; cursor:pointer; font-size:13.5px; transition:opacity .15s, border-color .15s;}
   button:hover{border-color:var(--ink);}
   button.primary{background:var(--accent); color:var(--paper); border-color:var(--accent);}
   button.primary:hover{opacity:.9;}
   button:disabled{opacity:.5; cursor:default;}
-  .error{color:#8C3B2E; font-size:13px; margin-top:8px; min-height:1em;}
-  .steps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:16px;}
-  .step{display:flex; gap:12px; align-items:flex-start;}
-  .num{font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--ink); background:var(--honey); border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;}
-  .step-body{flex:1;}
-  .step-title{font-weight:700; margin-bottom:2px;}
-  .step-desc{font-size:13.5px; color:var(--ink-soft); line-height:1.5; margin-bottom:10px;}
-  .step-actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
   a.linkbtn{text-decoration:none;}
-  .identity-bar{display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--ink-soft); margin-bottom:6px;}
-  .identity-bar button{padding:5px 12px; font-size:12px; font-weight:600;}
-  .invite-row{display:flex; gap:8px; margin-top:8px;}
-  .invite-row input{flex:1; font-family:'JetBrains Mono',monospace; font-size:12px; border-radius:10px;}
-  .copied{color:var(--ink); font-size:12px; font-weight:600; margin-left:8px; opacity:0; transition:opacity .15s;}
-  .copied.show{opacity:1;}
   footer{margin-top:24px; font-size:12px; color:var(--ink-soft); line-height:1.6;}
   [hidden]{display:none !important;}
 
@@ -103,36 +85,14 @@
 
   <div class="eyebrow">Mend &middot; early test</div>
 
-  <!-- Sign-up screen -->
-  <section id="signup">
-    <h1>Sign up</h1>
-    <!-- Personal email dropped from this screen for this test round --
-         testers give an email on intake-app's own post-session survey
-         instead, for follow-up, not for identity here. See server.py's
-         signup() for the backend side of this. -->
-    <p class="lede">No company directory, no SSO. Just your org's access code.</p>
-    <div class="card">
-      <div class="field">
-        <label for="orgCode">Org access code</label>
-        <input type="text" id="orgCode" placeholder="e.g. WILLOW-CREEK-9F2" autocomplete="off">
-      </div>
-      <button class="primary" id="signupBtn">Sign up</button>
-      <div class="error" id="signupError"></div>
-    </div>
-  </section>
-
-  <!-- Hub, shown once "signed up" -- for this test round, a single
-       explainer + one way in (the solo session, today's "intake-app"),
-       not the full multi-step journey (invite/joint-session/post-session
-       aren't part of this test and aren't deployed alongside it). See
+  <!-- Hub -- for this test round, a single explainer + one way in (the
+       solo session, today's "intake-app"), not the full multi-step journey
+       (invite/joint-session/post-session aren't part of this test and
+       aren't deployed alongside it). Sign-in was dropped entirely for this
+       test round -- testers go straight here, no org access code. See
        STATUS.md / the commit that added this for why -- those other steps'
        server-side routes still exist in server.py, just not linked here. -->
-  <section id="hub" hidden>
-    <div class="identity-bar">
-      <span>Signed up</span>
-      <button id="signoutBtn">Sign out</button>
-    </div>
-
+  <section id="hub">
     <div class="hero-card">
       <div class="hero-avatar"></div>
       <h1 class="hero-h1">Before you start</h1>
@@ -153,69 +113,5 @@
 
 </div>
 
-<script>
-const $ = (id) => document.getElementById(id);
-// Path-relative, not hardcoded absolute: this page is served at "/"
-// standalone (direct port) but at "/" behind the local Caddy proxy too
-// (../Caddyfile has demo-app as the catch-all root) -- kept for the same
-// reason the other three apps need it, see ../joint-session-app.
-const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
-function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
-
-function loadIdentity() {
-  try { return JSON.parse(localStorage.getItem('mend_demo_identity') || 'null'); }
-  catch (e) { return null; }
-}
-
-function saveIdentity(identity) {
-  localStorage.setItem('mend_demo_identity', JSON.stringify(identity));
-}
-
-function clearIdentity() {
-  localStorage.removeItem('mend_demo_identity');
-}
-
-function showHub(identity) {
-  $('signup').hidden = true;
-  $('hub').hidden = false;
-}
-
-function showSignup() {
-  $('hub').hidden = true;
-  $('signup').hidden = false;
-}
-
-$('signupBtn').addEventListener('click', async () => {
-  const orgCode = $('orgCode').value.trim();
-  const errorEl = $('signupError');
-  errorEl.textContent = '';
-  let data;
-  try {
-    const res = await fetch(apiPath('/api/signup'), {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({org_code: orgCode}),
-    });
-    data = await res.json();
-    if (!res.ok) { errorEl.textContent = data.error || 'signup failed'; return; }
-  } catch (e) {
-    errorEl.textContent = 'could not reach the server: ' + e.message;
-    return;
-  }
-  const identity = {email: data.email, token: data.identity_token, joinedAt: Date.now()};
-  saveIdentity(identity);
-  showHub(identity);
-});
-
-$('signoutBtn').addEventListener('click', () => {
-  clearIdentity();
-  showSignup();
-});
-
-(function init() {
-  const identity = loadIdentity();
-  if (identity) showHub(identity);
-  else showSignup();
-})();
-</script>
 </body>
 </html>

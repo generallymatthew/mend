@@ -2,11 +2,15 @@
 
 Updated at natural checkpoints (a completed, verified piece of work), not on every commit. Meant to let anyone — including you, switching between your two Claude accounts on this same machine — pick the project back up cold, without depending on any one conversation's chat history. See `README.md` for what the project actually is, and `ROADMAP.md` for the structural phase-level view (this file is the rolling log of what actually happened; that one is the checklist of what needs to be true next).
 
-**Last updated:** 2026-10-03 (night)
+**Last updated:** 2026-10-04
 
 ## Active goal
 
-7-day push to a workable MVP (`demo-app` + `intake-app`) testers can reach over a real link, not localhost. **Live as of 2026-09-30: https://mend-mvp.onrender.com** — signup, access code, hub, intake, and a real facilitator conversation all verified against the actual deployed site (not just locally). Full legal/HR counsel review (Phase 3) is explicitly deferred for this test phase — a footer disclaimer is the agreed substitute, since no real HR is acting on output during testing.
+7-day push to a workable MVP (`demo-app` + `intake-app`) testers can reach over a real link, not localhost. **Live as of 2026-09-30: https://mend-mvp.onrender.com** — hub, intake, and a real facilitator conversation all verified against the actual deployed site (not just locally). Full legal/HR counsel review (Phase 3) is explicitly deferred for this test phase — a footer disclaimer is the agreed substitute, since no real HR is acting on output during testing.
+
+## Recently completed
+
+- **`demo-app`: sign-in removed for this test round, at the user's explicit request** ("remove the sign in feature thats not going to be used for the user test"). The org-access-code signup screen (`#signup`) and its gating JS (`loadIdentity`/`saveIdentity`/`clearIdentity`/`showHub`/`showSignup`/the init check) are gone; `#hub` ("Before you start") is now shown unconditionally, so testers land straight on it instead of entering `WILLOW-CREEK-9F2`-style codes first. CSS rules that were only reachable from the removed signup markup (`label`, `input[type=text/email]`, `.field`, `.error`, and the already-orphaned `.identity-bar`) were removed alongside it. `server.py`'s `/api/signup` and the other identity-gated routes (`/api/invite`, `/api/pair-invite`, etc.) are untouched — not linked from the UI, same as before. Verified live in the browser pane: hard reload of `http://localhost:8423` now shows "Before you start" immediately, no sign-up step.
 
 ## Where things stand
 
