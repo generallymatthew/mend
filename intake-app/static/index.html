@@ -170,7 +170,7 @@
   .call-controls{width:100%; max-width:720px; display:flex; flex-direction:column; gap:8px;}
   .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
   .transcript-header{padding:14px 16px; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
-  .transcript-header button{font-size:11px; padding:5px 9px; text-transform:none; letter-spacing:normal; font-family:-apple-system,BlinkMacSystemFont,'Public Sans',sans-serif;}
+  .transcript-header button{font-size:11px; padding:5px 9px; text-transform:none; letter-spacing:normal;}
   .transcript-panel .thread{flex:1; min-height:0; overflow-y:auto; padding:16px; margin:0;}
 
   /* PiP-style "You" tile, video-call style -- avatar centers in the tile on
@@ -392,7 +392,7 @@
       <div class="transcript-panel" id="transcriptPanel" hidden>
         <div class="transcript-header">
           <span>Transcript</span>
-          <button id="resetBtn" title="Start a new conversation">Reset</button>
+          <button id="resetBtn" title="Start a new conversation">Start over</button>
         </div>
         <div class="thread" id="thread"></div>
       </div>
@@ -449,10 +449,10 @@
   </div>
 
   <div class="banner survey-toast" id="surveyToast" hidden>
-    <span>Thanks for talking with Thimble &mdash; taking you to a quick feedback survey&hellip;</span>
+    <span>Thanks for talking with Thimble. Taking you to a quick feedback survey&hellip;</span>
   </div>
 
-  <div class="disclaimer-footer">Not legal or HR advice. Mend is a prototype &mdash; Thimble is an AI assistant, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
+  <div class="disclaimer-footer">Not legal or HR advice. Mend is a prototype. Thimble is an AI assistant, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
 </div>
 
 <script>

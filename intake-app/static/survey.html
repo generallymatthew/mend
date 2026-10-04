@@ -10,7 +10,7 @@
 <style>
   :root{
     --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
-    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0; --pink:#F3829A;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
   }
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
@@ -55,7 +55,7 @@
 
   <div id="form-view">
     <h1>How did that go?</h1>
-    <p class="sub">Ten minutes, anonymous, and it goes straight to the people building this &mdash; nothing here is shared with your employer.</p>
+    <p class="sub">Ten minutes, anonymous. It goes straight to the people building this, not to your employer.</p>
 
     <div class="card">
       <div class="q-label">Overall, how was your experience?</div>
@@ -93,8 +93,8 @@
       <div class="q-label">Did Thimble ever feel like it was taking sides?</div>
       <div class="choice-row" data-radio="sided">
         <label class="choice"><input type="radio" name="sided" value="neutral"> No, it felt neutral</label>
-        <label class="choice"><input type="radio" name="sided" value="me"> Somewhat &mdash; it leaned toward me</label>
-        <label class="choice"><input type="radio" name="sided" value="other"> Somewhat &mdash; it leaned toward the other person</label>
+        <label class="choice"><input type="radio" name="sided" value="me"> Somewhat, it leaned toward me</label>
+        <label class="choice"><input type="radio" name="sided" value="other"> Somewhat, it leaned toward the other person</label>
         <label class="choice"><input type="radio" name="sided" value="clear"> Yes, it clearly sided with someone</label>
       </div>
     </div>
@@ -103,7 +103,7 @@
       <div class="q-label">Did Thimble feel helpful and fair overall?</div>
       <div class="choice-row" data-radio="felt_fair">
         <label class="choice"><input type="radio" name="felt_fair" value="yes"> Yes, it felt helpful and neutral</label>
-        <label class="choice"><input type="radio" name="felt_fair" value="somewhat"> Somewhat &mdash; it had moments that felt off</label>
+        <label class="choice"><input type="radio" name="felt_fair" value="somewhat"> Somewhat, it had moments that felt off</label>
         <label class="choice"><input type="radio" name="felt_fair" value="no"> No, it didn't feel helpful or fair</label>
       </div>
     </div>
@@ -140,7 +140,7 @@
     <div class="section-label">Compared to the alternative</div>
 
     <div class="card">
-      <div class="q-label">Compared to talking to an HR rep, a manager, or a friend about this &mdash; was this...</div>
+      <div class="q-label">Compared to talking to an HR rep, a manager, or a friend about this, was this...</div>
       <div class="choice-row" data-radio="comparison">
         <label class="choice"><input type="radio" name="comparison" value="better"> Better</label>
         <label class="choice"><input type="radio" name="comparison" value="same"> About the same</label>
@@ -208,7 +208,7 @@
     </div>
 
     <div class="card">
-      <div class="q-label">Did you find yourself treating Thimble's suggestions or framing as authoritative &mdash; something to defer to, the way you might a person's judgment?</div>
+      <div class="q-label">Did you find yourself treating Thimble's suggestions or framing as authoritative, something to defer to the way you might a person's judgment?</div>
       <div class="choice-row" data-radio="granted_authority">
         <label class="choice"><input type="radio" name="granted_authority" value="yes"> Yes</label>
         <label class="choice"><input type="radio" name="granted_authority" value="somewhat"> Somewhat</label>
@@ -224,7 +224,7 @@
     </div>
 
     <div class="card">
-      <div class="q-label">Setting Thimble aside &mdash; in general, how comfortable are you talking to an AI about something personal or emotionally loaded?</div>
+      <div class="q-label">Setting Thimble aside, how comfortable are you in general talking to an AI about something personal or emotionally loaded?</div>
       <div class="scale" id="q-ai-comfort">
         <button type="button" data-val="1">1</button>
         <button type="button" data-val="2">2</button>
@@ -238,7 +238,7 @@
     <div class="section-label">In your own words</div>
 
     <div class="card">
-      <div class="q-label">What's one moment in this conversation that stood out &mdash; good or bad?</div>
+      <div class="q-label">What's one moment in this conversation that stood out, good or bad?</div>
       <textarea id="standout_moment" placeholder="Optional"></textarea>
     </div>
 
@@ -261,7 +261,7 @@
 
     <div class="card">
       <div class="q-label">Anything else you'd like to share?</div>
-      <textarea id="comments" placeholder="Optional &mdash; what worked, what didn't, what you'd change"></textarea>
+      <textarea id="comments" placeholder="Optional. What worked, what didn't, what you'd change"></textarea>
     </div>
 
     <div class="submit-row">
