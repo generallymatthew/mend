@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mend demo hub (local prototype)</title>
+<title>Mend</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -74,9 +74,7 @@
     </div>
   </header>
 
-  <div class="eyebrow">Demo hub &middot; local prototype</div>
-
-  <div id="invitedNotice" class="callout" hidden></div>
+  <div class="eyebrow">Mend &middot; early test</div>
 
   <!-- Sign-up screen -->
   <section id="signup">
@@ -96,95 +94,37 @@
     </div>
   </section>
 
-  <!-- Hub, shown once "signed up" -->
+  <!-- Hub, shown once "signed up" -- for this test round, a single
+       explainer + one way in (the solo session, today's "intake-app"),
+       not the full multi-step journey (invite/joint-session/post-session
+       aren't part of this test and aren't deployed alongside it). See
+       STATUS.md / the commit that added this for why -- those other steps'
+       server-side routes still exist in server.py, just not linked here. -->
   <section id="hub" hidden>
     <div class="identity-bar">
       <span>Signed up</span>
       <button id="signoutBtn">Sign out</button>
     </div>
-    <h1>Your Mend flow</h1>
-    <p class="lede">Each step opens its own local prototype in a new tab. Facilitator replies use your real Anthropic key, so keep each app's own server running per its README.</p>
+    <h1>Before you start</h1>
+    <p class="lede">This is a private, one-on-one space to work through a workplace conflict with Thimble, an AI facilitator &mdash; a solo conflict-resolution conversation, not a group mediation. No HR, no manager, no case file. Just you, working through what happened, before you decide what, if anything, to do next.</p>
 
     <div class="card">
-      <ol class="steps">
-        <li class="step">
-          <span class="num">1</span>
-          <div class="step-body">
-            <div class="step-title">Private processing</div>
-            <div class="step-desc">Talk through what happened, on your own. The facilitator decides with you whether a joint session makes sense.</div>
-            <div class="step-actions">
-              <a class="linkbtn" href="/intake/" target="_blank" rel="noopener"><button class="primary">Open intake &rarr;</button></a>
-              <span style="font-size:12px; color:var(--ink-soft)">/intake/</span>
-            </div>
-          </div>
-        </li>
+      <div class="step-title" style="margin-bottom:10px;">What you can do here</div>
+      <ul style="margin:0 0 4px; padding-left:20px; color:var(--ink-soft); font-size:14px; line-height:1.7;">
+        <li>Talk through what happened, in your own words &mdash; vent without worrying how it sounds.</li>
+        <li>Get help separating what actually happened from how it felt, and think through why the other person might have acted the way they did.</li>
+        <li>Practice out loud how you'd raise it with them, if you decide to.</li>
+        <li>Decide for yourself what happens next &mdash; Thimble won't tell you who's right, and nothing here is shared with your employer.</li>
+      </ul>
+    </div>
 
-        <li class="step">
-          <span class="num">2</span>
-          <div class="step-body">
-            <div class="step-title">Invite the other person (optional)</div>
-            <div class="step-desc">A one-time link, not an email to their work address. You send it yourself, any way you like &mdash; Mend never delivers it and never sees who you sent it to.</div>
-            <div class="step-actions">
-              <button id="generateInviteBtn">Generate invite link</button>
-            </div>
-            <div class="invite-row" id="inviteRow" hidden>
-              <input type="text" id="inviteLink" readonly>
-              <button id="copyInviteBtn">Copy</button>
-              <span class="copied" id="copiedMsg">copied</span>
-            </div>
-            <div class="step-desc" id="inviteStatus" hidden></div>
-          </div>
-        </li>
-
-        <li class="step">
-          <span class="num">3</span>
-          <div class="step-body">
-            <div class="step-title">Suggest a conversation between two coworkers</div>
-            <div class="step-desc">Not involved yourself? If you've noticed tension between two other people, generate two links and send one to each of them, any way you like &mdash; same as inviting someone yourself, just on their behalf. They'll each see it came from you.</div>
-            <div class="step-actions">
-              <button id="generatePairBtn">Generate two links</button>
-            </div>
-            <div class="invite-row" id="pairRowA" hidden>
-              <input type="text" id="pairLinkA" readonly>
-              <button class="copyPairBtn" data-target="pairLinkA">Copy</button>
-            </div>
-            <div class="invite-row" id="pairRowB" hidden>
-              <input type="text" id="pairLinkB" readonly>
-              <button class="copyPairBtn" data-target="pairLinkB">Copy</button>
-            </div>
-            <span class="copied" id="copiedPairMsg">copied</span>
-            <div class="step-desc" id="pairStatus" hidden></div>
-          </div>
-        </li>
-
-        <li class="step">
-          <span class="num">4</span>
-          <div class="step-body">
-            <div class="step-title">Joint session</div>
-            <div class="step-desc">Whoever invited whom, this is where you both show up &mdash; each of you opens the session's own link with your own role, from separate devices or tabs.</div>
-            <div class="step-actions">
-              <a class="linkbtn" href="/joint/" target="_blank" rel="noopener"><button class="primary">Open joint session &rarr;</button></a>
-              <span style="font-size:12px; color:var(--ink-soft)">/joint/</span>
-            </div>
-          </div>
-        </li>
-
-        <li class="step">
-          <span class="num">5</span>
-          <div class="step-body">
-            <div class="step-title">Post-session follow-up</div>
-            <div class="step-desc">A private 1:1 afterward &mdash; handles any escalation disclosure first, then checks whether things actually got resolved.</div>
-            <div class="step-actions">
-              <a class="linkbtn" href="/post/" target="_blank" rel="noopener"><button class="primary">Open post-session &rarr;</button></a>
-              <span style="font-size:12px; color:var(--ink-soft)">/post/</span>
-            </div>
-          </div>
-        </li>
-      </ol>
+    <div class="card" style="text-align:center;">
+      <a class="linkbtn" href="/intake/" target="_blank" rel="noopener"><button class="primary" style="padding:13px 28px; font-size:14.5px;">Start your session &rarr;</button></a>
+      <div style="font-size:12px; color:var(--ink-soft); margin-top:10px;">Opens in a new tab. Takes 10&ndash;20 minutes. You can stop any time.</div>
     </div>
 
     <footer>
-      Sign-up checks a real access code and invites (direct or suggested) are real server-side records (crypto-shredded on accept/decline, per <code>product-spec.html</code> Section 3) &mdash; so an invite link works for a real second person on their own device, not just this same browser. Not built here: invite expiry or multi-org codes. The intake and joint-session apps each show a banner with a "continue" link once the facilitator's own signal says the next step is ready, so you don't have to guess when to move on.
+      Sign-up checks a real access code, same as the real product's model (Section 3 of <code>product-spec.html</code>).
       <p style="margin-top:12px;">Not legal or HR advice. Mend is a prototype. Thimble is an AI assistant, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. Use your judgment, and if something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services &mdash; don't wait on this.</p>
     </footer>
   </section>
@@ -223,149 +163,6 @@ function showSignup() {
   $('signup').hidden = false;
 }
 
-let pollTimer = null;
-
-function stopPolling() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-}
-
-async function renderInvitedNotice() {
-  const params = new URLSearchParams(location.search);
-  const inviteId = params.get('invite');
-  const pairId = params.get('pair');
-  const slot = params.get('slot');
-  if (!inviteId && !(pairId && slot)) return;
-  const notice = $('invitedNotice');
-  notice.hidden = false;
-
-  const identity = loadIdentity();
-  if (!identity) {
-    notice.innerHTML = 'Someone invited you to a joint session on Mend. Sign up below to see who, and to accept or decline.';
-    return;
-  }
-
-  if (pairId && slot) {
-    await renderPairInviteNotice(notice, pairId, slot, identity);
-    return;
-  }
-
-  let data;
-  try {
-    const res = await fetch(apiPath(`/api/invite/${inviteId}`));
-    data = await res.json();
-  } catch (e) {
-    notice.textContent = 'Could not reach the invite -- try reloading.';
-    return;
-  }
-
-  if (data.error) {
-    notice.textContent = `This invite link isn't valid (${data.error}).`;
-    return;
-  }
-  if (data.status === 'pending') {
-    notice.innerHTML = `<strong>${data.from_email}</strong> invited you to a confidential joint session on Mend. `;
-    const acceptBtn = document.createElement('button');
-    acceptBtn.className = 'primary';
-    acceptBtn.textContent = 'Accept';
-    acceptBtn.style.marginRight = '8px';
-    const declineBtn = document.createElement('button');
-    declineBtn.textContent = 'Decline';
-    notice.appendChild(document.createElement('br'));
-    notice.appendChild(acceptBtn);
-    notice.appendChild(declineBtn);
-    acceptBtn.addEventListener('click', async () => {
-      acceptBtn.disabled = true; declineBtn.disabled = true;
-      const r = await fetch(apiPath(`/api/invite/${inviteId}/accept`), {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({identity_token: identity.token}),
-      });
-      const d = await r.json();
-      if (d.joint_code) location.href = `/joint/?code=${d.joint_code}&role=b`;
-    });
-    declineBtn.addEventListener('click', async () => {
-      acceptBtn.disabled = true; declineBtn.disabled = true;
-      await fetch(apiPath(`/api/invite/${inviteId}/decline`), {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({identity_token: identity.token}),
-      });
-      notice.textContent = 'Declined. Nothing further happens on your end.';
-    });
-  } else if (data.status === 'accepted') {
-    notice.textContent = 'You already accepted this invite.';
-  } else if (data.status === 'declined') {
-    notice.textContent = 'You already declined this invite.';
-  }
-}
-
-async function renderPairInviteNotice(notice, pairId, slot, identity) {
-  let data;
-  try {
-    const res = await fetch(apiPath(`/api/pair-invite/${pairId}?slot=${slot}`));
-    data = await res.json();
-  } catch (e) {
-    notice.textContent = 'Could not reach the invite -- try reloading.';
-    return;
-  }
-  if (data.error) {
-    notice.textContent = `This invite link isn't valid (${data.error}).`;
-    return;
-  }
-
-  const myStatus = data[`status_${slot}`];
-  const otherStatus = data[`status_${slot === 'a' ? 'b' : 'a'}`];
-
-  if (myStatus === 'declined' || otherStatus === 'declined') {
-    notice.textContent = otherStatus === 'declined' && myStatus !== 'declined'
-      ? 'The other person declined. Nothing further happens on your end.'
-      : 'Declined. Nothing further happens on your end.';
-    return;
-  }
-  if (myStatus === 'accepted' && otherStatus === 'accepted' && data.joint_code) {
-    notice.innerHTML = 'Both of you accepted. ';
-    const joinBtn = document.createElement('a');
-    joinBtn.href = `/joint/?code=${data.joint_code}&role=${slot}`;
-    joinBtn.target = '_blank';
-    joinBtn.rel = 'noopener';
-    const btn = document.createElement('button');
-    btn.className = 'primary';
-    btn.textContent = 'Join now →';
-    joinBtn.appendChild(btn);
-    notice.appendChild(joinBtn);
-    return;
-  }
-  if (myStatus === 'accepted') {
-    notice.textContent = 'You accepted -- waiting for the other person.';
-    return;
-  }
-
-  notice.innerHTML = `<strong>${data.from_email}</strong> thought a conversation between you and a coworker might help. `;
-  const acceptBtn = document.createElement('button');
-  acceptBtn.className = 'primary';
-  acceptBtn.textContent = 'Accept';
-  acceptBtn.style.marginRight = '8px';
-  const declineBtn = document.createElement('button');
-  declineBtn.textContent = 'Decline';
-  notice.appendChild(document.createElement('br'));
-  notice.appendChild(acceptBtn);
-  notice.appendChild(declineBtn);
-  acceptBtn.addEventListener('click', async () => {
-    acceptBtn.disabled = true; declineBtn.disabled = true;
-    await fetch(apiPath(`/api/pair-invite/${pairId}/accept`), {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({identity_token: identity.token, slot}),
-    });
-    renderPairInviteNotice(notice, pairId, slot, identity);
-  });
-  declineBtn.addEventListener('click', async () => {
-    acceptBtn.disabled = true; declineBtn.disabled = true;
-    await fetch(apiPath(`/api/pair-invite/${pairId}/decline`), {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({identity_token: identity.token, slot}),
-    });
-    notice.textContent = 'Declined. Nothing further happens on your end.';
-  });
-}
-
 $('signupBtn').addEventListener('click', async () => {
   const orgCode = $('orgCode').value.trim();
   const errorEl = $('signupError');
@@ -385,115 +182,17 @@ $('signupBtn').addEventListener('click', async () => {
   const identity = {email: data.email, token: data.identity_token, joinedAt: Date.now()};
   saveIdentity(identity);
   showHub(identity);
-  renderInvitedNotice();
 });
 
 $('signoutBtn').addEventListener('click', () => {
-  stopPolling();
   clearIdentity();
   showSignup();
-});
-
-$('generateInviteBtn').addEventListener('click', async () => {
-  const identity = loadIdentity();
-  if (!identity) return;
-  const res = await fetch(apiPath('/api/invite'), {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({identity_token: identity.token}),
-  });
-  const data = await res.json();
-  if (!data.invite_id) return;
-  const link = `${location.origin}${location.pathname}?invite=${data.invite_id}`;
-  $('inviteLink').value = link;
-  $('inviteRow').hidden = false;
-  $('inviteStatus').hidden = false;
-  $('inviteStatus').textContent = 'Waiting for them to respond...';
-
-  stopPolling();
-  pollTimer = setInterval(async () => {
-    const r = await fetch(apiPath(`/api/invite/${data.invite_id}`));
-    const d = await r.json();
-    if (d.status === 'accepted') {
-      stopPolling();
-      $('inviteStatus').innerHTML = '';
-      const joinBtn = document.createElement('a');
-      joinBtn.href = `/joint/?code=${d.joint_code}&role=a`;
-      joinBtn.target = '_blank';
-      joinBtn.rel = 'noopener';
-      const btn = document.createElement('button');
-      btn.className = 'primary';
-      btn.textContent = 'Accepted -- Join now →';
-      joinBtn.appendChild(btn);
-      $('inviteStatus').appendChild(joinBtn);
-    } else if (d.status === 'declined') {
-      stopPolling();
-      $('inviteStatus').textContent = 'They declined.';
-    }
-  }, 2000);
-});
-
-$('copyInviteBtn').addEventListener('click', async () => {
-  const input = $('inviteLink');
-  input.select();
-  try {
-    await navigator.clipboard.writeText(input.value);
-  } catch (e) {
-    document.execCommand('copy');
-  }
-  const msg = $('copiedMsg');
-  msg.classList.add('show');
-  setTimeout(() => msg.classList.remove('show'), 1200);
-});
-
-$('generatePairBtn').addEventListener('click', async () => {
-  const identity = loadIdentity();
-  if (!identity) return;
-  const res = await fetch(apiPath('/api/pair-invite'), {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({identity_token: identity.token}),
-  });
-  const data = await res.json();
-  if (!data.pair_id) return;
-  $('pairLinkA').value = `${location.origin}${location.pathname}?pair=${data.pair_id}&slot=a`;
-  $('pairLinkB').value = `${location.origin}${location.pathname}?pair=${data.pair_id}&slot=b`;
-  $('pairRowA').hidden = false;
-  $('pairRowB').hidden = false;
-  $('pairStatus').hidden = false;
-  $('pairStatus').textContent = 'Send one link to each person. Waiting for both to respond...';
-
-  const pairPollTimer = setInterval(async () => {
-    const r = await fetch(apiPath(`/api/pair-invite/${data.pair_id}?slot=a`));
-    const d = await r.json();
-    if (d.status_a === 'declined' || d.status_b === 'declined') {
-      clearInterval(pairPollTimer);
-      $('pairStatus').textContent = 'One of them declined.';
-    } else if (d.status_a === 'accepted' && d.status_b === 'accepted') {
-      clearInterval(pairPollTimer);
-      $('pairStatus').textContent = 'Both accepted -- they can join the joint session now.';
-    }
-  }, 2000);
-});
-
-document.querySelectorAll('.copyPairBtn').forEach((btn) => {
-  btn.addEventListener('click', async () => {
-    const input = $(btn.dataset.target);
-    input.select();
-    try {
-      await navigator.clipboard.writeText(input.value);
-    } catch (e) {
-      document.execCommand('copy');
-    }
-    const msg = $('copiedPairMsg');
-    msg.classList.add('show');
-    setTimeout(() => msg.classList.remove('show'), 1200);
-  });
 });
 
 (function init() {
   const identity = loadIdentity();
   if (identity) showHub(identity);
   else showSignup();
-  renderInvitedNotice();
 })();
 </script>
 </body>
