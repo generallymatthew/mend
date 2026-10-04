@@ -81,15 +81,15 @@
   <!-- Sign-up screen -->
   <section id="signup">
     <h1>Sign up</h1>
-    <p class="lede">No company directory, no SSO. Your org's access code plus a personal email is all this needs &mdash; never your work address.</p>
+    <!-- Personal email dropped from this screen for this test round --
+         testers give an email on intake-app's own post-session survey
+         instead, for follow-up, not for identity here. See server.py's
+         signup() for the backend side of this. -->
+    <p class="lede">No company directory, no SSO. Just your org's access code.</p>
     <div class="card">
       <div class="field">
         <label for="orgCode">Org access code</label>
         <input type="text" id="orgCode" placeholder="e.g. WILLOW-CREEK-9F2" autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="email">Personal email</label>
-        <input type="email" id="email" placeholder="you@gmail.com" autocomplete="off">
       </div>
       <button class="primary" id="signupBtn">Sign up</button>
       <div class="error" id="signupError"></div>
@@ -99,7 +99,7 @@
   <!-- Hub, shown once "signed up" -->
   <section id="hub" hidden>
     <div class="identity-bar">
-      <span>Signed up as <strong id="whoami"></strong></span>
+      <span>Signed up</span>
       <button id="signoutBtn">Sign out</button>
     </div>
     <h1>Your Mend flow</h1>
@@ -216,7 +216,6 @@ function clearIdentity() {
 function showHub(identity) {
   $('signup').hidden = true;
   $('hub').hidden = false;
-  $('whoami').textContent = identity.email;
 }
 
 function showSignup() {
@@ -369,14 +368,13 @@ async function renderPairInviteNotice(notice, pairId, slot, identity) {
 
 $('signupBtn').addEventListener('click', async () => {
   const orgCode = $('orgCode').value.trim();
-  const email = $('email').value.trim();
   const errorEl = $('signupError');
   errorEl.textContent = '';
   let data;
   try {
     const res = await fetch(apiPath('/api/signup'), {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({org_code: orgCode, email}),
+      body: JSON.stringify({org_code: orgCode}),
     });
     data = await res.json();
     if (!res.ok) { errorEl.textContent = data.error || 'signup failed'; return; }

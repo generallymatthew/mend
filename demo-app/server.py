@@ -3,12 +3,18 @@
 Local demo hub: sign-up / anonymous-invite screen plus a walkthrough of the
 full journey across ../intake-app, ../joint-session-app, ../post-session-app.
 
-Runs the real access-code + personal-email signup and one-time invite flow
-from Section 3 of ../product-spec.html -- not a client-side simulation.
-In-memory only (no database), same convention as every other app here:
-state is lost on restart. What's real:
+Runs the real access-code signup and one-time invite flow from Section 3 of
+../product-spec.html -- not a client-side simulation. In-memory only (no
+database), same convention as every other app here: state is lost on
+restart. What's real:
 
 - Signup checks a real ORG_ACCESS_CODE (.env), not "any code works."
+  Personal email, part of the real product-spec identity model, is
+  deliberately NOT collected here for this test round -- static/index.html's
+  signup form has no email field, and signup() below treats it as optional
+  if a caller sends one anyway. Follow-up email is instead collected once,
+  via intake-app's own post-session survey, per explicit direction: testers
+  don't need it twice.
 - An invite is a server-side record, so it resolves correctly for a real
   second person on a different device/browser, not just the same browser
   that created it.
@@ -109,8 +115,16 @@ async def signup(payload: dict):
         return JSONResponse({"error": "server has no ORG_ACCESS_CODE configured -- see README"}, status_code=500)
     if org_code != ORG_ACCESS_CODE:
         return JSONResponse({"error": "that access code isn't recognized"}, status_code=400)
-    if "@" not in email:
-        return JSONResponse({"error": "enter a valid personal email"}, status_code=400)
+    # Personal email is no longer collected at signup for this test round --
+    # the static/index.html form no longer has the field at all, and
+    # follow-up email is instead collected once, via intake-app's own
+    # post-session survey. Still accepted here if a caller does send one
+    # (kept valid, not re-validated with the old "@" check), so this isn't a
+    # breaking change to the API shape -- just stop requiring it. A non-empty
+    # placeholder is stored either way so require_identity()'s `if not email`
+    # checks below still correctly distinguish "valid token, no email" from
+    # "no such token" (an empty string would be falsy and look like neither).
+    email = email if email else "(not collected)"
     token = secrets.token_urlsafe(24)
     IDENTITIES[token] = email
     return {"identity_token": token, "email": email}
