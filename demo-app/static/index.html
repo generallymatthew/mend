@@ -72,11 +72,12 @@
      is omitted entirely -- at talk=0 its own opacity formula zeroes it out
      anyway. */
   .hero-avatar{width:120px; height:120px; margin:0 auto 28px; position:relative; border-radius:50%; background:radial-gradient(circle at 34% 30%, #7fb3a7 0%, var(--pink) 55%, #8c0d28 100%); box-shadow:0 10px 26px rgba(27,52,47,.22);}
-  /* Mouth sized to the exact same proportions as intake-app's resting
-     mouth (THIMBLE_SHAPES.listening/idle: mouthW .11, mouthH .028,
-     mouthTop 60%, pill border-radius) -- .11*120 / .028*120 here, not an
-     arbitrary bar. */
-  .hero-avatar::after{content:''; position:absolute; left:50%; top:60%; width:13px; height:3px; border-radius:999px; background:var(--card); transform:translate(-50%,-50%);}
+  /* An actual oval (border-radius:50% on a non-square box, a true ellipse)
+     at intake-app's mouthTop (60%), not the stretched hairline-thin pill
+     the .11/.028 fractions produce at this avatar's much smaller size --
+     those ratios read as a flat dash once height drops to a couple
+     pixels, not as a mouth. */
+  .hero-avatar::after{content:''; position:absolute; left:50%; top:60%; width:18px; height:9px; border-radius:50%; background:var(--card); transform:translate(-50%,-50%);}
   .hero-h1{font-family:'Fraunces',Georgia,serif; font-weight:800; font-size:2.3rem; line-height:1.1; letter-spacing:-0.01em; margin:0 0 16px;}
   .hero-lede{color:var(--ink-soft); font-size:15.5px; line-height:1.6; max-width:420px; margin:0 auto 24px;}
   .hero-options{list-style:none; margin:0 auto 32px; padding:0; max-width:380px; text-align:left; display:flex; flex-direction:column; gap:12px;}
