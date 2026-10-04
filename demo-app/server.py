@@ -284,5 +284,11 @@ async def pitch_index():
     return FileResponse(PITCH_DIR / "Mend Pitch v2.dc.html")
 
 
+@app.get("/links")
+@app.get("/links/")
+async def links_index():
+    return FileResponse(ROOT / "static" / "links.html")
+
+
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 app.mount("/pitch", StaticFiles(directory=PITCH_DIR), name="pitch")
