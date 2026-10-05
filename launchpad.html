@@ -38,6 +38,8 @@
   .status{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; padding:2px 7px; border-radius:5px; margin-top:4px;}
   .status.down{background:var(--warn-soft); color:var(--warn);}
 
+  a.link.unavailable{opacity:.45; pointer-events:none;}
+
   footer{margin-top:32px; font-size:12px; color:var(--ink-soft); line-height:1.6; border-top:1px solid var(--border); padding-top:14px;}
 </style>
 </head>
@@ -47,7 +49,7 @@
   <h1>Launchpad</h1>
   <p class="lede">Every page built so far, one click each. Bookmark this instead of hunting for ports and file paths.</p>
 
-  <div class="howto">
+  <div class="howto" id="howto">
     Serve the whole <code>Mend/</code> folder once, from this folder: <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/launchpad.html</code> instead of double-clicking this file. The document links below need a real server, not <code>file://</code>, to render correctly. The product links below need <code>./run_all.sh</code> running instead (repo root, needs <code>caddy</code> &mdash; see the root <code>README.md</code>); it puts all four apps behind <code>:8080</code> together.
   </div>
 
@@ -63,25 +65,25 @@
     </a>
   </div>
 
-  <h2 class="group">The product (needs ./run_all.sh running)</h2>
+  <h2 class="group" id="productGroupTitle">The product (needs ./run_all.sh running)</h2>
   <div class="links">
-    <a class="link" href="http://localhost:8080/" target="_blank" rel="noopener">
+    <a class="link" href="http://localhost:8080/" data-local="http://localhost:8080/" data-live="https://mend-mvp.onrender.com/" data-live-meta="live" target="_blank" rel="noopener">
       <div><div class="name">Demo hub</div><div class="desc">Sign-up + invite flow, links through the four below</div></div>
       <div class="meta">:8080</div>
     </a>
-    <a class="link" href="http://localhost:8080/intake/" target="_blank" rel="noopener">
+    <a class="link" href="http://localhost:8080/intake/" data-local="http://localhost:8080/intake/" data-live="https://mend-mvp.onrender.com/intake/" data-live-meta="live" target="_blank" rel="noopener">
       <div><div class="name">Intake</div><div class="desc">Private 1:1 consultation with the facilitator</div></div>
       <div class="meta">:8080/intake/</div>
     </a>
-    <a class="link" href="http://localhost:8080/joint/?code=launchpad&amp;role=a" target="_blank" rel="noopener">
+    <a class="link" href="http://localhost:8080/joint/?code=launchpad&amp;role=a" data-local="http://localhost:8080/joint/?code=launchpad&amp;role=a" target="_blank" rel="noopener">
       <div><div class="name">Joint session &middot; Employee A</div><div class="desc">Real two-person session &mdash; also open the Employee B link below (two tabs, or send it to someone else)</div></div>
       <div class="meta">:8080/joint/</div>
     </a>
-    <a class="link" href="http://localhost:8080/joint/?code=launchpad&amp;role=b" target="_blank" rel="noopener">
+    <a class="link" href="http://localhost:8080/joint/?code=launchpad&amp;role=b" data-local="http://localhost:8080/joint/?code=launchpad&amp;role=b" target="_blank" rel="noopener">
       <div><div class="name">Joint session &middot; Employee B</div><div class="desc">Same session as above, the other role</div></div>
       <div class="meta">:8080/joint/</div>
     </a>
-    <a class="link" href="http://localhost:8080/post/" target="_blank" rel="noopener">
+    <a class="link" href="http://localhost:8080/post/" data-local="http://localhost:8080/post/" target="_blank" rel="noopener">
       <div><div class="name">Post-session check-in</div><div class="desc">Private follow-up &mdash; auto-filled when reached via the joint session's own banner link, or use the scenario picker directly</div></div>
       <div class="meta">:8080/post/</div>
     </a>
@@ -89,19 +91,19 @@
 
   <h2 class="group">QA / internal tools</h2>
   <div class="links">
-    <a class="link" href="https://mend-mvp.onrender.com/intake/static/thimble-states.html" target="_blank" rel="noopener">
+    <a class="link" href="http://localhost:8080/intake/static/thimble-states.html" data-local="http://localhost:8080/intake/static/thimble-states.html" data-live="https://mend-mvp.onrender.com/intake/static/thimble-states.html" data-live-meta="live" target="_blank" rel="noopener">
       <div><div class="name">Thimble states</div><div class="desc">Every avatar state (idle, listening, thinking, talking, empathizing, paused&hellip;) running live side by side, for QA -- no mic or real call needed</div></div>
-      <div class="meta">live</div>
+      <div class="meta">:8080/intake/</div>
     </a>
   </div>
 
   <h2 class="group">Documents (served locally, from this same folder)</h2>
   <div class="links">
-    <a class="link" href="product-spec.html" target="_blank">
+    <a class="link" href="product-spec.html" data-local="product-spec.html" target="_blank">
       <div><div class="name">Product spec</div><div class="desc">Full buyer-facing spec, all sections</div></div>
       <div class="meta">local</div>
     </a>
-    <a class="link" href="Mend Pitch/Mend Pitch v2.dc.html" target="_blank">
+    <a class="link" href="Mend Pitch/Mend Pitch v2.dc.html" data-local="Mend Pitch/Mend Pitch v2.dc.html" data-live="https://mend-mvp.onrender.com/pitch" data-live-meta="live" target="_blank">
       <div><div class="name">Pitch page</div><div class="desc">Narrative walkthrough + animations</div></div>
       <div class="meta">local</div>
     </a>
@@ -135,5 +137,41 @@
     Internal draft, pre-legal review. This page isn't linked from <code>index.html</code> (the public Pages landing) and isn't meant for distribution. It's just a bookmark for testing.
   </footer>
 </div>
+<script>
+(function(){
+  // This same file is served two ways: opened locally (file:// or
+  // python3 -m http.server, per the howto box above) while developing, and
+  // live at https://mend-mvp.onrender.com/launchpad (see demo-app's
+  // /launchpad route). Links tagged data-local/data-live above need to
+  // point at whichever one is actually being browsed right now, not always
+  // localhost -- a live viewer clicking "Demo hub" wants the live hub, not
+  // their own unreachable localhost:8080.
+  var isLive = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:';
+  if (!isLive) return; // local default hrefs already in the markup, nothing to rewrite
+
+  document.querySelectorAll('a.link[data-local]').forEach(function(a){
+    var live = a.getAttribute('data-live');
+    var meta = a.querySelector('.meta');
+    if (live) {
+      a.href = live;
+      if (meta) meta.textContent = a.getAttribute('data-live-meta') || 'live';
+    } else {
+      // No live equivalent deployed (joint/post-session apps aren't part
+      // of the Render deploy; product-spec.html isn't served by any app
+      // route) -- grey it out rather than leaving a dead link to
+      // someone's unreachable localhost.
+      a.classList.add('unavailable');
+      a.removeAttribute('href');
+      if (meta) meta.textContent = 'local only';
+    }
+  });
+
+  var title = document.getElementById('productGroupTitle');
+  if (title) title.textContent = 'The product (live)';
+
+  var howto = document.getElementById('howto');
+  if (howto) howto.innerHTML = 'You’re viewing the live deploy at <code>' + location.origin + '</code>. Links above now point here instead of localhost; rows greyed out as <b>local only</b> aren’t part of this deploy (joint/post-session apps, local-only docs) and need <code>./run_all.sh</code> on your own machine instead — see the root <code>README.md</code>.';
+})();
+</script>
 </body>
 </html>
