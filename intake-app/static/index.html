@@ -1268,12 +1268,21 @@ function updateThimbleMotion(inst, now, level, listening) {
     // than "sped up." Thinking spins much slower (0.12), same as the
     // reference, since it's an idle wait rather than a reaction.
     const spin = thinkingState ? 0.12 : 0.35;
-    // Talking's own depth cap -- see thimblePolygon's maxDepth comment.
-    // Reported live as feeling too sharp/geometric while talking; capped at
-    // .55 instead of the full 1 listening/thinking still use, so the
-    // outline stays visibly hexagonal (not a plain circle) without hitting
-    // the sharp full-depth vertices on every loud syllable.
-    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, inst.lvl, 6, spin, speaking ? 0.55 : 1);
+    // Talking's and thinking's own depth caps -- see thimblePolygon's
+    // maxDepth comment. Talking (reported live as feeling too
+    // sharp/geometric) is capped at .55 instead of the full 1 listening
+    // still uses. Thinking's constant geoTarget .6 and fixed shapeLvl .15
+    // work out to a depth of ~.998 -- effectively the same uncapped, nearly
+    // full-depth hexagon as talking had before its own cap, just arrived at
+    // by different numbers -- so the "blob" the reference describes was
+    // actually a lopsided hexagon at almost every rotation phase, not a
+    // soft, roughly-round shape. That lopsidedness is what read as the
+    // thinking dots looking "off center": the dot row is genuinely centered
+    // in the avatar's own box (verified against its clipPath), it's the
+    // visible blob silhouette bulging to one side around it that wasn't.
+    // Same .55 cap talking uses, since there's nothing in either report
+    // asking for thinking to look any sharper than talking does.
+    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, inst.lvl, 6, spin, (speaking || thinkingState) ? 0.55 : 1);
   }
   // Talking mouth: real TTS amplitude drives the open/close height directly,
   // rather than the handoff's canned "talk" loop -- real lip-sync instead of
