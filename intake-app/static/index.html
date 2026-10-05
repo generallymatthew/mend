@@ -101,6 +101,13 @@
   .caption-stack{position:absolute; left:0; right:0; display:flex; justify-content:center; padding:0 28px; pointer-events:none;}
   .caption{max-width:420px; font-size:clamp(13px,0.9vw,15px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
   .stage-top-left{position:absolute; top:16px; left:16px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; z-index:2;}
+  /* Mirrors .stage-top-left on the opposite corner, same top offset, so the
+     header's privacy pill (moved in here below 420px -- see its own
+     comment) sits vertically inline with the Skip pill rather than floating
+     at some unrelated height. Hidden by default: only shown in the narrow
+     breakpoint below, where it swaps in for the header copy. */
+  .stage-top-right{position:absolute; top:16px; right:16px; z-index:2; display:none;}
+  .stage-top-right .privacy-pill{margin-left:0;}
   /* State pill ("Thimble Listening...") sits directly under the avatar
      shape itself, not pinned to a stage corner -- it's reporting on
      Thimble specifically, not the call as a whole (that's what the
@@ -297,6 +304,20 @@
        mode. */
     .caption-stack{display:none;}
   }
+  /* Below ~420px the header (logo + "Private" pill + Voice/Text toggle) no
+     longer fits in one row and the toggle runs off the right edge of the
+     screen (confirmed live, e.g. at 320px) -- space-between doesn't wrap,
+     it just overflows. Rather than shrink the toggle (its two tap targets
+     are already tight) or wrap the header (reported wrong for the same
+     pill back when it was the full sentence, see the 760px breakpoint
+     above), move the privacy pill out of the header entirely and into the
+     stage's own top-right corner, vertically inline with the Skip pill
+     opposite it -- the header then only has to fit the logo and the
+     toggle. */
+  @media (max-width:420px){
+    .header .privacy-pill{display:none;}
+    .stage-top-right{display:flex;}
+  }
   [hidden]{display:none !important;}
 </style>
 </head>
@@ -324,6 +345,9 @@
           <div class="stage-top-left">
             <div class="live-timer" id="liveTimer" hidden>Live &middot; <span id="liveTimerText">00:00</span></div>
             <button id="skipIntroBtn" class="skip-intro-btn" hidden>Skip &rarr;</button>
+          </div>
+          <div class="stage-top-right">
+            <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span>Private<span class="privacy-pill-rest">. Nothing is recorded.</span></span></div>
           </div>
           <div class="avatar-stack">
             <div class="avatar-row">
@@ -1036,7 +1060,18 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
   // cap on almost every syllable, reading as a sharp hexagon snapping in
   // and out rather than a wobble. Listening/thinking keep the old
   // uncapped-at-1 behavior, since only talking was reported as too sharp.
-  const depth = Math.min(maxDepth == null ? 1 : maxDepth, g * Math.min(1, 0.55 + lvl * 0.6) * THIMBLE_WOBBLE_AMOUNT);
+  const rawDepth = g * Math.min(1, 0.55 + lvl * 0.6) * THIMBLE_WOBBLE_AMOUNT;
+  const depth = Math.min(maxDepth == null ? 1 : maxDepth, rawDepth);
+  // jitter below still scaled off the raw, uncapped g -- while depth was
+  // also uncapped that tracked, but once talking's maxDepth reined depth in
+  // well below g's full .8, jitter kept moving at the old full amplitude on
+  // top of a now much calmer outline, reading as a flicker right at the
+  // bottom (jitter is a radius ripple, and the bottom sits on the flattest,
+  // most tangent part of the curve, where any vertical wobble is most
+  // visible as shimmer rather than motion). Scaling jitter down by the same
+  // ratio depth itself got capped by keeps it proportional to the outline
+  // that's actually showing, instead of an independent, uncapped wobble.
+  const jitterScale = rawDepth > 0 ? depth / rawDepth : 1;
   for (let i = 0; i < M; i++) {
     const th = (i / M) * 2 * Math.PI;
     let sum = 0; for (let w = -6; w <= 6; w++) sum += poly(th + (w / 6) * seg * 0.32);
@@ -1046,7 +1081,7 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
     // more than real movement; the second, slower, counter-phased term
     // breaks that symmetry so the wobble looks alive instead of
     // mechanical.
-    const jitter = 1 + 0.05 * g * lvl * Math.sin(th * N + t * 5) + 0.03 * g * lvl * Math.sin(th * N * 0.5 - t * 3.2);
+    const jitter = 1 + jitterScale * (0.05 * g * lvl * Math.sin(th * N + t * 5) + 0.03 * g * lvl * Math.sin(th * N * 0.5 - t * 3.2));
     const r = 50 * (1 - depth * (1 - smooth)) * jitter;
     pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
   }
