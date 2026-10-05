@@ -52,10 +52,7 @@
   .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
-  .thimble-mouth.dots{display:flex; align-items:center; justify-content:center; background:none !important;}
-  .thimble-mouth .dot{width:9px; height:9px; border-radius:50%; background:#F6F1E7; animation:thimble-dot 1.2s ease-in-out infinite;}
   @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
-  @keyframes thimble-dot{0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-35%);}}
   @keyframes thimble-ripple{0%{transform:scale(1); opacity:.45;} 100%{transform:scale(1.6); opacity:0;}}
 </style>
 </head>
@@ -72,9 +69,9 @@
 const THIMBLE_SHAPES = {
   listening:   {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   idle:        {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
-  thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
-  synthesizing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
-  transcribing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
+  thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
+  synthesizing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
+  transcribing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   talking:     {radius: '50%', anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
   empathizing: {radius: '50% 50% 50% 50% / 62% 62% 38% 38%', anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
   paused:      {radius: '50%', anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
@@ -103,20 +100,7 @@ function renderThimbleMouth(inst, state) {
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
   const s = inst.size;
   inst.mouth.style.top = shape.mouthTop + '%';
-  if (state === 'thinking' || state === 'synthesizing' || state === 'transcribing') {
-    inst.mouth.className = 'thimble-mouth dots';
-    inst.mouth.style.width = inst.mouth.style.height = 'auto';
-    inst.mouth.style.gap = (0.04 * s) + 'px';
-    inst.mouth.innerHTML = '';
-    for (let k = 0; k < 3; k++) {
-      const dot = document.createElement('div');
-      dot.className = 'dot';
-      dot.style.width = dot.style.height = (0.045 * s) + 'px';
-      dot.style.animationDelay = (k * 0.2) + 's';
-      inst.mouth.appendChild(dot);
-    }
-    return;
-  }
+  inst.mouth.style.left = (shape.mouthX || 50) + '%';
   inst.mouth.className = 'thimble-mouth';
   inst.mouth.innerHTML = '';
   inst.mouth.style.width = (shape.mouthW * s) + 'px';
@@ -129,7 +113,7 @@ function renderThimbleMouth(inst, state) {
   } else {
     inst.mouth.style.background = '#F6F1E7';
     inst.mouth.style.borderBottom = 'none';
-    inst.mouth.style.borderRadius = state === 'talking' ? '50%' : '999px';
+    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking' || state === 'synthesizing' || state === 'transcribing') ? '50%' : '999px';
   }
 }
 
@@ -192,7 +176,7 @@ const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 
 const STATES = [
   {state: 'idle', title: 'Idle', desc: 'Before the call has really started -- same resting egg shape as listening, just no live mic input yet.', hasLevel: false, hasMuted: true},
   {state: 'listening', title: 'Listening', desc: 'Leans in, egg-shaped, wobbles with mic level. Continuous nod the whole time, not just on speech.', hasLevel: true, hasMuted: true},
-  {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Mouth becomes three pulsing dots.', hasLevel: false, hasMuted: false},
+  {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Small off-center oval mouth, no movement.', hasLevel: false, hasMuted: false},
   {state: 'synthesizing', title: 'Synthesizing', desc: '"Getting ready to talk…" -- same look as thinking. Defined for completeness; rarely reached since TTS now starts per-sentence.', hasLevel: false, hasMuted: false},
   {state: 'transcribing', title: 'Transcribing', desc: 'Same look as thinking again, distinct label so a few-second transcription step doesn’t read as part of the longer reply wait after it.', hasLevel: false, hasMuted: false},
   {state: 'talking', title: 'Talking', desc: 'Round, ripples outward. Mouth height tracks TTS amplitude directly (fast attack, slower release) instead of a canned loop.', hasLevel: true, hasMuted: false},

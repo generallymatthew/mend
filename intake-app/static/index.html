@@ -87,10 +87,9 @@
   .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
-  .thimble-mouth.dots{display:flex; align-items:center; justify-content:center; background:none !important;}
-  .thimble-mouth .dot{width:9px; height:9px; border-radius:50%; background:#F6F1E7; animation:thimble-dot 1.2s ease-in-out infinite;}
   @keyframes thimble-blob{0%,100%{border-radius:50%; transform:scale(.95);} 25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%; transform:scale(.92) rotate(-3deg);} 50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%; transform:scale(.95);} 75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%; transform:scale(.92) rotate(3deg);}}
   @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
+  /* Still used by .chat-typing below, not the avatar mouth anymore. */
   @keyframes thimble-dot{0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-35%);}}
   @keyframes thimble-ripple{0%{transform:scale(1); opacity:.45;} 100%{transform:scale(1.6); opacity:0;}}
   /* Caption sits in normal flow right under the state pill now, not
@@ -1009,19 +1008,24 @@ const THIMBLE_SHAPES = {
   // engine as listening/talking (constant geo .6, slow spin, a head-tilt
   // wiggle instead of a nod), ported from the handoff's 'thinking' state in
   // updateThimbleMotion below, instead of a canned border-radius keyframe.
-  thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
+  // Mouth: a small off-center oval (w:12%/h:7%, 58% across rather than
+  // centered), a direct port of thimble-avatar.js's own MOUTH.thinking --
+  // not the three-pulsing-dots look a later design doc described, which
+  // read badly live (reported as looking bad) and is dropped here in favor
+  // of the original reference's plain mouth.
+  thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   // Same look as thinking. Defined for STATE_WORDS/CHAT_STATUS completeness
   // but not currently reached -- TTS now starts per-sentence, concurrently
   // with the rest of the reply still generating (see the sentence-streamed
   // TTS section), so there's no longer a distinct "reply text arrived,
   // now waiting on voice" gap between 'thinking' and 'talking' to label.
-  synthesizing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
+  synthesizing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   // Same look again -- distinct state so the real transcription step (a
   // couple seconds) doesn't share a label with the Claude reply wait
   // after it (several more seconds), the exact conflation that made
   // "transcribing" look like it was taking way longer than it actually
   // was. See the onstop handler in startRecordingTurn().
-  transcribing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
+  transcribing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   // No CSS bob anymore -- talking's body motion is the same amplitude-driven
   // hexagon wobble + breathing as listening/thinking, just with its own
   // breathe period and a constant (not threshold-gated) geo target, ported
@@ -1134,20 +1138,9 @@ function renderThimbleMouth(inst, state) {
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
   const s = inst.size;
   inst.mouth.style.top = shape.mouthTop + '%';
-  if (state === 'thinking' || state === 'synthesizing' || state === 'transcribing') {
-    inst.mouth.className = 'thimble-mouth dots';
-    inst.mouth.style.width = inst.mouth.style.height = 'auto';
-    inst.mouth.style.gap = (0.04 * s) + 'px';
-    inst.mouth.innerHTML = '';
-    for (let k = 0; k < 3; k++) {
-      const dot = document.createElement('div');
-      dot.className = 'dot';
-      dot.style.width = dot.style.height = (0.045 * s) + 'px';
-      dot.style.animationDelay = (k * 0.2) + 's';
-      inst.mouth.appendChild(dot);
-    }
-    return;
-  }
+  // Only thinking/synthesizing/transcribing set mouthX (58, off-center per
+  // thimble-avatar.js's own MOUTH table) -- everything else stays centered.
+  inst.mouth.style.left = (shape.mouthX || 50) + '%';
   inst.mouth.className = 'thimble-mouth';
   inst.mouth.innerHTML = '';
   inst.mouth.style.width = (shape.mouthW * s) + 'px';
@@ -1160,7 +1153,13 @@ function renderThimbleMouth(inst, state) {
   } else {
     inst.mouth.style.background = '#F6F1E7';
     inst.mouth.style.borderBottom = 'none';
-    inst.mouth.style.borderRadius = state === 'talking' ? '50%' : '999px';
+    // Thinking/synthesizing/transcribing get the same true-oval 50% radius
+    // talking uses (thimble-avatar.js draws every state's mouth with the
+    // same border-radius:50%, varying only size/position) -- previously
+    // these fell through to the 999px capsule radius along with
+    // listening/idle/paused, back when they had their own dots branch
+    // above and never reached this line at all.
+    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking' || state === 'synthesizing' || state === 'transcribing') ? '50%' : '999px';
   }
 }
 
@@ -1180,8 +1179,9 @@ function applyThimbleState(inst, state) {
   inst.rippleA.hidden = !talking;
   inst.rippleB.hidden = !talking;
   // .thimble-mouth's CSS transition (width/height/border-radius, .35s) is
-  // for smooth shape changes BETWEEN states (e.g. thinking's dots morphing
-  // into talking's oval) -- reported live as the talking mouth feeling
+  // for smooth shape changes BETWEEN states (e.g. thinking's small oval
+  // morphing into talking's bigger one) -- reported live as the talking
+  // mouth feeling
   // sluggish even after the amplitude-envelope fix above, and this is why:
   // updateThimbleMotion sets .style.height every animation frame (~16ms)
   // to track real speech amplitude, but the CSS transition doesn't let it
