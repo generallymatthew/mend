@@ -70,8 +70,6 @@ const THIMBLE_SHAPES = {
   listening:   {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   idle:        {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
-  synthesizing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
-  transcribing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   talking:     {radius: '50%', anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
   empathizing: {radius: '50% 50% 50% 50% / 62% 62% 38% 38%', anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
   paused:      {radius: '50%', anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
@@ -113,7 +111,7 @@ function renderThimbleMouth(inst, state) {
   } else {
     inst.mouth.style.background = '#F6F1E7';
     inst.mouth.style.borderBottom = 'none';
-    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking' || state === 'synthesizing' || state === 'transcribing') ? '50%' : '999px';
+    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
   }
 }
 
@@ -140,7 +138,7 @@ function applyThimbleState(inst, state) {
 function updateCardMotion(inst, now, state, level, muted) {
   applyThimbleState(inst, state);
   const speaking = state === 'talking';
-  const thinkingState = state === 'thinking' || state === 'synthesizing' || state === 'transcribing';
+  const thinkingState = state === 'thinking';
   const listening = state === 'listening';
   inst.el.classList.toggle('muted', muted && listening && !speaking && !thinkingState);
   const ttsLevel = speaking ? level : 0;
@@ -171,14 +169,12 @@ function updateCardMotion(inst, now, state, level, muted) {
 
 // ---- QA page scaffolding (not part of the real app) ----
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', transcribing: 'Transcribing…', talking: 'Talking…', empathizing: 'Empathizing…', paused: 'Paused'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…', paused: 'Paused'};
 
 const STATES = [
   {state: 'idle', title: 'Idle', desc: 'Before the call has really started -- same resting egg shape as listening, just no live mic input yet.', hasLevel: false, hasMuted: true},
   {state: 'listening', title: 'Listening', desc: 'Leans in, egg-shaped, wobbles with mic level. Continuous nod the whole time, not just on speech.', hasLevel: true, hasMuted: true},
-  {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Small off-center oval mouth, no movement.', hasLevel: false, hasMuted: false},
-  {state: 'synthesizing', title: 'Synthesizing', desc: '"Getting ready to talk…" -- same look as thinking. Defined for completeness; rarely reached since TTS now starts per-sentence.', hasLevel: false, hasMuted: false},
-  {state: 'transcribing', title: 'Transcribing', desc: 'Same look as thinking again, distinct label so a few-second transcription step doesn’t read as part of the longer reply wait after it.', hasLevel: false, hasMuted: false},
+  {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Small off-center oval mouth, no movement. Covers transcribing and waiting on the reply both -- no separate states for those anymore.', hasLevel: false, hasMuted: false},
   {state: 'talking', title: 'Talking', desc: 'Round, ripples outward. Mouth height tracks TTS amplitude directly (fast attack, slower release) instead of a canned loop.', hasLevel: true, hasMuted: false},
   {state: 'empathizing', title: 'Empathizing', desc: 'Slow nod, soft closed-mouth smile, honey blend fades in from the side. Not wired to a real trigger yet.', hasLevel: false, hasMuted: false},
   {state: 'paused', title: 'Paused', desc: 'Frozen (no breathing/wobble) and recolored grey, so a paused session reads as deliberately stopped, not stuck.', hasLevel: false, hasMuted: false},

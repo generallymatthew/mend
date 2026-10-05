@@ -558,8 +558,8 @@ function pauseSession() {
   // the audio itself is just paused, not actually gone. Skip all of that
   // when pausing mid-talk; just release the barge-in mic (stopInterruptMonitor)
   // and leave the queue/controllers intact for resumeSession() to pick
-  // back up. Any other pause point (still transcribing/thinking/
-  // synthesizing) has no audio in flight to resume yet, so the old
+  // back up. Any other pause point (still thinking, i.e. transcribing or
+  // waiting on Claude) has no audio in flight to resume yet, so the old
   // hard-abort behavior stays correct there.
   pausedMidReply = (avatarState === 'talking');
   if (pausedMidReply) stopInterruptMonitor(); else endReplyCycle();
@@ -1014,18 +1014,6 @@ const THIMBLE_SHAPES = {
   // read badly live (reported as looking bad) and is dropped here in favor
   // of the original reference's plain mouth.
   thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
-  // Same look as thinking. Defined for STATE_WORDS/CHAT_STATUS completeness
-  // but not currently reached -- TTS now starts per-sentence, concurrently
-  // with the rest of the reply still generating (see the sentence-streamed
-  // TTS section), so there's no longer a distinct "reply text arrived,
-  // now waiting on voice" gap between 'thinking' and 'talking' to label.
-  synthesizing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
-  // Same look again -- distinct state so the real transcription step (a
-  // couple seconds) doesn't share a label with the Claude reply wait
-  // after it (several more seconds), the exact conflation that made
-  // "transcribing" look like it was taking way longer than it actually
-  // was. See the onstop handler in startRecordingTurn().
-  transcribing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   // No CSS bob anymore -- talking's body motion is the same amplitude-driven
   // hexagon wobble + breathing as listening/thinking, just with its own
   // breathe period and a constant (not threshold-gated) geo target, ported
@@ -1138,8 +1126,8 @@ function renderThimbleMouth(inst, state) {
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
   const s = inst.size;
   inst.mouth.style.top = shape.mouthTop + '%';
-  // Only thinking/synthesizing/transcribing set mouthX (58, off-center per
-  // thimble-avatar.js's own MOUTH table) -- everything else stays centered.
+  // Only thinking sets mouthX (58, off-center per thimble-avatar.js's own
+  // MOUTH table) -- everything else stays centered.
   inst.mouth.style.left = (shape.mouthX || 50) + '%';
   inst.mouth.className = 'thimble-mouth';
   inst.mouth.innerHTML = '';
@@ -1153,13 +1141,13 @@ function renderThimbleMouth(inst, state) {
   } else {
     inst.mouth.style.background = '#F6F1E7';
     inst.mouth.style.borderBottom = 'none';
-    // Thinking/synthesizing/transcribing get the same true-oval 50% radius
-    // talking uses (thimble-avatar.js draws every state's mouth with the
-    // same border-radius:50%, varying only size/position) -- previously
-    // these fell through to the 999px capsule radius along with
-    // listening/idle/paused, back when they had their own dots branch
-    // above and never reached this line at all.
-    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking' || state === 'synthesizing' || state === 'transcribing') ? '50%' : '999px';
+    // Thinking gets the same true-oval 50% radius talking uses
+    // (thimble-avatar.js draws every state's mouth with the same
+    // border-radius:50%, varying only size/position) -- previously it fell
+    // through to the 999px capsule radius along with listening/idle/paused,
+    // back when it had its own dots branch above and never reached this
+    // line at all.
+    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
   }
 }
 
@@ -1207,7 +1195,7 @@ function applyThimbleState(inst, state) {
 function updateThimbleMotion(inst, now, level, listening) {
   applyThimbleState(inst, avatarState);
   const speaking = avatarState === 'talking';
-  const thinkingState = avatarState === 'thinking' || avatarState === 'synthesizing' || avatarState === 'transcribing';
+  const thinkingState = avatarState === 'thinking';
   // Mic-muted dims the avatar (handoff's 'muted' opacity .5) instead of
   // leaving it full-strength while clearly not hearing anything -- applied
   // as a class so it layers on top of whatever state is otherwise showing,
@@ -1358,11 +1346,11 @@ function splitCaptionParts(text) {
   return parts.length ? parts : [text];
 }
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', paused: 'Paused', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Talking…', empathizing: 'Empathizing…'};
-const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', paused: 'Paused.', transcribing: 'Transcribing…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', talking: 'Replying…', empathizing: 'Replying…'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
+const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
-const BUSY_STATES = ['transcribing', 'thinking', 'synthesizing', 'talking'];
+const BUSY_STATES = ['thinking', 'talking'];
 function updateStatePill() {
   // Not gated by the early-return below -- this needs to react every
   // frame avatarState could've changed, same as the label itself would.
@@ -1866,7 +1854,7 @@ function checkVad(level, now) {
 
 // Barge-in. The turn recorder's own mic stream closes the moment a turn
 // ends (mediaRecorder.onstop stops its tracks) and stays closed through
-// transcribing/thinking/synthesizing/talking -- lowering VAD_SILENCE_MS
+// thinking (which covers transcribing)/talking -- lowering VAD_SILENCE_MS
 // above means that window now starts sooner and more often on a pause that
 // wasn't really the end of a thought. This opens a second, independent mic
 // stream for just that window and watches for the user talking again; if
@@ -2003,7 +1991,7 @@ async function startRecordingTurn() {
     const bubble = pendingTranscriptEl;
     pendingTranscriptEl = null;
     setBusy(true);
-    avatarState = 'transcribing';
+    avatarState = 'thinking';
     // pauseSession()'s endReplyCycle() bumps replyGen on pause, but there's
     // no AbortController wired to getFinalTranscript below -- that fetch
     // keeps running regardless, and used to come back and silently revive
