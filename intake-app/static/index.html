@@ -663,8 +663,26 @@ function ensureAudioGraph() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const source = audioCtx.createMediaElementSource(audioEl);
     analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
-    avatarData = new Uint8Array(analyser.frequencyBinCount);
+    // 2048, not the 256 every other analyser on this page uses (mic VAD,
+    // barge-in) -- those need to react fast to real speech starting/
+    // stopping. This one only drives the mouth's lip-sync height, and at
+    // 256 samples -- ~5ms of audio, read fresh every ~16ms rAF frame --
+    // each read lands on a different phase of the voice's own pitch cycle
+    // (a period of 5-10ms for a typical voice), so the raw level bounced
+    // around well beyond anything actually changing in the words, and the
+    // existing attack/release smoothing below (tuned to react fast, not
+    // to average out noise) couldn't fully absorb it -- reported live as
+    // "very jittery." 2048 samples is a ~46ms window, long enough to
+    // average out a few pitch cycles into a stable reading, short enough
+    // to still track individual syllables (each ~80-200ms) rather than
+    // blurring across them, so it reads as smoother without feeling
+    // delayed from the words. Reading the full fftSize (not just
+    // frequencyBinCount, half that) for the time-domain buffer below is
+    // what actually captures that whole window -- frequencyBinCount is an
+    // FFT-output-sized count that happens to equal half of fftSize, not a
+    // time-domain sample count.
+    analyser.fftSize = 2048;
+    avatarData = new Uint8Array(analyser.fftSize);
     source.connect(analyser);
     analyser.connect(audioCtx.destination);
   } catch (e) {} // Web Audio unavailable; avatar just stays idle, audio still plays normally
