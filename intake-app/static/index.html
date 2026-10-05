@@ -1554,6 +1554,18 @@ document.getElementById('autoplayRetryBtn').addEventListener('click', () => {
   const item = pendingAutoplayItem;
   pendingAutoplayItem = null;
   autoplayBanner.hidden = true;
+  // The original playSpeechItem attempt also resumes a suspended audioCtx,
+  // but that call itself isn't riding on a user gesture (Voice mode
+  // auto-starts with no tap yet), so on iOS Safari specifically it just
+  // stays suspended -- audioEl.play() below then quietly "succeeds"
+  // (paused goes false) while the Web Audio graph it's routed through
+  // (createMediaElementSource -> analyser -> destination, see
+  // ensureAudioGraph) outputs nothing, and the mouth barely moves since
+  // the analyser reads near-silence. Reported live as the button "not
+  // doing anything" -- from the outside that's indistinguishable from the
+  // click simply not registering. This click IS a real gesture, so resume
+  // it here too, same as the original attempt.
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   // The click itself is a real user gesture, so this retry should succeed
   // -- same src is already set from the original attempt, just needs a
   // play() call riding on this gesture instead of the earlier gesture-less
