@@ -1026,11 +1026,17 @@ function thimbleInstance(prefix, size) {
 // the handoff's own numbers stay as the baseline shape math (polygon math,
 // smoothing, easing), just pushed further from the circle.
 const THIMBLE_WOBBLE_AMOUNT = 2.6;
-function thimblePolygon(t, g, lvl, facets, spinSpeed) {
+function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
   const N = facets, M = 120, seg = (2 * Math.PI) / N, pts = [];
   const phi = t * spinSpeed + 0.15 * Math.sin(t * 1.7);
   const poly = th => { const m = (((th - phi) % seg) + seg) % seg; return Math.cos(seg / 2) / Math.cos(m - seg / 2); };
-  const depth = Math.min(1, g * Math.min(1, 0.55 + lvl * 0.6) * THIMBLE_WOBBLE_AMOUNT);
+  // maxDepth caps how far the outline is allowed to pull toward the full
+  // hexagon's sharp vertices -- talking passes a lower cap than the default
+  // 1 (see its call below) because at geoTarget .8 depth was hitting the
+  // cap on almost every syllable, reading as a sharp hexagon snapping in
+  // and out rather than a wobble. Listening/thinking keep the old
+  // uncapped-at-1 behavior, since only talking was reported as too sharp.
+  const depth = Math.min(maxDepth == null ? 1 : maxDepth, g * Math.min(1, 0.55 + lvl * 0.6) * THIMBLE_WOBBLE_AMOUNT);
   for (let i = 0; i < M; i++) {
     const th = (i / M) * 2 * Math.PI;
     let sum = 0; for (let w = -6; w <= 6; w++) sum += poly(th + (w / 6) * seg * 0.32);
@@ -1209,7 +1215,12 @@ function updateThimbleMotion(inst, now, level, listening) {
     // than "sped up." Thinking spins much slower (0.12), same as the
     // reference, since it's an idle wait rather than a reaction.
     const spin = thinkingState ? 0.12 : 0.35;
-    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, inst.lvl, 6, spin);
+    // Talking's own depth cap -- see thimblePolygon's maxDepth comment.
+    // Reported live as feeling too sharp/geometric while talking; capped at
+    // .55 instead of the full 1 listening/thinking still use, so the
+    // outline stays visibly hexagonal (not a plain circle) without hitting
+    // the sharp full-depth vertices on every loud syllable.
+    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, inst.lvl, 6, spin, speaking ? 0.55 : 1);
   }
   // Talking mouth: real TTS amplitude drives the open/close height directly,
   // rather than the handoff's canned "talk" loop -- real lip-sync instead of
