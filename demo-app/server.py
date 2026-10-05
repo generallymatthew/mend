@@ -290,5 +290,16 @@ async def links_index():
     return FileResponse(ROOT / "static" / "links.html")
 
 
+# launchpad.html lives at the repo root, not under demo-app/static, like
+# PITCH_DIR above -- it's the internal dev bookmark page /links replaced
+# for public use (see that commit), kept around for its own sake and now
+# given a route rather than a static mount so the rest of the repo root
+# (system prompts, deploy scripts, etc.) stays unexposed.
+@app.get("/launchpad")
+@app.get("/launchpad/")
+async def launchpad_index():
+    return FileResponse(ROOT.parent / "launchpad.html")
+
+
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 app.mount("/pitch", StaticFiles(directory=PITCH_DIR), name="pitch")
