@@ -1,0 +1,284 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thimble states — QA reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /*
+    QA reference page for every Thimble avatar state. This is NOT part of
+    the real app flow -- nothing here is wired to a mic, TTS audio, or a
+    conversation. Each card below runs its own always-on instance of the
+    exact same avatar engine static/index.html uses (thimblePolygon,
+    THIMBLE_SHAPES, applyThimbleState, renderThimbleMouth -- copied
+    verbatim, not reimplemented), with "Auto" sliders standing in for real
+    mic/TTS level, so you can eyeball every state side by side without
+    going through mic permissions, a live call, or waiting for real TTS to
+    land. If the real engine in static/index.html changes, re-copy those
+    functions here too -- there's no shared import, by design, so this
+    page can never accidentally pull in something that only works inside
+    the real call flow (audioCtx, analyser, etc).
+  */
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --stage-bg:#FBF8F3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
+  .wrap{max-width:1280px; margin:0 auto; padding:28px 24px 60px;}
+  h1{font-size:22px; font-weight:800; letter-spacing:-0.01em; margin:0 0 4px;}
+  .sub{font-size:13.5px; color:var(--ink-soft); margin:0 0 28px; line-height:1.5; max-width:720px;}
+  .sub code{background:#17372E0D; padding:1px 5px; border-radius:4px; font-size:12.5px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px;}
+  .card-stage{position:relative; height:160px; display:flex; align-items:center; justify-content:center; background:var(--stage-bg); border-radius:12px;}
+  .card-name{font-weight:700; font-size:15px;}
+  .card-pill{display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:var(--accent-soft); font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink);}
+  .card-desc{font-size:12.5px; line-height:1.5; color:var(--ink-soft); min-height:48px;}
+  .card-controls{display:flex; flex-direction:column; gap:6px; font-size:11.5px; color:var(--ink-soft); border-top:1px solid var(--border); padding-top:10px; margin-top:-2px;}
+  .card-controls label{display:flex; align-items:center; gap:6px;}
+  .card-controls input[type=range]{flex:1; accent-color:var(--accent);}
+  .card-controls .row{display:flex; align-items:center; gap:8px;}
+
+  /* Avatar engine CSS, copied verbatim from static/index.html. */
+  .thimble-avatar{position:relative; width:120px; height:120px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
+  .thimble-avatar.muted{opacity:.5;}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
+  .thimble-ripple.b{animation-delay:.8s;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease;}
+  .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
+  .thimble-mouth.dots{display:flex; align-items:center; justify-content:center; background:none !important;}
+  .thimble-mouth .dot{width:9px; height:9px; border-radius:50%; background:#F6F1E7; animation:thimble-dot 1.2s ease-in-out infinite;}
+  @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
+  @keyframes thimble-dot{0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-35%);}}
+  @keyframes thimble-ripple{0%{transform:scale(1); opacity:.45;} 100%{transform:scale(1.6); opacity:0;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Thimble states</h1>
+  <p class="sub">Every <code>avatarState</code> the real app can be in, running live and side by side, for QA -- no mic, call, or real TTS needed. Sliders marked <b>Auto</b> simulate a mic/TTS level; drag one to freeze it and inspect a specific amplitude.</p>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+// ---- Avatar engine, copied verbatim from static/index.html (see that
+// file for the full history/reasoning behind these numbers) ----
+
+const THIMBLE_SHAPES = {
+  listening:   {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  idle:        {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
+  synthesizing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
+  transcribing: {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62},
+  talking:     {radius: '50%', anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
+  empathizing: {radius: '50% 50% 50% 50% / 62% 62% 38% 38%', anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
+  paused:      {radius: '50%', anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
+};
+
+const THIMBLE_WOBBLE_AMOUNT = 2.6;
+function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
+  const N = facets, M = 120, seg = (2 * Math.PI) / N, pts = [];
+  const phi = t * spinSpeed + 0.15 * Math.sin(t * 1.7);
+  const poly = th => { const m = (((th - phi) % seg) + seg) % seg; return Math.cos(seg / 2) / Math.cos(m - seg / 2); };
+  const rawDepth = g * Math.min(1, 0.55 + lvl * 0.6) * THIMBLE_WOBBLE_AMOUNT;
+  const depth = Math.min(maxDepth == null ? 1 : maxDepth, rawDepth);
+  const jitterScale = rawDepth > 0 ? depth / rawDepth : 1;
+  for (let i = 0; i < M; i++) {
+    const th = (i / M) * 2 * Math.PI;
+    let sum = 0; for (let w = -6; w <= 6; w++) sum += poly(th + (w / 6) * seg * 0.32);
+    const smooth = sum / 13;
+    const jitter = 1 + jitterScale * (0.05 * g * lvl * Math.sin(th * N + t * 5) + 0.03 * g * lvl * Math.sin(th * N * 0.5 - t * 3.2));
+    const r = 50 * (1 - depth * (1 - smooth)) * jitter;
+    pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
+  }
+  return `polygon(${pts.join(',')})`;
+}
+
+function renderThimbleMouth(inst, state) {
+  const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+  const s = inst.size;
+  inst.mouth.style.top = shape.mouthTop + '%';
+  if (state === 'thinking' || state === 'synthesizing' || state === 'transcribing') {
+    inst.mouth.className = 'thimble-mouth dots';
+    inst.mouth.style.width = inst.mouth.style.height = 'auto';
+    inst.mouth.style.gap = (0.04 * s) + 'px';
+    inst.mouth.innerHTML = '';
+    for (let k = 0; k < 3; k++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.width = dot.style.height = (0.045 * s) + 'px';
+      dot.style.animationDelay = (k * 0.2) + 's';
+      inst.mouth.appendChild(dot);
+    }
+    return;
+  }
+  inst.mouth.className = 'thimble-mouth';
+  inst.mouth.innerHTML = '';
+  inst.mouth.style.width = (shape.mouthW * s) + 'px';
+  inst.mouth.style.height = (shape.mouthH * s) + 'px';
+  inst.mouth.style.boxSizing = 'border-box';
+  if (state === 'empathizing') {
+    inst.mouth.style.background = 'none';
+    inst.mouth.style.borderBottom = (0.028 * s) + 'px solid #F6F1E7';
+    inst.mouth.style.borderRadius = '0 0 999px 999px';
+  } else {
+    inst.mouth.style.background = '#F6F1E7';
+    inst.mouth.style.borderBottom = 'none';
+    inst.mouth.style.borderRadius = state === 'talking' ? '50%' : '999px';
+  }
+}
+
+function applyThimbleState(inst, state) {
+  if (state === inst.renderedState) return;
+  inst.renderedState = state;
+  const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+  inst.el.style.transform = shape.lean;
+  inst.body.style.animation = shape.anim;
+  inst.body.style.borderRadius = shape.radius;
+  inst.blend.style.opacity = state === 'empathizing' ? '.85' : '0';
+  inst.body.style.background = state === 'paused' ? '#A9A39A' : '';
+  const talking = state === 'talking';
+  inst.rippleA.hidden = !talking;
+  inst.rippleB.hidden = !talking;
+  inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
+  renderThimbleMouth(inst, state);
+}
+
+// Adapted from static/index.html's updateThimbleMotion: that version reads
+// a single global avatarState/micMuted/analyser (one real call has one
+// Thimble); this page runs many fixed-state instances at once, so state,
+// level and muted come in as plain arguments instead.
+function updateCardMotion(inst, now, state, level, muted) {
+  applyThimbleState(inst, state);
+  const speaking = state === 'talking';
+  const thinkingState = state === 'thinking' || state === 'synthesizing' || state === 'transcribing';
+  const listening = state === 'listening';
+  inst.el.classList.toggle('muted', muted && listening && !speaking && !thinkingState);
+  const ttsLevel = speaking ? level : 0;
+  const active = listening || speaking || thinkingState;
+  if (!active) { inst.ring.style.transform = 'none'; inst.body.style.clipPath = 'none'; inst.geo = 0; inst.lvl = 0; }
+  else {
+    const nodding = listening;
+    const y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
+    const wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
+    const breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
+    const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * (now / 1000)) / breathePeriod));
+    inst.ring.style.transform = `translateY(${y.toFixed(2)}%) rotate(${wiggle.toFixed(2)}deg) scale(${breathe.toFixed(4)})`;
+    const input = speaking ? ttsLevel : thinkingState ? 0.15 : level;
+    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
+    const geoTarget = listening ? (inst.lvl > 0.08 ? 1 : 0) : speaking ? 0.8 : thinkingState ? 0.6 : 0;
+    inst.geo += (geoTarget - inst.geo) * 0.12;
+    const spin = thinkingState ? 0.12 : 0.35;
+    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, inst.lvl, 6, spin, (speaking || thinkingState) ? 0.55 : 1);
+  }
+  if (speaking) {
+    const rate = ttsLevel > inst.mouthLevel ? 0.7 : 0.25;
+    inst.mouthLevel += (ttsLevel - inst.mouthLevel) * rate;
+    inst.mouth.style.height = (inst.size * (0.03 + 0.22 * inst.mouthLevel)) + 'px';
+  } else {
+    inst.mouthLevel = 0;
+  }
+}
+
+// ---- QA page scaffolding (not part of the real app) ----
+
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', thinking: 'Thinking…', synthesizing: 'Getting ready to talk…', transcribing: 'Transcribing…', talking: 'Talking…', empathizing: 'Empathizing…', paused: 'Paused'};
+
+const STATES = [
+  {state: 'idle', title: 'Idle', desc: 'Before the call has really started -- same resting egg shape as listening, just no live mic input yet.', hasLevel: false, hasMuted: true},
+  {state: 'listening', title: 'Listening', desc: 'Leans in, egg-shaped, wobbles with mic level. Continuous nod the whole time, not just on speech.', hasLevel: true, hasMuted: true},
+  {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Mouth becomes three pulsing dots.', hasLevel: false, hasMuted: false},
+  {state: 'synthesizing', title: 'Synthesizing', desc: '"Getting ready to talk…" -- same look as thinking. Defined for completeness; rarely reached since TTS now starts per-sentence.', hasLevel: false, hasMuted: false},
+  {state: 'transcribing', title: 'Transcribing', desc: 'Same look as thinking again, distinct label so a few-second transcription step doesn’t read as part of the longer reply wait after it.', hasLevel: false, hasMuted: false},
+  {state: 'talking', title: 'Talking', desc: 'Round, ripples outward. Mouth height tracks TTS amplitude directly (fast attack, slower release) instead of a canned loop.', hasLevel: true, hasMuted: false},
+  {state: 'empathizing', title: 'Empathizing', desc: 'Slow nod, soft closed-mouth smile, honey blend fades in from the side. Not wired to a real trigger yet.', hasLevel: false, hasMuted: false},
+  {state: 'paused', title: 'Paused', desc: 'Frozen (no breathing/wobble) and recolored grey, so a paused session reads as deliberately stopped, not stuck.', hasLevel: false, hasMuted: false},
+];
+
+const grid = document.getElementById('grid');
+const cards = STATES.map(def => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const uid = 'av_' + def.state;
+  card.innerHTML = `
+    <div class="card-stage">
+      <div class="thimble-avatar" id="${uid}">
+        <div class="thimble-ripple" id="${uid}RippleA" hidden></div>
+        <div class="thimble-ripple b" id="${uid}RippleB" hidden></div>
+        <div class="thimble-ring" id="${uid}Ring">
+          <div class="thimble-body" id="${uid}Body">
+            <div class="thimble-blend" id="${uid}Blend"></div>
+            <div class="thimble-mouth" id="${uid}Mouth"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card-name">${def.title}</div>
+      <div class="card-pill">avatarState: ${def.state}</div>
+    </div>
+    <div class="card-desc">${def.desc}<br><i>Pill label: “${STATE_WORDS[def.state]}”</i></div>
+    <div class="card-controls"></div>
+  `;
+  grid.appendChild(card);
+
+  const inst = {
+    size: 120,
+    el: document.getElementById(uid),
+    ring: document.getElementById(uid + 'Ring'),
+    body: document.getElementById(uid + 'Body'),
+    blend: document.getElementById(uid + 'Blend'),
+    mouth: document.getElementById(uid + 'Mouth'),
+    rippleA: document.getElementById(uid + 'RippleA'),
+    rippleB: document.getElementById(uid + 'RippleB'),
+    renderedState: null, mouthLevel: 0, geo: 0, lvl: 0,
+  };
+
+  const c = { def, inst, level: 0, auto: true, muted: false, phase: Math.random() * 10 };
+  const controls = card.querySelector('.card-controls');
+
+  if (def.hasLevel) {
+    controls.innerHTML += `
+      <div class="row"><label style="flex:1"><input type="checkbox" class="autoChk" checked> Auto</label></div>
+      <div class="row"><input type="range" class="levelSlider" min="0" max="100" value="0"></div>
+    `;
+    const autoChk = controls.querySelector('.autoChk');
+    const slider = controls.querySelector('.levelSlider');
+    autoChk.addEventListener('change', () => { c.auto = autoChk.checked; });
+    slider.addEventListener('input', () => { c.auto = false; autoChk.checked = false; c.level = slider.value / 100; });
+    c._slider = slider;
+  }
+  if (def.hasMuted) {
+    controls.innerHTML += `<div class="row"><label><input type="checkbox" class="mutedChk"> Muted</label></div>`;
+    controls.querySelector('.mutedChk').addEventListener('change', e => { c.muted = e.target.checked; });
+  }
+  if (!def.hasLevel && !def.hasMuted) {
+    controls.style.display = 'none';
+  }
+  return c;
+});
+
+function tick(now) {
+  cards.forEach(c => {
+    if (c.def.hasLevel && c.auto) {
+      // A bursty, speech-like level: layered sines + a slow on/off envelope
+      // per card (own random phase) so cards don't all pulse in lockstep.
+      const t = now / 1000 + c.phase;
+      const envelope = Math.max(0, Math.sin(t * 0.6));
+      const chatter = 0.5 + 0.5 * Math.sin(t * 7) * Math.sin(t * 2.3);
+      c.level = Math.max(0, Math.min(1, envelope * chatter));
+      if (c._slider) c._slider.value = Math.round(c.level * 100);
+    }
+    updateCardMotion(c.inst, now, c.def.state, c.level, c.muted);
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
