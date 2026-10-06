@@ -1235,6 +1235,7 @@ function thimbleInstance(prefix, size) {
     rippleA: document.getElementById(prefix + 'RippleA'),
     rippleB: document.getElementById(prefix + 'RippleB'),
     renderedState: null, mouthLevel: 0, geo: 0, lvl: 0,
+    wobblePhase: 0, breathePhase: 0, lastT: null,
   };
 }
 
@@ -1437,6 +1438,14 @@ function applyThimbleState(inst, state) {
 // to, just real input here instead of its simulated fallback.
 function updateThimbleMotion(inst, now, level, listening) {
   applyThimbleState(inst, avatarState);
+  // dt since this instance's last frame, used below to advance the wobble/
+  // breathe cycles by elapsed time instead of reading them off absolute
+  // `now` -- see the wobblePhase/breathePhase comment further down for why
+  // that was causing a visible snap on every thinking<->talking/listening
+  // transition. Clamped so a backgrounded tab (or the very first frame)
+  // can't produce one huge catch-up jump instead.
+  const dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
+  inst.lastT = now;
   const speaking = avatarState === 'talking';
   const thinkingState = avatarState === 'thinking';
   // Mic-muted dims the avatar (handoff's 'muted' opacity .5) instead of
@@ -1474,8 +1483,16 @@ function updateThimbleMotion(inst, now, level, listening) {
     // thinking, 2.2s while talking, 4.5s while idle, per the handoff's own
     // BREATHE table; amplitude pushed past its baseline (0.0175) for a
     // livelier feel per explicit request.
+    // Advanced by dt/period each frame rather than read off absolute `now`
+    // (now/1000 % period) -- the old version re-derived the cycle's position
+    // from wall-clock time, so the instant breathePeriod changed (e.g.
+    // thinking's 3s -> talking's 2.2s) the cosine's argument jumped to a
+    // different absolute value and the scale snapped instead of continuing
+    // from wherever the breath actually was. Accumulating phase instead
+    // only changes the *speed* going forward, never the current position.
     const breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
-    const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * (now / 1000)) / breathePeriod));
+    inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+    const breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
     inst.ring.style.transform = `translateY(${y.toFixed(2)}%) rotate(${wiggle.toFixed(2)}deg) scale(${breathe.toFixed(4)})`;
     // Smoothed level driving the outline, same two-speed smoothing as the
     // handoff (0.45/frame while speaking since TTS amplitude jumps faster
@@ -1494,8 +1511,13 @@ function updateThimbleMotion(inst, now, level, listening) {
     // wobbles on a slow, calm cycle (3.4s); listening/talking share a
     // livelier 1.6s cycle -- the same period talking's ripple rings use
     // below, so the rings fire exactly as the body passes through "circle."
+    // Same fix as breathePhase above, same reason: thinking's 3.4s cycle vs
+    // listening/talking's 1.6s one used to cause the dome shape itself to
+    // snap at the exact moment avatarState changed, since domePhase was
+    // re-derived from absolute `now` instead of carried over.
     const wobblePeriod = thinkingState ? 3.4 : 1.6;
-    const domePhase = ((now / 1000) % wobblePeriod) / wobblePeriod;
+    inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+    const domePhase = inst.wobblePhase;
     const domeFactor = (1 + Math.cos(domePhase * 2 * Math.PI)) / 2;
     inst.body.style.clipPath = 'none';
     inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);

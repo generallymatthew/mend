@@ -186,6 +186,13 @@ function applyThimbleState(inst, state) {
 // level and muted come in as plain arguments instead.
 function updateCardMotion(inst, now, state, level, muted) {
   applyThimbleState(inst, state);
+  // See static/index.html's updateThimbleMotion for why this is dt-accumulated
+  // rather than read off absolute `now` -- each card here stays on one fixed
+  // state for its whole lifetime so it never actually hits the snap that fix
+  // addresses, but the formula is kept identical so this page can't quietly
+  // drift from the real engine.
+  const dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
+  inst.lastT = now;
   const speaking = state === 'talking';
   const thinkingState = state === 'thinking';
   const listening = state === 'listening';
@@ -199,7 +206,8 @@ function updateCardMotion(inst, now, state, level, muted) {
     const y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
     const wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
     const breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : listening2 ? 3 : 4.5;
-    const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * (now / 1000)) / breathePeriod));
+    inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+    const breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
     inst.ring.style.transform = `translateY(${y.toFixed(2)}%) rotate(${wiggle.toFixed(2)}deg) scale(${breathe.toFixed(4)})`;
     const input = speaking ? ttsLevel : thinkingState ? 0.15 : level;
     inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
@@ -208,7 +216,8 @@ function updateCardMotion(inst, now, state, level, muted) {
       inst.body.style.borderRadius = newListeningRadius(now / 1000, inst.lvl);
     } else {
       const wobblePeriod = thinkingState ? 3.4 : 1.6;
-      const domePhase = ((now / 1000) % wobblePeriod) / wobblePeriod;
+      inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+      const domePhase = inst.wobblePhase;
       const domeFactor = (1 + Math.cos(domePhase * 2 * Math.PI)) / 2;
       inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
       if (speaking) {
@@ -289,6 +298,7 @@ const cards = STATES.map(def => {
     rippleA: document.getElementById(uid + 'RippleA'),
     rippleB: document.getElementById(uid + 'RippleB'),
     renderedState: null, mouthLevel: 0, geo: 0, lvl: 0,
+    wobblePhase: 0, breathePhase: 0, lastT: null,
   };
 
   const c = { def, inst, level: 0, auto: true, muted: false, phase: Math.random() * 10 };
