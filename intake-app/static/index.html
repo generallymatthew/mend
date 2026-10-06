@@ -21,6 +21,7 @@
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
   .wrap{max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-direction:column; height:100vh;}
   .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;}
+  .header-right{display:flex; align-items:center; gap:8px; flex-shrink:0;}
   .brand{display:flex; align-items:center; gap:10px;}
   .brand-mark{height:26px; width:auto; display:block;}
   .brand-name{font-weight:800; font-size:22px; letter-spacing:-0.01em; color:var(--ink);}
@@ -151,8 +152,6 @@
   .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
   .mic-indicator-dot.lit{background:#8C3B2E; transform:scale(1.15);}
 
-  .ptt-mode-row{display:flex; justify-content:center; margin-top:10px;}
-  .ptt-mode-pill{font-size:12px; padding:6px 13px;}
   .ptt-row{display:flex; justify-content:center; margin-top:10px;}
   /* Big, thumb-friendly, press-and-hold target -- deliberately larger than
      the 44px .ctrl-btn icons above, since this is the one control that
@@ -249,8 +248,13 @@
      align-items so the shorter tab height doesn't throw off the toggle's
      own vertical centering. */
   .ui-toggle{display:flex; align-items:center; height:38px; padding:4px; border-radius:999px; background:#17372E0D; gap:2px; flex-shrink:0;}
-  .ui-tab{font:inherit; font-size:13px; font-weight:700; height:30px; padding:0 16px; display:flex; align-items:center; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
-  .ui-tab.active{background:var(--accent); color:var(--paper);}
+  /* .ptt-tab shares this styling but NOT the .ui-tab class itself -- a
+     pre-existing delegated listener wires up every element matching
+     `.ui-tab` to setUi(btn.dataset.ui) (see that querySelectorAll call),
+     so reusing the class made clicking Auto/Hold also call
+     setUi(undefined) and hide both panels at once. Confirmed live. */
+  .ui-tab, .ptt-tab{font:inherit; font-size:13px; font-weight:700; height:30px; padding:0 16px; display:flex; align-items:center; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
+  .ui-tab.active, .ptt-tab.active{background:var(--accent); color:var(--paper);}
   /* Hidden for now -- the pink dot on the state pill already signals
      live/active, so this duplicated that. JS still tracks/updates it
      underneath; delete this override to bring it back. */
@@ -296,6 +300,14 @@
        on mobile instead of the full sentence, short enough to stay on one
        line next to the logo with no wrapping anywhere. */
     .privacy-pill{font-size:12px; padding:7px 12px;}
+    /* Same "don't wrap the header" lesson applies now that there are TWO
+       segmented toggles up there (Auto/Hold, Voice/Text) -- confirmed live,
+       they ran off the right edge at 375px with the wordmark still full
+       size. Dropping "Mend" down to icon-only and tightening both toggles'
+       padding frees enough width to keep everything on one line. */
+    .brand-name{display:none;}
+    .header-right{gap:6px;}
+    .ui-tab, .ptt-tab{font-size:12px; padding:0 11px;}
     .privacy-pill-rest{display:none;}
     .feedback-link{font-size:12px;}
     .call-layout{flex-direction:column;}
@@ -345,9 +357,20 @@
       <span class="brand-name">Mend</span>
       <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span>Private<span class="privacy-pill-rest">. Nothing is recorded.</span></span></div>
     </div>
-    <div class="ui-toggle">
-      <button class="ui-tab active" data-ui="voice">Voice</button>
-      <button class="ui-tab" data-ui="text">Text</button>
+    <div class="header-right">
+      <!-- Short labels on purpose ("Auto"/"Hold", not "Hands-free"/"Push to
+           talk") -- this header already had an explicit "don't let it wrap"
+           lesson from the privacy-pill fix above, and two segmented pills
+           side by side needs to fit a narrow screen without repeating that.
+           title= carries the full meaning for anyone hovering/reading. -->
+      <div class="ui-toggle" id="pttToggleGroup">
+        <button class="ptt-tab active" id="pttHandsFreeTab" type="button" title="Hands-free -- listens automatically">Auto</button>
+        <button class="ptt-tab" id="pttHoldTab" type="button" title="Push to talk -- hold the button to talk">Hold</button>
+      </div>
+      <div class="ui-toggle">
+        <button class="ui-tab active" data-ui="voice">Voice</button>
+        <button class="ui-tab" data-ui="text">Text</button>
+      </div>
     </div>
   </div>
   <div class="video-toggle" id="videoToggle" hidden>
@@ -422,13 +445,10 @@
             </div>
             <!-- Push-to-talk: an alternative to hands-free live listening
                  (see the JS section near pttMode for the full reasoning).
-                 Placed in .call-controls, not the you-tile -- the you-tile
-                 is hidden outright on mobile (<760px, see its own CSS),
-                 and this needs to work there too. Hidden by default; shown
-                 only when pttMode is on and ui === 'voice'. -->
-            <div class="ptt-mode-row">
-              <button id="pttModeToggleBtn" class="outline-pill ptt-mode-pill" type="button">Switch to push-to-talk</button>
-            </div>
+                 The mode switch itself lives in the header, next to the
+                 Voice/Text toggle -- this button is just the hold target.
+                 Hidden by default; shown only when pttMode is on and
+                 ui === 'voice'. -->
             <div class="ptt-row" id="pttRow" hidden>
               <button id="pttBtn" class="ptt-btn" type="button" title="Hold to talk">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
@@ -658,20 +678,23 @@ muteBtn.addEventListener('click', () => {
 // toggle needs nothing special to re-enable.
 let pttMode = false;
 let pttHolding = false;
-const pttModeToggleBtn = document.getElementById('pttModeToggleBtn');
+const pttToggleGroup = document.getElementById('pttToggleGroup');
+const pttHandsFreeTab = document.getElementById('pttHandsFreeTab');
+const pttHoldTab = document.getElementById('pttHoldTab');
 const pttRow = document.getElementById('pttRow');
 const pttBtn = document.getElementById('pttBtn');
 const pttBtnLabel = document.getElementById('pttBtnLabel');
 
 function refreshPttVisibility() {
   pttRow.hidden = !pttMode || ui !== 'voice';
-  pttModeToggleBtn.hidden = ui !== 'voice';
+  pttToggleGroup.hidden = ui !== 'voice';
 }
 
 function setPttMode(on) {
   if (on === pttMode) return;
   pttMode = on;
-  pttModeToggleBtn.textContent = on ? 'Switch to hands-free' : 'Switch to push-to-talk';
+  pttHandsFreeTab.classList.toggle('active', !on);
+  pttHoldTab.classList.toggle('active', on);
   refreshPttVisibility();
   if (on) {
     // Switching INTO push-to-talk mid-call: hands-free may already have a
@@ -686,7 +709,8 @@ function setPttMode(on) {
     startRecordingTurnSafe();
   }
 }
-pttModeToggleBtn.addEventListener('click', () => setPttMode(!pttMode));
+pttHandsFreeTab.addEventListener('click', () => setPttMode(false));
+pttHoldTab.addEventListener('click', () => setPttMode(true));
 
 async function pttPress() {
   if (!pttMode || pttHolding || micMuted || sessionPaused) return;
