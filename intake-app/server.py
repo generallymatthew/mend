@@ -647,11 +647,23 @@ DEEPGRAM_URL = (
     # tuning tweak). Matching that same tuned value here instead of
     # re-discovering it from scratch -- Deepgram's silence-to-speech_final
     # window is the direct equivalent of VAD_SILENCE_MS, same tradeoff.
-    # utterance_end_ms is a separate backstop (fires on its own VAD-level
-    # silence detection even without a clean word boundary); kept
-    # comfortably above endpointing so it doesn't become the thing that
-    # ends turns early instead.
-    "&endpointing=1400&utterance_end_ms=2500&vad_events=true"
+    #
+    # utterance_end_ms was written up as a rare backstop for when
+    # speech_final doesn't fire on a clean word boundary -- turned out to
+    # be backwards. Checked directly against the real API (a short reply
+    # and a long one, both watched frame by frame over the real websocket):
+    # speech_final never came back true in either case, not once. This
+    # backstop is the thing actually ending every single turn, not a rare
+    # fallback -- which meant real turn-end latency was gated on THIS
+    # number the whole time, not endpointing, and reported live as "doesn't
+    # seem to know I've finished talking" was really this 2500ms silence
+    # requirement on every turn, felt worse on short replies since there's
+    # less talking beforehand to offset the same wait. Lowered to 1300ms,
+    # same real-silence-after-speech tradeoff VAD_SILENCE_MS already went
+    # through and landed near (1100ms) -- if this starts cutting people off
+    # mid-sentence, that's the signal to raise it back up, not evidence the
+    # whole approach is wrong.
+    "&endpointing=1400&utterance_end_ms=1300&vad_events=true"
 )
 
 
