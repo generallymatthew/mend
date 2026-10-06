@@ -678,7 +678,15 @@ function resumeSession() {
     audioEl.play().catch(() => advanceSpeechQueue()); // same autoplay-blocked fallback playSpeechItem itself uses
     return;
   }
-  if (ui === 'voice' && !pttMode) { armLiveMode(); startRecordingTurnSafe(); }
+  if (ui === 'voice') {
+    armLiveMode();
+    if (!pttMode) startRecordingTurnSafe();
+    // Push-to-talk never had a recording in flight to resume -- nothing
+    // else here sets avatarState back from 'paused', so without this it
+    // stayed stuck reading "Paused" after a resume (reported live: hit
+    // pause, unpaused, it stayed paused) until the button was pressed.
+    else avatarState = 'idle';
+  }
 }
 
 let micMuted = false;
@@ -917,6 +925,10 @@ function startDeepgramSocket(sampleRate) {
         if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = shown;
         if (captionsOn) employeeCaption.textContent = shown;
       }
+      // onFinalHint, when set, is onstop's own post-release drain wait
+      // (see startRecordingTurn) watching for exactly this signal to
+      // resolve early instead of sitting out its full timeout.
+      if (msg.is_final && ws.onFinalHint) ws.onFinalHint();
       // speech_final means Deepgram itself has decided this utterance is
       // over (its own endpointing, from the real audio) -- same role
       // checkVad's silence timer plays for the local-Whisper path, just
@@ -931,6 +943,7 @@ function startDeepgramSocket(sampleRate) {
       // updates regardless, so the push-to-talk caption stays live).
       if (!pttMode && msg.speech_final && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     } else if (msg.type === 'utterance_end') {
+      if (ws.onFinalHint) ws.onFinalHint();
       if (!pttMode && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     }
   };
@@ -2298,7 +2311,32 @@ async function startRecordingTurn() {
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
     const dg = dgSocket;
-    dgSocket = null; // clear first so a message already in flight from this socket is ignored by its own `ws !== dgSocket` check
+    // Deepgram has real latency between receiving audio and transcribing
+    // it -- the old code read dgFinalText/dgInterimText and killed this
+    // socket in the same instant mediaRecorder.stop() fired, which raced
+    // that latency and silently dropped whatever was said in the last
+    // stretch of audio sent right before release (reported live: saying
+    // "shes a peer" then releasing never showed up at all). Give Deepgram
+    // a short window to send back the transcript for audio already in
+    // flight before reading the accumulated text and tearing the socket
+    // down. onFinalHint (wired in startDeepgramSocket's onmessage) lets a
+    // real is_final/utterance_end signal resolve this early instead of
+    // always sitting out the full timeout; the 350ms settle guards against
+    // a second trailing final landing right after the first.
+    if (dg && dg.readyState === WebSocket.OPEN) {
+      await new Promise((resolve) => {
+        let settleTimer = null;
+        const maxTimer = setTimeout(finish, 1200);
+        function finish() {
+          clearTimeout(maxTimer);
+          clearTimeout(settleTimer);
+          dg.onFinalHint = null;
+          resolve();
+        }
+        dg.onFinalHint = () => { clearTimeout(settleTimer); settleTimer = setTimeout(finish, 350); };
+      });
+    }
+    dgSocket = null; // clear after the drain wait so a message already in flight from this socket is ignored by its own `ws !== dgSocket` check
     if (dg && dg.readyState === WebSocket.OPEN) dg.close();
     partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
     micIndicator.classList.remove('active');
