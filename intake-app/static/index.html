@@ -151,6 +151,17 @@
   .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
   .mic-indicator-dot.lit{background:#8C3B2E; transform:scale(1.15);}
 
+  .ptt-mode-row{display:flex; justify-content:center; margin-top:10px;}
+  .ptt-mode-pill{font-size:12px; padding:6px 13px;}
+  .ptt-row{display:flex; justify-content:center; margin-top:10px;}
+  /* Big, thumb-friendly, press-and-hold target -- deliberately larger than
+     the 44px .ctrl-btn icons above, since this is the one control that
+     matters most while push-to-talk is on. touch-action:none stops mobile
+     Safari/Chrome from treating a held finger as a scroll/selection
+     gesture, which would otherwise eat the press before JS ever sees it. */
+  .ptt-btn{display:flex; align-items:center; gap:9px; padding:15px 30px; border-radius:999px; background:var(--accent); color:var(--paper); border:none; font:inherit; font-size:14.5px; font-weight:700; cursor:pointer; -webkit-user-select:none; user-select:none; touch-action:none;}
+  .ptt-btn.active{background:#8C3B2E;}
+
   /* Zoom-call style layout: the avatar + captions + controls are the main
      event, full attention like a video tile; the transcript is reference
      material, docked to the side rather than the main flow. */
@@ -409,6 +420,21 @@
               <span class="mic-indicator-dot" id="micIndicatorDot"></span>
               <span>Listening&hellip;</span>
             </div>
+            <!-- Push-to-talk: an alternative to hands-free live listening
+                 (see the JS section near pttMode for the full reasoning).
+                 Placed in .call-controls, not the you-tile -- the you-tile
+                 is hidden outright on mobile (<760px, see its own CSS),
+                 and this needs to work there too. Hidden by default; shown
+                 only when pttMode is on and ui === 'voice'. -->
+            <div class="ptt-mode-row">
+              <button id="pttModeToggleBtn" class="outline-pill ptt-mode-pill" type="button">Switch to push-to-talk</button>
+            </div>
+            <div class="ptt-row" id="pttRow" hidden>
+              <button id="pttBtn" class="ptt-btn" type="button" title="Hold to talk">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+                <span id="pttBtnLabel">Hold to talk</span>
+              </button>
+            </div>
             <div class="status" id="status"></div>
           </div>
           <div class="you-tile" id="employeeTile">
@@ -530,6 +556,7 @@ function setUi(next) {
   chatPanel.hidden = ui !== 'text';
   document.querySelectorAll('.ui-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.ui === ui));
   if (ui === 'voice') enterVoiceLive(); else exitVoiceLive();
+  refreshPttVisibility();
 }
 document.querySelectorAll('.ui-tab').forEach(btn => btn.addEventListener('click', () => setUi(btn.dataset.ui)));
 
@@ -592,11 +619,14 @@ function resumeSession() {
     pausedMidReply = false;
     armLiveMode(); // re-arms liveMode/the live timer so finishSpeechCycle resumes listening once this (and any still-queued) sentence finishes playing, same as if never paused
     avatarState = 'talking';
-    startInterruptMonitor(replyGen); // barge-in should still work on the resumed portion, same as before pausing
+    // Push-to-talk owns interrupting on its own (the button itself is the
+    // interrupt) -- the passive barge-in listener this would otherwise arm
+    // is exactly the always-on mic this mode exists to not have.
+    if (!pttMode) startInterruptMonitor(replyGen); // barge-in should still work on the resumed portion, same as before pausing
     audioEl.play().catch(() => advanceSpeechQueue()); // same autoplay-blocked fallback playSpeechItem itself uses
     return;
   }
-  if (ui === 'voice') { armLiveMode(); startRecordingTurnSafe(); }
+  if (ui === 'voice' && !pttMode) { armLiveMode(); startRecordingTurnSafe(); }
 }
 
 let micMuted = false;
@@ -608,6 +638,92 @@ muteBtn.addEventListener('click', () => {
   youMuteIcon.hidden = !micMuted;
   if (micMuted) { employeeTile.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
 });
+
+// Push-to-talk: an alternative to hands-free live listening, added per
+// explicit request after live testing found two real problems with the
+// automatic approach -- the VAD/Deepgram silence-wait feels slow and
+// uncertain ("doesn't seem to know I've finished talking"), and the
+// passive always-on barge-in listener can false-trigger on Thimble's own
+// echo (see MIC_CONSTRAINTS and startInterruptMonitor's own calibration
+// fix above, both aimed at the same report but only partial mitigations).
+// Holding pttBtn is the ONLY thing that starts or ends a recording while
+// pttMode is on: no VAD timer, no silence guess, no passive open mic
+// during Thimble's own reply. Pressing it while Thimble is thinking/
+// talking interrupts on the spot -- the button itself IS the interrupt,
+// not a guess made by a second always-listening stream. Every call site
+// that would otherwise auto-arm hands-free listening or the passive
+// interrupt monitor is individually guarded with `&& !pttMode` (or
+// `if (!pttMode) ...`) rather than this mode replacing those code paths
+// outright -- lower-risk, and switching back to hands-free via the mode
+// toggle needs nothing special to re-enable.
+let pttMode = false;
+let pttHolding = false;
+const pttModeToggleBtn = document.getElementById('pttModeToggleBtn');
+const pttRow = document.getElementById('pttRow');
+const pttBtn = document.getElementById('pttBtn');
+const pttBtnLabel = document.getElementById('pttBtnLabel');
+
+function refreshPttVisibility() {
+  pttRow.hidden = !pttMode || ui !== 'voice';
+  pttModeToggleBtn.hidden = ui !== 'voice';
+}
+
+function setPttMode(on) {
+  if (on === pttMode) return;
+  pttMode = on;
+  pttModeToggleBtn.textContent = on ? 'Switch to hands-free' : 'Switch to push-to-talk';
+  refreshPttVisibility();
+  if (on) {
+    // Switching INTO push-to-talk mid-call: hands-free may already have a
+    // passive interrupt monitor or an auto-armed recording in flight --
+    // both are exactly what this mode exists to not have, so tear them
+    // down the same way a real interrupt or pause would.
+    stopInterruptMonitor();
+    if (mediaRecorder && mediaRecorder.state === 'recording' && !pttHolding) mediaRecorder.stop();
+  } else if (liveMode && ui === 'voice' && avatarState !== 'talking' && avatarState !== 'thinking') {
+    // Switching back TO hands-free mid-call, not mid-reply: re-arm the
+    // normal auto-listening loop same as a fresh live-mode entry would.
+    startRecordingTurnSafe();
+  }
+}
+pttModeToggleBtn.addEventListener('click', () => setPttMode(!pttMode));
+
+async function pttPress() {
+  if (!pttMode || pttHolding || micMuted || sessionPaused) return;
+  pttHolding = true;
+  pttBtn.classList.add('active');
+  pttBtnLabel.textContent = 'Listening…';
+  // Pressing while Thimble is replying is the interrupt -- same cleanup
+  // interruptNow() does for the automatic path, just triggered by a
+  // deliberate press instead of a passive VAD guess.
+  if (avatarState === 'thinking' || avatarState === 'talking') {
+    endReplyCycle();
+    audioEl.pause();
+    avatarState = 'idle';
+  }
+  if (mediaRecorder && mediaRecorder.state === 'recording') return; // already recording -- shouldn't happen, but don't double-start
+  try {
+    await startRecordingTurn();
+  } catch (e) {
+    pttHolding = false;
+    pttBtn.classList.remove('active');
+    pttBtnLabel.textContent = 'Hold to talk';
+    showMicError(e);
+  }
+}
+function pttRelease() {
+  if (!pttMode || !pttHolding) return;
+  pttHolding = false;
+  pttBtn.classList.remove('active');
+  pttBtnLabel.textContent = 'Hold to talk';
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); // triggers the same onstop -> transcribe -> reply flow hands-free uses
+}
+pttBtn.addEventListener('mousedown', (e) => { e.preventDefault(); pttPress(); });
+pttBtn.addEventListener('mouseup', pttRelease);
+pttBtn.addEventListener('mouseleave', () => { if (pttHolding) pttRelease(); }); // dragged off while held -- same as releasing
+pttBtn.addEventListener('touchstart', (e) => { e.preventDefault(); pttPress(); }, {passive: false});
+pttBtn.addEventListener('touchend', (e) => { e.preventDefault(); pttRelease(); }, {passive: false});
+pttBtn.addEventListener('touchcancel', pttRelease);
 
 let liveTimerInterval = null, liveSeconds = 0;
 function startLiveTimer() {
@@ -755,9 +871,13 @@ function startDeepgramSocket(sampleRate) {
       // picks up dgFinalText directly -- Pause/Mute/manual-stop all
       // already call mediaRecorder.stop() too, so this reuses every one
       // of those paths unchanged instead of needing its own copy of each.
-      if (msg.speech_final && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+      // Suppressed entirely in push-to-talk mode -- holding the button is
+      // the only thing allowed to end that recording, not a silence guess
+      // Deepgram makes on its own (the live partial text above still
+      // updates regardless, so the push-to-talk caption stays live).
+      if (!pttMode && msg.speech_final && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     } else if (msg.type === 'utterance_end') {
-      if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+      if (!pttMode && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     }
   };
   return ws;
@@ -1494,7 +1614,7 @@ function animateAvatar(now) {
   if (recording) {
     micIndicatorDot.classList.toggle('lit', employeeLit);
     employeeTile.classList.toggle('lit', employeeLit);
-    if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage
+    if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled && !pttMode) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage; push-to-talk owns end-of-turn instead of either
     if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
   }
   updateCaption();
@@ -1667,7 +1787,7 @@ function advanceSpeechQueue() {
 function finishSpeechCycle() {
   if (avatarState === 'talking') avatarState = 'idle';
   endReplyCycle();
-  if (liveMode) startRecordingTurnSafe();
+  if (liveMode && !pttMode) startRecordingTurnSafe(); // push-to-talk waits for the next press instead of auto-listening
 }
 
 skipIntroBtn.addEventListener('click', () => {
@@ -1677,7 +1797,7 @@ skipIntroBtn.addEventListener('click', () => {
   captionEl.textContent = '';
   avatarState = 'idle';
   armLiveMode(); // no-op if already armed; just ensures liveMode is true
-  startRecordingTurnSafe();
+  if (!pttMode) startRecordingTurnSafe();
 });
 
 // Voice view's transcript sidebar and Text view's chat panel render the same
@@ -2167,7 +2287,7 @@ async function startRecordingTurn() {
         avatarState = 'idle';
         if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); } // nothing usable was actually said -- don't leave a stale live-preview bubble behind
         employeeCaption.textContent = '';
-        if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
+        if (liveMode && !pttMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening; push-to-talk just waits for the next press instead
         return;
       }
       const transcript = voiceData.transcript;
@@ -2179,7 +2299,9 @@ async function startRecordingTurn() {
       }
       avatarState = 'thinking';
       myGen = ++replyGen;
-      startInterruptMonitor(myGen);
+      // Push-to-talk's own interrupt IS the button -- no passive listener
+      // to arm here, same reasoning as resumeSession's own pttMode guard.
+      if (!pttMode) startInterruptMonitor(myGen);
       resetSpeechQueue(myGen);
       replyAbortController = new AbortController();
       let replyBubble = null;
@@ -2199,7 +2321,7 @@ async function startRecordingTurn() {
       if (myGen !== null) endReplyCycle();
       if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); }
       employeeCaption.textContent = '';
-      if (liveMode) startRecordingTurnSafe();
+      if (liveMode && !pttMode) startRecordingTurnSafe();
     } finally {
       setBusy(false);
     }
@@ -2267,6 +2389,16 @@ document.addEventListener('visibilitychange', () => {
 
 async function enterVoiceLive() {
   if (liveMode) return;
+  // Push-to-talk: switching into Voice just arms the "live" UI (timer,
+  // layout) -- the mic is never touched until the button is actually
+  // pressed, unlike hands-free below which grabs it immediately.
+  if (pttMode) {
+    liveMode = true;
+    setLiveLayout(true);
+    acquireWakeLock();
+    refreshPttVisibility();
+    return;
+  }
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     liveMode = true;
     setLiveLayout(true);
@@ -2291,6 +2423,7 @@ function exitVoiceLive() {
   liveMode = false;
   setLiveLayout(false);
   if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  if (pttHolding) { pttHolding = false; pttBtn.classList.remove('active'); pttBtnLabel.textContent = 'Hold to talk'; }
   releaseWakeLock();
 }
 
@@ -2437,7 +2570,7 @@ async function start() {
       // showed "Listening..." and the live timer running while the mic
       // was never actually requested -- looked like it was working,
       // reported live as "it could not hear me."
-      if (ui === 'voice') { armLiveMode(); startRecordingTurnSafe(); }
+      if (ui === 'voice') { armLiveMode(); if (!pttMode) startRecordingTurnSafe(); }
     }
   } finally {
     setBusy(false);
