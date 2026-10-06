@@ -1,0 +1,245 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Listening — options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /*
+    Throwaway comparison page -- not part of the real app or the
+    thimble-states.html QA reference, just four candidate motion profiles
+    for the listening state, side by side, so a pick can be made before
+    wiring the winner into static/index.html and thimble-states.html for
+    real. Delete once a direction is chosen.
+  */
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --stage-bg:#FBF8F3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
+  .wrap{max-width:1100px; margin:0 auto; padding:28px 24px 60px;}
+  h1{font-size:22px; font-weight:800; letter-spacing:-0.01em; margin:0 0 4px;}
+  .sub{font-size:13.5px; color:var(--ink-soft); margin:0 0 28px; line-height:1.5; max-width:720px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px;}
+  .card-stage{position:relative; height:170px; display:flex; align-items:center; justify-content:center; background:var(--stage-bg); border-radius:12px; overflow:hidden;}
+  .card-name{font-weight:700; font-size:15px;}
+  .card-desc{font-size:12.5px; line-height:1.5; color:var(--ink-soft);}
+  .card-controls{display:flex; flex-direction:column; gap:6px; font-size:11.5px; color:var(--ink-soft); border-top:1px solid var(--border); padding-top:10px;}
+  .card-controls .row{display:flex; align-items:center; gap:8px;}
+  .card-controls input[type=range]{flex:1; accent-color:var(--accent);}
+  .simBtn{width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:8px; background:var(--accent-soft); color:var(--ink); font-family:inherit; font-size:11.5px; font-weight:600; cursor:pointer;}
+  .simBtn:hover{background:#DCE6DF;}
+
+  .thimble-avatar{position:relative; width:120px; height:120px;}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A;}
+  /* Lighter tint of the body's own pink -- an inward pulse sits on top of
+     the body itself, so it needs a shade that actually reads against it
+     instead of just blending into flat color. */
+  .thimble-ripple.inward{background:#FBC3D1;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden;}
+  .thimble-mouth{position:absolute; left:50%; top:60%; transform:translate(-50%,-50%); background:#F6F1E7; border-radius:999px;}
+  .thimble-ear{position:absolute; width:13%; height:16%; top:36%; background:#F3829A; border-radius:50%; transition:transform .55s cubic-bezier(.3,1.4,.5,1), opacity .35s ease;}
+  .thimble-ear.left{left:-4%; transform-origin:100% 50%;}
+  .thimble-ear.right{right:-4%; transform-origin:0% 50%;}
+  .thimble-ear.tucked{transform:scale(0); opacity:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Listening — options</h1>
+  <p class="sub">Four candidate motion profiles for the listening state, running live. <b>Auto</b> simulates a bursty mic level per card (own random phase, so they don't pulse in lockstep); drag a slider to freeze a level and inspect it.</p>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+const DOME_RADIUS = '50% 50% 50% 50% / 68% 68% 28% 28%';
+const LISTEN_RADIUS = '50% 50% 47% 53% / 68% 68% 28% 28%';
+const LISTEN_LEAN = 'rotate(-10deg) translate(2%,1%)';
+
+function domeWobbleRadius(domeFactor, lvl) {
+  const capY = 50 + (18 + 4 * lvl) * domeFactor;
+  const rimY = 50 - (22 + 4 * lvl) * domeFactor;
+  return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+}
+
+const OPTIONS = [
+  {
+    id: 'opt1', title: 'A — Flat dome, no shape wobble',
+    desc: 'Lean + continuous nod + breathe stay exactly as now. The outline itself holds the resting egg/dome shape at all times -- mic level only shows up in how hard it nods, not in the silhouette.',
+  },
+  {
+    id: 'opt2', title: 'B — Mic-gated wobble',
+    desc: 'Sits flat-dome in silence. Once level crosses a threshold it eases into the same dome↔circle wobble talking uses, and eases back out when you stop -- reads as reacting to you, not always-on.',
+  },
+  {
+    id: 'opt3', title: 'C — Lean-biased wobble',
+    desc: 'Wobbles continuously like talking, but the horizontal radii sway side to side in sync with the dome↔circle cycle, so it reads as leaning in and out toward you rather than just morphing in place.',
+  },
+  {
+    id: 'opt4', title: 'D — Ripple pulse on voice onset',
+    desc: 'Shape itself stays flat-dome, calm, like option A. Instead, a single ripple ring fires and fades each time your level crosses the threshold -- a "heard you" blip instead of continuous motion.',
+  },
+  {
+    id: 'opt5', title: 'E — Inward pulse on voice onset',
+    desc: 'Same onset trigger as D, reversed: starts right at the body’s own outer edge and shrinks toward the center, fading out as it collapses -- reads as pulling sound in toward the middle, not pushing it out. Bigger and fires on a lower threshold here (just to make it easy to catch while comparing -- real threshold/size still tunable).',
+  },
+  {
+    id: 'opt6', title: 'F — Simple ears',
+    desc: 'Flat dome, calm, like option A -- plus two small bumps at ear height. Tucked flush into the body while talking, pop out with a little overshoot right as it switches to listening -- click the button to simulate the transition.',
+  },
+];
+
+const grid = document.getElementById('grid');
+const cards = OPTIONS.map(def => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-stage">
+      <div class="thimble-avatar" id="${def.id}">
+        <div class="thimble-ripple${def.id === 'opt5' ? ' inward' : ''}" id="${def.id}Ripple" hidden></div>
+        <div class="thimble-ring" id="${def.id}Ring">
+          ${def.id === 'opt6' ? `<div class="thimble-ear left" id="${def.id}EarL"></div><div class="thimble-ear right" id="${def.id}EarR"></div>` : ''}
+          <div class="thimble-body" id="${def.id}Body">
+            <div class="thimble-mouth" id="${def.id}Mouth"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-name">${def.title}</div>
+    <div class="card-desc">${def.desc}</div>
+    <div class="card-controls">
+      <div class="row"><label style="flex:1"><input type="checkbox" class="autoChk" checked> Auto</label></div>
+      <div class="row"><input type="range" class="levelSlider" min="0" max="100" value="0"></div>
+      ${def.id === 'opt6' ? `<div class="row"><button class="simBtn" type="button">Simulate talking → listening</button></div>` : ''}
+    </div>
+  `;
+  grid.appendChild(card);
+  const inst = {
+    el: document.getElementById(def.id),
+    ring: document.getElementById(def.id + 'Ring'),
+    body: document.getElementById(def.id + 'Body'),
+    ripple: document.getElementById(def.id + 'Ripple'),
+    mouth: document.getElementById(def.id + 'Mouth'),
+    earL: def.id === 'opt6' ? document.getElementById(def.id + 'EarL') : null,
+    earR: def.id === 'opt6' ? document.getElementById(def.id + 'EarR') : null,
+    lvl: 0, wobbleActive: 0, pulseStart: -999, wasAboveThreshold: false,
+  };
+  inst.mouth.style.width = (0.11 * 120) + 'px';
+  inst.mouth.style.height = (0.028 * 120) + 'px';
+  const c = { def, inst, level: 0, auto: true, phase: Math.random() * 10, simState: 'listening' };
+  const autoChk = card.querySelector('.autoChk');
+  const slider = card.querySelector('.levelSlider');
+  autoChk.addEventListener('change', () => { c.auto = autoChk.checked; });
+  slider.addEventListener('input', () => { c.auto = false; autoChk.checked = false; c.level = slider.value / 100; });
+  c._slider = slider;
+  inst.body.style.borderRadius = LISTEN_RADIUS;
+  if (def.id === 'opt6') {
+    const btn = card.querySelector('.simBtn');
+    btn.addEventListener('click', () => {
+      // Flips talking <-> listening each click. Going TO listening is the
+      // case asked for (ears pop out with overshoot); going back to
+      // talking tucks them away the same way talking's own body -- a
+      // circle here, standing in for its real rounder silhouette -- would
+      // naturally hide them.
+      c.simState = c.simState === 'listening' ? 'talking' : 'listening';
+      btn.textContent = c.simState === 'listening' ? 'Simulate listening → talking' : 'Simulate talking → listening';
+    });
+  }
+  return c;
+});
+
+function tick(now) {
+  const t = now / 1000;
+  cards.forEach(c => {
+    if (c.auto) {
+      const tt = t + c.phase;
+      const envelope = Math.max(0, Math.sin(tt * 0.6));
+      const chatter = 0.5 + 0.5 * Math.sin(tt * 7) * Math.sin(tt * 2.3);
+      c.level = Math.max(0, Math.min(1, envelope * chatter));
+      if (c._slider) c._slider.value = Math.round(c.level * 100);
+    }
+    const inst = c.inst;
+    inst.lvl += (c.level - inst.lvl) * 0.3;
+    const y = 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * t) / 2.6)), 1.5);
+    const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * t) / 3));
+    const ringTransform = `translateY(${y.toFixed(2)}%) rotate(0deg) scale(${breathe.toFixed(4)})`;
+    inst.ring.style.transform = ringTransform;
+
+    const phase = (t % 1.6) / 1.6;
+    const domeFactor = (1 + Math.cos(phase * 2 * Math.PI)) / 2;
+
+    if (c.def.id === 'opt1') {
+      inst.body.style.borderRadius = LISTEN_RADIUS;
+    } else if (c.def.id === 'opt2') {
+      const target = inst.lvl > 0.08 ? 1 : 0;
+      inst.wobbleActive += (target - inst.wobbleActive) * 0.12;
+      const finalDome = 1 - inst.wobbleActive * (1 - domeFactor);
+      inst.body.style.borderRadius = domeWobbleRadius(finalDome, inst.lvl);
+    } else if (c.def.id === 'opt3') {
+      const capY = 50 + (18 + 4 * inst.lvl) * domeFactor;
+      const rimY = 50 - (22 + 4 * inst.lvl) * domeFactor;
+      const sway = 3 * Math.sin(phase * 2 * Math.PI);
+      const lx = (50 + sway).toFixed(1), rx = (50 - sway).toFixed(1);
+      inst.body.style.borderRadius = `${lx}% ${rx}% ${rx}% ${lx}% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+    } else if (c.def.id === 'opt4') {
+      inst.body.style.borderRadius = LISTEN_RADIUS;
+      const above = inst.lvl > 0.08;
+      if (above && !inst.wasAboveThreshold) inst.pulseStart = t;
+      inst.wasAboveThreshold = above;
+      const pulseAge = t - inst.pulseStart;
+      if (pulseAge >= 0 && pulseAge < 0.7) {
+        const frac = pulseAge / 0.7;
+        inst.ripple.hidden = false;
+        inst.ripple.style.borderRadius = LISTEN_RADIUS;
+        inst.ripple.style.transform = `${ringTransform} scale(${(1 + 0.6 * frac).toFixed(3)})`;
+        inst.ripple.style.opacity = (0.45 * (1 - frac)).toFixed(3);
+      } else {
+        inst.ripple.hidden = true;
+      }
+    } else if (c.def.id === 'opt5') {
+      inst.body.style.borderRadius = LISTEN_RADIUS;
+      // Lower threshold + longer pulse than D, just for this comparison --
+      // makes it fire often enough to actually catch instead of blinking
+      // past once every ~10s like the real 0.08 threshold would.
+      const above = inst.lvl > 0.03;
+      if (above && !inst.wasAboveThreshold) inst.pulseStart = t;
+      inst.wasAboveThreshold = above;
+      const pulseAge = t - inst.pulseStart;
+      if (pulseAge >= 0 && pulseAge < 1.1) {
+        const frac = pulseAge / 1.1;
+        inst.ripple.hidden = false;
+        inst.ripple.style.borderRadius = LISTEN_RADIUS;
+        // Starts exactly at the body's own edge (scale 1, same radius as
+        // the body) and shrinks toward the center, fading out as it
+        // collapses -- the pulse originates right at the outer silhouette
+        // and travels inward, never spilling outside it the way D's
+        // outward ripple does. Bigger swing (1 -> 0.05) and higher peak
+        // opacity (.75) than the first pass, so it actually reads.
+        inst.ripple.style.transform = `${ringTransform} scale(${(1 - 0.95 * frac).toFixed(3)})`;
+        inst.ripple.style.opacity = (0.75 * (1 - frac)).toFixed(3);
+      } else {
+        inst.ripple.hidden = true;
+      }
+    } else if (c.def.id === 'opt6') {
+      const isListening = c.simState === 'listening';
+      // Talking isn't a flat circle in the real app -- it's the same
+      // dome<->circle wobble as everywhere else (see domeWobbleRadius),
+      // just driven by TTS level instead of mic level. Reusing it here so
+      // the simulated transition actually shows what talking looks like,
+      // not a placeholder.
+      inst.body.style.borderRadius = isListening ? LISTEN_RADIUS : domeWobbleRadius(domeFactor, inst.lvl);
+      inst.earL.classList.toggle('tucked', !isListening);
+      inst.earR.classList.toggle('tucked', !isListening);
+    }
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
