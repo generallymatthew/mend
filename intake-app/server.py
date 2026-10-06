@@ -753,7 +753,17 @@ async def post_voice_partial(file: UploadFile):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
         tmp.write(await file.read())
         tmp.flush()
-        transcript = await run_in_threadpool(transcribe_file, tmp.name)
+        try:
+            transcript = await run_in_threadpool(transcribe_file, tmp.name)
+        except Exception:
+            # Same "a bad result here just means no preview update" contract
+            # the docstring above already promises -- transcribe_file can
+            # raise (not just return empty), e.g. av.error.EOFError on a
+            # clip too short/empty to even decode (confirmed live from a
+            # push-to-talk quick-tap), and this call site had nothing
+            # catching that, so the exception reached the client as an
+            # unhandled 500 instead of just skipping this one preview.
+            return {"partial": ""}
     return {"partial": transcript}
 
 
@@ -773,7 +783,18 @@ async def post_voice(file: UploadFile):
     with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:
         tmp.write(await file.read())
         tmp.flush()
-        transcript = await run_in_threadpool(transcribe_file, tmp.name)
+        try:
+            transcript = await run_in_threadpool(transcribe_file, tmp.name)
+        except Exception:
+            # transcribe_file can raise, not just return empty -- a clip too
+            # short/empty to even decode (av.error.EOFError) reached the
+            # client as an unhandled 500/HTML error page instead of the
+            # JSON error shape getFinalTranscript() already expects and
+            # handles gracefully (see its own "couldn't transcribe audio"
+            # path below) -- confirmed live from a push-to-talk quick-tap,
+            # reported as "Unexpected token 'I', 'Internal S'... is not
+            # valid JSON" (the frontend trying to JSON.parse that HTML page).
+            transcript = ""
     if not transcript:
         return JSONResponse({"error": "couldn't transcribe audio"}, status_code=400)
     return {"transcript": transcript}

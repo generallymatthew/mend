@@ -168,8 +168,15 @@
      more specific), so the red here was silently losing to the default
      dark-green until this combined selector gave it the edge. Confirmed
      live: the button rendered at the right size but plain green. */
-  .ctrl-btn.ptt-circle-btn{width:76px; height:76px; font-size:inherit; background:#8C3B2E; border-color:#8C3B2E; -webkit-user-select:none; user-select:none; touch-action:none; transition:transform 80ms ease;}
-  .ptt-circle-btn.active{transform:scale(.93);}
+  .ctrl-btn.ptt-circle-btn{width:76px; height:76px; font-size:inherit; background:#8C3B2E; border-color:#8C3B2E; -webkit-user-select:none; user-select:none; touch-action:none; transition:transform 80ms ease, background 80ms ease, box-shadow 80ms ease;}
+  /* A scale-only press state (no color change) turned out too subtle to
+     actually notice -- reported live as "doesn't change when you push the
+     button." Red-on-red at a 7% size difference just doesn't read as
+     "changed" at a glance. Now a visibly darker shade plus a glow ring
+     (same "active speaker" glow language the you-tile already uses
+     elsewhere in this app, just red instead of honey) on top of the scale,
+     so holding it is unmistakable. */
+  .ctrl-btn.ptt-circle-btn.active{background:#5C241B; border-color:#5C241B; box-shadow:0 0 0 6px #8C3B2E4D; transform:scale(.93);}
 
   /* Zoom-call style layout: the avatar + captions + controls are the main
      event, full attention like a video tile; the transcript is reference
