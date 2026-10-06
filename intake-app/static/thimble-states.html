@@ -44,12 +44,14 @@
   .card-controls .row{display:flex; align-items:center; gap:8px;}
 
   /* Avatar engine CSS, copied verbatim from static/index.html. */
-  .thimble-avatar{position:relative; width:120px; height:120px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
+  .thimble-avatar{position:relative; width:120px; height:120px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;
+    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));}
   .thimble-avatar.muted{opacity:.5;}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
   .thimble-ripple.b{animation-delay:.8s;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
+  /* "Matte Shade" fill, copied verbatim from static/index.html -- see that file's comment for why. */
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 50% 40%, #F3829A 0%, #F3829A 45%, #D9607C 85%, #C15372 100%); overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
   @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}

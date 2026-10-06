@@ -76,7 +76,8 @@
      talking, nodding honey-blend empathizing) -- DOM/CSS border-radius
      shapes, not the old canvas circle, so the exact shapes/keyframes match
      the handoff instead of an older, different avatar system's motion. */
-  .thimble-avatar{position:relative; width:200px; height:200px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
+  .thimble-avatar{position:relative; width:200px; height:200px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;
+    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));}
   /* Mic muted: dim Thimble's own avatar too, same opacity the handoff uses
      for its 'muted' state, so "your mic is off" reads on the avatar itself
      and not only on the small You-tile icon. */
@@ -91,7 +92,11 @@
      the underlying polygon math checked out smooth (no jump between
      frames), so a residual flicker report is more likely this kind of
      compositing/anti-aliasing shimmer than the shape itself jumping. */
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
+  /* "Matte Shade" fill -- ambient rim darkening toward the edges, no specular
+     dot, picked over three other gradient options (see design_handoffs
+     comparisons) for staying closer to the flat brand mark's friendly feel
+     while still reading as a lit 3D form. */
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 50% 40%, #F3829A 0%, #F3829A 45%, #D9607C 85%, #C15372 100%); overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
   @keyframes thimble-blob{0%,100%{border-radius:50%; transform:scale(.95);} 25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%; transform:scale(.92) rotate(-3deg);} 50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%; transform:scale(.95);} 75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%; transform:scale(.92) rotate(3deg);}}
