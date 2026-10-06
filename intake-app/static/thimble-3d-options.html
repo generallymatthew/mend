@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Thimble 3D gradient options</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --border:#DDD4C0; --accent-soft:#EAF0EC;}
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); font-family:'Manrope',-apple-system,sans-serif; color:var(--ink); padding:28px;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1100px; margin:0 auto;}
+  .card{background:#fff; border:1px solid var(--border); border-radius:16px; padding:0 0 22px; overflow:hidden;}
+  .stage{height:300px; display:flex; align-items:center; justify-content:center; background:var(--accent-soft); position:relative;}
+  .halo{position:absolute; width:260px; height:260px; border-radius:50%; background:radial-gradient(circle, rgba(243,130,154,.18), rgba(243,130,154,0) 70%);}
+  /* exact shape from static/thimble-states.html DOME_RADIUS -- not reinventing the silhouette, only the fill.
+     filter (not box-shadow) so it layers independently of each option's own inset box-shadow below. */
+  .ball{position:relative; width:150px; height:150px; border-radius:50% 50% 50% 50% / 68% 68% 28% 28%;
+    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));}
+  .mouth{position:absolute; left:50%; bottom:26%; transform:translateX(-50%); width:26px; height:6px; border-radius:999px; background:rgba(246,241,231,.75);}
+  .label-row{display:flex; align-items:center; gap:10px; padding:18px 20px 8px;}
+  .letter{width:26px; height:26px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;}
+  h3{font-size:18px; margin:0; font-weight:800;}
+  .tag{margin:0 20px 10px; display:inline-block; font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--accent-soft); padding:4px 10px; border-radius:999px; color:var(--ink);}
+  p{font-size:13.5px; line-height:1.55; color:var(--ink-soft); margin:0 20px;}
+
+  /* A: Soft Sheen -- one faint highlight, nothing darkened */
+  .ballA{background:
+    radial-gradient(circle at 35% 28%, rgba(255,255,255,.45), rgba(255,255,255,0) 40%),
+    #F3829A;}
+
+  /* B: Glossy Dome -- tight bright highlight + darker pool toward rim */
+  .ballB{background:
+    radial-gradient(circle at 34% 24%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 18%),
+    radial-gradient(circle at 36% 28%, rgba(255,255,255,.5), rgba(255,255,255,0) 42%),
+    radial-gradient(circle at 68% 82%, rgba(150,30,60,.45), rgba(150,30,60,0) 55%),
+    #F3829A;}
+
+  /* C: Matte Shade -- ambient rim darkening, no specular dot */
+  .ballC{background:
+    radial-gradient(circle at 50% 40%, #F3829A 0%, #F3829A 45%, #D9607C 85%, #C15372 100%);}
+
+  /* D: Rim Light -- soft top-left highlight (like B, but softer/no dark pool)
+     plus a bright bounce-light crescent hugging the bottom-right rim, which
+     is the part the first attempt missed. Inset box-shadow follows the
+     dome's own border-radius curve, unlike a conic sweep. */
+  .ballD{
+    background: radial-gradient(circle at 36% 30%, rgba(255,255,255,.6), rgba(255,255,255,0) 45%), #F3829A;
+    box-shadow:
+      inset -16px -18px 22px -10px rgba(255,255,255,.85),
+      inset -28px -30px 34px -18px rgba(255,255,255,.4);
+  }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballA"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">A</div><h3>Soft Sheen</h3></div>
+      <div class="tag">one faint highlight</div>
+      <p>The lightest touch: a single soft highlight, nothing darkened. Barely reads as "lit" at a glance, mostly just softens the flat fill slightly. Lowest risk of looking like a material change.</p>
+    </div>
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballB"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">B</div><h3>Glossy Dome</h3></div>
+      <div class="tag">specular highlight + pooled shadow</div>
+      <p>A tight bright highlight plus a darker pool toward the rim -- reads like glazed ceramic or glass. The most literal "a real thimble, lit" of the four, and the biggest visual departure from the current flat brand mark.</p>
+    </div>
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballC"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">C</div><h3>Matte Shade</h3></div>
+      <div class="tag">ambient rim darkening, no specular dot</div>
+      <p>No bright highlight at all, just a soft overall darkening toward the edges. Reads like soft rubber or fabric rather than glass or metal -- closer in spirit to the brand's current flat, friendly language than B or D.</p>
+    </div>
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballD"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">D</div><h3>Rim Light</h3></div>
+      <div class="tag">edge-wrapping light + center highlight</div>
+      <p>Light wrapping the upper-left rim instead of one highlight pool -- the most "premium app icon" looking option. Watch this one in particular: the busiest background of the four, most likely to fight the mouth/ripples in motion.</p>
+    </div>
+  </div>
+</body>
+</html>

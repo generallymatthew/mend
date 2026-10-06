@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Thimble 3D gradient options — talking state</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --border:#DDD4C0; --accent-soft:#EAF0EC;}
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); font-family:'Manrope',-apple-system,sans-serif; color:var(--ink); padding:28px;}
+  h1{font-size:20px; font-weight:800; margin:0 0 4px;}
+  .sub{font-size:13px; color:var(--ink-soft); margin:0 0 24px; max-width:640px; line-height:1.5;}
+  .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:20px; max-width:620px; margin:0 auto;}
+  .card{background:#fff; border:1px solid var(--border); border-radius:16px; overflow:hidden;}
+  .stage{height:220px; display:flex; align-items:center; justify-content:center; background:var(--accent-soft); position:relative;}
+  .label-row{display:flex; align-items:center; gap:10px; padding:16px 18px 6px;}
+  .letter{width:24px; height:24px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;}
+  h3{font-size:15px; margin:0; font-weight:800;}
+  .tag{margin:0 18px 14px; display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; background:var(--accent-soft); padding:3px 9px; border-radius:999px; color:var(--ink);}
+
+  /* ---- Avatar engine CSS, copied verbatim from static/thimble-states.html ---- */
+  .thimble-avatar{position:relative; width:120px; height:120px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;
+    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
+  .thimble-ripple.b{animation-delay:.8s;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
+  @keyframes thimble-ripple{0%{transform:scale(1); opacity:.45;} 100%{transform:scale(1.6); opacity:0;}}
+
+  /* ---- Option fills, same recipes as thimble-3d-options.html ---- */
+  .fillA .thimble-body{background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.45), rgba(255,255,255,0) 40%), #F3829A;}
+
+  .fillB .thimble-body{background:
+    radial-gradient(circle at 34% 24%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 18%),
+    radial-gradient(circle at 36% 28%, rgba(255,255,255,.5), rgba(255,255,255,0) 42%),
+    radial-gradient(circle at 68% 82%, rgba(150,30,60,.45), rgba(150,30,60,0) 55%),
+    #F3829A;}
+
+  .fillC .thimble-body{background:
+    radial-gradient(circle at 50% 40%, #F3829A 0%, #F3829A 45%, #D9607C 85%, #C15372 100%);}
+
+  .fillD .thimble-body{
+    background: radial-gradient(circle at 36% 30%, rgba(255,255,255,.6), rgba(255,255,255,0) 45%), #F3829A;
+    box-shadow:
+      inset -16px -18px 22px -10px rgba(255,255,255,.85),
+      inset -28px -30px 34px -18px rgba(255,255,255,.4);
+  }
+</style>
+</head>
+<body>
+  <h1>Talking state — gradient options compared</h1>
+  <p class="sub">Same engine as <code>static/thimble-states.html</code> (ripples, mouth tracking a simulated TTS level, dome wobble), just the fill swapped per card. Watch the ripples and wobble -- that's where a gradient can start to fight the motion instead of helping it.</p>
+  <div class="grid" id="grid"></div>
+<script>
+// ---- Avatar engine, copied verbatim from static/thimble-states.html, trimmed to the talking state only ----
+const DOME_RADIUS = '50% 50% 50% 50% / 68% 68% 28% 28%';
+const SHAPE = {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12};
+
+function domeWobbleRadius(domeFactor, lvl) {
+  const capY = 50 + (18 + 4 * lvl) * domeFactor;
+  const rimY = 50 - (22 + 4 * lvl) * domeFactor;
+  return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+}
+
+function renderMouth(inst) {
+  const s = inst.size;
+  inst.mouth.style.top = SHAPE.mouthTop + '%';
+  inst.mouth.style.left = '50%';
+  inst.mouth.style.width = (SHAPE.mouthW * s) + 'px';
+  inst.mouth.style.height = (SHAPE.mouthH * s) + 'px';
+  inst.mouth.style.boxSizing = 'border-box';
+  inst.mouth.style.background = '#F6F1E7';
+  inst.mouth.style.borderRadius = '50%';
+}
+
+const OPTIONS = [
+  {id:'A', fill:'fillA', title:'Soft Sheen', tag:'one faint highlight'},
+  {id:'B', fill:'fillB', title:'Glossy Dome', tag:'specular highlight + pooled shadow'},
+  {id:'C', fill:'fillC', title:'Matte Shade', tag:'ambient rim darkening, no specular dot'},
+  {id:'D', fill:'fillD', title:'Rim Light', tag:'edge-wrapping light + center highlight'},
+];
+
+const grid = document.getElementById('grid');
+const cards = OPTIONS.map(def => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  const uid = 'av_' + def.id;
+  card.innerHTML = `
+    <div class="stage">
+      <div class="thimble-avatar ${def.fill}" id="${uid}">
+        <div class="thimble-ripple" id="${uid}RippleA"></div>
+        <div class="thimble-ripple b" id="${uid}RippleB"></div>
+        <div class="thimble-ring" id="${uid}Ring">
+          <div class="thimble-body" id="${uid}Body">
+            <div class="thimble-mouth" id="${uid}Mouth"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="label-row"><div class="letter">${def.id}</div><h3>${def.title}</h3></div>
+    <div class="tag">${def.tag}</div>
+  `;
+  grid.appendChild(card);
+
+  const inst = {
+    size: 120,
+    ring: document.getElementById(uid + 'Ring'),
+    body: document.getElementById(uid + 'Body'),
+    mouth: document.getElementById(uid + 'Mouth'),
+    rippleA: document.getElementById(uid + 'RippleA'),
+    rippleB: document.getElementById(uid + 'RippleB'),
+    lvl: 0, mouthLevel: 0,
+  };
+  inst.body.style.borderRadius = SHAPE.radius;
+  renderMouth(inst);
+  return { def, inst, phase: Math.random() * 10 };
+});
+
+function tick(now) {
+  cards.forEach(c => {
+    const inst = c.inst;
+    const t = now / 1000 + c.phase;
+    const envelope = Math.max(0, Math.sin(t * 0.6));
+    const chatter = 0.5 + 0.5 * Math.sin(t * 7) * Math.sin(t * 2.3);
+    const level = Math.max(0, Math.min(1, envelope * chatter));
+
+    const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * (now / 1000)) / 2.2));
+    inst.ring.style.transform = `scale(${breathe.toFixed(4)})`;
+    inst.lvl += (level - inst.lvl) * 0.45;
+
+    const wobblePeriod = 1.6;
+    const domePhase = ((now / 1000) % wobblePeriod) / wobblePeriod;
+    const domeFactor = (1 + Math.cos(domePhase * 2 * Math.PI)) / 2;
+    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+
+    const rippleFracA = (domePhase - 0.5 + 1) % 1;
+    const rippleFracB = (rippleFracA + 0.5) % 1;
+    const ringRadius = inst.body.style.borderRadius;
+    const ringTransform = inst.ring.style.transform;
+    [[inst.rippleA, rippleFracA], [inst.rippleB, rippleFracB]].forEach(([el, frac]) => {
+      el.style.animation = 'none';
+      el.style.borderRadius = ringRadius;
+      el.style.transform = `${ringTransform} scale(${(1 + 0.6 * frac).toFixed(3)})`;
+      el.style.opacity = (0.45 * (1 - frac)).toFixed(3);
+    });
+
+    const rate = level > inst.mouthLevel ? 0.7 : 0.25;
+    inst.mouthLevel += (level - inst.mouthLevel) * rate;
+    const maxH = SHAPE.mouthW * inst.size * 0.7;
+    inst.mouth.style.height = Math.min(inst.size * (0.03 + 0.22 * inst.mouthLevel), maxH) + 'px';
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
