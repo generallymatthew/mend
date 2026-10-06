@@ -1099,7 +1099,7 @@ const THIMBLE_WOBBLE_AMOUNT = 2.6;
 // bug.
 const DOME_WOBBLE_BIAS = 0.22;
 function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
-  const N = facets, M = 120, seg = (2 * Math.PI) / N, pts = [];
+  const N = facets, M = 120, seg = (2 * Math.PI) / N, raw = [];
   const phi = t * spinSpeed + 0.15 * Math.sin(t * 1.7);
   const poly = th => { const m = (((th - phi) % seg) + seg) % seg; return Math.cos(seg / 2) / Math.cos(m - seg / 2); };
   // maxDepth caps how far the outline is allowed to pull toward the full
@@ -1132,8 +1132,24 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
     const jitter = 1 + jitterScale * (0.05 * g * lvl * Math.sin(th * N + t * 5) + 0.03 * g * lvl * Math.sin(th * N * 0.5 - t * 3.2));
     const dome = 1 - DOME_WOBBLE_BIAS * Math.max(0, -Math.sin(th));
     const r = 50 * (1 - depth * (1 - smooth)) * jitter * dome;
-    pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
+    raw.push([50 + r * Math.cos(th), 50 + r * Math.sin(th)]);
   }
+  // dome's shrink-only-at-the-top (see its own comment) keeps every point
+  // safely inside the box, but it also means the resulting outline's own
+  // bounding box isn't centered in that box anymore -- the top edge pulls
+  // in while the bottom stays put, so the shape's actual visual weight
+  // sits low. Reported live as "make sure the blob is centered" (first
+  // noticed right as talking starts, where the shape is freshest off a
+  // reset and the offset is easiest to spot, but it's really there in
+  // every frame, every active state). Re-centering here, on the shape's
+  // own true bounding box, fixes that directly and stays correct
+  // regardless of whatever g/lvl/depth/dome end up doing -- cheaper and
+  // more robust than trying to hand-tune DOME_WOBBLE_BIAS or the jitter
+  // terms to happen to average out to centered.
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [x, y] of raw) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+  const dx = 50 - (minX + maxX) / 2, dy = 50 - (minY + maxY) / 2;
+  const pts = raw.map(([x, y]) => `${(x + dx).toFixed(2)}% ${(y + dy).toFixed(2)}%`);
   return `polygon(${pts.join(',')})`;
 }
 const thimbleBig = thimbleInstance('thimble', 200);

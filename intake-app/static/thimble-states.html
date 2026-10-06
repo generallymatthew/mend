@@ -86,7 +86,7 @@ const THIMBLE_WOBBLE_AMOUNT = 2.6;
 // read as dome-shaped, not just the states that render plain border-radius.
 const DOME_WOBBLE_BIAS = 0.22;
 function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
-  const N = facets, M = 120, seg = (2 * Math.PI) / N, pts = [];
+  const N = facets, M = 120, seg = (2 * Math.PI) / N, raw = [];
   const phi = t * spinSpeed + 0.15 * Math.sin(t * 1.7);
   const poly = th => { const m = (((th - phi) % seg) + seg) % seg; return Math.cos(seg / 2) / Math.cos(m - seg / 2); };
   const rawDepth = g * Math.min(1, 0.55 + lvl * 0.6) * THIMBLE_WOBBLE_AMOUNT;
@@ -99,8 +99,15 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
     const jitter = 1 + jitterScale * (0.05 * g * lvl * Math.sin(th * N + t * 5) + 0.03 * g * lvl * Math.sin(th * N * 0.5 - t * 3.2));
     const dome = 1 - DOME_WOBBLE_BIAS * Math.max(0, -Math.sin(th));
     const r = 50 * (1 - depth * (1 - smooth)) * jitter * dome;
-    pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
+    raw.push([50 + r * Math.cos(th), 50 + r * Math.sin(th)]);
   }
+  // See static/index.html's thimblePolygon for the full reasoning --
+  // re-centers the outline on its own true bounding box, since dome's
+  // shrink-only-at-the-top leaves the shape's visual weight sitting low.
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [x, y] of raw) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+  const dx = 50 - (minX + maxX) / 2, dy = 50 - (minY + maxY) / 2;
+  const pts = raw.map(([x, y]) => `${(x + dx).toFixed(2)}% ${(y + dy).toFixed(2)}%`);
   return `polygon(${pts.join(',')})`;
 }
 
