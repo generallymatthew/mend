@@ -84,7 +84,13 @@
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
   .thimble-ripple.b{animation-delay:.8s;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease;}
+  /* will-change hints the browser to keep this on its own composited layer
+     rather than re-rasterizing the whole thing fresh each time clip-path
+     changes (every animation frame while listening/thinking/talking) --
+     the underlying polygon math checked out smooth (no jump between
+     frames), so a residual flicker report is more likely this kind of
+     compositing/anti-aliasing shimmer than the shape itself jumping. */
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:#F3829A; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
   @keyframes thimble-blob{0%,100%{border-radius:50%; transform:scale(.95);} 25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%; transform:scale(.92) rotate(-3deg);} 50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%; transform:scale(.95);} 75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%; transform:scale(.92) rotate(3deg);}}
@@ -1001,9 +1007,20 @@ async function maybeSendPartial(now) {
 // border-radius + CSS animation name, outer lean, and mouth box per state.
 // mouthW/mouthH are fractions of the avatar's own size (handoff's s),
 // mouthTop is a % from the top -- all taken verbatim from the handoff.
+// DOME_RADIUS: the "Soft Dome" shape option (rounder cap, flatter rim --
+// pushes the cap/rim contrast beyond empathizing's own original 62%/38% to
+// 68%/28%), picked from a side-by-side of four options against the
+// thimble_avatar-new-mow reference and empathizing's own look (the one
+// state that already read as thimble-shaped rather than circular). Reused
+// across every state below instead of each having its own radius, so the
+// whole avatar reads as one consistent "thimble," not just empathizing.
+const DOME_RADIUS = '50% 50% 50% 50% / 68% 68% 28% 28%';
 const THIMBLE_SHAPES = {
-  listening:   {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
-  idle:        {radius: '50% 50% 47% 53% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  // Listening/idle keep their own subtle 47%/53% horizontal split (paired
+  // with the lean transform) for the "leaning toward you" asymmetry --
+  // only the vertical cap/rim ratio moves to DOME_RADIUS.
+  listening:   {radius: '50% 50% 47% 53% / 68% 68% 28% 28%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  idle:        {radius: '50% 50% 47% 53% / 68% 68% 28% 28%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   // No CSS blob anymore -- thinking's body motion is the same geometry
   // engine as listening/talking (constant geo .6, slow spin, a head-tilt
   // wiggle instead of a nod), ported from the handoff's 'thinking' state in
@@ -1013,13 +1030,13 @@ const THIMBLE_SHAPES = {
   // not the three-pulsing-dots look a later design doc described, which
   // read badly live (reported as looking bad) and is dropped here in favor
   // of the original reference's plain mouth.
-  thinking:    {radius: '50%', anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
+  thinking:    {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   // No CSS bob anymore -- talking's body motion is the same amplitude-driven
   // hexagon wobble + breathing as listening/thinking, just with its own
   // breathe period and a constant (not threshold-gated) geo target, ported
   // from the handoff's 'speaking' state in updateThimbleMotion below.
-  talking:     {radius: '50%', anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
-  empathizing: {radius: '50% 50% 50% 50% / 62% 62% 38% 38%', anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
+  talking:     {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
+  empathizing: {radius: DOME_RADIUS, anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
   // Session paused: frozen (no breathing, no wobble -- see the `active`
   // check in updateThimbleMotion, which excludes 'paused' from the motion
   // branch entirely) and recolored grey via applyThimbleState below, same
@@ -1027,7 +1044,7 @@ const THIMBLE_SHAPES = {
   // so it fell through to the listening shape (egg radius + tilt) while
   // still paused -- wrong shape frozen mid-lean instead of a plain
   // resting circle.
-  paused:      {radius: '50%', anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
+  paused:      {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
 };
 // Two instances share one avatarState: the big call-stage avatar (voice
 // view) and a 48px mini copy in the text/chat header -- same per-frame
@@ -1060,6 +1077,27 @@ function thimbleInstance(prefix, size) {
 // the handoff's own numbers stay as the baseline shape math (polygon math,
 // smoothing, easing), just pushed further from the circle.
 const THIMBLE_WOBBLE_AMOUNT = 2.6;
+// Soft Dome's own bias, ported into the live wobble engine: DOME_RADIUS
+// (THIMBLE_SHAPES above) only ever paints while a state is NOT "active"
+// (see the `active` check in updateThimbleMotion) -- border-radius is
+// invisible once a clip-path is set, and listening/thinking/talking are
+// active essentially the entire time they're the current state, so without
+// this the dome choice would only ever show on idle/paused/empathizing,
+// never on the three states people actually spend a call looking at.
+// A first version multiplied r by 1 + amount*sin(th) -- symmetric, bigger
+// at the bottom AND smaller at the top by the same amount. That pushed the
+// top of the shape inward past where the circle/hexagon normally reaches
+// (th=-pi/2, straight up) without anything pulling the BOTTOM back in to
+// compensate, so the whole outline stopped filling its own box -- a visible
+// gap at the top, reported live as "the blob is off center." This version
+// only ever SHRINKS r, and only near the top (th=-pi/2; th=0 is 3 o'clock,
+// increasing clockwise since y+ is down here) -- max(0,-sin(th)) is 0 for
+// the entire bottom half and at both sides, rising to 1 only at the very
+// top, so the bottom and sides stay exactly on the original circle/hexagon
+// (same outer bounds as before, nothing overflows or gaps) and only the
+// cap narrows in, same net visual direction as the old version without its
+// bug.
+const DOME_WOBBLE_BIAS = 0.22;
 function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
   const N = facets, M = 120, seg = (2 * Math.PI) / N, pts = [];
   const phi = t * spinSpeed + 0.15 * Math.sin(t * 1.7);
@@ -1092,7 +1130,8 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
     // breaks that symmetry so the wobble looks alive instead of
     // mechanical.
     const jitter = 1 + jitterScale * (0.05 * g * lvl * Math.sin(th * N + t * 5) + 0.03 * g * lvl * Math.sin(th * N * 0.5 - t * 3.2));
-    const r = 50 * (1 - depth * (1 - smooth)) * jitter;
+    const dome = 1 - DOME_WOBBLE_BIAS * Math.max(0, -Math.sin(th));
+    const r = 50 * (1 - depth * (1 - smooth)) * jitter * dome;
     pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
   }
   return `polygon(${pts.join(',')})`;
@@ -1789,7 +1828,7 @@ let liveMode = false;
 // immediately gets a threshold near their own volume, risking an early
 // mid-word cutoff) is far cheaper than a recording that never stops.
 const VAD_THRESHOLD = 0.06;
-const VAD_SILENCE_MS = 1400; // was 500, before that 1000/2600/1800. 500ms (pushed close to the ~200ms natural human gap specifically because barge-in existed to recover a wrong guess) was reported live as cutting off and starting to transcribe before the user was actually done, repeatedly, badly enough that the barge-in recovery wasn't making up for it -- a real turn getting cut this early isn't a brief mid-thought pause, it's genuinely still-talking. Raised partway back; still well under the original 2600/1800ms, and barge-in still covers whatever this misjudges.
+const VAD_SILENCE_MS = 1100; // was 1400, before that 500, before that 1000/2600/1800. 500ms (pushed close to the ~200ms natural human gap specifically because barge-in existed to recover a wrong guess) was reported live as cutting off and starting to transcribe before the user was actually done, repeatedly, badly enough that the barge-in recovery wasn't making up for it -- a real turn getting cut this early isn't a brief mid-thought pause, it's genuinely still-talking. Raised to 1400 to fix that. Now reported live as the other direction -- the gap from stopping talking to Thimble visibly starting to think felt like "2 secs," too slow. 1100 is a middle point between the two reported problems, not a re-derivation of either -- if this starts cutting people off again, that's the signal to go back up, not down further.
 const VAD_MIN_SPEECH_MS = 500;
 const VAD_CALIBRATION_MS = 400;
 const VAD_MAX_TURN_MS = 60000; // hard backstop, independent of VAD: no single turn should ever record this long uninterrupted (a real 290s clip happened once already, starving the whole server's CPU) -- force-ends the turn regardless of what's confusing the silence detection
@@ -2109,11 +2148,38 @@ function armLiveMode() {
   hideMicError();
 }
 
+// Reported live: a phone's screen kept dimming/locking mid-call, which on
+// most phones also suspends the mic and/or audio playback -- not just an
+// annoyance, a real way to silently drop a turn. The Screen Wake Lock API
+// is the real fix (not a fake-video/fake-audio trick): held for as long as
+// liveMode is true, released the moment it isn't. The OS also force-releases
+// any wake lock the instant a tab is backgrounded/hidden (spec behavior,
+// not a bug here), so it has to be re-acquired on visibilitychange too, or
+// switching away and back during a call would leave it silently un-held.
+// Unsupported browsers (most of all iOS Safari pre-16.4) just no-op --
+// nothing else here depends on it.
+let wakeLock = null;
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator) || !liveMode || document.visibilityState !== 'visible') return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch (e) {} // permission/platform quirk -- call still works, screen just isn't held awake
+}
+function releaseWakeLock() {
+  if (wakeLock) wakeLock.release().catch(() => {});
+  wakeLock = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && liveMode && !wakeLock) acquireWakeLock();
+});
+
 async function enterVoiceLive() {
   if (liveMode) return;
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     liveMode = true;
     setLiveLayout(true);
+    acquireWakeLock();
     return;
   }
   try {
@@ -2121,6 +2187,7 @@ async function enterVoiceLive() {
     liveMode = true;
     setLiveLayout(true);
     hideMicError();
+    acquireWakeLock();
   } catch (e) {
     // Same redundancy as startRecordingTurnSafe's catch above -- the
     // mic-error banner already says this.
@@ -2133,6 +2200,7 @@ function exitVoiceLive() {
   liveMode = false;
   setLiveLayout(false);
   if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  releaseWakeLock();
 }
 
 // Without this, a blocked/denied mic left avatarState at 'idle', which
