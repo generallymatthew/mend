@@ -1152,6 +1152,20 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
   const pts = raw.map(([x, y]) => `${(x + dx).toFixed(2)}% ${(y + dy).toFixed(2)}%`);
   return `polygon(${pts.join(',')})`;
 }
+// Every active state's wobble, in one place: interpolates DOME_RADIUS's own
+// vertical cap/rim percentages between the resting dome (domeFactor 1,
+// cap 68%/rim 28%, exactly DOME_RADIUS) and a perfect circle (domeFactor 0,
+// cap/rim both 50%). Horizontal radii stay 50% throughout -- DOME_RADIUS's
+// own horizontal values are already 50% at rest, so nothing needs to move
+// there. lvl (mic or TTS level, already smoothed by the caller) widens the
+// swing a little on top, so louder moments dip closer to circle, quieter
+// ones stay closer to dome, without ever snapping to a different shape
+// family the way the old hexagon clip-path did.
+function domeWobbleRadius(domeFactor, lvl) {
+  const capY = 50 + (18 + 4 * lvl) * domeFactor;
+  const rimY = 50 - (22 + 4 * lvl) * domeFactor;
+  return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+}
 const thimbleBig = thimbleInstance('thimble', 200);
 const thimbleMini = thimbleInstance('thimbleMini', 48);
 
@@ -1295,37 +1309,50 @@ function updateThimbleMotion(inst, now, level, listening) {
     // react to, so it settles on the handoff's own fixed shapeLvl of .15.
     const input = speaking ? ttsLevel : thinkingState ? 0.15 : level;
     inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
-    // Circle at rest, rounded hexagon once actually hearing speech (not just
-    // idle/silence) -- geo eases toward its target at 12%/frame, same as
-    // the reference, so the shape always morphs smoothly and never snaps.
-    // Speaking's target is a constant .8 and thinking's a constant .6 (not
-    // threshold-gated on level, unlike listening), same as the handoff --
-    // both are always wobbling in their state, not just on loud syllables.
-    const geoTarget = avatarState === 'listening' ? (inst.lvl > 0.08 ? 1 : 0) : speaking ? 0.8 : thinkingState ? 0.6 : 0;
-    inst.geo += (geoTarget - inst.geo) * 0.12;
-    // Spin speed is constant per state (not boosted by level, as an earlier
-    // version here did for listening) -- reported live as making listening
-    // feel like it was running too fast whenever the employee spoke up; the
-    // reference keeps this at a flat 0.35 regardless of amplitude for
-    // listening/talking, which is what actually reads as "alive" rather
-    // than "sped up." Thinking spins much slower (0.12), same as the
-    // reference, since it's an idle wait rather than a reaction.
-    const spin = thinkingState ? 0.12 : 0.35;
-    // Talking's and thinking's own depth caps -- see thimblePolygon's
-    // maxDepth comment. Talking (reported live as feeling too
-    // sharp/geometric) is capped at .55 instead of the full 1 listening
-    // still uses. Thinking's constant geoTarget .6 and fixed shapeLvl .15
-    // work out to a depth of ~.998 -- effectively the same uncapped, nearly
-    // full-depth hexagon as talking had before its own cap, just arrived at
-    // by different numbers -- so the "blob" the reference describes was
-    // actually a lopsided hexagon at almost every rotation phase, not a
-    // soft, roughly-round shape. That lopsidedness is what read as the
-    // thinking dots looking "off center": the dot row is genuinely centered
-    // in the avatar's own box (verified against its clipPath), it's the
-    // visible blob silhouette bulging to one side around it that wasn't.
-    // Same .55 cap talking uses, since there's nothing in either report
-    // asking for thinking to look any sharper than talking does.
-    inst.body.style.clipPath = thimblePolygon(now / 1000, inst.geo, inst.lvl, 6, spin, (speaking || thinkingState) ? 0.55 : 1);
+    // Every active state wobbles the same way now: no hexagon clip-path
+    // anywhere -- reported live as reading "weird," not charming, and once
+    // seen next to idle/paused's plain border-radius dome, the hexagon
+    // states looked like a different shape language entirely rather than
+    // the same character moving. domeWobbleRadius instead interpolates
+    // DOME_RADIUS's own vertical cap/rim percentages between the resting
+    // dome (domeFactor 1) and a perfect circle (domeFactor 0), so the
+    // outline is always a true smooth curve, never a polygon. Thinking
+    // wobbles on a slow, calm cycle (3.4s); listening/talking share a
+    // livelier 1.6s cycle -- the same period talking's ripple rings use
+    // below, so the rings fire exactly as the body passes through "circle."
+    const wobblePeriod = thinkingState ? 3.4 : 1.6;
+    const domePhase = ((now / 1000) % wobblePeriod) / wobblePeriod;
+    const domeFactor = (1 + Math.cos(domePhase * 2 * Math.PI)) / 2;
+    inst.body.style.clipPath = 'none';
+    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+    if (speaking) {
+      // Ripple emission synced to the body hitting full-circle (domePhase
+      // .5): rippleFrac counts 0 (just emitted, at the circle) up to 1
+      // (fully faded, right before the next circle) each cycle. The second
+      // ring is just the same count offset half a cycle, same stagger the
+      // old CSS animation-delay gave it.
+      const rippleFracA = (domePhase - 0.5 + 1) % 1;
+      const rippleFracB = (rippleFracA + 0.5) % 1;
+      // Rings share the body's own live border-radius instead of the old
+      // CSS circle -- so as each ring expands outward it's carrying the
+      // dome/circle shape the body actually had at that instant, not a
+      // generic halo that happens to sit behind it.
+      const ringRadius = inst.body.style.borderRadius;
+      // .thimble-ripple sits as .thimble-ring's sibling, not inside it, so
+      // it never inherited the ring's own translateY/rotate/scale (the
+      // breathing scale, and listening's nod) -- it just sat fixed at the
+      // avatar's base position while the body moved inside the ring,
+      // drifting off-center. Prefixing the ring's current transform here,
+      // then adding the ring's own scale on top, keeps every ripple locked
+      // to wherever the body actually is this frame.
+      const ringTransform = inst.ring.style.transform;
+      [[inst.rippleA, rippleFracA], [inst.rippleB, rippleFracB]].forEach(([el, frac]) => {
+        el.style.animation = 'none';
+        el.style.borderRadius = ringRadius;
+        el.style.transform = `${ringTransform} scale(${(1 + 0.6 * frac).toFixed(3)})`;
+        el.style.opacity = (0.45 * (1 - frac)).toFixed(3);
+      });
+    }
   }
   // Talking mouth: real TTS amplitude drives the open/close height directly,
   // rather than the handoff's canned "talk" loop -- real lip-sync instead of
@@ -1345,7 +1372,12 @@ function updateThimbleMotion(inst, now, level, listening) {
   if (speaking) {
     const rate = ttsLevel > inst.mouthLevel ? 0.7 : 0.25;
     inst.mouthLevel += (ttsLevel - inst.mouthLevel) * rate;
-    inst.mouth.style.height = (inst.size * (0.03 + 0.22 * inst.mouthLevel)) + 'px';
+    // Capped at 70% of the mouth's fixed width -- uncapped, a loud peak
+    // pushed height past width and border-radius:50% turned the oval into
+    // a near-circle, reading as a white hole punched in the face rather
+    // than an open mouth. See THIMBLE_SHAPES[state].mouthW for the width.
+    const maxH = THIMBLE_SHAPES[avatarState].mouthW * inst.size * 0.7;
+    inst.mouth.style.height = Math.min(inst.size * (0.03 + 0.22 * inst.mouthLevel), maxH) + 'px';
   } else {
     inst.mouthLevel = 0;
   }

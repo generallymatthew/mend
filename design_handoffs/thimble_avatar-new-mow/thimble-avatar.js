@@ -51,16 +51,25 @@
       const input = (s === 'listening' || s === 'speaking') ? this.level : 0;
       this.lvl += (input - this.lvl) * (s === 'speaking' ? 0.45 : 0.3);
 
-      // How "geometric" the outline is
-      const geoTarget = s === 'listening' ? (this.lvl > 0.08 ? 1 : 0)
-                      : s === 'speaking' ? 0.8
-                      : s === 'thinking' ? 0.6 : 0;
-      this.geo += (geoTarget - this.geo) * 0.12;
+      if (s === 'listening') {
+        // Listening v2: a circle at rest, a soft dome as you start talking,
+        // then the base softens and widens the longer you go -- three
+        // stages, not a straight blend -- with a small wobble riding on
+        // top. Replaces the rounded-hexagon wobble for this state only;
+        // every other state is unchanged.
+        this.body.style.clipPath = 'none';
+        this.body.style.borderRadius = this._domeRadius(t, this.lvl);
+      } else {
+        // How "geometric" the outline is
+        const geoTarget = s === 'speaking' ? 0.8 : s === 'thinking' ? 0.6 : 0;
+        this.geo += (geoTarget - this.geo) * 0.12;
 
-      // Outline: circle blended toward a smoothed (rounded-corner) polygon
-      const shapeLvl = s === 'thinking' ? 0.15 : this.lvl;
-      const spin = s === 'thinking' ? 0.12 : 0.35;
-      this.body.style.clipPath = this._polygon(t, this.geo, shapeLvl, spin);
+        // Outline: circle blended toward a smoothed (rounded-corner) polygon
+        const shapeLvl = s === 'thinking' ? 0.15 : this.lvl;
+        const spin = s === 'thinking' ? 0.12 : 0.35;
+        this.body.style.borderRadius = '';
+        this.body.style.clipPath = this._polygon(t, this.geo, shapeLvl, spin);
+      }
 
       // Breathing
       const p = BREATHE[s];
@@ -72,17 +81,13 @@
       this.root.style.opacity = s === 'muted' ? '0.5' : '1';
 
       // Face motion
-      if (s === 'listening') {
-        const ph = (2 * Math.PI * t) / 2.6;                 // slow continuous nod, 2.6s cycle
-        const y = 4 * Math.pow(Math.max(0, Math.sin(ph)), 1.5);
-        this.face.style.transform = `translateY(${y.toFixed(2)}%)`;
-      } else if (s === 'thinking') {
+      if (s === 'thinking') {
         this.face.style.transform = `rotate(${(-10 + 2 * Math.sin(t * 1.2)).toFixed(2)}deg)`;
       } else {
         this.face.style.transform = 'none';
       }
       this.face.style.transition = 'transform .5s ease-out';
-      if (s === 'listening' || s === 'thinking') this.face.style.transition = 'none';
+      if (s === 'thinking') this.face.style.transition = 'none';
 
       // Mouth
       const m = MOUTH[s];
@@ -92,6 +97,19 @@
       this.mouth.style.left = m.x + '%';
       this.mouth.style.transform = s === 'speaking' ? 'translate(-50%, 50%)' : 'translateX(-50%)';
       this.mouth.style.transition = s === 'speaking' ? 'width .07s, height .07s, left .5s' : 'width .3s, height .3s, left .5s';
+    }
+
+    _domeRadius(t, l) {
+      const ease = x => x * x * (3 - 2 * x);
+      const lerp = (a, b, p) => a + (b - a) * p;
+      const p1 = ease(Math.min(1, l / 0.5));
+      const p2 = ease(Math.min(1, Math.max(0, (l - 0.5) / 0.5)));
+      const hBot = l <= 0.5 ? lerp(50, 20, p1) : lerp(20, 82, p2);
+      const vBot = l <= 0.5 ? lerp(50, 14, p1) : lerp(14, 26, p2);
+      const j = (ph, amp) => Math.sin(t * 1.3 + ph) * amp * l;
+      const bl = Math.round(hBot + j(0, 6)), br = Math.round(hBot + j(1.1, 6));
+      const tl = Math.round(vBot + j(2.3, 5)), tr = Math.round(vBot + j(3.6, 5));
+      return `50% 50% ${bl}% ${br}% / 50% 50% ${tl}% ${tr}%`;
     }
 
     _polygon(t, g, lvl, spinSpeed) {
