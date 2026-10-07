@@ -39,15 +39,26 @@ from playwright.async_api import async_playwright
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SILENT_AUDIO = FIXTURES / "turn1.wav"  # only its silence lead is used here -- see module docstring
+# Real speech ("She's a peer, not my manager"), ~2s, ending right at the
+# file's own end -- no trailing silence. Built with `say` + ffmpeg
+# specifically so a hold that releases right as the file ends reproduces
+# the real release-at-last-word timing the trailing-words bug needed; the
+# other fixtures all have a silence tail that would mask the race.
+TRAILING_WORDS_AUDIO = FIXTURES / "ptt_trailing_words.wav"
 
-FAKE_MIC_ARGS = [
-    "--use-fake-ui-for-media-stream",
-    "--use-fake-device-for-media-stream",
-    f"--use-file-for-fake-audio-capture={SILENT_AUDIO}",
-    "--disable-backgrounding-occluded-windows",
-    "--disable-renderer-backgrounding",
-    "--disable-background-timer-throttling",
-]
+
+def fake_mic_args(audio_file):
+    return [
+        "--use-fake-ui-for-media-stream",
+        "--use-fake-device-for-media-stream",
+        f"--use-file-for-fake-audio-capture={audio_file}",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--disable-background-timer-throttling",
+    ]
+
+
+FAKE_MIC_ARGS = fake_mic_args(SILENT_AUDIO)
 
 
 async def reset_server(playwright, base_url):
@@ -57,8 +68,8 @@ async def reset_server(playwright, base_url):
     await request_ctx.dispose()
 
 
-async def new_page(playwright, base_url):
-    browser = await playwright.chromium.launch(headless=True, args=FAKE_MIC_ARGS)
+async def new_page(playwright, base_url, audio_file=SILENT_AUDIO):
+    browser = await playwright.chromium.launch(headless=True, args=fake_mic_args(audio_file))
     page = await browser.new_page()
     errors = []
     page.on("pageerror", lambda exc: errors.append(str(exc)))
@@ -194,6 +205,82 @@ async def check_ptt_hold_release(playwright, base_url):
         await browser.close()
 
 
+async def check_ptt_trailing_words_not_dropped(playwright, base_url):
+    """Regression check for the bug fixed in this commit: releasing
+    push-to-talk right as the last word finishes must not drop it.
+    TRAILING_WORDS_AUDIO has no silence tail -- the file ends the instant
+    speech ends, so holding for its exact duration and releasing
+    reproduces the real release-at-last-word timing (Deepgram's own
+    transcript for that trailing audio often hasn't arrived yet at the
+    moment of release). Needs deepgramEnabled (a real DEEPGRAM_API_KEY) to
+    exercise the actual code path this bug was in -- skips with ok=True
+    otherwise rather than failing on an unrelated missing-config case."""
+    browser, page, errors = await new_page(playwright, base_url, audio_file=TRAILING_WORDS_AUDIO)
+    try:
+        # The frontend's own `deepgramEnabled` is set by an async fetch
+        # fired at page load (see checkDeepgramEnabled in index.html) and
+        # isn't guaranteed resolved yet right here -- fetch the same
+        # endpoint directly instead of racing that variable. By the time
+        # the actual hold/release below reaches onstop (2+ seconds later),
+        # the frontend's own copy has long since resolved either way.
+        config = await page.evaluate("fetch('/api/voice/config').then(r => r.json())")
+        if config.get("error"):
+            # Rate-limited (RATE_LIMIT_MAX, see server.py) or some other
+            # transient server error -- not the same thing as "no
+            # DEEPGRAM_API_KEY configured" and shouldn't be reported as
+            # that; a real missing-config case would come back as
+            # {"deepgram": false}, not an error body.
+            return True, f"skipped: /api/voice/config errored: {config['error']!r}", errors
+        if not config.get("deepgram"):
+            return True, "skipped: DEEPGRAM_API_KEY not configured on the server", errors
+        await page.locator("#pttHoldTab").click()
+        await page.wait_for_timeout(200)
+        btn = page.locator("#pttBtn")
+        box = await btn.bounding_box()
+        await page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        await page.mouse.down()
+        bubble = page.locator("#thread .msg.employee.transcript").last
+        await bubble.wait_for(state="attached", timeout=5000)
+        # Release the instant Deepgram's own live INTERIM transcript shows
+        # the last word, not after a fixed delay -- a fixed delay can't
+        # tell real startup latency (getUserMedia, Deepgram's websocket
+        # handshake) apart from the fixture's own speech actually finishing,
+        # and undercounting either one truncates the audio before the
+        # phrase ends, which isn't the bug this test exists to catch. This
+        # is the real race instead: by the time the interim transcript has
+        # caught up to the last word, the audio is definitely fully sent --
+        # releasing right then is exactly "release right as the last word
+        # finishes," the real trigger (the bug used to drop that FINAL
+        # transcript, which lags behind the interim one).
+        deadline = asyncio.get_event_loop().time() + 8
+        while asyncio.get_event_loop().time() < deadline:
+            interim = (await bubble.text_content() or "").lower()
+            if "manager" in interim:
+                break
+            await page.wait_for_timeout(50)
+        await page.mouse.up()
+        # The live interim update and onstop's own final rewrite both write
+        # the same quoted-text format into this bubble, so text content
+        # alone can't tell interim from final -- but only onstop's final
+        # path removes the 'pending' class (see its own `bubble.classList
+        # .remove('pending')`). Wait for that instead of guessing from text.
+        deadline = asyncio.get_event_loop().time() + 5
+        while asyncio.get_event_loop().time() < deadline:
+            still_pending = await bubble.evaluate("el => el.classList.contains('pending')")
+            if not still_pending:
+                break
+            await page.wait_for_timeout(100)
+        text = (await bubble.text_content() or "").strip()
+        # Only check for "manager" (TRAILING_WORDS_AUDIO's own last word) --
+        # the bug this guards against drops trailing words outright, not
+        # individual mid-phrase STT misheard homophones ("a peer" vs.
+        # "appear" is a real, separate STT-accuracy question, not this bug).
+        ok = "manager" in text.lower()
+        return ok, f"final transcript bubble: {text!r}", errors
+    finally:
+        await browser.close()
+
+
 async def check_captions_and_transcript_toggle(playwright, base_url):
     """Captions button flips its own toggled-state class; transcript button
     shows/hides its panel (its 'inactive' class only reflects the panel's
@@ -238,6 +325,7 @@ CHECKS = [
     ("Pause/Resume (push-to-talk)", check_pause_resume_pushtotalk),
     ("Push-to-talk mode toggle (Auto/Hold)", check_ptt_mode_toggle),
     ("Push-to-talk hold/release", check_ptt_hold_release),
+    ("Push-to-talk trailing words not dropped", check_ptt_trailing_words_not_dropped),
     ("Captions/transcript toggles", check_captions_and_transcript_toggle),
     ("Text chat send", check_text_chat_send),
 ]
