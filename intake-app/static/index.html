@@ -1845,12 +1845,13 @@ function animateAvatar(now) {
     employeeTile.classList.toggle('lit', employeeLit);
     if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled && !pttMode) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage; push-to-talk owns end-of-turn instead of either
     if (liveMode && !micMuted && !sessionPaused && deepgramEnabled && !pttMode) {
-      // See DG_HANG_BACKSTOP_MS above -- last-resort stop if Deepgram never ends the turn itself.
+      // See DG_HANG_BACKSTOP_PRE_MS/_POST_MS above -- last-resort stop if Deepgram never ends the turn itself.
       if (level > vadThreshold) {
+        dgSpeechHeard = true;
         dgHangSilenceSince = null;
       } else {
         if (dgHangSilenceSince === null) dgHangSilenceSince = t;
-        else if (t - dgHangSilenceSince >= DG_HANG_BACKSTOP_MS) mediaRecorder.stop();
+        else if (t - dgHangSilenceSince >= (dgSpeechHeard ? DG_HANG_BACKSTOP_POST_MS : DG_HANG_BACKSTOP_PRE_MS)) mediaRecorder.stop();
       }
     }
     if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
@@ -2281,20 +2282,27 @@ let vadBlipSince = null;
 // forever). Nothing else in the Deepgram path ever calls
 // mediaRecorder.stop() in that case, so this mirrors checkVad's own
 // silence timer -- purely off local mic energy, independent of whatever
-// Deepgram is or isn't sending -- as a last-resort stop. Deliberately
-// longer than VAD_SILENCE_MS/utterance_end_ms so it never races a normal
-// Deepgram-driven stop, which almost always fires first -- confirmed
-// directly against the real API (a clean one-word utterance's own
-// speech_final lands ~1.5-2s after the word ends, from endpointing=1400ms
-// plus overhead). Originally 4000ms, which meant every turn where
-// Deepgram's OWN VAD never detects the utterance at all (plausible for a
-// short, quiet real one-word reply, as opposed to this file's own clean
-// TTS-generated test audio) sat through the full worst case -- reported
-// live as the exact "just keeps listening" symptom this backstop exists to
-// bound. Lowered to comfortably clear the normal path without leaving that
-// worst case anywhere near as long.
-const DG_HANG_BACKSTOP_MS = 2200;
+// Deepgram is or isn't sending -- as a last-resort stop.
+//
+// Two different waits, not one -- this was a real bug, caught live
+// immediately after shortening the single old constant (4000ms) to clear
+// the normal post-speech path faster: a single timer counts quiet time
+// from the moment recording STARTS, so shortening it to beat Deepgram's
+// own ~1.5-2s post-speech latency also shortened the PRE-speech grace
+// period -- ordinary reaction time before a short answer (reported live:
+// "it just interrupted me") started losing the race against the same
+// clock. dgSpeechHeard (set the first time local mic energy ever crosses
+// vadThreshold this turn) splits the two: generous grace before any local
+// speech has been heard at all (DG_HANG_BACKSTOP_PRE_MS, basically "are
+// they even going to answer"), short grace once they've started and gone
+// quiet again (DG_HANG_BACKSTOP_POST_MS, "they're done talking, confirmed
+// directly against the real API -- a clean one-word utterance's own
+// speech_final lands ~1.5-2s after the word ends, endpointing=1400ms plus
+// overhead -- comfortably clears that without being the old 4000ms).
+const DG_HANG_BACKSTOP_PRE_MS = 8000;
+const DG_HANG_BACKSTOP_POST_MS = 2200;
 let dgHangSilenceSince = null;
+let dgSpeechHeard = false;
 
 function startVadCalibration(now) {
   vadCalibrating = true;
@@ -2523,6 +2531,7 @@ async function startRecordingTurn() {
   vadSpeechStarted = null;
   vadSilenceSince = null;
   dgHangSilenceSince = null;
+  dgSpeechHeard = false;
   mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
