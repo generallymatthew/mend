@@ -17,6 +17,8 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 | [10_LEGAL_COUNSEL_OUTREACH.md](10_LEGAL_COUNSEL_OUTREACH.md) | Outreach email + scoping memo template for finding employment/tech-liability counsel pre-pilot |
 | [11_PRODUCT_ARCHITECTURE_AND_STRATEGY_BLUEPRINT.md](11_PRODUCT_ARCHITECTURE_AND_STRATEGY_BLUEPRINT.md) | Standalone blueprint pass: brand manifesto/taglines, the dual-track (user vs. buyer) value prop, product/intake journey, Watcher audit rubric + practice-state schema, pricing, 3-cohort testing plan -- overlaps several docs above, written as one self-contained pass rather than split by topic |
 | [12_SYMMETRIC_VIDEO_PARITY_FEATURE.md](12_SYMMETRIC_VIDEO_PARITY_FEATURE.md) | Feature concept: if either joint-session participant's camera drops mid-session, both are symmetrically dropped to voice+avatar together, with neutral framing and facilitator non-intervention. Captured from an earlier exploratory code dump, not yet designed against this repo's real stack |
+| [13_PITCHING_MEND_TO_ENTERPRISE_HR.md](13_PITCHING_MEND_TO_ENTERPRISE_HR.md) | Field guide for selling Mend to HR/People Ops buyers as a solo founder: what HR actually cares about (risk containment, not "cool AI"), countering the "AI wrapper" skepticism, positioning as deterministic ADR software rather than a chatbot |
+| [14_WORKPLACE_SCENARIOS.md](14_WORKPLACE_SCENARIOS.md) | 14 pretend workplace-conflict scenarios (peer, manager, harassment, and manager-rehearsal cases) for giving testers something to bring to the app when they don't have a real conflict of their own |
 
 ## Status
 
