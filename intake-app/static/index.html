@@ -1845,11 +1845,15 @@ function animateAvatar(now) {
     employeeTile.classList.toggle('lit', employeeLit);
     if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled && !pttMode) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage; push-to-talk owns end-of-turn instead of either
     if (liveMode && !micMuted && !sessionPaused && deepgramEnabled && !pttMode) {
-      // See DG_HANG_BACKSTOP_PRE_MS/_POST_MS above -- last-resort stop if Deepgram never ends the turn itself.
+      // See DG_HANG_BACKSTOP_PRE_MS/_POST_MS/DG_SPEECH_CONFIRM_MS above -- last-resort stop if Deepgram never ends the turn itself.
       if (level > vadThreshold) {
-        dgSpeechHeard = true;
+        if (!dgSpeechHeard) {
+          if (dgAboveSince === null) dgAboveSince = t;
+          else if (t - dgAboveSince >= DG_SPEECH_CONFIRM_MS) dgSpeechHeard = true;
+        }
         dgHangSilenceSince = null;
       } else {
+        dgAboveSince = null;
         if (dgHangSilenceSince === null) dgHangSilenceSince = t;
         else if (t - dgHangSilenceSince >= (dgSpeechHeard ? DG_HANG_BACKSTOP_POST_MS : DG_HANG_BACKSTOP_PRE_MS)) mediaRecorder.stop();
       }
@@ -2301,8 +2305,19 @@ let vadBlipSince = null;
 // overhead -- comfortably clears that without being the old 4000ms).
 const DG_HANG_BACKSTOP_PRE_MS = 8000;
 const DG_HANG_BACKSTOP_POST_MS = 2200;
+// dgSpeechHeard must only flip true on SUSTAINED level, not one loud frame --
+// a brief echo/room-tail blip from Thimble's own just-finished voice, right
+// as this turn's mic stream opens, can cross vadThreshold for a frame or two
+// even with echoCancellation on. If that alone flipped dgSpeechHeard, the
+// short post-speech backstop above would arm immediately, before the person
+// had said anything -- reported live right after the pre/post split landed
+// ("it also just cut me off"), too fast to have been a real finished answer.
+// Mirrors checkVad's own VAD_MIN_SPEECH_MS debounce, applied here to the
+// start of speech instead of the end.
+const DG_SPEECH_CONFIRM_MS = 250;
 let dgHangSilenceSince = null;
 let dgSpeechHeard = false;
+let dgAboveSince = null;
 
 function startVadCalibration(now) {
   vadCalibrating = true;
@@ -2532,6 +2547,7 @@ async function startRecordingTurn() {
   vadSilenceSince = null;
   dgHangSilenceSince = null;
   dgSpeechHeard = false;
+  dgAboveSince = null;
   mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
