@@ -1721,6 +1721,15 @@ function animateAvatar(now) {
     micIndicatorDot.classList.toggle('lit', employeeLit);
     employeeTile.classList.toggle('lit', employeeLit);
     if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled && !pttMode) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage; push-to-talk owns end-of-turn instead of either
+    if (liveMode && !micMuted && !sessionPaused && deepgramEnabled && !pttMode) {
+      // See DG_HANG_BACKSTOP_MS above -- last-resort stop if Deepgram never ends the turn itself.
+      if (level > vadThreshold) {
+        dgHangSilenceSince = null;
+      } else {
+        if (dgHangSilenceSince === null) dgHangSilenceSince = t;
+        else if (t - dgHangSilenceSince >= DG_HANG_BACKSTOP_MS) mediaRecorder.stop();
+      }
+    }
     if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
   }
   updateCaption();
@@ -2117,6 +2126,22 @@ let vadCalibrateMax = 0;
 let vadThreshold = VAD_THRESHOLD;
 let vadTurnStartedAt = 0;
 let vadBlipSince = null;
+// Deepgram-path backstop: checkVad (and its own blip backstop above) is
+// skipped entirely when deepgramEnabled -- Deepgram does its own
+// server-side endpointing instead (see DEEPGRAM_URL's utterance_end_ms in
+// server.py, confirmed live as the thing actually ending every turn). But
+// that's still a guess from Deepgram's own model about whether something
+// it heard counts as speech at all; a short, quiet reply can end up with
+// Deepgram never sending back a single Results or UtteranceEnd message for
+// the whole turn (reported live: a one-word answer left it "listening"
+// forever). Nothing else in the Deepgram path ever calls
+// mediaRecorder.stop() in that case, so this mirrors checkVad's own
+// silence timer -- purely off local mic energy, independent of whatever
+// Deepgram is or isn't sending -- as a last-resort stop. Deliberately
+// longer than VAD_SILENCE_MS/utterance_end_ms so it never races a normal
+// Deepgram-driven stop, which almost always fires first.
+const DG_HANG_BACKSTOP_MS = 4000;
+let dgHangSilenceSince = null;
 
 function startVadCalibration(now) {
   vadCalibrating = true;
@@ -2343,6 +2368,7 @@ async function startRecordingTurn() {
   vadSpeaking = false;
   vadSpeechStarted = null;
   vadSilenceSince = null;
+  dgHangSilenceSince = null;
   mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
