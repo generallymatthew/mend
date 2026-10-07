@@ -19,6 +19,8 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 | [12_SYMMETRIC_VIDEO_PARITY_FEATURE.md](12_SYMMETRIC_VIDEO_PARITY_FEATURE.md) | Feature concept: if either joint-session participant's camera drops mid-session, both are symmetrically dropped to voice+avatar together, with neutral framing and facilitator non-intervention. Captured from an earlier exploratory code dump, not yet designed against this repo's real stack |
 | [13_PITCHING_MEND_TO_ENTERPRISE_HR.md](13_PITCHING_MEND_TO_ENTERPRISE_HR.md) | Field guide for selling Mend to HR/People Ops buyers as a solo founder: what HR actually cares about (risk containment, not "cool AI"), countering the "AI wrapper" skepticism, positioning as deterministic ADR software rather than a chatbot |
 | [14_WORKPLACE_SCENARIOS.md](14_WORKPLACE_SCENARIOS.md) | 14 pretend workplace-conflict scenarios (peer, manager, harassment, and manager-rehearsal cases) for giving testers something to bring to the app when they don't have a real conflict of their own |
+| [15_USER_TESTING_FEEDBACK_INVITATION.md](15_USER_TESTING_FEEDBACK_INVITATION.md) | The user's own refined version of the tester-outreach email draft (about-page comprehension check + app walkthrough + roleplay scenarios + specific feedback questions) |
+| [16_CONFLICT_RESOLUTION_STRATEGIES_PROMPT_DRAFT.md](16_CONFLICT_RESOLUTION_STRATEGIES_PROMPT_DRAFT.md) | Draft/alternative facilitator system prompt (operational-systems framing, non-judgment stance, safety floor, phased conversational pipeline) -- reference input, not yet reconciled with the real `facilitator-*-system-prompt.md` files at repo root |
 
 ## Status
 
