@@ -301,5 +301,13 @@ async def launchpad_index():
     return FileResponse(ROOT.parent / "launchpad.html")
 
 
+# about.html lives at the repo root too, same reasoning as launchpad.html
+# above -- a dedicated route rather than exposing the whole repo root.
+@app.get("/about")
+@app.get("/about/")
+async def about_index():
+    return FileResponse(ROOT.parent / "about.html")
+
+
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 app.mount("/pitch", StaticFiles(directory=PITCH_DIR), name="pitch")
