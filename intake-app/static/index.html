@@ -735,6 +735,14 @@ muteBtn.addEventListener('click', () => {
 // toggle needs nothing special to re-enable.
 let pttMode = false;
 let pttHolding = false;
+let pttPressedAt = 0;
+// A quick tap-and-release can call mediaRecorder.stop() before the browser
+// has encoded enough of the webm container to decode -- reached the server
+// as av.error.EOFError (see server.py's /api/voice), surfacing as "couldn't
+// transcribe audio" for exactly the short responses this mode is meant to
+// handle well. Delaying the actual stop() until at least this much time has
+// elapsed since press gives the recorder a real clip to work with.
+const PTT_MIN_HOLD_MS = 400;
 const pttToggleGroup = document.getElementById('pttToggleGroup');
 const pttHandsFreeTab = document.getElementById('pttHandsFreeTab');
 const pttHoldTab = document.getElementById('pttHoldTab');
@@ -770,6 +778,7 @@ pttHoldTab.addEventListener('click', () => setPttMode(true));
 async function pttPress() {
   if (!pttMode || pttHolding || micMuted || sessionPaused) return;
   pttHolding = true;
+  pttPressedAt = performance.now();
   pttBtn.classList.add('active');
   pttBtn.title = 'Listening… (release to send)';
   // Pressing while Thimble is replying is the interrupt -- same cleanup
@@ -795,7 +804,10 @@ function pttRelease() {
   pttHolding = false;
   pttBtn.classList.remove('active');
   pttBtn.title = 'Hold to talk';
-  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); // triggers the same onstop -> transcribe -> reply flow hands-free uses
+  const elapsed = performance.now() - pttPressedAt;
+  const stopNow = () => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }; // triggers the same onstop -> transcribe -> reply flow hands-free uses
+  if (elapsed < PTT_MIN_HOLD_MS) setTimeout(stopNow, PTT_MIN_HOLD_MS - elapsed);
+  else stopNow();
 }
 pttBtn.addEventListener('mousedown', (e) => { e.preventDefault(); pttPress(); });
 pttBtn.addEventListener('mouseup', pttRelease);
@@ -2373,6 +2385,14 @@ async function startRecordingTurn() {
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
+    // Clear the "Listening…" indicator right away -- recording genuinely
+    // stopped here. The Deepgram drain below can take up to 1.2s, and
+    // leaving these lit until after it resolved made the UI visibly keep
+    // saying "Listening…" for that whole stretch after the person had
+    // already released push-to-talk (reported live).
+    micIndicator.classList.remove('active');
+    micIndicatorDot.classList.remove('lit');
+    employeeTile.classList.remove('lit');
     const dg = dgSocket;
     // Deepgram has real latency between receiving audio and transcribing
     // it -- the old code read dgFinalText/dgInterimText and killed this
@@ -2402,9 +2422,6 @@ async function startRecordingTurn() {
     dgSocket = null; // clear after the drain wait so a message already in flight from this socket is ignored by its own `ws !== dgSocket` check
     if (dg && dg.readyState === WebSocket.OPEN) dg.close();
     partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
-    micIndicator.classList.remove('active');
-    micIndicatorDot.classList.remove('lit');
-    employeeTile.classList.remove('lit');
     if (discardNextStop) {
       // Pause fired mid-turn -- this stop is a hard abort, not a real end
       // of speech. Nothing was actually finished, so there's nothing to
