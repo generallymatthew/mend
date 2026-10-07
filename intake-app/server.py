@@ -917,8 +917,8 @@ async def ws_voice(websocket: WebSocket):
     finally:
         try:
             await websocket.close()
-        except RuntimeError:
-            pass  # already closed
+        except (RuntimeError, WebSocketDisconnect):
+            pass  # already closed -- different Starlette versions raise different things here
 
 
 @app.post("/api/voice/partial")
@@ -960,8 +960,10 @@ async def post_voice(file: UploadFile):
     part that's actually thinking. Mirrors the same split already done
     for TTS (see facilitator_reply's docstring)."""
     with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:
-        tmp.write(await file.read())
+        body = await file.read()
+        tmp.write(body)
         tmp.flush()
+        print(f"[post_voice] uploaded clip: {len(body)} bytes")
         try:
             transcript = await run_in_threadpool(transcribe_file, tmp.name)
         except Exception:
