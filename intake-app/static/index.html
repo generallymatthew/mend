@@ -2098,6 +2098,7 @@ let vadNoiseFloor = 1;
 let vadCalibrateMax = 0;
 let vadThreshold = VAD_THRESHOLD;
 let vadTurnStartedAt = 0;
+let vadBlipSince = null;
 
 function startVadCalibration(now) {
   vadCalibrating = true;
@@ -2106,6 +2107,7 @@ function startVadCalibration(now) {
   vadCalibrateMax = 0; // grows toward the loudest sample seen, used only if nothing quiet ever shows up
   vadThreshold = VAD_THRESHOLD;
   vadTurnStartedAt = now;
+  vadBlipSince = null;
 }
 
 function checkVad(level, now) {
@@ -2124,6 +2126,21 @@ function checkVad(level, now) {
     }
     // Falls through to real detection below every frame, calibrating or
     // not -- speech is never left undetected while this window runs.
+  }
+  if (vadBlipSince !== null) {
+    if (level > vadThreshold) {
+      vadBlipSince = null; // real speech resumed, falls through to a normal turn start below
+    } else if (now - vadBlipSince >= VAD_SILENCE_MS) {
+      // Nothing more came after the blip reset within another full grace
+      // window -- a short real answer (e.g. a one-word "peer") was mistaken
+      // for a click/breath and silently reset with no further mic input, so
+      // without this the turn would otherwise never end. Stop it now rather
+      // than waiting forever.
+      mediaRecorder.stop();
+      return;
+    } else {
+      return; // still inside the backstop grace window after a short blip
+    }
   }
   if (level > vadThreshold) {
     if (!vadSpeaking) { vadSpeaking = true; vadSpeechStarted = now; }
@@ -2145,6 +2162,7 @@ function checkVad(level, now) {
     vadSpeaking = false;
     vadSpeechStarted = null;
     vadSilenceSince = null;
+    vadBlipSince = now; // backstop: if silence just continues from here, stop anyway above
   }
 }
 
