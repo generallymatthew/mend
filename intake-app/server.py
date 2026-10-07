@@ -279,7 +279,22 @@ SYSTEM_PROMPT = load_system_prompt()
 SYSTEM_PROMPT_BLOCKS = [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}]
 
 # In-memory conversation state -- a prototype, not a persistence layer.
-conversation: list[dict] = []
+# Keyed by session_id so independent conversations (e.g. several
+# self-consistency "judge" calls fired concurrently for an ambiguous
+# safety-floor case, see tests/voting_rule_prototype.py) don't share state
+# and race each other. The real frontend (static/index.html) never sends a
+# session_id, so every one of its requests lands on DEFAULT_SESSION_ID --
+# this is additive, not a behavior change, for the single-user app itself.
+# Each session's own conversation is still a single list a client can race
+# against ITSELF (e.g. /api/reset mid-in-flight-reply, a known separate
+# issue -- see STATUS.md); this only isolates DIFFERENT sessions from each
+# other, it doesn't add per-session locking.
+DEFAULT_SESSION_ID = "default"
+conversations: dict[str, list[dict]] = {}
+
+
+def get_conversation(session_id: str | None) -> list[dict]:
+    return conversations.setdefault(session_id or DEFAULT_SESSION_ID, [])
 
 
 def strip_signal(reply_text: str) -> tuple[str, str | None]:
@@ -290,7 +305,7 @@ def strip_signal(reply_text: str) -> tuple[str, str | None]:
     return visible, signal
 
 
-def facilitator_reply(synthesize: bool = False) -> dict:
+def facilitator_reply(conversation: list[dict], synthesize: bool = False) -> dict:
     """Synchronous, blocking network call (client.messages.create) -- always
     call via run_in_threadpool from a route handler, never directly. uvicorn
     runs a single-threaded asyncio event loop by default; calling this
@@ -301,6 +316,11 @@ def facilitator_reply(synthesize: bool = False) -> dict:
     entire app, not just the one request waiting on it; confirmed live (a
     single request queued behind a stuck call long enough to make a plain
     `GET /` take 9s instead of its normal <0.2s).
+
+    Takes the specific session's conversation list explicitly (from
+    get_conversation(session_id)) rather than reading a module global, so
+    independent sessions never touch each other's list -- see
+    `conversations`'s own comment above for why that matters.
 
     Assumes the latest turn just appended to `conversation` is the user's.
     On any failure, rolls that turn back off so conversation always ends on
@@ -493,7 +513,7 @@ TEST_SHORT_INTRO = os.environ.get("TEST_SHORT_INTRO", "").lower() in ("1", "true
 
 
 @app.get("/api/history")
-async def get_history():
+async def get_history(session_id: str | None = None):
     """`conversation` lives server-side and survives a reload; the
     transcript panel / chat view are pure client-side DOM state and don't.
     Without this, a reload partway through a session showed a blank,
@@ -504,7 +524,7 @@ async def get_history():
     something the employee/manager actually said) and each reply's
     <mend_signal> block -- only ever reconstructs what was already shown."""
     turns = []
-    for msg in conversation:
+    for msg in get_conversation(session_id):
         if msg["role"] == "user" and msg["content"].startswith("("):
             continue
         if msg["role"] == "assistant":
@@ -524,6 +544,8 @@ async def start(payload: dict = None):
     # wants to skip straight to rehearsal are now both things the facilitator
     # itself figures out from the conversation, per its own system prompt's
     # "Which track applies" section -- not pre-declared here.
+    payload = payload or {}
+    conversation = get_conversation(payload.get("session_id"))
     if not conversation:
         kickoff = "(Someone just opened the app. Begin the conversation now with your opening line.)"
         if TEST_SHORT_INTRO:
@@ -532,7 +554,7 @@ async def start(payload: dict = None):
                 "skip the usual disclosures, so this is fast to click through repeatedly.)"
             )
         conversation.append({"role": "user", "content": kickoff})
-        return await run_in_threadpool(facilitator_reply)
+        return await run_in_threadpool(facilitator_reply, conversation)
     return {"reply": None, "signal": None}
 
 
@@ -541,11 +563,12 @@ async def post_message(payload: dict):
     text = payload.get("text", "").strip()
     if not text:
         return JSONResponse({"error": "empty message"}, status_code=400)
+    conversation = get_conversation(payload.get("session_id"))
     conversation.append({"role": "user", "content": text})
-    return await run_in_threadpool(facilitator_reply)
+    return await run_in_threadpool(facilitator_reply, conversation)
 
 
-def stream_message_reply():
+def stream_message_reply(conversation: list[dict]):
     """SSE stream of the facilitator's reply for /api/message/stream -- same
     job as facilitator_reply() above, but yields visible text incrementally
     instead of returning it all at once, so the frontend can show Thimble's
@@ -631,8 +654,9 @@ async def post_message_stream(payload: dict):
     text = payload.get("text", "").strip()
     if not text:
         return JSONResponse({"error": "empty message"}, status_code=400)
+    conversation = get_conversation(payload.get("session_id"))
     conversation.append({"role": "user", "content": text})
-    return StreamingResponse(stream_message_reply(), media_type="text/event-stream")
+    return StreamingResponse(stream_message_reply(conversation), media_type="text/event-stream")
 
 
 DEEPGRAM_URL = (
@@ -818,8 +842,17 @@ async def speak(payload: dict):
 
 
 @app.post("/api/reset")
-async def reset():
-    conversation.clear()
+async def reset(payload: dict = None):
+    payload = payload or {}
+    get_conversation(payload.get("session_id")).clear()
+    # Audio files aren't namespaced per session (random uuid filenames,
+    # see synthesize_speech) -- clearing them here is harmless for the real
+    # single-session frontend (the only caller that ever uses synthesize
+    # audio), but would be a real cross-session hazard for anyone resetting
+    # one session while another's audio is still in flight. Not a concern
+    # for the text-only concurrent-session use case this was built for
+    # (self-consistency voting never calls synthesize=True), but worth
+    # fixing properly before audio is ever used across concurrent sessions.
     for pattern in ("*.m4a", "*.mp3"):
         for f in AUDIO_DIR.glob(pattern):
             f.unlink(missing_ok=True)
