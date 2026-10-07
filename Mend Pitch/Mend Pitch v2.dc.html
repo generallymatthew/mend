@@ -212,7 +212,7 @@
       <div data-reveal="200" style="background:var(--color-neutral-100);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:12px">
         <span class="tag tag-neutral" style="align-self:flex-start">Never stored</span>
         <p style="margin:0;font-size:16px;line-height:1.6">Transcripts or audio. Pre-session summaries. Anything said in private processing.</p>
-        <span style="font-size:13px;color:var(--color-neutral-700)">Kept: date, participants, resolved yes/no, and which safety category fired, if any.</span>
+        <span style="font-size:13px;color:var(--color-neutral-700)">Kept: date, participants, resolved yes/no. A safety floor hit was never recorded in the first place — HR gets a names-only email instead, nothing else is kept.</span>
       </div>
     </div>
   </div>
@@ -382,7 +382,7 @@
     <div style="display:flex;flex-direction:column;gap:18px;max-width:880px">
       <span data-reveal="0" style="font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-700)">{{ labels.safety }}</span>
       <h2 data-reveal="80" style="font-size:clamp(36px,5vw,60px);line-height:1.05;margin:0;text-wrap:balance">One honest exception, and it can't be switched off.</h2>
-      <p data-reveal="160" style="margin:0;font-size:clamp(18px,1.8vw,20px);line-height:1.55;max-width:680px">A fixed unacceptable behavior floor escalates to HR no matter how a customer configures Mend. Companies can add categories on top. They can never remove one. If something escalates, the people involved are told.</p>
+      <p data-reveal="160" style="margin:0;font-size:clamp(18px,1.8vw,20px);line-height:1.55;max-width:680px">A fixed unacceptable behavior floor escalates to HR no matter how a customer configures Mend. Companies can add categories on top. They can never remove one. If something escalates, nothing was ever recorded to begin with, and HR gets a names-only email — no transcript, no context, ever. HR runs its own investigation from there; Mend isn't part of it.</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
       <div data-reveal="0" style="background:var(--color-surface);border-radius:var(--radius-lg);padding:32px;display:flex;flex-direction:column;gap:16px">
@@ -560,14 +560,14 @@ class Component extends DCLogic {
         : { safety: 'Safety', trust: 'Proof', caseLabel: 'The business case', next: 'What\u2019s next' },
       steps: [
         { n: 1, title: 'Private processing, any time', short: 'Private processing', body: 'A 1:1 with their own bot. No case number, no manager. Work through what happened and why the other person acted as they did.', coHead: 'Nothing', co: 'Not even that it happened.' },
-        { n: 2, title: 'A quick safety screen', short: 'Safety screen', body: 'If they want a joint session, each person summarizes the conflict separately. Anything meeting the unacceptable behavior floor goes to HR instead.', coHead: 'Only if the unacceptable behavior floor is met', co: 'HR is notified with a category, and both people are told.' },
+        { n: 2, title: 'A quick safety screen', short: 'Safety screen', body: 'If they want a joint session, each person summarizes the conflict separately. Anything meeting the unacceptable behavior floor goes to HR instead.', coHead: 'Only if the unacceptable behavior floor is met', co: 'Nothing is recorded. HR gets a names-only email and takes it from there.' },
         { n: 3, title: 'One-on-one side conversation', short: 'Side conversation', body: 'The facilitator hears each side alone, sets expectations, and checks that a yes is real consent, not compliance.', coHead: 'Nothing', co: 'If a manager required it: "scheduling not complete."' },
         { n: 4, title: 'A facilitated session, digital only', short: 'Joint session', body: 'The bot runs turn-taking and can pull either person aside. Either can end it anytime. It never ends in live agreement, and nothing is saved.', coHead: 'Nothing', co: 'No transcript exists to hand over.' },
         { n: 5, title: 'Private follow-up, where agreement happens', short: 'Private follow-up', body: 'One person at a time, away from the room. A resolution is proposed and agreed without pressure, and can be reopened later.', coHead: 'Resolved / not resolved', co: 'Only for sessions the manager required.' }
       ],
       tiers: [
         { when: 'Rising tension.', what: 'Pause and check in privately. The person decides whether to continue.', dot: 'var(--color-accent-2-500)' },
-        { when: 'Serious, not acute.', what: 'A routine-sounding close, identical to any other. Both are told separately, once apart.', dot: 'var(--color-accent-400)' },
+        { when: 'Serious, not acute.', what: 'Each is told, separately, that it’s being escalated to HR for potential harassment. Nothing was ever recorded.', dot: 'var(--color-accent-400)' },
         { when: 'Active threat.', what: 'A broadcast-style delay lets the classifier cut content before the other person receives it.', dot: 'var(--color-accent-700)' }
       ],
       proof: [

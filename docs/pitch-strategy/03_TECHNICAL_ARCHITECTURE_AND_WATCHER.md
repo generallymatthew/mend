@@ -20,15 +20,16 @@ User Input ──► [Facilitator LLM (Drafts Action/Advice)]
  [MINOR FAIL]     [SAFETY_FLOOR]      [PASS]
  Self-Correct       Halt session    Sent to UI
  ("Regenerate           │
-  without           ┌───┴────┐
-  diagnosing)        ▼        ▼
-                 [Deleted] [Email HR]
-                 Zero       Names only,
-                 trace      no content
-                               │
-                               ▼
-                     HR runs own investigation
-                     (Mend has no further role)
+  without      ┌────────┼────────┐
+  diagnosing)  ▼        ▼         ▼
+        [Never recorded] [Email HR] [Tell parties]
+        Session ends in     Names     "Escalated to
+        volatile memory,    only      HR," no detail
+        nothing persisted
+                         │
+                         ▼
+               HR runs own investigation
+               (Mend has no further role)
 ```
 
 ## The Watcher System Specification
@@ -46,11 +47,12 @@ Categories 2-5 are handled by the self-correction loop: the Facilitator regenera
 
 ## Safety Floor Escalation
 
-`SAFETY_FLOOR` is the single exception to the zero-trace guarantee described above, and it is deliberately minimal:
+`SAFETY_FLOOR` does not break the zero-trace guarantee described above — the escalation is deliberately minimal and content-free:
 
 - The session halts immediately. No further turns are generated.
-- The conversation is deleted. No transcript, summary, or context is written anywhere — the zero-trace guarantee holds even for the violation itself.
+- Nothing is deleted, because nothing was ever recorded: the session simply ends inside the volatile-memory enclave, and no transcript, summary, or context was ever written anywhere — the same zero-trace guarantee that applies to every other session, not a special case for the violation.
 - HR receives a names-only email notice: that harassment (or another safety-floor category) was potentially detected between the two named parties, with no conversation content, quotes, or context attached.
+- Each party is separately told that the conversation was escalated to HR for potential harassment — not what was said, just that it happened.
 - Mend keeps no data and takes no further role. HR runs its own independent investigation from there — Mend is a notifier, not an investigator.
 
 ## Unit Economics & Cost Analysis (100 conflict pairs / 10,000 turns)
