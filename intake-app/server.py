@@ -364,6 +364,159 @@ def facilitator_reply(conversation: list[dict], synthesize: bool = False) -> dic
     return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible) if synthesize else None}
 
 
+def parse_mend_signal(raw_signal: str | None) -> dict:
+    """Parses the JSON object inside a reply's <mend_signal> block (already
+    extracted by strip_signal). Tolerates a null/malformed one rather than
+    raising -- a single off turn's signal failing to parse shouldn't crash
+    the request that's just trying to read floor_triggered off it."""
+    if not raw_signal:
+        return {}
+    try:
+        return json.loads(raw_signal)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+def floor_met(signal: dict) -> bool:
+    return bool(signal.get("floor_triggered")) or signal.get("screen_result") == "floor_met"
+
+
+def floor_uncertain(signal: dict) -> bool:
+    return signal.get("screen_result") == "uncertain"
+
+
+def vote_flags(signal: dict) -> bool:
+    """Whether one vote in the any-of-k ensemble counts as "this might be a
+    problem." Deliberately broader than floor_met() alone -- an extra vote
+    is judging the exact same genuinely-ambiguous input the primary call
+    already couldn't confidently clear, so it will itself mostly land on
+    "uncertain" too, not jump straight to a hard floor_met commitment.
+    Requiring extra votes to hit floor_met before counting (an earlier,
+    wrong version of this) meant the ensemble almost never fired for the
+    exact cases it exists for -- confirmed directly: 10 clean single-turn
+    samples of a known-ambiguous case came back ~1 floor_met, ~8 uncertain,
+    0 confidently cleared, so demanding floor_met from EXTRA votes was
+    requiring something the data shows barely happens even once, let alone
+    twice. "uncertain" IS the signal worth amplifying here, consistent with
+    the already-decided any-flag-counts design (see
+    memory/project_safety_floor_voting_rule.md) -- this just applies that
+    same philosophy to the real 3-way signal instead of a false binary."""
+    return floor_met(signal) or floor_uncertain(signal)
+
+
+# --- Self-consistency voting on the safety floor -------------------------
+# Prototyped in tests/voting_rule_prototype.py against a real ambiguous
+# case: majority vote across k independent samples CONVERGES on whichever
+# answer already dominates, which actively suppresses a rare-but-real
+# floor case as k grows -- the wrong direction for a safety check where a
+# missed real disclosure is worse than a false alarm. An any-of-k (OR)
+# rule does the opposite, amplifying the rare signal instead (measured
+# there: 20% -> 48% caught at k=3, -> 80% at k=7). VOTE_K below is total
+# votes, primary call included -- VOTE_K=3 means the primary plus 2 extra
+# throwaway samples. See memory/project_safety_floor_voting_rule.md (or
+# its MEMORY.md pointer) for the full writeup of why OR, not majority.
+#
+# Only fires when the primary call's own signal says `screen_result:
+# "uncertain"` (see that field's own instructions in the mandatory-floor
+# section) -- NOT merely "didn't already meet the floor." An earlier
+# version of this gated on the latter, which fires on nearly every turn of
+# an ordinary conversation (screen_result is null/cleared the vast
+# majority of the time; floor_met turns are rare by design), running
+# VOTE_K-1 extra Claude calls on turns that were never ambiguous in the
+# first place -- caught live, not by design: a real run showed it firing
+# on essentially every message. "uncertain" is the facilitator's own
+# explicit, narrow signal that THIS specific turn sits in the genuine
+# middle, which is the only case this feature exists for.
+VOTE_K = int(os.environ.get("VOTE_K", "3"))
+
+
+def _judge_floor_only(conversation_snapshot: list[dict]) -> dict:
+    """One throwaway independent sample for the any-of-k vote below -- same
+    model call facilitator_reply makes, but only the floor fields from its
+    own <mend_signal> matter; the generated reply text is discarded, and
+    `conversation_snapshot` is never mutated or shared with any real
+    session's own conversation list (each call site passes its own copy).
+    Any failure here just counts as "no flag," not an error -- a transient
+    failure on one of several throwaway judge calls shouldn't distort or
+    crash a feature whose whole point is tolerating disagreement across
+    samples; see VOTE_K's own comment for why "no flag" is the safe default
+    for a single failed vote rather than, say, retrying it."""
+    if client is None:
+        return {}
+    try:
+        response = client.messages.create(
+            model=MODEL, max_tokens=8192, system=SYSTEM_PROMPT_BLOCKS, messages=conversation_snapshot,
+        )
+        raw = "".join(block.text for block in response.content if block.type == "text")
+    except Exception as e:
+        print(f"[vote] throwaway judge call failed (counts as no-flag): {e!r}", flush=True)
+        return {}
+    _, signal = strip_signal(raw)
+    return parse_mend_signal(signal)
+
+
+async def maybe_override_via_voting(conversation: list[dict], snapshot: list[dict], result: dict) -> dict:
+    """Runs after the primary facilitator_reply() call for a turn. Only
+    does anything when the primary's own signal says `screen_result:
+    "uncertain"` -- see VOTE_K's own comment for why that's the gate, not
+    "didn't already meet the floor." Every other turn (the vast majority)
+    returns `result` unchanged with zero extra calls. When it does fire:
+    VOTE_K-1 throwaway judge calls, genuinely concurrently (asyncio.gather
+    over run_in_threadpool, not a sequential loop -- the whole point is
+    this doesn't make the person wait k times as long), against `snapshot`
+    (the conversation as it stood right before the primary call ran, so
+    every vote -- primary included -- judges the identical input).
+
+    If any extra vote flags it, the primary's already-generated reply is
+    superseded: per the system prompt's own "never silently" rule, the
+    person must still be told plainly, so this doesn't just flip the
+    signal and leave the primary's ordinary-conversation reply standing --
+    it discards that reply, appends a system note telling the facilitator
+    plainly what was just determined, and gets a fresh reply, letting the
+    facilitator's OWN escalation-disclosure instructions (already in the
+    system prompt) produce the actual words, rather than hand-writing
+    canned override text here. The synthetic note is prefixed with "(" the
+    same way /api/start's own kickoff turn is, so /api/history's existing
+    stripping logic already hides it from any reconstructed transcript --
+    not a new convention, reusing one already in this file.
+
+    Scope: only wired into /api/message today, not /api/message/stream --
+    overriding a reply that's already mid-stream to the client is a harder
+    problem (discarding partially-shown text) than this prototype needed
+    to solve to answer the "does any-of-k work" question."""
+    primary_signal = parse_mend_signal(result.get("signal"))
+    if not floor_uncertain(primary_signal) or VOTE_K <= 1 or client is None:
+        return result
+
+    print(f"[vote] primary call marked screen_result=uncertain -- firing {VOTE_K - 1} extra votes", flush=True)
+    extra_signals = await asyncio.gather(
+        *[run_in_threadpool(_judge_floor_only, list(snapshot)) for _ in range(VOTE_K - 1)]
+    )
+    flagged = next((s for s in extra_signals if vote_flags(s)), None)
+    if not flagged:
+        print("[vote] no extra vote flagged it -- primary's reply stands", flush=True)
+        return result
+
+    category = flagged.get("floor_triggered") or "unspecified"
+    print(
+        f"[vote] OVERRIDE: primary call missed a floor hit that an extra vote caught "
+        f"(category={category!r}, {1 + len(extra_signals)} total votes, {sum(1 for s in extra_signals if vote_flags(s))} flagged)",
+        flush=True,
+    )
+    conversation.pop()  # discard the primary's own now-superseded reply
+    conversation.append({
+        "role": "user",
+        "content": (
+            "(System note, not from the person you're talking to: a safety-floor review "
+            f"just determined this conversation meets the mandatory floor (category: "
+            f"{category}). Your next turn must be the required floor-escalation "
+            "disclosure, exactly as your own instructions describe it -- plainly, "
+            "calmly, right now.)"
+        ),
+    })
+    return await run_in_threadpool(facilitator_reply, conversation)
+
+
 # --- Video-avatar mode (Tavus) -------------------------------------------
 # The video call's transcript lives entirely in Tavus's own conversation, not
 # in `conversation` above -- Tavus re-sends the running history to the shim
@@ -565,7 +718,9 @@ async def post_message(payload: dict):
         return JSONResponse({"error": "empty message"}, status_code=400)
     conversation = get_conversation(payload.get("session_id"))
     conversation.append({"role": "user", "content": text})
-    return await run_in_threadpool(facilitator_reply, conversation)
+    snapshot = list(conversation)  # before the primary call appends its own reply -- see maybe_override_via_voting
+    result = await run_in_threadpool(facilitator_reply, conversation)
+    return await maybe_override_via_voting(conversation, snapshot, result)
 
 
 def stream_message_reply(conversation: list[dict]):

@@ -45,8 +45,14 @@ SCENARIOS = [
 
 async def run_session(client, base_url, message):
     session_id = uuid.uuid4().hex
-    await client.post(f"{base_url}/api/reset", json={"session_id": session_id})
-    await client.post(f"{base_url}/api/start", json={"session_id": session_id})
+    # Explicit timeouts throughout, not httpx's 5s default -- /api/start can
+    # itself trigger the greeting's own Claude call, and with several
+    # sessions genuinely concurrent (the whole point of this test) plus
+    # each one's own any-of-k voting firing extra calls server-side (see
+    # maybe_override_via_voting), real latency here is higher than a single
+    # isolated request would show.
+    await client.post(f"{base_url}/api/reset", json={"session_id": session_id}, timeout=60)
+    await client.post(f"{base_url}/api/start", json={"session_id": session_id}, timeout=60)
     r = await client.post(f"{base_url}/api/message", json={"session_id": session_id, "text": message}, timeout=60)
     r.raise_for_status()
     data = r.json()
