@@ -572,6 +572,23 @@
 const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
 function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
 
+// Anonymous usage analytics -- counts and mode tags only, never conversation
+// text or audio (see server.py's /api/analytics docstring for the same
+// "nothing is recorded" boundary everything else here follows). sessionId is
+// a fresh random id per page load, not tied to any identity, just enough to
+// group one session's turns/interrupts together in the sheet.
+const sessionId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+let analyticsTurnCount = 0;
+function logEvent(event, extra) {
+  fetch(apiPath('/api/analytics'), {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(Object.assign({session_id: sessionId, event}, extra || {})),
+    keepalive: true, // lets session_end's fetch survive the page actually unloading
+  }).catch(() => {}); // best-effort -- never blocks or breaks the real conversation flow
+}
+window.addEventListener('pagehide', () => logEvent('session_end', {turn: analyticsTurnCount}), {once: true});
+
 const thread = document.getElementById('thread');
 const statusEl = document.getElementById('status');
 const micIndicator = document.getElementById('micIndicator');
@@ -2001,6 +2018,7 @@ async function sendText() {
   if (!text) return;
   chatInput.value = '';
   addMessage(text, 'employee');
+  logEvent('turn', {mode: 'text', turn: ++analyticsTurnCount});
   setBusy(true);
   avatarState = 'thinking';
   const myGen = ++replyGen;
@@ -2271,6 +2289,7 @@ async function startInterruptMonitor(myGen) {
 
 function interruptNow(myGen) {
   if (myGen !== replyGen) return;
+  logEvent('interrupt');
   endReplyCycle();
   audioEl.pause();
   avatarState = 'idle';
@@ -2423,6 +2442,7 @@ async function startRecordingTurn() {
         return;
       }
       const transcript = voiceData.transcript;
+      logEvent('turn', {mode: 'voice', turn: ++analyticsTurnCount});
       if (bubble) {
         bubble.textContent = '"' + transcript + '"';
         bubble.classList.remove('pending');
@@ -2666,6 +2686,7 @@ async function start() {
     });
     const data = await res.json();
     if (data.reply) {
+      logEvent('session_start');
       addMessage(data.reply, 'facilitator');
       handleSignal(data.signal);
       feedSpeechText(data.reply, true);

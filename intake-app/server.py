@@ -96,7 +96,7 @@ _rate_hits: dict[str, list[float]] = {}
 # then get the actual paid reply call rejected with 429 right after --
 # confirmed live: a turn's partials ate the budget, then /api/message came
 # back 429 and Thimble never replied at all.
-RATE_LIMIT_EXEMPT_PATHS = {"/api/voice/partial", "/api/survey"}
+RATE_LIMIT_EXEMPT_PATHS = {"/api/voice/partial", "/api/survey", "/api/analytics"}
 # /api/audio/<filename> just serves an mp3/m4a this process already
 # generated and has sitting on disk -- zero marginal cost, same free-local
 # reasoning as /api/voice/partial above, but it's a dynamic per-file path so
@@ -987,6 +987,85 @@ async def submit_survey(request: Request):
     with SURVEY_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
     print(f"[survey] {json.dumps(record)}", flush=True)
+    return {"ok": True}
+
+
+# Usage analytics -- same "nothing is recorded" boundary as everything else
+# in this file: no conversation text, no audio, no IP tied to a record.
+# session_id is a random uuid4 the client mints fresh per page load (never
+# derived from anything identifying), so this answers "how many turns did a
+# session have", "text or voice", "did anyone interrupt" in aggregate without
+# ever carrying what was actually said.
+ANALYTICS_FILE = ROOT / "analytics_events.jsonl"
+VALID_ANALYTICS_EVENTS = {"session_start", "turn", "interrupt", "session_end"}
+VALID_ANALYTICS_MODES = {"text", "voice"}
+_events_sheet = None
+_events_sheet_init_failed = False
+
+
+def get_events_sheet():
+    """Same spreadsheet as get_survey_sheet, a separate 'events' worksheet
+    so the two don't interleave. Created on first use if the sheet doesn't
+    already have one. Returns None, logging why, on any auth/access failure
+    -- an analytics event still succeeds either way, falling back to
+    ANALYTICS_FILE/stdout below, same contract as the survey path."""
+    global _events_sheet, _events_sheet_init_failed
+    if _events_sheet is not None or _events_sheet_init_failed:
+        return _events_sheet
+    if not GOOGLE_SHEET_ID or not GOOGLE_SERVICE_ACCOUNT_JSON:
+        _events_sheet_init_failed = True
+        return None
+    try:
+        info = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+        creds = GoogleCredentials.from_service_account_info(
+            info, scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        spreadsheet = gspread.authorize(creds).open_by_key(GOOGLE_SHEET_ID)
+        try:
+            _events_sheet = spreadsheet.worksheet("events")
+        except gspread.WorksheetNotFound:
+            _events_sheet = spreadsheet.add_worksheet(title="events", rows=1000, cols=6)
+            _events_sheet.append_row(["timestamp_utc", "session_id", "event", "mode", "turn"])
+    except Exception as e:
+        print(f"[analytics] Google Sheets auth/open failed, falling back to local log: {e}", flush=True)
+        _events_sheet_init_failed = True
+        return None
+    return _events_sheet
+
+
+@app.post("/api/analytics")
+async def submit_analytics_event(request: Request):
+    data = await request.json()
+    event = data.get("event")
+    if event not in VALID_ANALYTICS_EVENTS:
+        return JSONResponse({"error": "invalid event"}, status_code=400)
+    session_id = str(data.get("session_id") or "")[:64]
+    if not session_id:
+        return JSONResponse({"error": "missing session_id"}, status_code=400)
+    mode = data.get("mode")
+    if mode is not None and mode not in VALID_ANALYTICS_MODES:
+        return JSONResponse({"error": "invalid mode"}, status_code=400)
+    turn = data.get("turn")
+    if turn is not None and not isinstance(turn, int):
+        return JSONResponse({"error": "invalid turn"}, status_code=400)
+    record = {"ts": time.time(), "session_id": session_id, "event": event, "mode": mode, "turn": turn}
+    sheet = get_events_sheet()
+    if sheet is not None:
+        try:
+            await run_in_threadpool(
+                sheet.append_row,
+                [
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(record["ts"])) + " UTC",
+                    session_id,
+                    event,
+                    mode or "",
+                    turn if turn is not None else "",
+                ],
+            )
+        except Exception as e:
+            print(f"[analytics] Sheets append failed, event saved to local log only: {e}", flush=True)
+    with ANALYTICS_FILE.open("a") as f:
+        f.write(json.dumps(record) + "\n")
     return {"ok": True}
 
 
