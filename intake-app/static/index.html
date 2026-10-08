@@ -869,18 +869,28 @@ let beepCtx = null;
 function playBeep(freq, durationMs) {
   try {
     if (!beepCtx) beepCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (beepCtx.state === 'suspended') beepCtx.resume().catch(() => {});
-    const osc = beepCtx.createOscillator();
-    const gain = beepCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    const now = beepCtx.currentTime;
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
-    osc.connect(gain).connect(beepCtx.destination);
-    osc.start(now);
-    osc.stop(now + durationMs / 1000 + 0.02);
+    const fire = () => {
+      const osc = beepCtx.createOscillator();
+      const gain = beepCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const now = beepCtx.currentTime;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+      osc.connect(gain).connect(beepCtx.destination);
+      osc.start(now);
+      osc.stop(now + durationMs / 1000 + 0.02);
+    };
+    // Scheduling the oscillator against `now` before resume() actually
+    // finishes was the first-beep-works-second-one-silent bug reported live:
+    // a context left 'suspended' (mobile browsers suspend it again after the
+    // tab backgrounds, e.g. between two separate button holds) still has
+    // `now` ticking from a stale clock, so the beep gets scheduled on a
+    // context that's never running by the time it would have played.
+    // Waiting for resume() to resolve first guarantees `now` is real.
+    if (beepCtx.state === 'suspended') beepCtx.resume().then(fire).catch(() => {});
+    else fire();
   } catch (e) {} // beep is a nicety, never worth failing a recording over
 }
 function playRecordStartBeep() { playBeep(880, 90); }
@@ -2787,6 +2797,17 @@ async function startRecordingTurnSafe() {
 // fixed-threshold-after-one-time-calibration design above requires.
 const MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: false}};
 
+// The composer's hold-to-dictate button has no VAD/threshold calibration to
+// protect (holdControlled -- recording only ever starts/stops on a manual
+// press/release, never a level comparison), so AGC's silence-ramp problem
+// above doesn't apply here. Without it, phone mics -- whose raw gain is
+// much lower than a laptop's -- send Deepgram a quiet signal and
+// transcription quality drops badly, reported live as working fine on a
+// laptop but "really really bad" on a phone with either its own mic or a
+// Bluetooth headset. Leaving AGC on for this one path gets the quality back
+// with no false-trigger risk.
+const COMPOSER_MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}};
+
 async function startRecordingTurn() {
   const stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
   mediaRecorder = new MediaRecorder(stream);
@@ -2904,13 +2925,21 @@ async function startRecordingTurn() {
 // is the only way this ends), and release fills the text input for review
 // instead of sending and waiting on a reply.
 async function startComposerRecording() {
-  const stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+  const stream = await navigator.mediaDevices.getUserMedia(COMPOSER_MIC_CONSTRAINTS);
   mediaRecorder = new MediaRecorder(stream);
   chunks = [];
   holdControlled = true;
   mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
   mediaRecorder.onstop = async () => {
     playRecordStopBeep();
+    // Release is naturally timed right at the end of the last word spoken,
+    // which leaves almost no time for micProcessor's own buffered chunk
+    // (onaudioprocess fires once per ~4096-sample render quantum, not
+    // instantly) to flush the final bit of audio to dgSocket before the
+    // track/processor get torn down below -- the trailing sentence is lost
+    // for good at that point, no amount of draining after recovers audio
+    // that was never sent. A short grace window lets that last chunk through first.
+    await new Promise((r) => setTimeout(r, 300));
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
     await drainDeepgramSocket();
