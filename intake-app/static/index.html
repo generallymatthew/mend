@@ -20,19 +20,27 @@
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
   .wrap{max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-direction:column; height:100vh;}
-  .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px;}
-  .header-right{display:flex; align-items:center; gap:8px; flex-shrink:0;}
-  .brand{display:flex; align-items:center; gap:10px;}
-  .brand-mark{height:26px; width:auto; display:block;}
-  .brand-name{font-weight:800; font-size:22px; letter-spacing:-0.01em; color:var(--ink);}
   .feedback-link{font-size:13.5px; font-weight:600; color:var(--ink-soft); text-decoration:none; white-space:nowrap;}
   .feedback-link-row{margin-top:14px; text-align:center;}
-  /* Same fixed height as .ui-toggle (see its own comment) so the pill and
-     the Voice/Text toggle -- the two pill-shaped controls on the page --
-     read as the same size even though their padding/font differ. */
-  .privacy-pill{display:flex; align-items:center; gap:8px; height:38px; margin-left:4px; padding:0 16px; border-radius:999px; background:#17372E0D; font-size:14px; font-weight:500; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
-  .privacy-pill svg{flex-shrink:0;}
   .disclaimer-footer{margin-top:14px; padding:0 4px; font-size:11.5px; line-height:1.5; color:var(--ink-soft); opacity:.65; text-align:center;}
+  /* Lock icon next to "Thimble" in either header (chat or voice call) --
+     replaces the old always-expanded "Private. Nothing is recorded." pill
+     with an icon that reveals the same line on hover/click, so the header
+     reads as just a name instead of a name plus a permanent disclaimer. */
+  .thimble-name-row{display:flex; align-items:center; gap:6px; position:relative;}
+  .lock-btn{width:22px; height:22px; padding:0; border:none; background:transparent; color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:50%;}
+  .lock-btn:hover, .lock-btn:focus-visible{color:var(--ink); background:#17372E0D;}
+  .lock-tooltip{position:absolute; top:calc(100% + 8px); left:0; width:220px; background:var(--ink); color:var(--paper); font-size:12.5px; line-height:1.5; font-weight:500; padding:10px 12px; border-radius:10px; box-shadow:0 4px 14px rgba(23,55,46,.2); z-index:6; opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .12s ease, transform .12s ease;}
+  .lock-btn:hover + .lock-tooltip, .lock-btn.open + .lock-tooltip{opacity:1; visibility:visible; transform:translateY(0);}
+  /* Overflow (kebab) menu -- holds "Start over" so it's one tap away from
+     the Voice/Text toggle instead of its own permanent button, per explicit
+     ask to bring both controls together. */
+  .overflow-btn{width:34px; height:34px; padding:0; border:none; background:transparent; color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:50%; flex-shrink:0;}
+  .overflow-btn:hover, .overflow-btn.open{background:#17372E0D; color:var(--ink);}
+  .overflow-wrap{position:relative; flex-shrink:0;}
+  .overflow-menu{position:absolute; top:calc(100% + 6px); right:0; min-width:160px; background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(23,55,46,.14); padding:6px; z-index:6;}
+  .overflow-menu button{display:block; width:100%; text-align:left; border:none; background:transparent; padding:9px 10px; border-radius:8px; font-size:13.5px; font-weight:600; color:var(--ink);}
+  .overflow-menu button:hover{background:var(--accent-soft);}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
   .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
   .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
@@ -114,13 +122,6 @@
   .caption-stack{position:absolute; left:0; right:0; display:flex; justify-content:center; padding:0 28px; pointer-events:none;}
   .caption{max-width:420px; font-size:clamp(13px,0.9vw,15px); font-weight:500; line-height:1.4; color:var(--ink); text-align:center;}
   .stage-top-left{position:absolute; top:16px; left:16px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; z-index:2;}
-  /* Mirrors .stage-top-left on the opposite corner, same top offset, so the
-     header's privacy pill (moved in here below 420px -- see its own
-     comment) sits vertically inline with the Skip pill rather than floating
-     at some unrelated height. Hidden by default: only shown in the narrow
-     breakpoint below, where it swaps in for the header copy. */
-  .stage-top-right{position:absolute; top:16px; right:16px; z-index:2; display:none;}
-  .stage-top-right .privacy-pill{margin-left:0;}
   /* State pill ("Thimble Listening...") sits directly under the avatar
      shape itself, not pinned to a stage corner -- it's reporting on
      Thimble specifically, not the call as a whole (that's what the
@@ -294,6 +295,11 @@
   .chat-name{font-weight:700; font-size:15px;}
   .chat-status{font-size:12.5px; opacity:.6;}
   .chat-header-right{display:flex; align-items:center; gap:8px;}
+  /* Same header bar as .chat-header, reused atop the voice stage so Voice
+     mode has the same name+lock on the left and toggle+overflow on the
+     right -- without this, there was no way back to Text once the old
+     always-on top header (with the Voice/Text toggle) was removed. */
+  .call-header{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid #17372E14; flex-shrink:0; position:relative; z-index:3;}
   .outline-pill{font:inherit; font-size:13px; font-weight:600; padding:8px 14px; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--ink); cursor:pointer; white-space:nowrap;}
   .chat-thread{flex:1; overflow-y:auto; padding:24px 16px; display:flex; flex-direction:column;}
   .chat-thread-inner{max-width:720px; width:100%; margin:0 auto; display:flex; flex-direction:column; gap:14px;}
@@ -314,22 +320,7 @@
   .chat-input-row .send-btn{height:44px; padding:0 20px; border-radius:12px; flex-shrink:0;}
   .chat-hint{max-width:720px; margin:8px auto 0; font-size:12px; opacity:.55; text-align:center;}
   @media (max-width: 760px){
-    /* Reported live: "Private. Nothing is recorded." runs off the right
-       edge of the screen. First fix (wrap the header, let the pill's text
-       wrap to two lines) was reported back as wrong -- the pill dropping
-       below the logo wasn't wanted either. Real fix: just say "Private."
-       on mobile instead of the full sentence, short enough to stay on one
-       line next to the logo with no wrapping anywhere. */
-    .privacy-pill{font-size:12px; padding:7px 12px;}
-    /* "Don't wrap the header" lesson -- confirmed live, the wordmark plus
-       the Voice/Text toggle ran off the right edge at 375px with the
-       wordmark still full size. Dropping "Mend" down to icon-only and
-       tightening the toggle's padding frees enough width to keep
-       everything on one line. */
-    .brand-name{display:none;}
-    .header-right{gap:6px;}
     .ui-tab{font-size:12px; padding:0 11px;}
-    .privacy-pill-rest{display:none;}
     .feedback-link{font-size:12px;}
     .call-layout{flex-direction:column;}
     .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
@@ -352,20 +343,39 @@
        transcript panel already shows the same text without this failure
        mode. */
     .caption-stack{display:none;}
-  }
-  /* Below ~420px the header (logo + "Private" pill + Voice/Text toggle) no
-     longer fits in one row and the toggle runs off the right edge of the
-     screen (confirmed live, e.g. at 320px) -- space-between doesn't wrap,
-     it just overflows. Rather than shrink the toggle (its two tap targets
-     are already tight) or wrap the header (reported wrong for the same
-     pill back when it was the full sentence, see the 760px breakpoint
-     above), move the privacy pill out of the header entirely and into the
-     stage's own top-right corner, vertically inline with the Skip pill
-     opposite it -- the header then only has to fit the logo and the
-     toggle. */
-  @media (max-width:420px){
-    .header .privacy-pill{display:none;}
-    .stage-top-right{display:flex;}
+    /* Full-bleed on mobile: .wrap's own 24px side padding, plus the chat
+       panel's border + border-radius + the page's --paper background
+       showing around it, was what made this read as "a chat widget sitting
+       inside a webpage" rather than the app itself -- explicit ask for it
+       to look like a real chat interface instead. The header, chat thread
+       and composer already carry their own 16px side padding (see their
+       own rules above), so dropping .wrap's padding doesn't leave anything
+       flush against the screen edge -- only the chat/voice panels' own
+       border + radius need stripping so they fill the full viewport width.
+       100dvh (not 100vh) so the layout fills the real visible viewport,
+       not the taller one mobile Safari reports with its address bar
+       showing -- unsupported browsers just ignore this line and keep the
+       100vh above. */
+    .wrap{padding:0; height:100vh; height:100dvh;}
+    .chat-panel, .call-layout{border-radius:0; border:none;}
+    /* chat-panel's own min-height:420px (sized for the desktop card layout)
+       forced the whole .wrap taller than one mobile screen once the
+       feedback link + disclaimer footer's own height was added on top --
+       confirmed live, the composer and disclaimer needed a page-level
+       scroll to reach instead of sitting at the bottom of the screen like
+       a real chat app's composer does. Dropping it lets flex:1 shrink
+       chat-panel to whatever's actually left after the header/footer take
+       their space, same as call-layout already does (min-height:0, set
+       above in its own un-media-queried rule). */
+    .chat-panel{min-height:0;}
+    .chat-composer{padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+    /* Chat app on mobile = header + thread + composer, nothing else.
+       feedback-link-row and disclaimer-footer were fixed-height rows below
+       .video-area that ate into .wrap's flex:1 share, so the chat panel
+       never actually reached the viewport edges -- real chat apps don't
+       show a footer disclaimer under the input. Dropped on mobile only;
+       both stay visible on desktop. */
+    .feedback-link-row, .disclaimer-footer{display:none;}
   }
   [hidden]{display:none !important;}
   /* Covers the whole app from first paint until Thimble is actually about
@@ -392,19 +402,6 @@
   <div class="app-loading-text">Connecting to Thimble&hellip;</div>
 </div>
 <div class="wrap">
-  <div class="header">
-    <div class="brand">
-      <img class="brand-mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E" alt="">
-      <span class="brand-name">Mend</span>
-      <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span>Private<span class="privacy-pill-rest">. Nothing is recorded.</span></span></div>
-    </div>
-    <div class="header-right">
-      <div class="ui-toggle">
-        <button class="ui-tab" data-ui="voice">Voice</button>
-        <button class="ui-tab active" data-ui="text">Text</button>
-      </div>
-    </div>
-  </div>
   <div class="video-toggle" id="videoToggle" hidden>
     <button id="videoStartBtn">Start video call</button>
   </div>
@@ -412,13 +409,31 @@
   <div id="textMode" class="video-area" style="flex-direction:column;">
     <div class="call-layout" id="voicePanel" hidden>
       <div class="call-main">
+        <div class="call-header">
+          <div class="thimble-name-row">
+            <span class="chat-name">Thimble</span>
+            <button id="voiceLockBtn" class="lock-btn" type="button" aria-label="Privacy info"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button>
+            <div class="lock-tooltip">Private. Nothing is recorded.</div>
+          </div>
+          <div class="chat-header-right">
+            <div class="ui-toggle">
+              <button class="ui-tab active" data-ui="voice">Voice</button>
+              <button class="ui-tab" data-ui="text">Text</button>
+            </div>
+            <div class="overflow-wrap">
+              <button id="voiceOverflowBtn" class="overflow-btn" type="button" aria-label="More options" aria-haspopup="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+              </button>
+              <div class="overflow-menu" id="voiceOverflowMenu" hidden>
+                <button id="resetBtn" type="button">Start over</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="stage">
           <div class="stage-top-left">
             <div class="live-timer" id="liveTimer" hidden>Live &middot; <span id="liveTimerText">00:00</span></div>
             <button id="skipIntroBtn" class="skip-intro-btn" hidden>Skip &rarr;</button>
-          </div>
-          <div class="stage-top-right">
-            <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span>Private<span class="privacy-pill-rest">. Nothing is recorded.</span></span></div>
           </div>
           <div class="avatar-stack">
             <div class="avatar-row">
@@ -491,7 +506,6 @@
       <div class="transcript-panel" id="transcriptPanel" hidden>
         <div class="transcript-header">
           <span>Transcript</span>
-          <button id="resetBtn" title="Start a new conversation">Start over</button>
         </div>
         <div class="thread" id="thread"></div>
       </div>
@@ -511,12 +525,27 @@
             </div>
           </div>
           <div class="chat-header-text">
-            <span class="chat-name">Thimble</span>
-            <span class="chat-status" id="chatStatus">Here to listen. Private, nothing is recorded.</span>
+            <div class="thimble-name-row">
+              <span class="chat-name">Thimble</span>
+              <button id="chatLockBtn" class="lock-btn" type="button" aria-label="Privacy info"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button>
+              <div class="lock-tooltip">Private. Nothing is recorded.</div>
+            </div>
+            <span class="chat-status" id="chatStatus">Your resolution facilitator</span>
           </div>
         </div>
         <div class="chat-header-right">
-          <button id="chatResetBtn" class="outline-pill" title="Start a new conversation">Start over</button>
+          <div class="ui-toggle">
+            <button class="ui-tab" data-ui="voice">Voice</button>
+            <button class="ui-tab active" data-ui="text">Text</button>
+          </div>
+          <div class="overflow-wrap">
+            <button id="chatOverflowBtn" class="overflow-btn" type="button" aria-label="More options" aria-haspopup="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+            </button>
+            <div class="overflow-menu" id="chatOverflowMenu" hidden>
+              <button id="chatResetBtn" type="button">Start over</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="chat-thread" id="chatThread">
@@ -654,6 +683,36 @@ function setUi(next) {
   }
 }
 document.querySelectorAll('.ui-tab').forEach(btn => btn.addEventListener('click', () => setUi(btn.dataset.ui)));
+
+// Lock icon tooltip (hover works on its own via CSS; click/tap toggles the
+// .open class too so touch devices, which have no hover, can reach it) and
+// the kebab overflow menus (Start over). Both close on an outside click so
+// they never linger over the thread.
+document.querySelectorAll('.lock-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const wasOpen = btn.classList.contains('open');
+    document.querySelectorAll('.lock-btn.open').forEach(b => b.classList.remove('open'));
+    btn.classList.toggle('open', !wasOpen);
+  });
+});
+document.querySelectorAll('.overflow-wrap').forEach(wrap => {
+  const btn = wrap.querySelector('.overflow-btn');
+  const menu = wrap.querySelector('.overflow-menu');
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const wasOpen = !menu.hidden;
+    document.querySelectorAll('.overflow-menu').forEach(m => { m.hidden = true; });
+    document.querySelectorAll('.overflow-btn.open').forEach(b => b.classList.remove('open'));
+    menu.hidden = wasOpen;
+    btn.classList.toggle('open', !wasOpen);
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.lock-btn.open').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.overflow-menu').forEach(m => { m.hidden = true; });
+  document.querySelectorAll('.overflow-btn.open').forEach(b => b.classList.remove('open'));
+});
 
 // Pause is a hard stop, deliberately different from Mute: Mute keeps the
 // mic running and just stops it from triggering a turn (per the user's own
@@ -1921,7 +1980,7 @@ function splitCaptionParts(text) {
 }
 
 const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
-const CHAT_STATUS = {idle: 'Here to listen. Private, nothing is recorded.', listening: 'Here to listen. Private, nothing is recorded.', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
+const CHAT_STATUS = {idle: 'Your resolution facilitator', listening: 'Your resolution facilitator', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
 const BUSY_STATES = ['thinking', 'talking'];
