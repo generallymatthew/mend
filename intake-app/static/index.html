@@ -171,6 +171,10 @@
      the press before JS ever sees it. */
   .composer-mic-btn{width:44px; height:44px; padding:0; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:var(--card); border:1.5px solid var(--border); color:var(--ink-soft); -webkit-user-select:none; user-select:none; touch-action:none; transition:transform 80ms ease, background 80ms ease, color 80ms ease, border-color 80ms ease;}
   .composer-mic-btn.active{background:#8C3B2E; border-color:#8C3B2E; color:#fff; transform:scale(.93); animation:composer-mic-pulse 1.3s ease-out infinite;}
+  .composer-mic-wrap{position:relative; flex-shrink:0; display:flex; align-items:center;}
+  .mic-tip{position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); width:220px; background:var(--ink); color:var(--paper); font-size:12.5px; line-height:1.5; padding:10px 28px 10px 12px; border-radius:10px; box-shadow:0 4px 14px rgba(23,55,46,.2); z-index:5;}
+  .mic-tip::after{content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--ink);}
+  .mic-tip #micTipClose{position:absolute; top:4px; right:6px; width:20px; height:20px; border:none; background:transparent; color:var(--paper); opacity:.75; font-size:15px; line-height:1; cursor:pointer; padding:0;}
   @keyframes composer-mic-pulse{
     0%{box-shadow:0 0 0 0 #8C3B2E80;}
     70%{box-shadow:0 0 0 14px #8C3B2E00;}
@@ -396,8 +400,8 @@
     </div>
     <div class="header-right">
       <div class="ui-toggle">
-        <button class="ui-tab active" data-ui="voice">Voice</button>
-        <button class="ui-tab" data-ui="text">Text</button>
+        <button class="ui-tab" data-ui="voice">Voice</button>
+        <button class="ui-tab active" data-ui="text">Text</button>
       </div>
     </div>
   </div>
@@ -406,7 +410,7 @@
   </div>
 
   <div id="textMode" class="video-area" style="flex-direction:column;">
-    <div class="call-layout" id="voicePanel">
+    <div class="call-layout" id="voicePanel" hidden>
       <div class="call-main">
         <div class="stage">
           <div class="stage-top-left">
@@ -492,7 +496,7 @@
         <div class="thread" id="thread"></div>
       </div>
     </div>
-    <div class="chat-panel" id="chatPanel" hidden>
+    <div class="chat-panel" id="chatPanel">
       <div class="chat-header">
         <div class="chat-header-left">
           <div class="chat-avatar-small">
@@ -527,9 +531,15 @@
                fills the field so it can be reviewed/edited before Send,
                per explicit request). Plain mic icon, no label: the
                standard voice-memo affordance next to a chat input. -->
-          <button id="composerMicBtn" class="composer-mic-btn" type="button" title="Hold to record a voice memo">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
-          </button>
+          <div class="composer-mic-wrap">
+            <div class="mic-tip" id="micTip" hidden>
+              Press and hold, then wait to hear the beep before speaking. Release when you're done.
+              <button type="button" id="micTipClose" aria-label="Dismiss">&times;</button>
+            </div>
+            <button id="composerMicBtn" class="composer-mic-btn" type="button" title="Hold to record a voice memo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+            </button>
+          </div>
           <button id="chatSendBtn" class="primary send-btn">Send</button>
         </div>
         <div class="chat-hint">Enter to send &middot; Shift+Enter for a new line</div>
@@ -611,15 +621,37 @@ const skipIntroBtn = document.getElementById('skipIntroBtn');
 // views swapped via setUi(), not a composer bolted onto the avatar stage --
 // Voice has no text input at all (Go live or nothing), Text is its own chat
 // panel. Both read/write the same shared message log (see addMessage()).
-let ui = 'voice';
+// Text first: landing in Voice used to mean Thimble started talking (and
+// recording) the instant the page loaded, before anyone had chosen that --
+// surprising on a shared or public screen. Text is silent by default; Voice
+// is an explicit choice via the tab or the hint below.
+let ui = 'text';
 function setUi(next) {
   if (next === ui) return;
+  const prev = ui;
   ui = next;
   voicePanel.hidden = ui !== 'voice';
   chatPanel.hidden = ui !== 'text';
   document.querySelectorAll('.ui-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.ui === ui));
   if (composerHolding) composerRelease(); // leaving Text mid-hold (rare, but possible) -- don't leave a dangling recording with nothing to end it
-  if (ui === 'voice') enterVoiceLive(); else exitVoiceLive();
+  if (ui === 'voice' && prev === 'text') {
+    // Coming from Text, Thimble should greet the switch instead of silently
+    // grabbing the mic -- same reasoning as start()'s own armLiveMode() vs
+    // enterVoiceLive() comment: speak first, armLiveMode() only flips the
+    // live-mode flag, and finishSpeechCycle() (reached once this greeting's
+    // done playing) is what actually calls startRecordingTurnSafe().
+    const myGen = ++replyGen;
+    startInterruptMonitor(myGen);
+    resetSpeechQueue(myGen);
+    const greeting = 'Hi, so just tell me what’s been going on?';
+    addMessage(greeting, 'facilitator');
+    armLiveMode();
+    feedSpeechText(greeting, true);
+  } else if (ui === 'voice') {
+    enterVoiceLive();
+  } else {
+    exitVoiceLive();
+  }
 }
 document.querySelectorAll('.ui-tab').forEach(btn => btn.addEventListener('click', () => setUi(btn.dataset.ui)));
 
@@ -736,6 +768,10 @@ let holdControlled = false;
 // in-flight recording the instant you leave the Voice tab, and this only
 // ever runs while on the Text tab).
 const composerMicBtn = document.getElementById('composerMicBtn');
+const micTip = document.getElementById('micTip');
+function showMicTip() { micTip.hidden = false; }
+function hideMicTip() { micTip.hidden = true; }
+document.getElementById('micTipClose').addEventListener('click', hideMicTip);
 let composerHolding = false;
 let composerPressedAt = 0;
 // A quick tap-and-release can call mediaRecorder.stop() before the browser
@@ -765,8 +801,35 @@ function composerScheduleStop(elapsedMs) {
   else stopNow();
 }
 
+// Separate from audioCtx/ensureAudioGraph() above (the TTS playback graph,
+// bound to audioEl) -- this is just a plain oscillator beep, created lazily
+// on first use so it never forces an AudioContext into existence (and the
+// autoplay-policy prompt that can come with one) before the user's first
+// mic press, which is itself a user gesture and unblocks it if needed.
+let beepCtx = null;
+function playBeep(freq, durationMs) {
+  try {
+    if (!beepCtx) beepCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (beepCtx.state === 'suspended') beepCtx.resume().catch(() => {});
+    const osc = beepCtx.createOscillator();
+    const gain = beepCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const now = beepCtx.currentTime;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+    osc.connect(gain).connect(beepCtx.destination);
+    osc.start(now);
+    osc.stop(now + durationMs / 1000 + 0.02);
+  } catch (e) {} // beep is a nicety, never worth failing a recording over
+}
+function playRecordStartBeep() { playBeep(880, 90); }
+function playRecordStopBeep() { playBeep(440, 110); }
+
 async function composerPress() {
   if (composerHolding || chatInput.disabled) return;
+  showMicTip(); // shown on every press, not just the first -- hideMicTip() in composerRelease() below clears it as soon as the hold ends
   composerHolding = true;
   composerReleaseRequested = false;
   composerPressedAt = performance.now();
@@ -805,6 +868,7 @@ async function composerPress() {
 function composerRelease() {
   if (!composerHolding) return;
   composerHolding = false;
+  hideMicTip(); // released -- whatever it had to say, the gesture it describes is already done
   composerMicBtn.classList.remove('active');
   composerMicBtn.title = 'Hold to record a voice memo';
   if (!mediaRecorder || mediaRecorder.state !== 'recording') {
@@ -1993,6 +2057,15 @@ function extractCompleteSentences(fullText, consumedLen) {
 }
 
 function feedSpeechText(fullText, final) {
+  if (ui !== 'voice') {
+    // Text view is silent -- no TTS audio until the user switches to Voice.
+    // Still have to close out the reply cycle ourselves on the final call,
+    // since that normally happens once the (skipped) audio queue drains --
+    // skip this and avatarState gets stuck on 'thinking' forever, pinning
+    // the header on "Thinking..." after every single text reply.
+    if (final && speechCycleGen === replyGen) { avatarState = 'idle'; endReplyCycle(); }
+    return;
+  }
   if (speechCycleGen !== replyGen) return;
   const {sentences, consumedLen} = extractCompleteSentences(fullText, speechConsumedLen);
   speechConsumedLen = consumedLen;
@@ -2165,6 +2238,36 @@ function addMessage(text, cls) {
   div.chatWrap = wrap;
   div.chatBubble = bubble;
   return div;
+}
+
+// Text-only onboarding nudge, not a real conversation turn -- unlike
+// addMessage() this doesn't mirror into the voice transcript (no sense
+// showing a "tap this button" control there), and the button inside it
+// jumps straight to Voice via the same setUi() the tab itself uses.
+function addHandsFreeHintMessage() {
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-msg-wrap theirs';
+  const who = document.createElement('span');
+  who.className = 'chat-who';
+  who.textContent = 'Thimble';
+  wrap.appendChild(who);
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble theirs';
+  bubble.appendChild(document.createTextNode('So what’s going on? You can type the issue here, use the voice memo, or have a more natural hands-free conversation by tapping this button:'));
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'outline-pill';
+  // Pink (#F3829A) with dark ink text, not white -- per the brand-kit note
+  // above (:root), pink fails contrast with light text at this lightness;
+  // ink text is the pairing already used for the logo mark/single-CTA use
+  // pink is reserved for.
+  btn.style.cssText = 'display:block; margin-top:10px; background:#F3829A; border-color:#F3829A; color:var(--ink);';
+  btn.textContent = 'Go hands-free';
+  btn.addEventListener('click', () => setUi('voice'));
+  bubble.appendChild(btn);
+  wrap.appendChild(bubble);
+  chatThreadInner.insertBefore(wrap, chatTyping);
+  chatThread.scrollTop = chatThread.scrollHeight;
 }
 
 const banner = document.getElementById('banner');
@@ -2734,6 +2837,7 @@ async function startComposerRecording() {
   holdControlled = true;
   mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
   mediaRecorder.onstop = async () => {
+    playRecordStopBeep();
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
     await drainDeepgramSocket();
@@ -2766,6 +2870,7 @@ async function startComposerRecording() {
     }
   };
   mediaRecorder.start();
+  playRecordStartBeep();
   startMicAnalysis(stream);
   resetPartialCapture();
   if (deepgramEnabled) dgSocket = startDeepgramSocket(pcmSampleRate);
@@ -2958,9 +3063,27 @@ async function start() {
     const data = await res.json();
     if (data.reply) {
       logEvent('session_start');
-      addMessage(data.reply, 'facilitator');
-      handleSignal(data.signal);
-      feedSpeechText(data.reply, true);
+      if (ui === 'text') {
+        // Staggered like messages actually landing, not a wall of text
+        // dumped the instant the page paints: 500ms before the greeting
+        // shows at all ("you just got sent a message"), then a pause
+        // before the hands-free nudge so it reads as a second thought,
+        // not one long paragraph.
+        setTimeout(() => {
+          addMessage(data.reply, 'facilitator');
+          handleSignal(data.signal);
+          feedSpeechText(data.reply, true); // no-op in Text, but still closes out this reply cycle -- see feedSpeechText
+          avatarState = 'thinking'; // brief "typing" pulse before the second message, same as a real reply would show
+          setTimeout(() => {
+            addHandsFreeHintMessage();
+            avatarState = 'idle';
+          }, 2000);
+        }, 500);
+      } else {
+        addMessage(data.reply, 'facilitator');
+        handleSignal(data.signal);
+        feedSpeechText(data.reply, true);
+      }
     } else {
       // /api/start is a no-op once `conversation` is already non-empty
       // server-side (e.g. a reload, or a second tab, after the session's
