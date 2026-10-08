@@ -1773,6 +1773,49 @@ function domeWobbleRadius(domeFactor, lvl) {
   const rimY = 50 - (14 + 3 * lvl) * domeFactor;
   return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
 }
+// "Hearing you": a quick, small ripple fired from where each ear would sit
+// on the dome (roughly upper-left/upper-right) the instant the employee's
+// own mic level crosses a threshold -- prototyped and tuned side by side
+// with the plain dome wobble in thimble-states.html before landing here.
+// Modeled like a stone dropped in water: a wavefront starts at each ear and
+// travels both ways around the perimeter at once, fully settled by
+// HEARING_RIPPLE_DURATION. Deliberately subtle (small amplitude, short
+// life) -- the point is a quick confirming flicker you catch out of the
+// corner of your eye, not a show, and the goal is for this alone to read as
+// "it heard that" clearly enough to eventually replace the You-tile's own
+// glow as that confirmation.
+const HEARING_PING_THRESHOLD = 0.22;
+const HEARING_RIPPLE_DURATION = 2.2; // seconds for each front to cross its own far half of the body
+const HEARING_RIPPLE_AMP = 3.5; // peak ripple height, % of radius
+const HEARING_RIPPLE_K = 5; // how many trailing oscillations ride behind the front
+const HEARING_RIPPLE_AGE_DECAY = 2.2; // how fast a ring settles once the front has passed it
+const HEARING_RIPPLE_SPATIAL_DECAY = 1.3; // how much weaker farther-out rings are
+const HEARING_EAR_OFFSET = 0.85; // radians either side of straight-up
+const HEARING_EAR_ORIGINS = [-Math.PI / 2 - HEARING_EAR_OFFSET, -Math.PI / 2 + HEARING_EAR_OFFSET];
+function hearingRippleAt(d, frontPos) {
+  if (d > frontPos) return 0;
+  const age = frontPos - d;
+  const spatialDecay = Math.exp(-d / HEARING_RIPPLE_SPATIAL_DECAY);
+  const ageDecay = Math.exp(-age * HEARING_RIPPLE_AGE_DECAY);
+  return HEARING_RIPPLE_AMP * spatialDecay * ageDecay * Math.sin(age * HEARING_RIPPLE_K);
+}
+function hearingRipplePolygon(pingP) {
+  const N = 96;
+  const frontPos = pingP * Math.PI; // 0 (at an ear) -> PI (the point opposite it)
+  const pts = [];
+  for (let i = 0; i < N; i++) {
+    const th = (i / N) * Math.PI * 2;
+    let ripple = 0;
+    for (const origin of HEARING_EAR_ORIGINS) {
+      let d = th - origin;
+      d = Math.abs(Math.atan2(Math.sin(d), Math.cos(d))); // unsigned angular distance, [0, PI]
+      ripple += hearingRippleAt(d, frontPos);
+    }
+    const r = 50 + ripple;
+    pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
+  }
+  return `polygon(${pts.join(',')})`;
+}
 const thimbleBig = thimbleInstance('thimble', 200);
 const thimbleMini = thimbleInstance('thimbleMini', 48);
 
@@ -1962,7 +2005,14 @@ function updateThimbleMotion(inst, now, level, listening) {
     // than mic level, 0.3/frame otherwise). Thinking has no real input to
     // react to, so it settles on the handoff's own fixed shapeLvl of .15.
     const input = speaking ? ttsLevel : thinkingState ? 0.15 : level;
-    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
+    // Listening gets its own fast-attack/slow-release rate (0.6 up, 0.12
+    // down) instead of the flat 0.3 both ways everything else uses -- a
+    // spike in your voice needs to show up on close to the very next frame
+    // for the reaction to read as "it just heard that," not a smoothed-out
+    // sway that happens to correlate with sound a few frames later. See the
+    // ear-ripple trigger below, which depends on this same fast-attack lvl.
+    const listeningRate = input > inst.lvl ? 0.6 : 0.12;
+    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : avatarState === 'listening' ? listeningRate : 0.3);
     // Every active state wobbles the same way now: no hexagon clip-path
     // anywhere -- reported live as reading "weird," not charming, and once
     // seen next to idle/paused's plain border-radius dome, the hexagon
@@ -1984,6 +2034,23 @@ function updateThimbleMotion(inst, now, level, listening) {
     const domeFactor = (1 + Math.cos(domePhase * 2 * Math.PI)) / 2;
     inst.body.style.clipPath = 'none';
     inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+    // Ear ripple: only while actually listening (not idle -- idle has no
+    // real input to react to), and never while muted -- arming a ripple off
+    // a level that isn't really your mic, or letting one already in flight
+    // keep playing after you mute, would read as a bug ("it heard me, but
+    // I'm muted?"). See hearingRipplePolygon's own comment for the motion
+    // itself; this just arms/advances/clears inst.pingT, same pattern as
+    // the thimble-states.html prototype this was built against.
+    if (avatarState === 'listening') {
+      const wasLoud = inst._hearingLoud || false;
+      const isLoud = !micMuted && inst.lvl > HEARING_PING_THRESHOLD;
+      if (isLoud && !wasLoud) inst.pingT = 0;
+      inst._hearingLoud = isLoud;
+      if (micMuted) inst.pingT = 1;
+      else inst.pingT = inst.pingT == null ? 1 : inst.pingT + dt / HEARING_RIPPLE_DURATION;
+      const pingP = Math.min(1, inst.pingT);
+      if (pingP < 1) inst.body.style.clipPath = hearingRipplePolygon(pingP);
+    }
     if (speaking) {
       // Single soft glow behind Thimble while talking, not two expanding
       // rings -- the old pair (each resetting 1->1.3 scale on its own 1.6s
@@ -2775,7 +2842,7 @@ async function startInterruptMonitor(myGen) {
   if (!liveMode || micMuted || sessionPaused) return;
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+    stream = await navigator.mediaDevices.getUserMedia(INTERRUPT_MIC_CONSTRAINTS);
   } catch (e) {
     return; // no mic access -- no barge-in this turn, nothing else breaks
   }
@@ -2794,7 +2861,7 @@ async function startInterruptMonitor(myGen) {
   // during listening, before Thimble had said a word, which has nothing to
   // do with how much of Thimble's own voice bleeds back into this brand
   // new mic stream once it starts playing through the speakers --
-  // echoCancellation (MIC_CONSTRAINTS above) helps, but isn't perfect,
+  // echoCancellation (INTERRUPT_MIC_CONSTRAINTS above) helps, but isn't perfect,
   // especially right as a fresh stream's AEC is still converging. Instead,
   // sample THIS stream's own level for INTERRUPT_CALIBRATION_MS right as
   // it opens (i.e. with Thimble's own audio already playing, the exact
@@ -2881,37 +2948,47 @@ async function startRecordingTurnSafe() {
 // values either way, but spelling them out removes any ambiguity about
 // intent and gives echoCancellation (Thimble's own voice bleeding back in
 // through the speakers, reported live as false-triggering the interrupt
-// monitor -- see MIC_CONSTRAINTS's other use in startInterruptMonitor) a
-// real chance to engage, rather than trusting an unstated default.
+// monitor) a real chance to engage, rather than trusting an unstated
+// default.
 //
-// autoGainControl is explicitly OFF, not just left out -- it was on until a
-// live mobile report ("keeps thinking I'm talking when there's no
+// autoGainControl is explicitly OFF here, not just left out -- it was on
+// until a live mobile report ("keeps thinking I'm talking when there's no
 // background noise and I haven't said a word"). checkVad's calibration
 // samples ambient level for a one-time 400ms window, then measures every
-// later frame against a threshold fixed from that sample. Mobile AGC keeps
-// adjusting gain for seconds after that, and specifically ramps gain UP
-// during silence (nothing loud for it to normalize against) -- so the same
+// later frame against a threshold fixed from that sample; mobile AGC keeps
+// adjusting gain for seconds after that and specifically ramps gain UP
+// during silence (nothing loud for it to normalize against), so the same
 // physical silence reads louder and louder after calibration, eventually
 // crossing the fixed threshold with no real noise or speech involved.
-// Desktop mics' AGC converges fast enough before the 400ms window closes
-// that this never showed up there. Turning it off keeps the 0..1 level
-// tied to actual acoustic energy for the whole turn, which is what the
-// fixed-threshold-after-one-time-calibration design above requires.
-const MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: false}};
+// Scoped to ONLY this stream (the interrupt monitor's own barge-in
+// detector, which runs its own fresh-per-turn calibration regardless of
+// deepgramEnabled -- see startInterruptMonitor) -- it was originally
+// applied to every mic stream in the app, including the main listening
+// capture below, which doesn't actually have this exposure: checkVad's own
+// call site is skipped entirely whenever deepgramEnabled is true (Deepgram
+// does its own server-side endpointing instead), so that stream was paying
+// AGC-off's real cost -- materially quieter audio on phone mics -- for a
+// false-trigger risk it was never exposed to in the first place. Confirmed
+// live as the same root cause behind the composer dictation's "really
+// really bad" mobile transcription quality, and very likely behind a
+// separate live report of hands-free "not seeming to know I'd said
+// something" -- same quiet-signal problem, different symptom (Deepgram
+// never getting enough signal to transcribe or detect speech_final at all,
+// vs. transcribing it badly).
+const INTERRUPT_MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: false}};
 
-// The composer's hold-to-dictate button has no VAD/threshold calibration to
-// protect (holdControlled -- recording only ever starts/stops on a manual
-// press/release, never a level comparison), so AGC's silence-ramp problem
-// above doesn't apply here. Without it, phone mics -- whose raw gain is
-// much lower than a laptop's -- send Deepgram a quiet signal and
-// transcription quality drops badly, reported live as working fine on a
-// laptop but "really really bad" on a phone with either its own mic or a
-// Bluetooth headset. Leaving AGC on for this one path gets the quality back
-// with no false-trigger risk.
-const COMPOSER_MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}};
+// Used for both the composer's hold-to-dictate button and hands-free's main
+// listening capture -- neither is exposed to AGC's silence-ramp problem
+// above (the composer has no VAD/threshold at all, holdControlled; the
+// listening capture's own checkVad call site is skipped whenever
+// deepgramEnabled, which is the only mode this has shipped tested in -- see
+// INTERRUPT_MIC_CONSTRAINTS's own comment). Leaving AGC on gets real gain
+// back on phone mics, which both paths need for Deepgram to hear anything
+// usable at all.
+const CAPTURE_MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}};
 
 async function startRecordingTurn() {
-  const stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+  const stream = await navigator.mediaDevices.getUserMedia(CAPTURE_MIC_CONSTRAINTS);
   mediaRecorder = new MediaRecorder(stream);
   chunks = [];
   holdControlled = false; // hands-free: silence/Deepgram endpointing ends the turn, not a manual release
@@ -3027,7 +3104,7 @@ async function startRecordingTurn() {
 // is the only way this ends), and release fills the text input for review
 // instead of sending and waiting on a reply.
 async function startComposerRecording() {
-  const stream = await navigator.mediaDevices.getUserMedia(COMPOSER_MIC_CONSTRAINTS);
+  const stream = await navigator.mediaDevices.getUserMedia(CAPTURE_MIC_CONSTRAINTS);
   mediaRecorder = new MediaRecorder(stream);
   const myChunks = chunks = [];
   holdControlled = true;
