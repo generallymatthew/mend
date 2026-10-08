@@ -99,6 +99,8 @@
   .compare-row.highlight{background:var(--accent-soft);}
   .compare-row.highlight .k{color:var(--accent);}
   .compare-row.highlight .v{color:var(--ink);}
+  .compare-divider{text-align:center; padding:10px 18px; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); background:var(--paper); border-bottom:1px solid var(--border);}
+  .belief-line{margin-top:14px; font-size:13.5px; color:var(--ink-soft); font-style:italic;}
 
   .privacy-grid{display:flex; flex-direction:column; gap:1px; margin-top:4px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
   .privacy-row{display:flex; gap:14px; align-items:flex-start; font-size:14px; padding:14px 18px; border-bottom:1px solid var(--border);}
@@ -196,12 +198,15 @@
 
   <section class="block">
     <h3 class="section-headline">The Cost of the Usual Options</h3>
+    <p class="section-sub">Most conflict at work isn't personal, it's structural: unclear roles, competing incentives, bad process. Treating it as a character problem instead of a structural one is why it almost never gets fixed.</p>
     <div class="compare-grid">
       <div class="compare-row"><span class="k">Say Nothing (Avoidance)</span><span class="v">The default choice. Tension festers, code reviews get delayed, and team collaboration quietly grinds to a halt.</span></div>
       <div class="compare-row"><span class="k">Vent to a Coworker</span><span class="v">Feels cathartic for an hour, but fixes nothing structurally and drags uninvolved teammates into backchannel politics.</span></div>
       <div class="compare-row"><span class="k">Escalate to HR or Management</span><span class="v">Creates an adversarial paper trail for an issue that was simply two people out of sync, turning normal friction into a formal performance risk.</span></div>
-      <div class="compare-row highlight"><span class="k">Resolve with Mend</span><span class="v">A private, third path. De-escalate the operational issue cleanly, protect both reputations, and get back to focused work with no records kept.</span></div>
+      <div class="compare-divider">We think there's a better way</div>
+      <div class="compare-row highlight"><span class="k">Resolve with Mend</span><span class="v">A private, fourth path. De-escalate the operational issue cleanly, protect both reputations, and get back to focused work with no records kept.</span></div>
     </div>
+    <p class="belief-line">Resolving conflict directly is a sign of maturity, not a failure. The people who engage with it should be seen as the adults in the room, not as the source of the problem.</p>
   </section>
 
   <section class="block">
@@ -219,7 +224,7 @@
     <h3 class="section-headline">Ready to Clear the Air?</h3>
     <p>Pick a practice scenario or simply type what's happening in your own words. Off the record, zero judgment, and completely confidential.</p>
     <a class="btn start-link" href="http://localhost:8080/intake/" data-local="http://localhost:8080/intake/" data-live="https://mend-mvp.onrender.com/intake/">Start the Conversation &rarr;</a>
-    <div class="trust-line">Testing Prototype: we want your honest take. At the end of your session, let us know if the experience felt safe, balanced, and operationally helpful.</div>
+    <div class="trust-line">Testing Prototype: we want your honest take, on the pitch above as much as the session itself. Does the problem above match something you've experienced? Does "nothing is recorded, ever" read as credible? Was there a reason you hesitated before clicking Start?</div>
   </div>
 
   <footer>
