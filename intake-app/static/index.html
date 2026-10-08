@@ -50,15 +50,17 @@
      with light text at this lightness, same pairing the "Go hands-free"
      button uses (see addMessage's own brand-kit comment). This is the
      Talk tab's one primary CTA, so it gets the brand color reserved for
-     single-CTA use, sized big enough to be the obvious thing to tap.
-     Lives in .call-controls (a column flex container, gap:8px) above
-     .control-bar -- align-self:center overrides that container's default
-     stretch, which would otherwise force this pill to the container's
-     full width. Always rendered while liveMode is on (never hidden, just
-     dimmed via :disabled) so it holds a fixed spot above the icon row
+     single-CTA use. Lives in the DOM as a real child of .control-bar
+     (between captionsToggleBtn and transcriptToggleBtn) so mobile's own
+     override below can render it inline as part of that same row --
+     desktop instead pulls it up out of the row with position:absolute
+     (.control-bar gets position:relative for this to anchor against),
+     landing it in the same prominent standalone spot it had before,
+     centered above the icon row. Always rendered while liveMode is on
+     (never hidden, just dimmed via :disabled) so it holds a fixed spot
      instead of popping in/out and shifting the caption's own midpoint
      (see positionCaptionStack) around underneath it. */
-  .talk-mic-btn{align-self:center; margin-bottom:4px; padding:18px 44px; border-radius:999px; border:1px solid #F3829A; background:#F3829A; color:var(--ink); font-size:17px; font-weight:700; cursor:pointer;}
+  .talk-mic-btn{position:absolute; left:50%; bottom:100%; transform:translateX(-50%); margin-bottom:14px; padding:18px 44px; border-radius:999px; border:1px solid #F3829A; background:#F3829A; color:var(--ink); font-size:17px; font-weight:700; cursor:pointer; white-space:nowrap;}
   .talk-mic-btn:disabled{opacity:.4; cursor:default;}
   .talk-mic-btn.recording{background:#C0392B; border-color:#C0392B; color:#fff; animation:talk-mic-pulse 1.4s ease-in-out infinite;}
   @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.35);} 50%{box-shadow:0 0 0 8px rgba(192,57,43,0);}}
@@ -294,7 +296,7 @@
      collapsed) and captions-off, not for a separate hover/press state. */
   .ctrl-btn{width:44px; height:44px; border-radius:50%; padding:0; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; background:var(--accent); color:var(--paper); border-color:var(--accent);}
   .ctrl-btn.inactive{background:var(--card); color:var(--accent); border-color:var(--border);}
-  .control-bar{display:flex; align-items:center; justify-content:center; gap:10px;}
+  .control-bar{position:relative; display:flex; align-items:center; justify-content:center; gap:10px;}
   /* Voice/Text segmented toggle -- appears both in the voice control bar and
      the text/chat header, always in sync (see setUi()). Per the design
      handoff, voice mode has no text input at all: typing only happens in
@@ -377,6 +379,22 @@
        transcript panel already shows the same text without this failure
        mode. */
     .caption-stack{display:none;}
+    /* Explicit ask: Thimble's own captions are already hidden on mobile
+       (.caption-stack above) and have been since before tap-to-talk
+       existed, so a "toggle captions" button here is toggling a feature
+       that was never visible to toggle in the first place -- remove it
+       rather than leave a dead control. Freeing its slot also gives
+       tap-to-talk a real home in the row (next rule) instead of needing
+       its own separate row above the icons. */
+    #captionsToggleBtn{display:none;}
+    /* Undoes the desktop pullout above (position:absolute, big sizing) --
+       on mobile this renders as a real part of .control-bar's own row,
+       which is where it already lives in the DOM (between
+       captionsToggleBtn, now hidden, and transcriptToggleBtn), landing it
+       roughly centered among pause/mute/transcript once CC is gone. One
+       row instead of two saves vertical space on a screen that doesn't
+       have much to spare. */
+    .talk-mic-btn{position:static; transform:none; margin-bottom:0; padding:10px 24px; font-size:14px;}
     /* Full-bleed on mobile: .wrap's own 24px side padding, plus the chat
        panel's border + border-radius + the page's --paper background
        showing around it, was what made this read as "a chat widget sitting
@@ -535,12 +553,12 @@
              with the control-bar. -->
         <div class="call-bottom-row">
           <div class="call-controls">
-            <button id="talkMicBtn" class="talk-mic-btn" type="button" hidden>Tap to talk</button>
             <div class="talk-transcript-box" id="talkTranscriptBox" hidden><span id="talkTranscriptText"></span></div>
             <div class="control-bar">
               <button id="pauseBtn" class="ctrl-btn" title="Pause"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg></button>
               <button id="muteBtn" class="ctrl-btn" title="Mute"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
               <button id="captionsToggleBtn" class="ctrl-btn" title="Toggle captions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"></path></svg></button>
+              <button id="talkMicBtn" class="talk-mic-btn" type="button" hidden>Tap to talk</button>
               <button id="transcriptToggleBtn" class="ctrl-btn" title="Show/hide transcript"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="14" y2="17"></line></svg></button>
             </div>
             <div class="mic-indicator" id="micIndicator" hidden>
