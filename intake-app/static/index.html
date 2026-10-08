@@ -99,7 +99,7 @@
      dot, picked over three other gradient options (see design_handoffs
      comparisons) for staying closer to the flat brand mark's friendly feel
      while still reading as a lit 3D form. */
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 50% 40%, #F3829A 0%, #F3829A 45%, #D9607C 85%, #C15372 100%); overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
   @keyframes thimble-blob{0%,100%{border-radius:50%; transform:scale(.95);} 25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%; transform:scale(.92) rotate(-3deg);} 50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%; transform:scale(.95);} 75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%; transform:scale(.92) rotate(3deg);}}
@@ -1430,13 +1430,13 @@ async function maybeSendPartial(now) {
 // state that already read as thimble-shaped rather than circular). Reused
 // across every state below instead of each having its own radius, so the
 // whole avatar reads as one consistent "thimble," not just empathizing.
-const DOME_RADIUS = '50% 50% 50% 50% / 68% 68% 28% 28%';
+const DOME_RADIUS = '50% 50% 50% 50% / 58% 58% 42% 42%';
 const THIMBLE_SHAPES = {
   // Listening/idle keep their own subtle 47%/53% horizontal split (paired
   // with the lean transform) for the "leaning toward you" asymmetry --
   // only the vertical cap/rim ratio moves to DOME_RADIUS.
-  listening:   {radius: '50% 50% 47% 53% / 68% 68% 28% 28%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
-  idle:        {radius: '50% 50% 47% 53% / 68% 68% 28% 28%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  listening:   {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  idle:        {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   // No CSS blob anymore -- thinking's body motion is the same geometry
   // engine as listening/talking (constant geo .6, slow spin, a head-tilt
   // wiggle instead of a nod), ported from the handoff's 'thinking' state in
@@ -1578,8 +1578,8 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
 // ones stay closer to dome, without ever snapping to a different shape
 // family the way the old hexagon clip-path did.
 function domeWobbleRadius(domeFactor, lvl) {
-  const capY = 50 + (18 + 4 * lvl) * domeFactor;
-  const rimY = 50 - (22 + 4 * lvl) * domeFactor;
+  const capY = 50 + (12 + 3 * lvl) * domeFactor;
+  const rimY = 50 - (14 + 3 * lvl) * domeFactor;
   return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
 }
 const thimbleBig = thimbleInstance('thimble', 200);

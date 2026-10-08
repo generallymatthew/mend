@@ -51,7 +51,7 @@
   .thimble-ripple.b{animation-delay:.8s;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
   /* "Matte Shade" fill, copied verbatim from static/index.html -- see that file's comment for why. */
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 50% 40%, #F3829A 0%, #F3829A 45%, #D9607C 85%, #C15372 100%); overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
   @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
@@ -71,11 +71,11 @@
 // DOME_RADIUS: the "Soft Dome" option picked after comparing four shapes
 // against empathizing's own look -- see static/index.html for the full
 // writeup. Reused across every state, not just empathizing.
-const DOME_RADIUS = '50% 50% 50% 50% / 68% 68% 28% 28%';
+const DOME_RADIUS = '50% 50% 50% 50% / 58% 58% 42% 42%';
 const THIMBLE_SHAPES = {
-  listening:   {radius: '50% 50% 47% 53% / 68% 68% 28% 28%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  listening:   {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   listening2:  {radius: '50% 50% 50% 50% / 50% 50% 50% 50%', anim: 'none', lean: 'none', mouthTop: 60, mouthW: .11, mouthH: .028},
-  idle:        {radius: '50% 50% 47% 53% / 68% 68% 28% 28%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  idle:        {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   thinking:    {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   talking:     {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
   empathizing: {radius: DOME_RADIUS, anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
@@ -138,8 +138,8 @@ function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth) {
 // percentages between the resting dome (domeFactor 1) and a perfect circle
 // (domeFactor 0); no hexagon clip-path anywhere anymore.
 function domeWobbleRadius(domeFactor, lvl) {
-  const capY = 50 + (18 + 4 * lvl) * domeFactor;
-  const rimY = 50 - (22 + 4 * lvl) * domeFactor;
+  const capY = 50 + (12 + 3 * lvl) * domeFactor;
+  const rimY = 50 - (14 + 3 * lvl) * domeFactor;
   return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
 }
 
