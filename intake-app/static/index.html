@@ -377,18 +377,23 @@
        both stay visible on desktop. */
     .feedback-link-row, .disclaimer-footer{display:none;}
     /* .chat-header-left (avatar + name/status column) and .chat-header-right
-       (Voice/Text toggle + overflow) together measure ~30px wider than a
-       375px screen has room for, so .chat-header's own flex-wrap -- there
-       for genuinely narrow cases -- was dropping the toggle to its own row
-       on every single load, not just a rare edge case. Reported live as the
+       (Voice/Text toggle + overflow) together measure wider than a 375px
+       screen has room for, so .chat-header's own flex-wrap -- there for
+       genuinely narrow cases -- was dropping the toggle to its own row on
+       every single load, not just a rare edge case. Reported live as the
        toggle "bumping down" once the hands-free nudge message was visible,
        but it's a static width overflow, not caused by that message's
        content -- confirmed by reproducing it on the very first message too.
-       chat-status ("Your resolution facilitator") is the longest string in
-       that column and the one piece safe to truncate -- the name above it
-       still reads fully, and the full phrase is never load-bearing on its
-       own line. */
-    .chat-status{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;}
+       First tried truncating chat-status with an ellipsis instead of hiding
+       it outright -- reported back live as still wrapped, and measuring it
+       confirmed why: it only clawed back ~18px, still ~12px short of
+       fitting. Same "real fix, not a partial one" call as .you-tile and
+       .caption-stack above: chat-status ("Your resolution facilitator") is
+       the one piece of status feedback in the header, and it's redundant
+       with .chat-typing's own dots already shown in the thread while
+       Thimble is composing a reply -- dropping it outright, not shrinking
+       it further, is what actually gets the toggle back on one row. */
+    .chat-status{display:none;}
   }
   [hidden]{display:none !important;}
   /* Covers the whole app from first paint until Thimble is actually about
