@@ -9,6 +9,19 @@
 		reverse_proxy 127.0.0.1:8420
 	}
 
+	# Serves the repo-root about.html static (no app process behind it) --
+	# the test-facing primer page, linked as mend-mvp.onrender.com/about.
+	handle /about {
+		root * .
+		rewrite * /about.html
+		file_server
+	}
+
+	handle /about.html {
+		root * .
+		file_server
+	}
+
 	handle {
 		reverse_proxy 127.0.0.1:8423
 	}
