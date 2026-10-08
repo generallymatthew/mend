@@ -2213,7 +2213,15 @@ function updateThimbleMotion(inst, now, level, listening) {
 const captionEl = document.getElementById('caption');
 const captionStackEl = document.querySelector('.caption-stack');
 const statePillRowEl = document.querySelector('.state-pill-row');
-const controlBarEl = document.querySelector('.control-bar');
+// talkMicBtn, not .control-bar -- the tap-to-talk button now sits ABOVE
+// .control-bar (see its own markup comment), so .control-bar's own top
+// moved down when that button was added. Using .control-bar here would
+// mean the caption's midpoint follows the button down with it, landing
+// the caption directly on top of the button instead of above it --
+// confirmed live right after the button was moved. talkMicBtn is the
+// first/topmost element of that lower zone, so anchoring to ITS top
+// keeps the caption in the gap above everything in .call-controls.
+const controlBarEl = document.getElementById('talkMicBtn');
 const callMainEl = document.querySelector('.call-main');
 // caption-stack lives directly in .call-main (see its own markup comment),
 // not inside .stage, so it can be placed at the real vertical midpoint
@@ -3194,7 +3202,7 @@ async function startRecordingTurn(tapMode) {
         avatarState = 'idle';
         if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); } // nothing usable was actually said -- don't leave a stale live-preview bubble behind
         employeeCaption.textContent = '';
-        if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
+        if (liveMode) armTapToTalk(); // e.g. a clip too short/quiet to transcribe -- back to "Tap to talk", not another auto-started recording
         return;
       }
       const transcript = voiceData.transcript;
@@ -3227,7 +3235,7 @@ async function startRecordingTurn(tapMode) {
       if (myGen !== null) endReplyCycle();
       if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); }
       employeeCaption.textContent = '';
-      if (liveMode) startRecordingTurnSafe();
+      if (liveMode) armTapToTalk();
     } finally {
       setBusy(false);
     }
@@ -3580,7 +3588,7 @@ async function start() {
       // showed "Listening..." and the live timer running while the mic
       // was never actually requested -- looked like it was working,
       // reported live as "it could not hear me."
-      if (ui === 'voice') { armLiveMode(); startRecordingTurnSafe(); }
+      if (ui === 'voice') { armLiveMode(); armTapToTalk(); }
     }
   } finally {
     setBusy(false);
