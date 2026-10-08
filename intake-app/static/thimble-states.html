@@ -206,8 +206,8 @@ const HEARING_PING_THRESHOLD = 0.22;
 // HEARING_RIPPLE_WAVES but as real trailing ripples instead of a static
 // pattern. Rings also weaken a bit the further out they are (spatialDecay),
 // same as real ripples losing energy as they spread.
-const HEARING_RIPPLE_DURATION = 5; /* TEMP longer for eyeballing, revert to 2.2 */
-const HEARING_RIPPLE_AMP = 24; /* TEMP bumped up further for visibility, revert to 3.5 */
+const HEARING_RIPPLE_DURATION = 2.2; // matches the production value in static/index.html
+const HEARING_RIPPLE_AMP = 32; // matches the production value in static/index.html
 const HEARING_RIPPLE_K = 5; // how many trailing oscillations ride behind the front
 const HEARING_RIPPLE_AGE_DECAY = 2.2; // how fast a ring settles once the front has passed it
 const HEARING_RIPPLE_SPATIAL_DECAY = 1.3; // how much weaker farther-out rings are
@@ -347,7 +347,6 @@ const STATES = [
   {state: 'idle', title: 'Idle', desc: 'Before the call has really started -- same resting egg shape as listening, just no live mic input yet.', hasLevel: false, hasMuted: true},
   {state: 'listening', title: 'Listening', desc: 'Leans in, egg-shaped, wobbles with mic level. Continuous nod the whole time, not just on speech.', hasLevel: true, hasMuted: true},
   {state: 'hearing', title: 'Hearing you (prototype)', desc: 'Same pose as Listening, but the reaction IS the point: fast attack / slow release on the level, nod and dome pulse driven only by your actual level (no idle sway), plus a quick outward ping the instant you cross the threshold. Goal: strong enough on its own to replace the You-box glow.', hasLevel: true, hasMuted: true},
-  {state: 'listening2', title: 'Listening — new (circle → dome → base)', desc: 'Circle at rest; a soft dome as you start talking; the base widens and softens the longer you go. Three stages, not a straight blend, with a small wobble riding on top. No lean, no tilt, no separate nod.', hasLevel: true, hasMuted: true},
   {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Small off-center oval mouth, no movement. Covers transcribing and waiting on the reply both -- no separate states for those anymore.', hasLevel: false, hasMuted: false},
   {state: 'talking', title: 'Talking', desc: 'Round, ripples outward. Mouth height tracks TTS amplitude directly (fast attack, slower release) instead of a canned loop.', hasLevel: true, hasMuted: false},
   {state: 'empathizing', title: 'Empathizing', desc: 'Slow nod, soft closed-mouth smile, honey blend fades in from the side. Not wired to a real trigger yet.', hasLevel: false, hasMuted: false},
