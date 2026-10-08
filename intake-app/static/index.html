@@ -3187,6 +3187,13 @@ async function startRecordingTurn(tapMode) {
   dgSpeechHeard = false;
   mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
   mediaRecorder.onstop = async () => {
+    // Diagnostic only (reported live: voice "thinking" feels much longer
+    // than text, even though both hit the exact same /api/message/stream
+    // -- see that endpoint's own [timing] server log for Claude's actual
+    // first-token latency). This brackets everything BEFORE that call
+    // that text never pays: the Deepgram drain and transcript resolution.
+    // Visible via the browser console, not sent anywhere.
+    const tStop = performance.now();
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
     // Clear the "Listening…" indicator right away -- recording genuinely
@@ -3198,6 +3205,7 @@ async function startRecordingTurn(tapMode) {
     micIndicatorDot.classList.remove('lit');
     employeeTile.classList.remove('lit');
     await drainDeepgramSocket();
+    const tDrained = performance.now();
     partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
     if (discardNextStop) {
       // Pause fired mid-turn -- this stop is a hard abort, not a real end
@@ -3224,6 +3232,7 @@ async function startRecordingTurn(tapMode) {
     let myGen = null; // set once the reply cycle (post-transcription) actually starts; null means any catch below is a transcription failure, not an interrupted reply
     try {
       const voiceData = await resolveTurnTranscript(blob);
+      const tTranscribed = performance.now();
       if (turnGen !== replyGen) {
         // Paused (or otherwise interrupted) while the transcript was still
         // in flight -- drop the result instead of reviving the turn.
@@ -3253,6 +3262,7 @@ async function startRecordingTurn(tapMode) {
       resetSpeechQueue(myGen);
       replyAbortController = new AbortController();
       let replyBubble = null;
+      console.log(`[timing] voice pre-LLM: drain=${(tDrained - tStop).toFixed(0)}ms transcribe=${(tTranscribed - tDrained).toFixed(0)}ms total_before_reply_call=${(tTranscribed - tStop).toFixed(0)}ms`);
       const {reply, signal} = await streamFacilitatorReply(transcript, (partial) => {
         if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator'); return; }
         replyBubble.textContent = partial;
