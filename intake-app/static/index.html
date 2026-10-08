@@ -46,22 +46,28 @@
   .overflow-menu .menu-option{display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .overflow-menu .menu-option .check{color:var(--accent); opacity:0; font-weight:700;}
   .overflow-menu .menu-option[aria-checked="true"] .check{opacity:1;}
-  /* Pink (#F3829A) with dark ink text, not white -- pink fails contrast
-     with light text at this lightness, same pairing the "Go hands-free"
-     button uses (see addMessage's own brand-kit comment). Sits inline in
-     .control-bar between captionsToggleBtn and transcriptToggleBtn, same
-     44px height as .ctrl-btn's circles so it reads as one consistent row
-     instead of a second, heavier control -- font-size/weight toned down
-     to match the icons' own visual weight rather than standing out as a
-     separate, bigger CTA. Always rendered while liveMode is on (never
-     hidden, just dimmed via :disabled) so it holds a fixed spot instead
-     of popping in/out and shifting the caption's own midpoint (see
-     positionCaptionStack) around underneath it. */
-  .talk-mic-btn{height:44px; padding:0 18px; border-radius:999px; border:1px solid #F3829A; background:#F3829A; color:var(--ink); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:filter 120ms ease;}
-  .talk-mic-btn:hover:not(:disabled){filter:brightness(0.93);}
+  /* Three explicit states, per direct ask: default matches .ctrl-btn's
+     own dark-green/paper pairing exactly (reads as one consistent row
+     with the icons either side of it, not a separate, differently-themed
+     control); hover goes white-with-dark-text to signal "this does
+     something" on desktop; actually recording (tap-activated, including
+     the instant it's tapped -- see tapStarting) switches to the brand
+     pink, dark-ink-text pairing used everywhere else pink appears (see
+     addMessage's own brand-kit comment -- pink fails contrast with light
+     text at this lightness). Sits inline in .control-bar between
+     captionsToggleBtn and transcriptToggleBtn, same 44px height as
+     .ctrl-btn's circles so it reads as one row, not a second, heavier
+     control -- font-size/weight toned down to match the icons' own
+     visual weight rather than standing out as a separate, bigger CTA.
+     Always rendered while liveMode is on (never hidden, just dimmed via
+     :disabled) so it holds a fixed spot instead of popping in/out and
+     shifting the caption's own midpoint (see positionCaptionStack)
+     around underneath it. */
+  .talk-mic-btn{height:44px; padding:0 18px; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:var(--paper); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:background 120ms ease, color 120ms ease, border-color 120ms ease;}
+  .talk-mic-btn:hover:not(:disabled):not(.recording){background:#fff; border-color:var(--border); color:var(--ink);}
   .talk-mic-btn:disabled{opacity:.4; cursor:default;}
-  .talk-mic-btn.recording{background:#C0392B; border-color:#C0392B; color:#fff; animation:talk-mic-pulse 1.4s ease-in-out infinite;}
-  @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.35);} 50%{box-shadow:0 0 0 8px rgba(192,57,43,0);}}
+  .talk-mic-btn.recording{background:#F3829A; border-color:#F3829A; color:var(--ink); animation:talk-mic-pulse 1.4s ease-in-out infinite;}
+  @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(243,130,154,.45);} 50%{box-shadow:0 0 0 8px rgba(243,130,154,0);}}
   .talk-transcript-box{align-self:center; max-width:420px; min-height:22px; padding:10px 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:13.5px; color:var(--ink); text-align:center;}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
   .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
@@ -895,6 +901,11 @@ muteBtn.addEventListener('click', () => {
 // hands-free recording doesn't. Every call site that used to check
 // `!pttMode` for this reason now checks `!holdControlled` instead.
 let holdControlled = false;
+// True from the instant talkMicBtn is tapped until startRecordingTurn's
+// getUserMedia call actually settles -- see that click handler's own
+// comment. Lets updateStatePill show the recording look immediately
+// instead of waiting out mic-setup latency.
+let tapStarting = false;
 
 // Composer's own hold-to-dictate mic button: press, hold, release fills
 // the text input with the transcript for review -- NOT auto-sent, per
@@ -2268,8 +2279,14 @@ function splitCaptionParts(text) {
   return parts.length ? parts : [text];
 }
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', ready: 'Tap to talk', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
-const CHAT_STATUS = {idle: 'Your resolution facilitator', listening: 'Your resolution facilitator', ready: 'Tap to talk', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
+// ready's own word is a status ("what Thimble is doing" -- waiting on the
+// person to respond), not an instruction -- "Tap to talk" belongs on the
+// button itself (see talkMicBtn's own text logic in updateStatePill),
+// which already says that; the pill saying the same thing read as an
+// instruction coming from Thimble, not a status, and was reported live
+// as wrong for exactly that reason.
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', ready: 'Waiting…', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
+const CHAT_STATUS = {idle: 'Your resolution facilitator', listening: 'Your resolution facilitator', ready: 'Waiting for you…', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
 const BUSY_STATES = ['thinking', 'talking'];
@@ -2282,7 +2299,10 @@ function updateStatePill() {
   // composer's own hold-to-dictate sets it too, on Text tab. Gating on
   // ui === 'voice' keeps this button/box from ever flashing on while
   // someone's dictating into the text composer instead.
-  const tapRecording = ui === 'voice' && liveMode && holdControlled && mediaRecorder && mediaRecorder.state === 'recording';
+  // tapStarting (set synchronously by talkMicBtn's own click handler,
+  // before getUserMedia resolves) counts as recording for every visual
+  // purpose below -- see that handler's own comment on why.
+  const tapRecording = tapStarting || (ui === 'voice' && liveMode && holdControlled && mediaRecorder && mediaRecorder.state === 'recording');
   // Persists (never hidden) for the whole time liveMode is on -- it used
   // to hide/show across avatarState changes, which shifted the caption's
   // own vertical midpoint (positionCaptionStack) underneath it every time
@@ -2292,10 +2312,12 @@ function updateStatePill() {
   talkMicBtn.hidden = !(ui === 'voice' && liveMode);
   // Tappable during 'talking'/'thinking' too, not just 'ready' -- with
   // voice barge-in disabled, tapping this is now the only way to cut
-  // Thimble off mid-reply (see talkMicBtn's own click handler).
+  // Thimble off mid-reply (see talkMicBtn's own click handler). Label
+  // stays "Tap to talk" throughout, per explicit ask -- interruptible
+  // only changes whether it's enabled, not what it says.
   const interruptible = avatarState === 'talking' || avatarState === 'thinking';
   talkMicBtn.disabled = !tapRecording && avatarState !== 'ready' && !interruptible;
-  talkMicBtn.textContent = tapRecording ? 'Tap to stop' : interruptible ? 'Tap to interrupt' : 'Tap to talk';
+  talkMicBtn.textContent = tapRecording ? 'Tap to stop' : 'Tap to talk';
   talkMicBtn.classList.toggle('recording', tapRecording);
   talkTranscriptBox.hidden = !tapRecording;
   const word = STATE_WORDS[avatarState] || 'Listening…';
@@ -3385,11 +3407,20 @@ talkMicBtn.addEventListener('click', async () => {
     avatarState = 'ready';
   }
   if (avatarState !== 'ready') return; // e.g. mid-transcription -- nothing to interrupt or start yet
-  talkMicBtn.disabled = true; // guard against a double-tap firing getUserMedia twice
+  // getUserMedia can take a real, noticeable fraction of a second even
+  // with permission already granted (cold mic hardware, echoCancellation/
+  // noiseSuppression setup) -- reported live as the button "feeling
+  // unresponsive" because nothing changed until it resolved. tapStarting
+  // (read by updateStatePill, folded into tapRecording there) flips the
+  // button to its recording look immediately on tap, not once the mic
+  // actually finishes opening.
+  tapStarting = true;
   try {
     await startRecordingTurn(true);
   } catch (e) {
     showMicError(e);
+  } finally {
+    tapStarting = false;
   }
 });
 
