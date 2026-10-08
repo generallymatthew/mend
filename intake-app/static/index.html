@@ -41,6 +41,11 @@
   .overflow-menu{position:absolute; top:calc(100% + 6px); right:0; min-width:160px; background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(23,55,46,.14); padding:6px; z-index:6;}
   .overflow-menu button{display:block; width:100%; text-align:left; border:none; background:transparent; padding:9px 10px; border-radius:8px; font-size:13.5px; font-weight:600; color:var(--ink);}
   .overflow-menu button:hover{background:var(--accent-soft);}
+  .overflow-menu .menu-divider{height:1px; background:var(--border); margin:6px 4px;}
+  .overflow-menu .menu-label{padding:4px 10px 2px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);}
+  .overflow-menu .menu-option{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .overflow-menu .menu-option .check{color:var(--accent); opacity:0; font-weight:700;}
+  .overflow-menu .menu-option[aria-checked="true"] .check{opacity:1;}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
   .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
   .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
@@ -456,7 +461,10 @@
               </button>
               <div class="overflow-menu" id="voiceOverflowMenu" hidden>
                 <button id="resetBtn" type="button">Start over</button>
-                <button id="ttsProviderBtn" type="button">Voice: OpenAI</button>
+                <div class="menu-divider"></div>
+                <div class="menu-label">Voice</div>
+                <button class="menu-option" id="ttsOptOpenai" type="button" role="menuitemradio"><span>OpenAI</span><span class="check">&check;</span></button>
+                <button class="menu-option" id="ttsOptAura" type="button" role="menuitemradio"><span>Aura</span><span class="check">&check;</span></button>
               </div>
             </div>
           </div>
@@ -1218,7 +1226,12 @@ function startDeepgramSocket(sampleRate) {
   // can fall back to the complete local-Whisper clip instead of silently
   // standing in as the whole answer.
   ws.closedUnexpectedly = false;
-  ws.onclose = () => { if (!ws.intentionalClose) ws.closedUnexpectedly = true; };
+  // onCloseHint (set by drainDeepgramSocket) is the server telling us,
+  // by actually closing the socket, that it has finished relaying
+  // Deepgram's finalized results and there is nothing left to wait for --
+  // see drainDeepgramSocket's own comment for why this replaced guessing
+  // at a fixed timeout.
+  ws.onclose = () => { if (!ws.intentionalClose) ws.closedUnexpectedly = true; if (ws.onCloseHint) ws.onCloseHint(); };
   ws.onerror = () => { ws.closedUnexpectedly = true; };
   ws.onmessage = (ev) => {
     let msg;
@@ -1331,18 +1344,38 @@ function startDeepgramSocket(sampleRate) {
 // recording's onstop was still sitting in that delay. Reading the global
 // here unconditionally meant the FIRST recording's drain would silently
 // close the SECOND recording's live socket out from under it.
+// Real bug found live on a phone, worse over mobile networks: this used to
+// just wait, hoping Deepgram's own is_final/UtteranceEnd showed up on its
+// own, then call dg.close() -- but /ws/voice only forwards Deepgram's
+// finalize signal (CloseStream) once IT sees OUR socket disconnect (see
+// server.py's ws_voice). So the finalize request only ever went out at the
+// exact moment this function gave up and closed -- the trailing word's
+// transcript, sent back in response to that late CloseStream, was racing a
+// channel we'd already started tearing down, and regularly lost that race
+// on slower/jittery connections (reported live: a mobile voice memo missing
+// its last part). Sending an explicit {"type":"end"} message up front lets
+// the server forward CloseStream immediately, while the socket is still
+// open to relay whatever Deepgram sends back -- the server now closes this
+// socket itself only once that relay is actually done, which is the real
+// "fully drained" signal (onCloseHint, wired in startDeepgramSocket), not a
+// guess. The old message-settle/timeout logic stays as a safety net in
+// case the server or Deepgram never closes for some other reason.
 async function drainDeepgramSocket(sock) {
   const dg = sock !== undefined ? sock : dgSocket;
   if (dg && dg.readyState === WebSocket.OPEN) {
+    dg.intentionalClose = true; // anything from here on is this turn ending normally, not a mid-recording drop -- see startDeepgramSocket's closedUnexpectedly comment
+    try { dg.send(JSON.stringify({type: 'end'})); } catch (e) {}
     await new Promise((resolve) => {
       let settleTimer = null;
-      const maxTimer = setTimeout(finish, 1200);
+      const maxTimer = setTimeout(finish, 2500);
       function finish() {
         clearTimeout(maxTimer);
         clearTimeout(settleTimer);
         dg.onMessageHint = null;
+        dg.onCloseHint = null;
         resolve();
       }
+      dg.onCloseHint = finish;
       dg.onMessageHint = () => { clearTimeout(settleTimer); settleTimer = setTimeout(finish, 350); };
     });
   }
@@ -1350,10 +1383,7 @@ async function drainDeepgramSocket(sock) {
   // newer recording cycle may have already replaced it with its own (see
   // this function's own comment above).
   if (dg === dgSocket) dgSocket = null;
-  if (dg && dg.readyState === WebSocket.OPEN) {
-    dg.intentionalClose = true; // tells its own onclose this wasn't a mid-recording drop -- see startDeepgramSocket's closedUnexpectedly comment
-    dg.close();
-  }
+  if (dg && dg.readyState === WebSocket.OPEN) dg.close(); // safety-net path only -- the server should already have closed this itself above
 }
 
 // Deepgram already has the transcript by the time a turn ends -- it was
@@ -2356,18 +2386,22 @@ function feedSpeechText(fullText, final) {
 // tester's choice survives a reload. Defaults to 'openai', the existing
 // behavior, for anyone who's never touched the toggle.
 let ttsProvider = localStorage.getItem('ttsProvider') || 'openai';
-const ttsProviderBtn = document.getElementById('ttsProviderBtn');
+const ttsOptButtons = {openai: document.getElementById('ttsOptOpenai'), aura: document.getElementById('ttsOptAura')};
 
 function updateTtsProviderBtn() {
-  ttsProviderBtn.textContent = ttsProvider === 'aura' ? 'Voice: Aura' : 'Voice: OpenAI';
+  for (const [provider, btn] of Object.entries(ttsOptButtons)) {
+    btn.setAttribute('aria-checked', String(provider === ttsProvider));
+  }
 }
 updateTtsProviderBtn();
 
-ttsProviderBtn.addEventListener('click', () => {
-  ttsProvider = ttsProvider === 'aura' ? 'openai' : 'aura';
-  localStorage.setItem('ttsProvider', ttsProvider);
-  updateTtsProviderBtn();
-});
+for (const [provider, btn] of Object.entries(ttsOptButtons)) {
+  btn.addEventListener('click', () => {
+    ttsProvider = provider;
+    localStorage.setItem('ttsProvider', ttsProvider);
+    updateTtsProviderBtn();
+  });
+}
 
 function queueSentence(text) {
   if (!text) return;
