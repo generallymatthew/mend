@@ -376,6 +376,19 @@
        show a footer disclaimer under the input. Dropped on mobile only;
        both stay visible on desktop. */
     .feedback-link-row, .disclaimer-footer{display:none;}
+    /* .chat-header-left (avatar + name/status column) and .chat-header-right
+       (Voice/Text toggle + overflow) together measure ~30px wider than a
+       375px screen has room for, so .chat-header's own flex-wrap -- there
+       for genuinely narrow cases -- was dropping the toggle to its own row
+       on every single load, not just a rare edge case. Reported live as the
+       toggle "bumping down" once the hands-free nudge message was visible,
+       but it's a static width overflow, not caused by that message's
+       content -- confirmed by reproducing it on the very first message too.
+       chat-status ("Your resolution facilitator") is the longest string in
+       that column and the one piece safe to truncate -- the name above it
+       still reads fully, and the full phrase is never load-bearing on its
+       own line. */
+    .chat-status{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;}
   }
   [hidden]{display:none !important;}
   /* Covers the whole app from first paint until Thimble is actually about
