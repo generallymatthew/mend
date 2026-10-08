@@ -232,7 +232,14 @@
      from both the row's right and bottom edges, not math'd to track the
      control-bar's own bottom (that coupling made the offset asymmetric
      and dependent on .call-controls' internal layout). */
-  .you-tile{position:absolute; right:24px; bottom:24px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden; transition:border-color 80ms linear, box-shadow 80ms linear;}
+  /* Hidden, not removed: the ear-ripple on Thimble itself (see
+     updateThimbleMotion's HEARING_* block) is meant to replace this tile's
+     own "it heard you" glow, and Thimble already dims to 50% opacity while
+     muted+listening (see .thimble-avatar.muted above) as this tile's mute
+     icon did. Markup/JS (employeeTile, youMuteIcon, the lit/muted toggles
+     below) all stay wired up untouched so this is a one-line revert --
+     delete this display:none -- if the ripple doesn't hold up on its own. */
+  .you-tile{display:none; position:absolute; right:24px; bottom:24px; width:150px; aspect-ratio:16/10; border-radius:14px; background:var(--paper); border:1px solid var(--border); overflow:hidden; transition:border-color 80ms linear, box-shadow 80ms linear;}
   /* Reported live: the only "yes, the app can hear you" feedback was the
      employee-circle's own 1.08x scale -- 48px, easy to miss entirely next
      to everything else on screen. A border + glow around the WHOLE tile
