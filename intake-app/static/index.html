@@ -1214,6 +1214,26 @@ function startDeepgramSocket(sampleRate) {
         ws.interimText = msg.text;
       }
       if (ws !== dgSocket) return; // a stale socket from a turn that already ended -- still accumulates its own text above, just doesn't touch shared UI state below
+      // dgSpeechHeard used to be set from local mic level crossing
+      // vadThreshold (see its own declaration below) -- re-coupled to AGC's
+      // silence-ramp problem the instant CAPTURE_MIC_CONSTRAINTS turned AGC
+      // back on for this stream, the exact bug that fix was trying to avoid
+      // reintroducing, just relocated from checkVad to this backstop
+      // instead. Deepgram actually recognizing real words is a strictly
+      // stronger, already-debounced (Deepgram's own STT, not a raw
+      // amplitude blip) signal that speech happened -- using it here
+      // instead makes this flag immune to local mic level/AGC entirely.
+      // dgLastActivityAt (any message, not just ones with text -- an empty
+      // interim still proves the connection and Deepgram's own VAD are
+      // alive) is what the backstop times silence from instead of local
+      // level too, for the same reason: AGC drift could otherwise keep
+      // `level` reading above vadThreshold during genuine silence, which
+      // would starve the backstop's own silence timer and leave it unable
+      // to fire at all -- a softer failure than the false-cutoff this
+      // whole fix is about, but still a real one, and easy to avoid by not
+      // depending on local level here in the first place.
+      if (msg.text) dgSpeechHeard = true;
+      dgLastActivityAt = performance.now();
       const shown = (ws.finalText + ' ' + ws.interimText).trim();
       if (shown && pendingTranscriptEl) {
         pendingTranscriptEl.textContent = '"' + shown + '"';
@@ -2220,17 +2240,14 @@ function animateAvatar(now) {
     employeeTile.classList.toggle('lit', employeeLit);
     if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage. liveMode alone is enough to exclude the composer's own hold-controlled recording, which never sets liveMode true (Text mode doesn't touch it).
     if (liveMode && !micMuted && !sessionPaused && deepgramEnabled) {
-      // See DG_HANG_BACKSTOP_PRE_MS/_POST_MS/DG_SPEECH_CONFIRM_MS above -- last-resort stop if Deepgram never ends the turn itself.
-      if (level > vadThreshold) {
-        if (!dgSpeechHeard) {
-          if (dgAboveSince === null) dgAboveSince = t;
-          else if (t - dgAboveSince >= DG_SPEECH_CONFIRM_MS) dgSpeechHeard = true;
-        }
-        dgHangSilenceSince = null;
-      } else {
-        dgAboveSince = null;
-        if (dgHangSilenceSince === null) dgHangSilenceSince = t;
-        else if (t - dgHangSilenceSince >= (dgSpeechHeard ? DG_HANG_BACKSTOP_POST_MS : DG_HANG_BACKSTOP_PRE_MS)) mediaRecorder.stop();
+      // See DG_HANG_BACKSTOP_PRE_MS/_POST_MS and dgLastActivityAt's own
+      // declarations above -- last-resort stop if Deepgram never ends the
+      // turn itself. Deliberately NOT based on local mic level/vadThreshold
+      // here (see dgSpeechHeard's own comment on why) -- silence is timed
+      // from the last real Deepgram message instead.
+      const quietFor = t - (dgLastActivityAt !== null ? dgLastActivityAt : vadTurnStartedAt);
+      if (quietFor >= (dgSpeechHeard ? DG_HANG_BACKSTOP_POST_MS : DG_HANG_BACKSTOP_PRE_MS)) {
+        mediaRecorder.stop();
       }
     }
     if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
@@ -2709,29 +2726,39 @@ let vadBlipSince = null;
 // own ~1.5-2s post-speech latency also shortened the PRE-speech grace
 // period -- ordinary reaction time before a short answer (reported live:
 // "it just interrupted me") started losing the race against the same
-// clock. dgSpeechHeard (set the first time local mic energy ever crosses
-// vadThreshold this turn) splits the two: generous grace before any local
-// speech has been heard at all (DG_HANG_BACKSTOP_PRE_MS, basically "are
-// they even going to answer"), short grace once they've started and gone
-// quiet again (DG_HANG_BACKSTOP_POST_MS, "they're done talking, confirmed
-// directly against the real API -- a clean one-word utterance's own
-// speech_final lands ~1.5-2s after the word ends, endpointing=1400ms plus
-// overhead -- comfortably clears that without being the old 4000ms).
+// clock. dgSpeechHeard splits the two: generous grace before any speech
+// has been heard at all (DG_HANG_BACKSTOP_PRE_MS, basically "are they even
+// going to answer"), short grace once they've started and gone quiet again
+// (DG_HANG_BACKSTOP_POST_MS, "they're done talking, confirmed directly
+// against the real API -- a clean one-word utterance's own speech_final
+// lands ~1.5-2s after the word ends, endpointing=1400ms plus overhead --
+// comfortably clears that without being the old 4000ms).
+//
+// dgSpeechHeard itself is set in startDeepgramSocket's onmessage, the
+// instant Deepgram sends back any real recognized text -- NOT from local
+// mic level crossing vadThreshold, which is what this used to do (and what
+// the silence-duration check just below still does, see its own comment).
+// A level-based signal here was exactly as exposed to AGC's silence-ramp
+// problem as checkVad's own threshold is (CAPTURE_MIC_CONSTRAINTS turned
+// AGC back on for this stream specifically because checkVad's own call
+// site is skipped whenever deepgramEnabled -- missed, on a first pass,
+// that this backstop reads the exact same vadThreshold and IS active in
+// that mode); rising self-noise could flip dgSpeechHeard true with nobody
+// having said a word, then the short post-speech window would cut the turn
+// off deceptively fast once that same self-noise dipped again -- a
+// plausible real explanation for "doesn't seem to know I've said
+// something even though it's listening." Deepgram actually recognizing
+// words is both a stronger signal and already immune to local mic level
+// entirely.
 const DG_HANG_BACKSTOP_PRE_MS = 8000;
 const DG_HANG_BACKSTOP_POST_MS = 2200;
-// dgSpeechHeard must only flip true on SUSTAINED level, not one loud frame --
-// a brief echo/room-tail blip from Thimble's own just-finished voice, right
-// as this turn's mic stream opens, can cross vadThreshold for a frame or two
-// even with echoCancellation on. If that alone flipped dgSpeechHeard, the
-// short post-speech backstop above would arm immediately, before the person
-// had said anything -- reported live right after the pre/post split landed
-// ("it also just cut me off"), too fast to have been a real finished answer.
-// Mirrors checkVad's own VAD_MIN_SPEECH_MS debounce, applied here to the
-// start of speech instead of the end.
-const DG_SPEECH_CONFIRM_MS = 250;
-let dgHangSilenceSince = null;
 let dgSpeechHeard = false;
-let dgAboveSince = null;
+// Last time ANY Deepgram message arrived for the current turn's socket
+// (set in startDeepgramSocket's onmessage) -- null means the turn just
+// started and nothing has arrived yet. The backstop below times silence
+// from this instead of local mic level, so it isn't exposed to AGC drift
+// either (see dgSpeechHeard's own comment for the matching reasoning).
+let dgLastActivityAt = null;
 
 function startVadCalibration(now) {
   vadCalibrating = true;
@@ -2995,9 +3022,8 @@ async function startRecordingTurn() {
   vadSpeaking = false;
   vadSpeechStarted = null;
   vadSilenceSince = null;
-  dgHangSilenceSince = null;
+  dgLastActivityAt = null;
   dgSpeechHeard = false;
-  dgAboveSince = null;
   mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
   mediaRecorder.onstop = async () => {
     stream.getTracks().forEach(t => t.stop());
