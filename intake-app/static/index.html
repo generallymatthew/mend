@@ -46,6 +46,11 @@
   .overflow-menu .menu-option{display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .overflow-menu .menu-option .check{color:var(--accent); opacity:0; font-weight:700;}
   .overflow-menu .menu-option[aria-checked="true"] .check{opacity:1;}
+  .talk-mic-btn{margin-top:14px; padding:10px 22px; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff; font-size:14px; font-weight:600; cursor:pointer;}
+  .talk-mic-btn:disabled{opacity:.4; cursor:default;}
+  .talk-mic-btn.recording{background:#C0392B; border-color:#C0392B; animation:talk-mic-pulse 1.4s ease-in-out infinite;}
+  @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.35);} 50%{box-shadow:0 0 0 8px rgba(192,57,43,0);}}
+  .talk-transcript-box{margin-top:14px; max-width:420px; min-height:22px; padding:10px 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:13.5px; color:var(--ink); text-align:center;}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
   .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
   .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
@@ -489,6 +494,8 @@
             <div class="state-pill-row">
               <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
             </div>
+            <button id="talkMicBtn" class="talk-mic-btn" type="button" hidden>Tap to talk</button>
+            <div class="talk-transcript-box" id="talkTranscriptBox" hidden><span id="talkTranscriptText"></span></div>
           </div>
           <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
           <div class="mic-error-banner" id="micErrorBanner" hidden>
@@ -682,6 +689,9 @@ const transcriptPanel = document.getElementById('transcriptPanel');
 const transcriptToggleBtn = document.getElementById('transcriptToggleBtn');
 const callLayout = document.querySelector('.call-layout');
 const voicePanel = document.getElementById('voicePanel');
+const talkMicBtn = document.getElementById('talkMicBtn');
+const talkTranscriptBox = document.getElementById('talkTranscriptBox');
+const talkTranscriptText = document.getElementById('talkTranscriptText');
 const chatPanel = document.getElementById('chatPanel');
 const chatThread = document.getElementById('chatThread');
 const chatThreadInner = document.getElementById('chatThreadInner');
@@ -839,7 +849,7 @@ function resumeSession() {
   }
   if (ui === 'voice') {
     armLiveMode();
-    startRecordingTurnSafe();
+    armTapToTalk();
   }
 }
 
@@ -1271,6 +1281,11 @@ function startDeepgramSocket(sampleRate) {
         if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = shown;
         if (captionsOn) employeeCaption.textContent = shown;
       }
+      // Tap-to-talk's own live transcript box -- unconditional on
+      // captionsOn (unlike employeeCaption above), since this is the core
+      // "it's actually hearing me" feedback for tap mode, not an optional
+      // caption some testers might turn off.
+      talkTranscriptText.textContent = shown;
       // onMessageHint, when set, is onstop's own post-release drain wait
       // (see startRecordingTurn) watching for Deepgram traffic to settle,
       // so it can resolve early instead of sitting out its full timeout.
@@ -2225,8 +2240,8 @@ function splitCaptionParts(text) {
   return parts.length ? parts : [text];
 }
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
-const CHAT_STATUS = {idle: 'Your resolution facilitator', listening: 'Your resolution facilitator', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', ready: 'Tap to talk', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
+const CHAT_STATUS = {idle: 'Your resolution facilitator', listening: 'Your resolution facilitator', ready: 'Tap to talk', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
 const BUSY_STATES = ['thinking', 'talking'];
@@ -2234,6 +2249,17 @@ function updateStatePill() {
   // Not gated by the early-return below -- this needs to react every
   // frame avatarState could've changed, same as the label itself would.
   skipIntroBtn.hidden = !BUSY_STATES.includes(avatarState);
+  // Tap-to-talk mic button + live transcript box: holdControlled alone
+  // isn't enough to mean "this is a tap-toggle Talk-tab recording" -- the
+  // composer's own hold-to-dictate sets it too, on Text tab. Gating on
+  // ui === 'voice' keeps this button/box from ever flashing on while
+  // someone's dictating into the text composer instead.
+  const tapRecording = ui === 'voice' && liveMode && holdControlled && mediaRecorder && mediaRecorder.state === 'recording';
+  talkMicBtn.hidden = !(ui === 'voice' && liveMode && (avatarState === 'ready' || tapRecording));
+  talkMicBtn.disabled = !tapRecording && avatarState !== 'ready';
+  talkMicBtn.textContent = tapRecording ? 'Tap to stop' : 'Tap to talk';
+  talkMicBtn.classList.toggle('recording', tapRecording);
+  talkTranscriptBox.hidden = !tapRecording;
   const word = STATE_WORDS[avatarState] || 'Listening…';
   if (word === lastStateWord) return;
   lastStateWord = word;
@@ -2274,7 +2300,7 @@ function updateCaption() {
 function animateAvatar(now) {
   requestAnimationFrame(animateAvatar);
   const t = now || performance.now();
-  const listening = avatarState === 'listening' || avatarState === 'idle';
+  const listening = avatarState === 'listening' || avatarState === 'idle' || avatarState === 'ready';
   const recording = mediaRecorder && mediaRecorder.state === 'recording';
   const rawLevel = (recording && micAnalyser) ? rmsLevel(micAnalyser, micData) : 0;
   const level = micMuted ? 0 : rawLevel;
@@ -2285,13 +2311,15 @@ function animateAvatar(now) {
   if (recording) {
     micIndicatorDot.classList.toggle('lit', employeeLit);
     employeeTile.classList.toggle('lit', employeeLit);
-    if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage. liveMode alone is enough to exclude the composer's own hold-controlled recording, which never sets liveMode true (Text mode doesn't touch it).
-    if (liveMode && !micMuted && !sessionPaused && deepgramEnabled) {
+    if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled && !holdControlled) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage. !holdControlled excludes tap-to-talk recordings (and the composer's hold-to-dictate, via liveMode alone already) -- a silence guess has no business ending a turn the user is ending themselves.
+    if (liveMode && !micMuted && !sessionPaused && deepgramEnabled && !holdControlled) {
       // See DG_HANG_BACKSTOP_PRE_MS/_POST_MS and dgLastActivityAt's own
       // declarations above -- last-resort stop if Deepgram never ends the
       // turn itself. Deliberately NOT based on local mic level/vadThreshold
       // here (see dgSpeechHeard's own comment on why) -- silence is timed
-      // from the last real Deepgram message instead.
+      // from the last real Deepgram message instead. Skipped entirely for
+      // tap-to-talk (!holdControlled) -- the whole point of a tap-to-end
+      // turn is that NOTHING times out on silence, including this backstop.
       const quietFor = t - (dgLastActivityAt !== null ? dgLastActivityAt : vadTurnStartedAt);
       if (quietFor >= (dgSpeechHeard ? DG_HANG_BACKSTOP_POST_MS : DG_HANG_BACKSTOP_PRE_MS)) {
         mediaRecorder.stop();
@@ -2521,7 +2549,7 @@ function advanceSpeechQueue() {
 function finishSpeechCycle() {
   if (avatarState === 'talking') avatarState = 'idle';
   endReplyCycle();
-  if (liveMode) startRecordingTurnSafe();
+  if (liveMode) armTapToTalk();
 }
 
 skipIntroBtn.addEventListener('click', () => {
@@ -2532,7 +2560,7 @@ skipIntroBtn.addEventListener('click', () => {
   captionEl.textContent = '';
   avatarState = 'idle';
   armLiveMode(); // no-op if already armed; just ensures liveMode is true
-  startRecordingTurnSafe();
+  armTapToTalk();
 });
 
 // Voice view's transcript sidebar and Text view's chat panel render the same
@@ -3068,11 +3096,19 @@ const INTERRUPT_MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppress
 // usable at all.
 const CAPTURE_MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}};
 
-async function startRecordingTurn() {
+async function startRecordingTurn(tapMode) {
   const stream = await navigator.mediaDevices.getUserMedia(CAPTURE_MIC_CONSTRAINTS);
   mediaRecorder = new MediaRecorder(stream);
   chunks = [];
-  holdControlled = false; // hands-free: silence/Deepgram endpointing ends the turn, not a manual release
+  // tapMode (Talk tab's tap-to-talk button): the second tap is what ends
+  // this turn, not a silence guess -- same holdControlled flag the
+  // composer's hold-to-dictate already uses to suppress Deepgram's own
+  // speech_final/utterance_end auto-stop (see startDeepgramSocket's
+  // onmessage) and the hang-backstop (see its own call site below).
+  // Without tapMode (barge-in's own call into this function), silence/
+  // Deepgram endpointing still ends the turn, same as before.
+  holdControlled = !!tapMode;
+  if (tapMode) { talkTranscriptText.textContent = ''; }
   vadSpeaking = false;
   vadSpeechStarted = null;
   vadSilenceSince = null;
@@ -3269,6 +3305,33 @@ function armLiveMode() {
   setLiveLayout(true);
   hideMicError();
 }
+
+// Tap-to-talk: every "the mic should be ready again now" moment that used
+// to immediately grab the mic and start recording (hands-free) now just
+// shows "Tap to talk" instead -- recording itself only ever starts from
+// talkMicBtn's own click handler below. Doesn't touch an in-flight
+// recording (e.g. a barge-in that's already capturing via
+// startRecordingTurnSafe, which still starts recording immediately,
+// unchanged -- real speech was already confirmed there, nothing to wait
+// for a tap for).
+function armTapToTalk() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  avatarState = 'ready';
+}
+
+talkMicBtn.addEventListener('click', async () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording' && holdControlled) {
+    mediaRecorder.stop(); // second tap: end the turn right now, no silence wait at all
+    return;
+  }
+  if (avatarState !== 'ready') return; // Thimble's talking/thinking, or nothing armed yet -- not our turn to listen
+  talkMicBtn.disabled = true; // guard against a double-tap firing getUserMedia twice
+  try {
+    await startRecordingTurn(true);
+  } catch (e) {
+    showMicError(e);
+  }
+});
 
 // Reported live: a phone's screen kept dimming/locking mid-call, which on
 // most phones also suspends the mic and/or audio playback -- not just an
