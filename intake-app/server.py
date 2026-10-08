@@ -72,7 +72,14 @@ DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
 # the default synthesize_speech() path, so existing behavior is untouched.
 # Reuses DEEPGRAM_API_KEY (already required for streaming STT), one fewer
 # vendor key than the current OpenAI+macOS setup.
-AURA_TTS_MODEL = os.environ.get("AURA_TTS_MODEL", "aura-2-asteria-en")
+#
+# aura-asteria-en (Aura-1), not aura-2-asteria-en -- measured live, same
+# text, direct Deepgram calls: Aura-1 ~0.25s total (~0.2s to first byte),
+# Aura-2 ~2.0s total (~0.3-0.4s to first byte) -- Aura-2's trailing
+# generation time (not connection/TTFB) is the gap, confirmed live as
+# "felt so slow after transcription" once this was wired into a real voice
+# turn. Aura-1 is also ~8x faster than the existing OpenAI tts-1 path.
+AURA_TTS_MODEL = os.environ.get("AURA_TTS_MODEL", "aura-asteria-en")
 
 # Optional video-avatar mode (Tavus Conversational Video Interface). All four
 # must be set -- see README.md's "Optional: video avatar" section for how to
