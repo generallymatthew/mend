@@ -836,10 +836,35 @@ function setPttMode(on) {
 pttHandsFreeTab.addEventListener('click', () => setPttMode(false));
 pttHoldTab.addEventListener('click', () => setPttMode(true));
 
+// Release-before-recording-started race: pttPress awaits getUserMedia
+// before `mediaRecorder` exists at all, and a real press/release can easily
+// land entirely inside that window (permission/device setup can take real
+// time, and a short answer is, deliberately, a short hold). The old
+// pttRelease() only knew how to stop an ALREADY-recording mediaRecorder --
+// a release that arrived before one existed found nothing to stop and was
+// silently dropped, so recording then started moments later with nothing
+// left to ever end it: reported live as "it kept listening," then, once
+// something else (a second press) finally stopped it, a near-empty clip
+// and "couldn't transcribe audio" -- confirmed directly from the server's
+// own upload-size log (110 bytes, i.e. a brand-new recording stopped
+// almost immediately, not the real answer). pttReleaseRequested records
+// that a release happened while still awaiting startRecordingTurn(), and
+// pttPress honors it the moment recording actually begins instead of
+// losing it.
+let pttReleaseRequested = false;
+
+function pttScheduleStop(elapsedMs) {
+  const stopNow = () => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }; // triggers the same onstop -> transcribe -> reply flow hands-free uses
+  const elapsed = elapsedMs ?? (performance.now() - pttPressedAt);
+  if (elapsed < PTT_MIN_HOLD_MS) setTimeout(stopNow, PTT_MIN_HOLD_MS - elapsed);
+  else stopNow();
+}
+
 async function pttPress() {
   if (!pttMode || pttHolding || micMuted || sessionPaused) return;
   hidePttTooltip(); // they've got it -- no need to keep coaching once they've actually pressed it
   pttHolding = true;
+  pttReleaseRequested = false;
   pttPressedAt = performance.now();
   pttBtn.classList.add('active');
   pttBtn.title = 'Listening… (release to send)';
@@ -855,6 +880,7 @@ async function pttPress() {
   if (mediaRecorder && mediaRecorder.state === 'recording') return; // already recording -- shouldn't happen, but don't double-start
   try {
     await startRecordingTurn();
+    if (pttReleaseRequested) pttScheduleStop();
   } catch (e) {
     pttHolding = false;
     pttBtn.classList.remove('active');
@@ -867,10 +893,14 @@ function pttRelease() {
   pttHolding = false;
   pttBtn.classList.remove('active');
   pttBtn.title = 'Hold to talk';
-  const elapsed = performance.now() - pttPressedAt;
-  const stopNow = () => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }; // triggers the same onstop -> transcribe -> reply flow hands-free uses
-  if (elapsed < PTT_MIN_HOLD_MS) setTimeout(stopNow, PTT_MIN_HOLD_MS - elapsed);
-  else stopNow();
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+    // Recording hasn't actually started yet -- see pttReleaseRequested's
+    // own comment above. pttPress's own await picks this up once
+    // startRecordingTurn() resolves.
+    pttReleaseRequested = true;
+    return;
+  }
+  pttScheduleStop(performance.now() - pttPressedAt);
 }
 pttBtn.addEventListener('mousedown', (e) => { e.preventDefault(); pttPress(); });
 pttBtn.addEventListener('mouseup', pttRelease);
