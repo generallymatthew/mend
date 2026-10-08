@@ -2712,7 +2712,21 @@ async function startRecordingTurnSafe() {
 // through the speakers, reported live as false-triggering the interrupt
 // monitor -- see MIC_CONSTRAINTS's other use in startInterruptMonitor) a
 // real chance to engage, rather than trusting an unstated default.
-const MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}};
+//
+// autoGainControl is explicitly OFF, not just left out -- it was on until a
+// live mobile report ("keeps thinking I'm talking when there's no
+// background noise and I haven't said a word"). checkVad's calibration
+// samples ambient level for a one-time 400ms window, then measures every
+// later frame against a threshold fixed from that sample. Mobile AGC keeps
+// adjusting gain for seconds after that, and specifically ramps gain UP
+// during silence (nothing loud for it to normalize against) -- so the same
+// physical silence reads louder and louder after calibration, eventually
+// crossing the fixed threshold with no real noise or speech involved.
+// Desktop mics' AGC converges fast enough before the 400ms window closes
+// that this never showed up there. Turning it off keeps the 0..1 level
+// tied to actual acoustic energy for the whole turn, which is what the
+// fixed-threshold-after-one-time-calibration design above requires.
+const MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: false}};
 
 async function startRecordingTurn() {
   const stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
