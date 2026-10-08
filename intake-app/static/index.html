@@ -268,11 +268,17 @@
   /* Honey, matching the facilitator/Employee-A/Employee-B tile scheme in
      joint-session-app -- the employee's own circle is always Honey, not a
      neutral placeholder that only colors in once "lit" by mic input. */
-  /* Shape driven entirely by updateEmployeeMotion's clip-path/transform
-     (same thimblePolygon engine Thimble itself uses) while actually
-     speaking -- border-radius is only the plain-circle fallback for when
-     that isn't running (muted, not recording). */
-  .employee-circle{width:48px; height:48px; border-radius:50%; background:#E9B949;}
+  /* Stays a plain circle at all times now -- see updateEmployeeMotion's own
+     comment for why the old hexagon-wobble clip-path (borrowed from
+     Thimble's pre-fix shape language) got replaced here too: a simple
+     scaleX/scaleY squish-stretch wobble plus the glow below instead. */
+  .employee-avatar{position:relative; width:48px; height:48px;}
+  .employee-circle{position:relative; z-index:1; width:48px; height:48px; border-radius:50%; background:#E9B949;}
+  /* Same soft blurred glow Thimble's own .thimble-ripple uses while
+     talking, just Honey instead of Pink -- matches the employee circle's
+     own color. Opacity/scale driven by updateEmployeeMotion, breathing
+     with the same level-driven wobble as the circle itself. */
+  .employee-glow{position:absolute; inset:0; border-radius:50%; background:#E9B949; filter:blur(14px); z-index:0; opacity:0;}
   /* Default = evergreen/"on" (matches the design handoff's control-button
      spec: active = evergreen bg + oat icon). .inactive is the explicit OFF
      look (white bg + evergreen icon) -- used for transcript (starts
@@ -522,7 +528,12 @@
             <div class="status" id="status"></div>
           </div>
           <div class="you-tile" id="employeeTile">
-            <div class="you-tile-avatar-wrap"><div class="employee-circle" id="employeeCircle"></div></div>
+            <div class="you-tile-avatar-wrap">
+              <div class="employee-avatar">
+                <div class="employee-glow" id="employeeGlow"></div>
+                <div class="employee-circle" id="employeeCircle"></div>
+              </div>
+            </div>
             <div class="you-caption" id="employeeCaption"></div>
             <div class="you-tile-label-row"><span class="you-tile-label">You</span> <svg id="youMuteIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" hidden><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></div>
           </div>
@@ -1556,26 +1567,40 @@ function domeWobbleRadius(domeFactor, lvl) {
 const thimbleBig = thimbleInstance('thimble', 200);
 const thimbleMini = thimbleInstance('thimbleMini', 48);
 
-// The You-tile's own blob: wobbles with the same thimblePolygon engine and
-// the same constant-.8-geo/2.2s-breathe "speaking" profile Thimble uses
-// while talking, just mirrored onto the employee's mic level instead of
-// Thimble's TTS level -- previously this was just a flat 1.08x scale bump,
-// which read as a blunt on/off blip next to Thimble's own much livelier
-// motion. Reported live as needing the same treatment, not a stroke around
-// the call window (that's the existing .you-tile.lit border, unchanged).
-let employeeGeo = 0, employeeLvl = 0;
+// The You-tile's own circle: a plain circle with a gentle scaleX/scaleY
+// squish-stretch wobble plus a soft Honey glow behind it while actually
+// speaking, mirrored onto the employee's mic level instead of Thimble's TTS
+// level -- previously this reused thimblePolygon, the same hexagon-wobble
+// clip-path engine Thimble itself used before being simplified to a plain
+// wobbling dome (see domeWobbleRadius's own history) for reading "weird"
+// next to the rest of the app's shape language. Reported live as needing
+// the same simple-circle-plus-glow treatment here too, not the polygon.
+let employeeGeo = 0, employeeLvl = 0, employeeWobblePhase = 0, employeeLastT = null;
+const employeeGlow = document.getElementById('employeeGlow');
 function updateEmployeeMotion(now, level, lit) {
+  const dt = Math.min(0.1, employeeLastT == null ? 0 : (now - employeeLastT) / 1000);
+  employeeLastT = now;
   if (!lit) {
     employeeLvl += (0 - employeeLvl) * 0.3;
     employeeGeo += (0 - employeeGeo) * 0.12;
-    if (employeeGeo < 0.01) { employeeCircle.style.clipPath = 'none'; employeeCircle.style.transform = 'none'; return; }
+    if (employeeGeo < 0.01) {
+      employeeCircle.style.transform = 'none';
+      employeeGlow.style.opacity = '0';
+      return;
+    }
   } else {
     employeeLvl += (level - employeeLvl) * 0.45;
     employeeGeo += (0.8 - employeeGeo) * 0.12;
   }
-  const breathe = 1 + 0.035 * (1 - Math.cos((2 * Math.PI * (now / 1000)) / 2.2));
-  employeeCircle.style.transform = `scale(${breathe.toFixed(4)})`;
-  employeeCircle.style.clipPath = thimblePolygon(now / 1000, employeeGeo, employeeLvl, 6, 0.35);
+  const wobblePeriod = 1.6; // same cadence Thimble's own talking wobble/ripple uses
+  employeeWobblePhase = (employeeWobblePhase + dt / wobblePeriod) % 1;
+  const wobble = Math.sin(employeeWobblePhase * 2 * Math.PI); // -1..1
+  const pulse = (1 + wobble) / 2; // 0..1, used for the glow so it breathes in step with the wobble
+  const amt = 0.05 * employeeGeo * (0.4 + 0.6 * employeeLvl); // eases in/out with geo+level instead of snapping to full wobble the instant lit flips
+  const breathe = 1 + 0.035 * employeeGeo;
+  employeeCircle.style.transform = `scale(${((1 + amt * wobble) * breathe).toFixed(4)}, ${((1 - amt * wobble) * breathe).toFixed(4)})`;
+  employeeGlow.style.opacity = (employeeGeo * (0.22 + 0.16 * pulse)).toFixed(3);
+  employeeGlow.style.transform = `scale(${(1.04 + 0.12 * pulse * employeeGeo).toFixed(3)})`;
 }
 
 function renderThimbleMouth(inst, state) {
