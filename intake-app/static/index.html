@@ -1153,12 +1153,9 @@ let micProcessor = null;
 // turn, fed the same raw PCM this ScriptProcessor already taps for the
 // local-Whisper path below -- both run in parallel so a mid-turn Deepgram
 // disconnect still has the Whisper pcmChunks to fall back to via
-// getFinalTranscript(). dgFinalText accumulates Deepgram's own "is_final"
-// segments for the turn so far; dgInterimText is the latest not-yet-final
-// guess, shown live but never counted as settled.
+// getFinalTranscript(). Each socket accumulates its own finalText/interimText
+// (see startDeepgramSocket) rather than writing through shared globals here.
 let dgSocket = null;
-let dgFinalText = '';
-let dgInterimText = '';
 
 function floatToInt16(float32) {
   const out = new Int16Array(float32.length);
@@ -1170,22 +1167,28 @@ function floatToInt16(float32) {
 }
 
 function startDeepgramSocket(sampleRate) {
-  dgFinalText = '';
-  dgInterimText = '';
   const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const ws = new WebSocket(`${wsProto}//${location.host}${apiPath('/ws/voice')}?sample_rate=${sampleRate}`);
+  // Accumulated directly on the socket object, not a shared global -- a
+  // composer recording whose onstop grace delay (see startComposerRecording)
+  // lets a second recording start before the first's own onstop runs would
+  // otherwise read the SECOND socket's text for the FIRST recording's
+  // transcript, if both wrote through the same two globals. resolveTurnTranscript
+  // takes an explicit socket for exactly this reason.
+  ws.finalText = '';
+  ws.interimText = '';
   ws.onmessage = (ev) => {
-    if (ws !== dgSocket) return; // a stale socket from a turn that already ended
     let msg;
     try { msg = JSON.parse(ev.data); } catch (e) { return; }
     if (msg.type === 'transcript') {
       if (msg.is_final) {
-        if (msg.text) dgFinalText = (dgFinalText + ' ' + msg.text).trim();
-        dgInterimText = '';
+        if (msg.text) ws.finalText = (ws.finalText + ' ' + msg.text).trim();
+        ws.interimText = '';
       } else {
-        dgInterimText = msg.text;
+        ws.interimText = msg.text;
       }
-      const shown = (dgFinalText + ' ' + dgInterimText).trim();
+      if (ws !== dgSocket) return; // a stale socket from a turn that already ended -- still accumulates its own text above, just doesn't touch shared UI state below
+      const shown = (ws.finalText + ' ' + ws.interimText).trim();
       if (shown && pendingTranscriptEl) {
         pendingTranscriptEl.textContent = '"' + shown + '"';
         thread.scrollTop = thread.scrollHeight;
@@ -1256,8 +1259,17 @@ function startDeepgramSocket(sampleRate) {
 // to respond than typing. resolveTurnTranscript below already reads
 // interim text regardless, so there was never a real need to wait
 // specifically for "final" here.
-async function drainDeepgramSocket() {
-  const dg = dgSocket;
+// `sock` lets a caller drain the specific socket ITS OWN recording cycle
+// opened, instead of whatever dgSocket happens to point at by the time this
+// runs (the default, for callers that don't pass one). Composer recordings
+// added a short grace delay before calling this (see startComposerRecording's
+// own onstop comment), which opened a real window for a second press to
+// start a brand new recording -- and its own dgSocket -- while the first
+// recording's onstop was still sitting in that delay. Reading the global
+// here unconditionally meant the FIRST recording's drain would silently
+// close the SECOND recording's live socket out from under it.
+async function drainDeepgramSocket(sock) {
+  const dg = sock !== undefined ? sock : dgSocket;
   if (dg && dg.readyState === WebSocket.OPEN) {
     await new Promise((resolve) => {
       let settleTimer = null;
@@ -1271,7 +1283,10 @@ async function drainDeepgramSocket() {
       dg.onMessageHint = () => { clearTimeout(settleTimer); settleTimer = setTimeout(finish, 350); };
     });
   }
-  dgSocket = null; // clear after the drain wait so a message already in flight from this socket is ignored by its own `ws !== dgSocket` check
+  // Only clear/close the shared pointer if it's still THIS socket -- a
+  // newer recording cycle may have already replaced it with its own (see
+  // this function's own comment above).
+  if (dg === dgSocket) dgSocket = null;
   if (dg && dg.readyState === WebSocket.OPEN) dg.close();
 }
 
@@ -1282,8 +1297,13 @@ async function drainDeepgramSocket() {
 // text arrived) -- pcmChunks was still being collected the whole time
 // regardless (see startMicAnalysis), so getFinalTranscript(blob) still
 // works as a real fallback, not just a silent failure.
-async function resolveTurnTranscript(blob) {
-  const dgText = (dgFinalText + ' ' + dgInterimText).trim();
+//
+// `sock` should be the specific socket THIS turn's recording opened (see
+// startDeepgramSocket's own comment) -- defaults to the live dgSocket for
+// callers (hands-free) where only one recording is ever active at a time.
+async function resolveTurnTranscript(blob, sock) {
+  const dg = sock !== undefined ? sock : dgSocket;
+  const dgText = dg ? (dg.finalText + ' ' + dg.interimText).trim() : '';
   if (deepgramEnabled && dgText) return {transcript: dgText};
   // Finalizing reuses the last partial transcript plus a tail-patch of just
   // the new audio since then, instead of re-transcribing the whole clip --
@@ -1422,6 +1442,21 @@ function mergeTranscripts(base, tail) {
   return (base + ' ' + tail).replace(/\s+/g, ' ').trim();
 }
 
+// A Response that isn't real JSON (a proxy's own HTML error page, a
+// truncated body from a dropped connection, anything outside the
+// try/except server.py's own voice endpoints already wrap) makes res.json()
+// itself throw -- surfaced live as a bare "Failed to execute 'json' on
+// 'Response'" instead of the clean "couldn't transcribe audio" message this
+// UI already has for every OTHER failure mode. Converts that crash into the
+// same shape so callers only ever have to handle {error}.
+async function safeJson(res) {
+  try {
+    return await res.json();
+  } catch (e) {
+    return {error: `server error (${res.status || 'network'})`};
+  }
+}
+
 async function getFinalTranscript(blob) {
   // Deliberately does NOT await an in-flight partial anymore. Every partial
   // call re-transcribes the WHOLE clip so far (see maybeSendPartial's own
@@ -1447,7 +1482,7 @@ async function getFinalTranscript(blob) {
     const form = new FormData();
     form.append('file', blob, 'memo.webm');
     const res = await fetch(apiPath('/api/voice'), {method: 'POST', body: form});
-    const data = await res.json();
+    const data = await safeJson(res);
     return data.error ? {error: data.error} : {transcript: data.transcript};
   }
   // Whisper marks a clip that trails off mid-sentence (exactly what every
@@ -1466,7 +1501,7 @@ async function getFinalTranscript(blob) {
   const form = new FormData();
   form.append('file', wav, 'tail.wav');
   const res = await fetch(apiPath('/api/voice/partial'), {method: 'POST', body: form});
-  const data = await res.json();
+  const data = await safeJson(res);
   const tailText = (data.partial || '').trim();
   if (!tailText) return {transcript: base}; // tail transcribed to nothing (silence/noise) -- base alone is still correct
   return {transcript: mergeTranscripts(base, tailText)};
@@ -2950,9 +2985,18 @@ async function startRecordingTurn() {
 async function startComposerRecording() {
   const stream = await navigator.mediaDevices.getUserMedia(COMPOSER_MIC_CONSTRAINTS);
   mediaRecorder = new MediaRecorder(stream);
-  chunks = [];
+  const myChunks = chunks = [];
   holdControlled = true;
-  mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+  // Captured once, right after this cycle's own socket opens below, so
+  // onstop's drain always targets the socket THIS recording actually used --
+  // not whatever dgSocket happens to point at by the time onstop runs (see
+  // drainDeepgramSocket's own comment on why that global can't be trusted
+  // there, now that onstop's grace delay gives a second press a real chance
+  // to start a new recording first). myChunks is the same idea applied to
+  // the audio blob itself, so a second recording's `chunks = []` reset
+  // can't corrupt this cycle's transcript either.
+  let myDgSocket = null;
+  mediaRecorder.ondataavailable = (e) => myChunks.push(e.data);
   mediaRecorder.onstop = async () => {
     playRecordStopBeep();
     // Release is naturally timed right at the end of the last word spoken,
@@ -2965,8 +3009,8 @@ async function startComposerRecording() {
     await new Promise((r) => setTimeout(r, 300));
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
-    await drainDeepgramSocket();
-    const blob = new Blob(chunks, {type: 'audio/webm'});
+    await drainDeepgramSocket(myDgSocket);
+    const blob = new Blob(myChunks, {type: 'audio/webm'});
     composerMicBtn.disabled = true;
     const restPlaceholder = chatInput.getAttribute('placeholder'); // the markup's own default, not whatever's showing right now
     chatInput.placeholder = 'Transcribing…';
@@ -2974,7 +3018,7 @@ async function startComposerRecording() {
     // the Text tab -- errors here show in the composer's own placeholder
     // instead, the one thing guaranteed visible regardless of which tab is open.
     try {
-      const voiceData = await resolveTurnTranscript(blob);
+      const voiceData = await resolveTurnTranscript(blob, myDgSocket);
       if (voiceData.error || !voiceData.transcript) {
         chatInput.placeholder = voiceData.error || "couldn't transcribe audio -- try again";
         setTimeout(() => { if (!chatInput.value) chatInput.placeholder = restPlaceholder; }, 4000);
@@ -2998,7 +3042,7 @@ async function startComposerRecording() {
   playRecordStartBeep();
   startMicAnalysis(stream);
   resetPartialCapture();
-  if (deepgramEnabled) dgSocket = startDeepgramSocket(pcmSampleRate);
+  if (deepgramEnabled) myDgSocket = dgSocket = startDeepgramSocket(pcmSampleRate);
 }
 
 // No more explicit "Go live" toggle -- being in Voice view simply means
