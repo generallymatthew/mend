@@ -512,14 +512,14 @@
               <!-- Waveform, not a mic -- the mic icon is already Mute's,
                    sitting right next to this button; two mic-shaped icons
                    side by side was the actual confusion to fix. -->
-              <div class="ptt-btn-wrap">
+              <div class="ptt-btn-wrap" hidden>
                 <div class="ptt-tooltip" id="pttTooltip" hidden>Press and hold to talk. Release when you're done speaking to send.</div>
                 <button id="pttBtn" class="ctrl-btn ptt-circle-btn" type="button" title="Hold to talk" hidden>
                   <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="10" x2="5" y2="14"></line><line x1="9.5" y1="6" x2="9.5" y2="18"></line><line x1="14" y1="3" x2="14" y2="21"></line><line x1="18.5" y1="7" x2="18.5" y2="17"></line></svg>
                 </button>
               </div>
               <button id="captionsToggleBtn" class="ctrl-btn" title="Toggle captions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"></path></svg></button>
-              <button id="transcriptToggleBtn" class="ctrl-btn" title="Show/hide transcript">&#9776;</button>
+              <button id="transcriptToggleBtn" class="ctrl-btn" title="Show/hide transcript"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="14" y2="17"></line></svg></button>
             </div>
             <div class="mic-indicator" id="micIndicator" hidden>
               <span class="mic-indicator-dot" id="micIndicatorDot"></span>
@@ -802,6 +802,7 @@ const pttToggleGroup = document.getElementById('pttToggleGroup');
 const pttHandsFreeTab = document.getElementById('pttHandsFreeTab');
 const pttHoldTab = document.getElementById('pttHoldTab');
 const pttBtn = document.getElementById('pttBtn');
+const pttBtnWrap = document.querySelector('.ptt-btn-wrap');
 const pttTooltip = document.getElementById('pttTooltip');
 let pttTooltipTimer = null;
 const PTT_TOOLTIP_MS = 5000;
@@ -820,6 +821,7 @@ function showPttTooltip() {
 
 function refreshPttVisibility() {
   pttBtn.hidden = !pttMode || ui !== 'voice';
+  pttBtnWrap.hidden = pttBtn.hidden; // drop the wrapper from the flex row too, else .control-bar's gap still opens a double-wide space around its empty shell
   pttToggleGroup.hidden = ui !== 'voice';
 }
 
