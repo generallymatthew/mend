@@ -67,6 +67,13 @@ OPENAI_TTS_MODEL = os.environ.get("OPENAI_TTS_MODEL", "tts-1")
 # a working (just slower) voice path.
 DEEPGRAM_API_KEY = os.environ.get("DEEPGRAM_API_KEY")
 
+# Prototype: Deepgram Aura TTS as a 3rd-party alternative to the OpenAI/`say`
+# chain above, running in parallel for side-by-side testing -- not wired into
+# the default synthesize_speech() path, so existing behavior is untouched.
+# Reuses DEEPGRAM_API_KEY (already required for streaming STT), one fewer
+# vendor key than the current OpenAI+macOS setup.
+AURA_TTS_MODEL = os.environ.get("AURA_TTS_MODEL", "aura-2-asteria-en")
+
 # Optional video-avatar mode (Tavus Conversational Video Interface). All four
 # must be set -- see README.md's "Optional: video avatar" section for how to
 # get them. Absent any of them, the app just runs text/voice-memo only, same
@@ -198,6 +205,32 @@ def synthesize_speech(text: str) -> str | None:
         if url:
             return url
     return synthesize_speech_say(text)
+
+
+def synthesize_speech_aura(text: str) -> str | None:
+    """Prototype: speaks `text` with Deepgram's Aura TTS, saves the returned
+    mp3, and returns a URL path to fetch it. Returns None on any failure --
+    not wired into synthesize_speech()'s fallback chain, so a failure here
+    never touches the default voice path. Parallel path for comparison only,
+    reached via /api/speak/aura."""
+    if not DEEPGRAM_API_KEY:
+        return None
+    try:
+        resp = _openai_http_client.post(
+            "https://api.deepgram.com/v1/speak",
+            params={"model": AURA_TTS_MODEL, "encoding": "mp3"},
+            headers={"Authorization": f"Token {DEEPGRAM_API_KEY}"},
+            json={"text": text},
+        )
+        resp.raise_for_status()
+    except httpx.HTTPError as e:
+        body = getattr(e, "response", None)
+        print(f"[synthesize_speech_aura] failed: {e!r}" + (f" body={body.text[:300]!r}" if body is not None else ""), flush=True)
+        return None
+    file_id = uuid.uuid4().hex
+    mp3_path = AUDIO_DIR / f"{file_id}.mp3"
+    mp3_path.write_bytes(resp.content)
+    return f"/api/audio/{file_id}.mp3"
 
 _whisper_model = None
 # "small.en"/"base.en" are noticeably slower on CPU than this needs to be for
@@ -995,6 +1028,20 @@ async def speak(payload: dict):
     # sentence-streamed TTS both landed) -- stdout only, see stream_message_reply's
     # own timing log for the matching Claude-side half of this.
     print(f"[timing] /api/speak: {time.time() - t0:.2f}s for {len(text)} chars: {text[:60]!r}", flush=True)
+    return {"audio_url": url}
+
+
+@app.post("/api/speak/aura")
+async def speak_aura(payload: dict):
+    """Prototype twin of /api/speak, routed to Deepgram Aura instead of the
+    default OpenAI/`say` chain -- for side-by-side comparison. Existing
+    callers of /api/speak are unaffected."""
+    text = (payload.get("text") or "").strip()
+    if not text:
+        return JSONResponse({"error": "empty text"}, status_code=400)
+    t0 = time.time()
+    url = await run_in_threadpool(synthesize_speech_aura, text)
+    print(f"[timing] /api/speak/aura: {time.time() - t0:.2f}s for {len(text)} chars: {text[:60]!r}", flush=True)
     return {"audio_url": url}
 
 

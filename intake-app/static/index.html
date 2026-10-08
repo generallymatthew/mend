@@ -456,6 +456,7 @@
               </button>
               <div class="overflow-menu" id="voiceOverflowMenu" hidden>
                 <button id="resetBtn" type="button">Start over</button>
+                <button id="ttsProviderBtn" type="button">Voice: OpenAI</button>
               </div>
             </div>
           </div>
@@ -2350,12 +2351,31 @@ function feedSpeechText(fullText, final) {
   }
 }
 
+// A/B toggle between the default OpenAI/`say` TTS chain and the Deepgram
+// Aura prototype (see /api/speak/aura on the server) -- persisted so a
+// tester's choice survives a reload. Defaults to 'openai', the existing
+// behavior, for anyone who's never touched the toggle.
+let ttsProvider = localStorage.getItem('ttsProvider') || 'openai';
+const ttsProviderBtn = document.getElementById('ttsProviderBtn');
+
+function updateTtsProviderBtn() {
+  ttsProviderBtn.textContent = ttsProvider === 'aura' ? 'Voice: Aura' : 'Voice: OpenAI';
+}
+updateTtsProviderBtn();
+
+ttsProviderBtn.addEventListener('click', () => {
+  ttsProvider = ttsProvider === 'aura' ? 'openai' : 'aura';
+  localStorage.setItem('ttsProvider', ttsProvider);
+  updateTtsProviderBtn();
+});
+
 function queueSentence(text) {
   if (!text) return;
   const myGen = speechCycleGen;
   const item = {text, url: null, ready: false};
   speechItems.push(item);
-  fetch(apiPath('/api/speak'), {
+  const speakPath = ttsProvider === 'aura' ? '/api/speak/aura' : '/api/speak';
+  fetch(apiPath(speakPath), {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({text}),
     signal: speechAbortController ? speechAbortController.signal : undefined,
