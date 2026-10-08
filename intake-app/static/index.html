@@ -1136,10 +1136,26 @@ function startDeepgramSocket(sampleRate) {
         if (pendingTranscriptEl.chatBubble) pendingTranscriptEl.chatBubble.textContent = shown;
         if (captionsOn) employeeCaption.textContent = shown;
       }
-      // onFinalHint, when set, is onstop's own post-release drain wait
-      // (see startRecordingTurn) watching for exactly this signal to
-      // resolve early instead of sitting out its full timeout.
-      if (msg.is_final && ws.onFinalHint) ws.onFinalHint();
+      // onMessageHint, when set, is onstop's own post-release drain wait
+      // (see startRecordingTurn) watching for Deepgram traffic to settle,
+      // so it can resolve early instead of sitting out its full timeout.
+      // Fires on every message, not just is_final -- a real regression,
+      // caught live right after push-to-talk's hold-tooltip and release-race
+      // fixes landed: push-to-talk reported feeling much slower to respond
+      // than typing the same short answer. Root cause: is_final/speech_final
+      // normally only arrive after Deepgram's own configured endpointing
+      // (1400ms of silence), which hands-free naturally already has by the
+      // time it decides to stop (VAD/backstop only fires after real
+      // silence) -- but push-to-talk's whole point is ending the instant
+      // the button releases, with no trailing silence for Deepgram to key
+      // an is_final off of. So this drain wait was paying its full 1200ms
+      // maxTimer on nearly every single push-to-talk turn, short or long,
+      // while hands-free usually resolved in well under the 350ms settle.
+      // Interim text is already what dgText reads below regardless (see
+      // onstop's own dgFinalText + dgInterimText concat) -- there was never
+      // a need to wait specifically for "final" here, only for Deepgram to
+      // finish sending whatever it already has for the audio already sent.
+      if (ws.onMessageHint) ws.onMessageHint();
       // speech_final means Deepgram itself has decided this utterance is
       // over (its own endpointing, from the real audio) -- same role
       // checkVad's silence timer plays for the local-Whisper path, just
@@ -1154,7 +1170,7 @@ function startDeepgramSocket(sampleRate) {
       // updates regardless, so the push-to-talk caption stays live).
       if (!pttMode && msg.speech_final && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     } else if (msg.type === 'utterance_end') {
-      if (ws.onFinalHint) ws.onFinalHint();
+      if (ws.onMessageHint) ws.onMessageHint();
       if (!pttMode && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     }
   };
@@ -1567,14 +1583,16 @@ function domeWobbleRadius(domeFactor, lvl) {
 const thimbleBig = thimbleInstance('thimble', 200);
 const thimbleMini = thimbleInstance('thimbleMini', 48);
 
-// The You-tile's own circle: a plain circle with a gentle scaleX/scaleY
-// squish-stretch wobble plus a soft Honey glow behind it while actually
-// speaking, mirrored onto the employee's mic level instead of Thimble's TTS
-// level -- previously this reused thimblePolygon, the same hexagon-wobble
-// clip-path engine Thimble itself used before being simplified to a plain
-// wobbling dome (see domeWobbleRadius's own history) for reading "weird"
-// next to the rest of the app's shape language. Reported live as needing
-// the same simple-circle-plus-glow treatment here too, not the polygon.
+// The You-tile's own circle: stays a true circle at all times (uniform
+// scale only, no clip-path, no scaleX/scaleY stretch -- see the stretch
+// version's own history below) with a small position jiggle and a soft
+// Honey glow behind it while actually speaking, mirrored onto the
+// employee's mic level instead of Thimble's TTS level. Previously reused
+// thimblePolygon, the same hexagon-wobble clip-path engine Thimble itself
+// used before being simplified to a plain wobbling dome (see
+// domeWobbleRadius's own history) for reading "weird" next to the rest of
+// the app's shape language -- then briefly a scaleX/scaleY squish-stretch,
+// reported live as reading like a stretched oval rather than a wobble.
 let employeeGeo = 0, employeeLvl = 0, employeeWobblePhase = 0, employeeLastT = null;
 const employeeGlow = document.getElementById('employeeGlow');
 function updateEmployeeMotion(now, level, lit) {
@@ -1601,9 +1619,16 @@ function updateEmployeeMotion(now, level, lit) {
   // mic level, already smoothed above) rather than mostly on the slow
   // wobble cycle, so a loud syllable visibly snaps the circle and glow
   // bigger right as it happens, not just a gentle ambient breathing motion.
-  const amt = employeeGeo * (0.12 + 0.22 * employeeLvl); // squish wobble: 12% at rest, up to 34% on a loud peak
-  const breathe = 1 + employeeGeo * (0.05 + 0.14 * employeeLvl); // overall size: up to +19% on a loud peak
-  employeeCircle.style.transform = `scale(${((1 + amt * wobble) * breathe).toFixed(4)}, ${((1 - amt * wobble) * breathe).toFixed(4)})`;
+  // Uniform scale, not scaleX/scaleY -- reported live as reading like a
+  // stretched oval, not a wobble. Stays a true circle at every instant;
+  // the "wobble" is a small position jiggle instead (two out-of-phase sine
+  // terms so it moves in a little circle/figure-eight rather than back and
+  // forth on one axis), same idea as a bobbing ball, not a shape change.
+  const breathe = 1 + employeeGeo * (0.05 + 0.16 * employeeLvl); // overall size: up to +21% on a loud peak
+  const jiggle = employeeGeo * (1.2 + 2.6 * employeeLvl); // px
+  const jx = jiggle * Math.sin(employeeWobblePhase * 2 * Math.PI);
+  const jy = jiggle * 0.6 * Math.sin(employeeWobblePhase * 2 * Math.PI * 2 + 1.2); // 2x frequency, phase-offset -- traces a little loop instead of a straight line
+  employeeCircle.style.transform = `translate(${jx.toFixed(2)}px, ${jy.toFixed(2)}px) scale(${breathe.toFixed(4)})`;
   employeeGlow.style.opacity = (employeeGeo * (0.4 + 0.2 * pulse + 0.35 * employeeLvl)).toFixed(3);
   employeeGlow.style.transform = `scale(${(1.15 + 0.15 * pulse * employeeGeo + 0.5 * employeeLvl).toFixed(3)})`;
 }
@@ -2659,10 +2684,18 @@ async function startRecordingTurn() {
     // "shes a peer" then releasing never showed up at all). Give Deepgram
     // a short window to send back the transcript for audio already in
     // flight before reading the accumulated text and tearing the socket
-    // down. onFinalHint (wired in startDeepgramSocket's onmessage) lets a
-    // real is_final/utterance_end signal resolve this early instead of
-    // always sitting out the full timeout; the 350ms settle guards against
-    // a second trailing final landing right after the first.
+    // down. onMessageHint (wired in startDeepgramSocket's onmessage) lets
+    // any real traffic -- an interim result, not just a formal is_final/
+    // utterance_end -- resolve this early instead of always sitting out
+    // the full timeout; the 350ms settle guards against another message
+    // landing right after the first. See onMessageHint's own comment for
+    // why this used to be is_final-only: that gated nearly every
+    // push-to-talk turn on the full 1200ms maxTimer (Deepgram's is_final
+    // needs its own 1400ms endpointing silence, which push-to-talk never
+    // naturally provides -- the button release IS the end signal), reported
+    // live as voice feeling much slower to respond than typing. dgText
+    // below already reads interim text regardless, so there was never a
+    // real need to wait specifically for "final" here.
     if (dg && dg.readyState === WebSocket.OPEN) {
       await new Promise((resolve) => {
         let settleTimer = null;
@@ -2670,10 +2703,10 @@ async function startRecordingTurn() {
         function finish() {
           clearTimeout(maxTimer);
           clearTimeout(settleTimer);
-          dg.onFinalHint = null;
+          dg.onMessageHint = null;
           resolve();
         }
-        dg.onFinalHint = () => { clearTimeout(settleTimer); settleTimer = setTimeout(finish, 350); };
+        dg.onMessageHint = () => { clearTimeout(settleTimer); settleTimer = setTimeout(finish, 350); };
       });
     }
     dgSocket = null; // clear after the drain wait so a message already in flight from this socket is ignored by its own `ws !== dgSocket` check
