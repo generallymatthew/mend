@@ -618,6 +618,15 @@
   <div class="disclaimer-footer">Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
 </div>
 
+<!-- Real voice-activity detection (Silero VAD, via ONNX Runtime Web) for
+     the barge-in/interrupt monitor -- see startInterruptMonitor below.
+     Replaces a hand-rolled raw-amplitude threshold (ambient-noise
+     calibration, a sustained-level debounce) that kept reopening the same
+     class of false-trigger bug (AGC ramp, echo bleed-through) every time
+     one symptom of it got patched. A model that actually recognizes human
+     speech, instead of just "loud," is immune to both by construction. -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.wasm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.31/dist/bundle.min.js"></script>
 <script>
 // Path-relative, not hardcoded absolute: this page is served at "/"
 // standalone (direct port) but at "/intake/" behind the local Caddy proxy
@@ -2842,24 +2851,57 @@ function checkVad(level, now) {
 // the cycle first -- a real interrupt, or the reply finishing normally --
 // bumps it, so the other path's next check sees it's stale and backs off
 // instead of double-handling the same turn.
-let interruptStream = null, interruptAnalyser = null, interruptData = null, interruptCtx = null;
-let interruptAboveSince = null;
 let replyGen = 0;
-const INTERRUPT_MIN_MS = 450; // sustained speech required, not a cough/click/chair creak -- was 300, raised alongside the echo-calibration fix below, both aimed at the same live-reported false-trigger
-// How long to sample the interrupt mic's own ambient level, right as
-// Thimble starts talking, before arming real detection -- see
-// startInterruptMonitor's own comment for why this exists at all.
-const INTERRUPT_CALIBRATION_MS = 400;
 let replyAbortController = null;
 
+// Barge-in/interrupt detection, via a real speech-detection model (Silero
+// VAD, loaded as `vad.MicVAD` -- see the CDN <script> tags above) instead
+// of a hand-rolled raw-amplitude threshold. The old version needed its own
+// per-turn ambient/echo calibration (sampling Thimble's own voice bleeding
+// back into a fresh mic stream, right as it starts playing) and a manual
+// sustained-level debounce, and kept reopening the same false-trigger bug
+// from a different angle every time one symptom got patched (AGC ramp,
+// echo bleed-through, a cough) -- because none of those are actually about
+// whether the sound IS speech, only about whether it's loud enough, which
+// is the wrong question. A real VAD model answers the right one directly
+// and needs neither workaround: onSpeechRealStart already only fires once
+// the model's own sustained-detection threshold is met (minSpeechMs,
+// default 400ms -- same job INTERRUPT_MIN_MS used to do), and
+// echo/background noise that isn't recognized as speech just doesn't
+// trigger it, calibration or not.
+//
+// One instance, created once and lazily (not per-turn) since ONNX model
+// init has real overhead -- start()/pause() per reply cycle instead of a
+// fresh getUserMedia+AudioContext+calibration every single turn like
+// before.
+let interruptVad = null;
+let interruptVadLoading = null;
+
+async function getInterruptVad() {
+  if (interruptVad) return interruptVad;
+  if (!interruptVadLoading) {
+    interruptVadLoading = vad.MicVAD.new({
+      // Same constraints the old implementation used (echoCancellation on,
+      // autoGainControl off -- see INTERRUPT_MIC_CONSTRAINTS's own comment)
+      // -- getStream lets the library use THIS getUserMedia call instead of
+      // its own unconstrained default.
+      getStream: () => navigator.mediaDevices.getUserMedia(INTERRUPT_MIC_CONSTRAINTS),
+      onSpeechRealStart: () => {
+        if (liveMode && !micMuted && !sessionPaused) interruptNow(replyGen);
+      },
+      baseAssetPath: 'https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.31/dist/',
+      onnxWASMBasePath: 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/',
+    }).catch((e) => {
+      interruptVadLoading = null; // let a later call retry instead of being stuck on a rejected promise forever
+      throw e;
+    });
+  }
+  interruptVad = await interruptVadLoading;
+  return interruptVad;
+}
+
 function stopInterruptMonitor() {
-  if (interruptStream) interruptStream.getTracks().forEach(t => t.stop());
-  interruptStream = null;
-  interruptAnalyser = null;
-  interruptData = null;
-  if (interruptCtx) interruptCtx.close().catch(() => {});
-  interruptCtx = null;
-  interruptAboveSince = null;
+  try { if (interruptVad) interruptVad.pause(); } catch (e) {}
 }
 
 // Call once at the start of a reply cycle (text submit or voice turn
@@ -2867,66 +2909,17 @@ function stopInterruptMonitor() {
 // armed and shouldn't grab one just to watch for an interrupt.
 async function startInterruptMonitor(myGen) {
   if (!liveMode || micMuted || sessionPaused) return;
-  let stream;
+  let v;
   try {
-    stream = await navigator.mediaDevices.getUserMedia(INTERRUPT_MIC_CONSTRAINTS);
+    v = await getInterruptVad();
   } catch (e) {
-    return; // no mic access -- no barge-in this turn, nothing else breaks
+    return; // no mic access, or the model/WASM failed to load -- no barge-in this turn, nothing else breaks
   }
-  if (myGen !== replyGen) { stream.getTracks().forEach(t => t.stop()); return; }
-  interruptStream = stream;
-  interruptCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const source = interruptCtx.createMediaStreamSource(interruptStream);
-  interruptAnalyser = interruptCtx.createAnalyser();
-  interruptAnalyser.fftSize = 256;
-  interruptData = new Uint8Array(interruptAnalyser.frequencyBinCount);
-  source.connect(interruptAnalyser);
-  // Reusing the listening phase's own vadThreshold here used to be the real
-  // bug behind a live-reported false trigger ("thought I had started
-  // talking in the middle of when it started talking, computer wasn't
-  // loud, no fan"): that threshold was calibrated against a SILENT room
-  // during listening, before Thimble had said a word, which has nothing to
-  // do with how much of Thimble's own voice bleeds back into this brand
-  // new mic stream once it starts playing through the speakers --
-  // echoCancellation (INTERRUPT_MIC_CONSTRAINTS above) helps, but isn't perfect,
-  // especially right as a fresh stream's AEC is still converging. Instead,
-  // sample THIS stream's own level for INTERRUPT_CALIBRATION_MS right as
-  // it opens (i.e. with Thimble's own audio already playing, the exact
-  // condition that needs to be told apart from a real interrupt) and set
-  // the threshold above whatever echo bleed-through actually showed up --
-  // same fallback-to-observed-ambient idea checkVad's own calibration
-  // already uses for the fan-noise case, just applied to this separate
-  // stream/condition instead of reused from it.
-  const calibStart = performance.now();
-  let calibMax = 0;
-  const threshold = await new Promise((resolve) => {
-    const calibTick = () => {
-      if (myGen !== replyGen || !interruptAnalyser) { resolve(VAD_THRESHOLD); return; }
-      const level = rmsLevel(interruptAnalyser, interruptData);
-      calibMax = Math.max(calibMax, level);
-      if (performance.now() - calibStart >= INTERRUPT_CALIBRATION_MS) {
-        resolve(Math.max(VAD_THRESHOLD, calibMax * 1.6 + 0.02));
-      } else {
-        requestAnimationFrame(calibTick);
-      }
-    };
-    requestAnimationFrame(calibTick);
-  });
-  if (myGen !== replyGen || !interruptAnalyser) return; // cycle ended during calibration
-  const tick = () => {
-    if (myGen !== replyGen || !interruptAnalyser) return; // cycle ended elsewhere -- monitor already torn down
-    if (!liveMode || micMuted || sessionPaused) { stopInterruptMonitor(); return; }
-    const level = rmsLevel(interruptAnalyser, interruptData);
-    const now = performance.now();
-    if (level > threshold) {
-      if (interruptAboveSince === null) interruptAboveSince = now;
-      if (now - interruptAboveSince >= INTERRUPT_MIN_MS) { interruptNow(myGen); return; }
-    } else {
-      interruptAboveSince = null;
-    }
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
+  // myGen may be stale by now -- getInterruptVad() can take real time on
+  // its first call (loading the model), during which the reply cycle this
+  // was meant for could already be over.
+  if (myGen !== replyGen || !liveMode || micMuted || sessionPaused) return;
+  v.start();
 }
 
 function interruptNow(myGen) {
