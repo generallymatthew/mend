@@ -8,9 +8,9 @@ Every testable URL in one place, split by **Local** (needs something running on 
 ./run_all.sh
 ```
 
-Run from the repo root (needs `caddy` — see the root `README.md`). Puts demo-app, intake-app, joint-session-app, and post-session-app behind one port, `:8080`, with the same path prefixes Render uses live (`/intake/`, `/joint/`, `/post/`) — so a local URL and its live equivalent below differ only in the host, nothing else.
+Run from the repo root (needs `caddy` — see the root `README.md`). Puts demo-app, intake-app, joint-session-app, post-session-app, and manager-coaching-app behind one port, `:8080`, with the same path prefixes Render uses live (`/intake/`, `/joint/`, `/post/`) — so a local URL and its live equivalent below differ only in the host, nothing else. `joint-session-audio` is opt-in (needs `livekit-server` and its own agent worker — see that app's own README) and is skipped automatically if that setup hasn't been done.
 
-Docs (Roadmap, Status, product spec, pitch page) need a plain file server instead, from the repo root:
+Docs and standalone HTML files (Roadmap, Status, product spec, pitch page, design handoffs) need a plain file server instead, from the repo root:
 
 ```bash
 python3 -m http.server 8000
@@ -25,8 +25,11 @@ python3 -m http.server 8000
 | Joint session · Employee A | [localhost:8080/joint/?code=links&role=a](http://localhost:8080/joint/?code=links&role=a) | — not deployed |
 | Joint session · Employee B | [localhost:8080/joint/?code=links&role=b](http://localhost:8080/joint/?code=links&role=b) | — not deployed |
 | Post-session check-in | [localhost:8080/post/](http://localhost:8080/post/) | — not deployed |
+| Manager coaching | [localhost:8080/coach/](http://localhost:8080/coach/) | — not deployed |
+| Joint session · audio (opt-in, needs LiveKit) | [localhost:8080/joint-audio/](http://localhost:8080/joint-audio/) | — not deployed |
+| About (why this matters) | [localhost:8080/about](http://localhost:8080/about) or [localhost:8000/about.html](http://localhost:8000/about.html) | [mend-mvp.onrender.com/about](https://mend-mvp.onrender.com/about) |
 
-Joint/post-session only exist locally right now — `render.yaml`/`deploy/start.sh` only run demo-app + intake-app. Open both Employee A and Employee B links (two tabs, or send B to someone else) for a real two-person joint session.
+Only demo-app + intake-app are in the live Render deploy (`render.yaml`/`deploy/start.sh`) — everything else above only exists locally. Open both Employee A and Employee B links (two tabs, or send B to someone else) for a real two-person joint session.
 
 ## QA / internal tools
 
@@ -34,6 +37,7 @@ Joint/post-session only exist locally right now — `render.yaml`/`deploy/start.
 |---|---|---|
 | Thimble states (every avatar state, side by side) | [localhost:8080/intake/static/thimble-states.html](http://localhost:8080/intake/static/thimble-states.html) | [mend-mvp.onrender.com/intake/static/thimble-states.html](https://mend-mvp.onrender.com/intake/static/thimble-states.html) |
 | Launchpad (this same link list, as a page) | [localhost:8080/launchpad](http://localhost:8080/launchpad) or [localhost:8000/launchpad.html](http://localhost:8000/launchpad.html) | [mend-mvp.onrender.com/launchpad](https://mend-mvp.onrender.com/launchpad) |
+| Phrase review (classifier training-data labeling tool) | [localhost:8000/classifier/data/review_page.html](<http://localhost:8000/classifier/data/review_page.html>) | — local only |
 
 ## Documents
 
@@ -45,8 +49,27 @@ Joint/post-session only exist locally right now — `render.yaml`/`deploy/start.
 | Status | [localhost:8000/STATUS.md](http://localhost:8000/STATUS.md) | — local only |
 | Public links page (demo-app's own, not this file) | — | [mend-mvp.onrender.com/links](https://mend-mvp.onrender.com/links) |
 
+## Design handoffs
+
+Static `.dc.html` mockups for engineering/design handoff — same templated format as the pitch page, so they also need a real file server (`python3 -m http.server 8000`), not `file://`. Local only, nothing deployed.
+
+| Page | Local |
+|---|---|
+| Mend Intake | [localhost:8000/design_handoffs/mend_sessions/Mend Intake.dc.html](<http://localhost:8000/design_handoffs/mend_sessions/Mend Intake.dc.html>) |
+| Mend Joint Session | [localhost:8000/design_handoffs/mend_sessions/Mend Joint Session.dc.html](<http://localhost:8000/design_handoffs/mend_sessions/Mend Joint Session.dc.html>) |
+| Simple Agent Presence (circle + mouth) | [localhost:8000/design_handoffs/simple_agent_presence/Simple Agent.dc.html](<http://localhost:8000/design_handoffs/simple_agent_presence/Simple Agent.dc.html>) |
+
 ## Hosted elsewhere (claude.ai, always up, no server needed)
 
 - [Thimble shape options](https://claude.ai/artifact/QxwTAwoqh4GpiYvG5Y5GmF) — the four dome/cone/barrel candidates compared against empathizing's shape
 - [Product spec (live artifact)](https://claude.ai/artifact/PRQ4kwizN721tXCAf6ACpt)
 - [Workflow diagram](https://claude.ai/artifact/3PmW3kE6ejoq4B8XxS9rH1)
+
+## GitHub Pages
+
+- [generallymatthew.github.io/mend/](https://generallymatthew.github.io/mend/) — public landing page (pitch + spec). **Currently down**: the GitHub account is suspended, pending appeal — see the repositories note below.
+
+## Repositories
+
+- GitLab (primary push target): `git@gitlab.com:generallymatthew-group/mend.git`
+- GitHub (`origin`): `github.com/generallymatthew/mend` — account suspended as of 2026-09-28; don't push here until that's resolved.

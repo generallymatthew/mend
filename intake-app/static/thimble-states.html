@@ -76,6 +76,7 @@ const THIMBLE_SHAPES = {
   listening:   {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   listening2:  {radius: '50% 50% 50% 50% / 50% 50% 50% 50%', anim: 'none', lean: 'none', mouthTop: 60, mouthW: .11, mouthH: .028},
   idle:        {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  hearing:     {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-6deg) translate(1%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   thinking:    {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   talking:     {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
   empathizing: {radius: DOME_RADIUS, anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
@@ -184,6 +185,93 @@ function applyThimbleState(inst, state) {
 // a single global avatarState/micMuted/analyser (one real call has one
 // Thimble); this page runs many fixed-state instances at once, so state,
 // level and muted come in as plain arguments instead.
+// Prototype: same resting pose as 'listening', but the reaction to your mic
+// is the whole point instead of a side effect -- fast attack / slow release
+// smoothing (so a spike in your voice reads on the very next frame, not a
+// few frames later), nod/dome amplitude driven directly off that level
+// instead of a constant idle sway (so motion only happens when you're
+// actually making sound), and a quick outward ping fired the instant level
+// crosses a threshold from below -- a visible "I just heard that" beat, not
+// just a continuous wobble you have to stare at to notice.
+const HEARING_PING_THRESHOLD = 0.22;
+// An actual expanding ripple, not a rotating standing wave (first "whole
+// outline" version didn't read as one -- no sense of something spreading
+// FROM a point). Modeled like a stone dropped in water: a wavefront starts
+// at the top and travels both ways around the perimeter at once, reaching
+// the bottom (half the circle, d=PI) right as the effect ends. Nothing
+// moves ahead of the front (d > frontPos -> flat). Right at the front the
+// ring is full strength; just behind it, it keeps oscillating for a beat
+// and settles (ageDecay) -- that trailing oscillation is what reads as
+// "little waves" rather than one bump, same idea as the previous version's
+// HEARING_RIPPLE_WAVES but as real trailing ripples instead of a static
+// pattern. Rings also weaken a bit the further out they are (spatialDecay),
+// same as real ripples losing energy as they spread.
+const HEARING_RIPPLE_DURATION = 5; /* TEMP longer for eyeballing, revert to 2.2 */
+const HEARING_RIPPLE_AMP = 24; /* TEMP bumped up further for visibility, revert to 3.5 */
+const HEARING_RIPPLE_K = 5; // how many trailing oscillations ride behind the front
+const HEARING_RIPPLE_AGE_DECAY = 2.2; // how fast a ring settles once the front has passed it
+const HEARING_RIPPLE_SPATIAL_DECAY = 1.3; // how much weaker farther-out rings are
+// Two origins, not one -- "where each ear would be" -- roughly upper-left/
+// upper-right on the dome instead of dead center top, each spreading its
+// own independent wavefront. Summed where they overlap.
+const HEARING_EAR_OFFSET = 0.85; // radians either side of straight-up
+const HEARING_EAR_ORIGINS = [-Math.PI / 2 - HEARING_EAR_OFFSET, -Math.PI / 2 + HEARING_EAR_OFFSET];
+function hearingRippleAt(d, frontPos) {
+  if (d > frontPos) return 0;
+  const age = frontPos - d;
+  const spatialDecay = Math.exp(-d / HEARING_RIPPLE_SPATIAL_DECAY);
+  const ageDecay = Math.exp(-age * HEARING_RIPPLE_AGE_DECAY);
+  return HEARING_RIPPLE_AMP * spatialDecay * ageDecay * Math.sin(age * HEARING_RIPPLE_K);
+}
+function hearingRipplePolygon(pingP) {
+  const N = 96;
+  const frontPos = pingP * Math.PI; // 0 (at an ear) -> PI (the point opposite it)
+  const pts = [];
+  for (let i = 0; i < N; i++) {
+    const th = (i / N) * Math.PI * 2;
+    let ripple = 0;
+    for (const origin of HEARING_EAR_ORIGINS) {
+      let d = th - origin;
+      d = Math.abs(Math.atan2(Math.sin(d), Math.cos(d))); // unsigned angular distance, [0, PI]
+      ripple += hearingRippleAt(d, frontPos);
+    }
+    const r = 50 + ripple;
+    pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
+  }
+  return `polygon(${pts.join(',')})`;
+}
+function updateHearingMotion(inst, now, dt, level, muted) {
+  const rate = level > inst.lvl ? 0.6 : 0.12;
+  inst.lvl += (level - inst.lvl) * rate;
+  // Muted: never arm a new ripple off a level that isn't really your mic,
+  // and cut short one already in flight rather than let it play out --
+  // seeing Thimble "hear" you while you're muted would read as a bug.
+  const wasLoud = inst._hearingLoud || false;
+  const isLoud = !muted && inst.lvl > HEARING_PING_THRESHOLD;
+  if (isLoud && !wasLoud) inst.pingT = 0;
+  inst._hearingLoud = isLoud;
+  if (muted) inst.pingT = 1;
+  else inst.pingT = inst.pingT == null ? 1 : inst.pingT + dt / HEARING_RIPPLE_DURATION;
+  const pingP = Math.min(1, inst.pingT);
+  const y = 3 * inst.lvl * Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 1.1));
+  const wobblePeriod = 1.1;
+  inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+  const domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
+  const capY = 50 + (10 + 16 * inst.lvl) * domeFactor;
+  const rimY = 50 - (12 + 16 * inst.lvl) * domeFactor;
+  if (pingP < 1) {
+    inst.body.style.clipPath = hearingRipplePolygon(pingP);
+    inst.body.style.borderRadius = '50%';
+  } else {
+    inst.body.style.clipPath = 'none';
+    inst.body.style.borderRadius = `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+  }
+  const scalePulse = 1 + 0.05 * inst.lvl;
+  inst.ring.style.transform = `translateY(${y.toFixed(2)}%) scale(${scalePulse.toFixed(4)})`;
+  inst.rippleA.hidden = true;
+  inst.rippleB.hidden = true;
+}
+
 function updateCardMotion(inst, now, state, level, muted) {
   applyThimbleState(inst, state);
   // See static/index.html's updateThimbleMotion for why this is dt-accumulated
@@ -197,10 +285,14 @@ function updateCardMotion(inst, now, state, level, muted) {
   const thinkingState = state === 'thinking';
   const listening = state === 'listening';
   const listening2 = state === 'listening2';
-  inst.el.classList.toggle('muted', muted && (listening || listening2) && !speaking && !thinkingState);
+  const hearing = state === 'hearing';
+  inst.el.classList.toggle('muted', muted && (listening || listening2 || hearing) && !speaking && !thinkingState);
   const ttsLevel = speaking ? level : 0;
-  const active = listening || listening2 || speaking || thinkingState;
+  const active = listening || listening2 || hearing || speaking || thinkingState;
   if (!active) { inst.ring.style.transform = 'none'; inst.body.style.clipPath = 'none'; inst.geo = 0; inst.lvl = 0; }
+  else if (hearing) {
+    updateHearingMotion(inst, now, dt, level, muted);
+  }
   else {
     const nodding = listening;
     const y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
@@ -249,11 +341,12 @@ function updateCardMotion(inst, now, state, level, muted) {
 
 // ---- QA page scaffolding (not part of the real app) ----
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', listening2: 'Listening…', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…', paused: 'Paused'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', listening2: 'Listening…', hearing: 'Listening…', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…', paused: 'Paused'};
 
 const STATES = [
   {state: 'idle', title: 'Idle', desc: 'Before the call has really started -- same resting egg shape as listening, just no live mic input yet.', hasLevel: false, hasMuted: true},
   {state: 'listening', title: 'Listening', desc: 'Leans in, egg-shaped, wobbles with mic level. Continuous nod the whole time, not just on speech.', hasLevel: true, hasMuted: true},
+  {state: 'hearing', title: 'Hearing you (prototype)', desc: 'Same pose as Listening, but the reaction IS the point: fast attack / slow release on the level, nod and dome pulse driven only by your actual level (no idle sway), plus a quick outward ping the instant you cross the threshold. Goal: strong enough on its own to replace the You-box glow.', hasLevel: true, hasMuted: true},
   {state: 'listening2', title: 'Listening — new (circle → dome → base)', desc: 'Circle at rest; a soft dome as you start talking; the base widens and softens the longer you go. Three stages, not a straight blend, with a small wobble riding on top. No lean, no tilt, no separate nod.', hasLevel: true, hasMuted: true},
   {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Small off-center oval mouth, no movement. Covers transcribing and waiting on the reply both -- no separate states for those anymore.', hasLevel: false, hasMuted: false},
   {state: 'talking', title: 'Talking', desc: 'Round, ripples outward. Mouth height tracks TTS amplitude directly (fast attack, slower release) instead of a canned loop.', hasLevel: true, hasMuted: false},

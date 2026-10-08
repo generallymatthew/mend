@@ -1,0 +1,14 @@
+{
+  "v": 3,
+  "attachments": {},
+  "createdOnFiles": {"v": 1, "at": "2026-10-08T00:00:00Z"},
+  "title": "Conflict Case Manager",
+  "launch": {"view": "focused", "file": "App.dc.html"},
+  "pages": [],
+  "boards": {
+    "App.dc.html": {"x": 0, "y": 0, "w": 1480, "h": 820, "title": "Conversation"}
+  },
+  "order": ["App.dc.html"],
+  "notes": {},
+  "designSystems": []
+}
