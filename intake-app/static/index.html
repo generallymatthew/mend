@@ -50,12 +50,19 @@
      with light text at this lightness, same pairing the "Go hands-free"
      button uses (see addMessage's own brand-kit comment). This is the
      Talk tab's one primary CTA, so it gets the brand color reserved for
-     single-CTA use, sized big enough to be the obvious thing to tap. */
-  .talk-mic-btn{margin-top:18px; padding:18px 44px; border-radius:999px; border:1px solid #F3829A; background:#F3829A; color:var(--ink); font-size:17px; font-weight:700; cursor:pointer;}
+     single-CTA use, sized big enough to be the obvious thing to tap.
+     Lives in .call-controls (a column flex container, gap:8px) above
+     .control-bar -- align-self:center overrides that container's default
+     stretch, which would otherwise force this pill to the container's
+     full width. Always rendered while liveMode is on (never hidden, just
+     dimmed via :disabled) so it holds a fixed spot above the icon row
+     instead of popping in/out and shifting the caption's own midpoint
+     (see positionCaptionStack) around underneath it. */
+  .talk-mic-btn{align-self:center; margin-bottom:4px; padding:18px 44px; border-radius:999px; border:1px solid #F3829A; background:#F3829A; color:var(--ink); font-size:17px; font-weight:700; cursor:pointer;}
   .talk-mic-btn:disabled{opacity:.4; cursor:default;}
   .talk-mic-btn.recording{background:#C0392B; border-color:#C0392B; color:#fff; animation:talk-mic-pulse 1.4s ease-in-out infinite;}
   @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.35);} 50%{box-shadow:0 0 0 8px rgba(192,57,43,0);}}
-  .talk-transcript-box{margin-top:14px; max-width:420px; min-height:22px; padding:10px 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:13.5px; color:var(--ink); text-align:center;}
+  .talk-transcript-box{align-self:center; max-width:420px; min-height:22px; padding:10px 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:13.5px; color:var(--ink); text-align:center;}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
   .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
   .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
@@ -499,8 +506,6 @@
             <div class="state-pill-row">
               <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
             </div>
-            <button id="talkMicBtn" class="talk-mic-btn" type="button" hidden>Tap to talk</button>
-            <div class="talk-transcript-box" id="talkTranscriptBox" hidden><span id="talkTranscriptText"></span></div>
           </div>
           <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
           <div class="mic-error-banner" id="micErrorBanner" hidden>
@@ -530,6 +535,8 @@
              with the control-bar. -->
         <div class="call-bottom-row">
           <div class="call-controls">
+            <button id="talkMicBtn" class="talk-mic-btn" type="button" hidden>Tap to talk</button>
+            <div class="talk-transcript-box" id="talkTranscriptBox" hidden><span id="talkTranscriptText"></span></div>
             <div class="control-bar">
               <button id="pauseBtn" class="ctrl-btn" title="Pause"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg></button>
               <button id="muteBtn" class="ctrl-btn" title="Mute"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
@@ -2260,7 +2267,13 @@ function updateStatePill() {
   // ui === 'voice' keeps this button/box from ever flashing on while
   // someone's dictating into the text composer instead.
   const tapRecording = ui === 'voice' && liveMode && holdControlled && mediaRecorder && mediaRecorder.state === 'recording';
-  talkMicBtn.hidden = !(ui === 'voice' && liveMode && (avatarState === 'ready' || tapRecording));
+  // Persists (never hidden) for the whole time liveMode is on -- it used
+  // to hide/show across avatarState changes, which shifted the caption's
+  // own vertical midpoint (positionCaptionStack) underneath it every time
+  // Thimble started/stopped talking. Reported live as the button and the
+  // captions fighting for the same space. Disabled (dimmed), not hidden,
+  // whenever it isn't actually tappable.
+  talkMicBtn.hidden = !(ui === 'voice' && liveMode);
   talkMicBtn.disabled = !tapRecording && avatarState !== 'ready';
   talkMicBtn.textContent = tapRecording ? 'Tap to stop' : 'Tap to talk';
   talkMicBtn.classList.toggle('recording', tapRecording);
@@ -2998,11 +3011,22 @@ function stopInterruptMonitor() {
   try { if (interruptVad) interruptVad.pause(); } catch (e) {}
 }
 
+// Barge-in disabled: now that Talk tab's own turn-taking is tap-to-talk
+// (explicit, deterministic -- see armTapToTalk/talkMicBtn), a voice-
+// activated interrupt is the same kind of silence/VAD guess this session
+// just finished removing from the OTHER side of the conversation. Keeping
+// the whole turn-taking model consistent means Thimble's reply now has to
+// be explicitly tapped into, not talked over -- no guessing in either
+// direction. Flip this back to true if voice barge-in is wanted again;
+// everything below it (interruptVad, getInterruptVad, interruptNow) is
+// untouched, just unreachable while this is false.
+const BARGE_IN_ENABLED = false;
+
 // Call once at the start of a reply cycle (text submit or voice turn
 // finalize). No-op outside live voice mode -- text-only chat has no mic
 // armed and shouldn't grab one just to watch for an interrupt.
 async function startInterruptMonitor(myGen) {
-  if (!liveMode || micMuted || sessionPaused) return;
+  if (!BARGE_IN_ENABLED || !liveMode || micMuted || sessionPaused) return;
   let v;
   try {
     v = await getInterruptVad();
