@@ -1177,6 +1177,32 @@ function startDeepgramSocket(sampleRate) {
   // takes an explicit socket for exactly this reason.
   ws.finalText = '';
   ws.interimText = '';
+  // Reported live: a composer dictation only captured "a sentence from the
+  // middle" of what was actually said -- both ends missing, not just the
+  // trailing-word gap already fixed elsewhere. Two real gaps, not one:
+  // (1) micProcessor's onaudioprocess (below) only ever sent audio when
+  // readyState was already OPEN, with nothing buffering what was spoken
+  // during the WebSocket's own connect/handshake time -- on mobile
+  // networks that's easily long enough to eat the opening words outright,
+  // silently, no error anywhere. pendingSend queues audio captured before
+  // 'open' and flushes it in order once the connection is actually ready.
+  ws.pendingSend = [];
+  ws.onopen = () => {
+    for (const buf of ws.pendingSend) ws.send(buf);
+    ws.pendingSend = [];
+  };
+  // (2) nothing here ever noticed if the socket died mid-recording (network
+  // hiccup, server-side timeout) -- readyState just silently stopped being
+  // OPEN and every later audio chunk got dropped the same way, with
+  // whatever text had already accumulated standing in as if it were the
+  // whole turn. closedUnexpectedly (checked in resolveTurnTranscript) lets
+  // an early death be told apart from drainDeepgramSocket's own intentional
+  // close at the end of a normal turn, so a confirmed-partial transcript
+  // can fall back to the complete local-Whisper clip instead of silently
+  // standing in as the whole answer.
+  ws.closedUnexpectedly = false;
+  ws.onclose = () => { if (!ws.intentionalClose) ws.closedUnexpectedly = true; };
+  ws.onerror = () => { ws.closedUnexpectedly = true; };
   ws.onmessage = (ev) => {
     let msg;
     try { msg = JSON.parse(ev.data); } catch (e) { return; }
@@ -1287,7 +1313,10 @@ async function drainDeepgramSocket(sock) {
   // newer recording cycle may have already replaced it with its own (see
   // this function's own comment above).
   if (dg === dgSocket) dgSocket = null;
-  if (dg && dg.readyState === WebSocket.OPEN) dg.close();
+  if (dg && dg.readyState === WebSocket.OPEN) {
+    dg.intentionalClose = true; // tells its own onclose this wasn't a mid-recording drop -- see startDeepgramSocket's closedUnexpectedly comment
+    dg.close();
+  }
 }
 
 // Deepgram already has the transcript by the time a turn ends -- it was
@@ -1304,7 +1333,15 @@ async function drainDeepgramSocket(sock) {
 async function resolveTurnTranscript(blob, sock) {
   const dg = sock !== undefined ? sock : dgSocket;
   const dgText = dg ? (dg.finalText + ' ' + dg.interimText).trim() : '';
-  if (deepgramEnabled && dgText) return {transcript: dgText};
+  // A socket that died mid-recording (closedUnexpectedly -- see
+  // startDeepgramSocket) stopped hearing new audio the instant it dropped,
+  // same as never having a socket at all from that point on -- whatever
+  // text it has by then is a confirmed-partial transcript, not the whole
+  // turn, even though it's non-empty. Trusting it as-is was the real bug
+  // behind "only caught a sentence from the middle": falls through to
+  // getFinalTranscript(blob) below instead, which still has the complete
+  // clip (pcmChunks never depended on this socket staying alive).
+  if (deepgramEnabled && dgText && !dg.closedUnexpectedly) return {transcript: dgText};
   // Finalizing reuses the last partial transcript plus a tail-patch of just
   // the new audio since then, instead of re-transcribing the whole clip --
   // see getFinalTranscript's own docstring.
@@ -1349,7 +1386,14 @@ function startMicAnalysis(stream) {
     micProcessor.onaudioprocess = (e) => {
       const samples = new Float32Array(e.inputBuffer.getChannelData(0));
       pcmChunks.push(samples); // kept regardless of deepgramEnabled -- the Whisper fallback path needs it if Deepgram's socket drops mid-turn
-      if (dgSocket && dgSocket.readyState === WebSocket.OPEN) dgSocket.send(floatToInt16(samples).buffer);
+      if (dgSocket) {
+        const buf = floatToInt16(samples).buffer;
+        if (dgSocket.readyState === WebSocket.OPEN) dgSocket.send(buf);
+        // CONNECTING -- not open yet, not dead either. Queue instead of
+        // dropping (see startDeepgramSocket's own comment on why audio said
+        // during this window was silently going nowhere before).
+        else if (dgSocket.readyState === WebSocket.CONNECTING) dgSocket.pendingSend.push(buf);
+      }
     };
     source.connect(micProcessor);
     micProcessor.connect(micAudioCtx.destination); // some browsers only fire onaudioprocess once connected to a destination; silent since we never write to outputBuffer
