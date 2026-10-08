@@ -321,6 +321,11 @@
   .chat-hint{max-width:720px; margin:8px auto 0; font-size:12px; opacity:.55; text-align:center;}
   @media (max-width: 760px){
     .ui-tab{font-size:12px; padding:0 11px;}
+    /* Dots rotated vertical (markup above) read the same as the standard
+       horizontal "more options" glyph but take up less of the icon's own
+       bounding box left-right -- shrinking the button to match claws back
+       a few more px in the header-right row the toggle sits in. */
+    .overflow-btn{width:26px; height:26px;}
     .feedback-link{font-size:12px;}
     .call-layout{flex-direction:column;}
     .transcript-panel{width:100%; border-left:none; border-top:1px solid var(--border); max-height:220px;}
@@ -440,7 +445,7 @@
             </div>
             <div class="overflow-wrap">
               <button id="voiceOverflowBtn" class="overflow-btn" type="button" aria-label="More options" aria-haspopup="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
               </button>
               <div class="overflow-menu" id="voiceOverflowMenu" hidden>
                 <button id="resetBtn" type="button">Start over</button>
@@ -558,7 +563,7 @@
           </div>
           <div class="overflow-wrap">
             <button id="chatOverflowBtn" class="overflow-btn" type="button" aria-label="More options" aria-haspopup="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
             </button>
             <div class="overflow-menu" id="chatOverflowMenu" hidden>
               <button id="chatResetBtn" type="button">Start over</button>
