@@ -46,9 +46,14 @@
   .overflow-menu .menu-option{display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .overflow-menu .menu-option .check{color:var(--accent); opacity:0; font-weight:700;}
   .overflow-menu .menu-option[aria-checked="true"] .check{opacity:1;}
-  .talk-mic-btn{margin-top:14px; padding:10px 22px; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff; font-size:14px; font-weight:600; cursor:pointer;}
+  /* Pink (#F3829A) with dark ink text, not white -- pink fails contrast
+     with light text at this lightness, same pairing the "Go hands-free"
+     button uses (see addMessage's own brand-kit comment). This is the
+     Talk tab's one primary CTA, so it gets the brand color reserved for
+     single-CTA use, sized big enough to be the obvious thing to tap. */
+  .talk-mic-btn{margin-top:18px; padding:18px 44px; border-radius:999px; border:1px solid #F3829A; background:#F3829A; color:var(--ink); font-size:17px; font-weight:700; cursor:pointer;}
   .talk-mic-btn:disabled{opacity:.4; cursor:default;}
-  .talk-mic-btn.recording{background:#C0392B; border-color:#C0392B; animation:talk-mic-pulse 1.4s ease-in-out infinite;}
+  .talk-mic-btn.recording{background:#C0392B; border-color:#C0392B; color:#fff; animation:talk-mic-pulse 1.4s ease-in-out infinite;}
   @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.35);} 50%{box-shadow:0 0 0 8px rgba(192,57,43,0);}}
   .talk-transcript-box{margin-top:14px; max-width:420px; min-height:22px; padding:10px 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:13.5px; color:var(--ink); text-align:center;}
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
