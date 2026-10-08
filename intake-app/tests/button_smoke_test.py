@@ -7,13 +7,18 @@ this file is narrower and faster -- it exists to catch a specific class of
 regression that timing test wouldn't notice: a control that's wired to the
 wrong flag, or a state transition that forgets to reset something, so the
 button visibly does the wrong thing (or nothing) even though no turn ever
-errors out. Two real examples that prompted this file:
-  - push-to-talk release losing the last words spoken right at release
-    (Deepgram's own transcript for that trailing audio hadn't arrived yet
-    when the socket was torn down -- see onstop's drain-wait comment).
+errors out. Two real examples that prompted this file (both from when
+push-to-talk still lived in the Voice panel, before it moved to the text
+composer's own hold-to-dictate mic button):
+  - release losing the last words spoken right at release (Deepgram's own
+    transcript for that trailing audio hadn't arrived yet when the socket
+    was torn down -- see onstop's drain-wait comment). Still a live risk
+    now that the same hold/release mechanics drive the composer's mic
+    button instead.
   - Pause -> Resume leaving the state pill stuck on "Paused" forever when
-    in push-to-talk mode (resumeSession() only re-armed listening in
-    hands-free mode, so push-to-talk's resume did nothing).
+    in push-to-talk mode. No longer reachable -- Voice mode is hands-free
+    only now, Pause/Resume has just the one path -- but
+    check_pause_resume_handsfree below still covers that one path.
 Both were silent: no console error, no failed request, just a control that
 looks like it worked but didn't. Each check below exists to catch one of
 those categories again if it comes back, not to re-prove the happy path
@@ -144,85 +149,52 @@ async def check_pause_resume_handsfree(playwright, base_url):
         await browser.close()
 
 
-async def check_pause_resume_pushtotalk(playwright, base_url):
-    """Regression check for the bug reported live: Pause -> Resume while in
-    push-to-talk mode must drop out of 'Paused', not stay stuck on it."""
+async def check_composer_hold_release(playwright, base_url):
+    """Holding the composer's mic button starts a recording; releasing ends
+    it. Uses SILENT_AUDIO (no real speech), so this only checks the hold/
+    release mechanics -- transcript content is check_composer_trailing_words_
+    not_dropped's job."""
     browser, page, errors = await new_page(playwright, base_url)
     try:
-        await page.locator("#pttHoldTab").click()
-        await page.wait_for_timeout(200)
-        await page.locator("#pauseBtn").click()
-        await page.wait_for_timeout(300)
-        paused = await state_word(page)
-        await page.locator("#pauseBtn").click()
-        await page.wait_for_timeout(300)
-        resumed = await state_word(page)
-        ok = ("Paused" in paused) and ("Paused" not in resumed)
-        return ok, f"paused={paused!r} resumed={resumed!r}", errors
-    finally:
-        await browser.close()
-
-
-async def check_ptt_mode_toggle(playwright, base_url):
-    """Auto/Hold tabs toggle which control is visible and which tab is active."""
-    browser, page, errors = await new_page(playwright, base_url)
-    try:
-        ptt_hidden_before = await page.locator("#pttBtn").is_hidden()
-        await page.locator("#pttHoldTab").click()
-        ptt_hidden_after_hold = await page.locator("#pttBtn").is_hidden()
-        hold_active = await page.locator("#pttHoldTab").evaluate("el => el.classList.contains('active')")
-        await page.locator("#pttHandsFreeTab").click()
-        ptt_hidden_after_auto = await page.locator("#pttBtn").is_hidden()
-        auto_active = await page.locator("#pttHandsFreeTab").evaluate("el => el.classList.contains('active')")
-        ok = ptt_hidden_before and (not ptt_hidden_after_hold) and hold_active and ptt_hidden_after_auto and auto_active
-        detail = (f"pttBtn hidden: before={ptt_hidden_before} after-hold={ptt_hidden_after_hold} "
-                  f"after-auto={ptt_hidden_after_auto}; hold_active={hold_active} auto_active={auto_active}")
-        return ok, detail, errors
-    finally:
-        await browser.close()
-
-
-async def check_ptt_hold_release(playwright, base_url):
-    """Holding the push-to-talk button starts a recording turn; releasing ends it."""
-    browser, page, errors = await new_page(playwright, base_url)
-    try:
-        await page.locator("#pttHoldTab").click()
-        await page.wait_for_timeout(200)
-        btn = page.locator("#pttBtn")
+        await page.locator('.ui-tab[data-ui="text"]').click()
+        await page.wait_for_timeout(200)  # let the tab switch/layout settle before trusting a bounding box
+        btn = page.locator("#composerMicBtn")
         box = await btn.bounding_box()
         await page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
         await page.mouse.down()
         await page.wait_for_timeout(300)
         active_while_held = await btn.evaluate("el => el.classList.contains('active')")
-        listening_while_held = "Listening" in await state_word(page)
         await page.mouse.up()
         await page.wait_for_timeout(300)
         active_after_release = await btn.evaluate("el => el.classList.contains('active')")
-        ok = active_while_held and listening_while_held and (not active_after_release)
-        detail = f"active_while_held={active_while_held} listening_while_held={listening_while_held} active_after_release={active_after_release}"
+        ok = active_while_held and (not active_after_release)
+        detail = f"active_while_held={active_while_held} active_after_release={active_after_release}"
         return ok, detail, errors
     finally:
         await browser.close()
 
 
-async def check_ptt_trailing_words_not_dropped(playwright, base_url):
-    """Regression check for the bug fixed in this commit: releasing
-    push-to-talk right as the last word finishes must not drop it.
-    TRAILING_WORDS_AUDIO has no silence tail -- the file ends the instant
-    speech ends, so holding for its exact duration and releasing
-    reproduces the real release-at-last-word timing (Deepgram's own
-    transcript for that trailing audio often hasn't arrived yet at the
-    moment of release). Needs deepgramEnabled (a real DEEPGRAM_API_KEY) to
-    exercise the actual code path this bug was in -- skips with ok=True
-    otherwise rather than failing on an unrelated missing-config case."""
+async def check_composer_trailing_words_not_dropped(playwright, base_url):
+    """Regression check: releasing the composer's mic button right as the
+    last word finishes must not drop it, same race push-to-talk's old Voice-
+    panel button needed this fix for (see onstop's drain-wait comment) --
+    the hold/release mechanics moved to the composer's button verbatim, so
+    the same regression is still reachable there. TRAILING_WORDS_AUDIO has
+    no silence tail -- the file ends the instant speech ends, so holding for
+    its exact duration and releasing reproduces the real release-at-last-
+    word timing (Deepgram's own transcript for that trailing audio often
+    hasn't arrived yet at the moment of release). Needs deepgramEnabled (a
+    real DEEPGRAM_API_KEY) to exercise the actual code path this bug was in
+    -- skips with ok=True otherwise rather than failing on an unrelated
+    missing-config case."""
     browser, page, errors = await new_page(playwright, base_url, audio_file=TRAILING_WORDS_AUDIO)
     try:
         # The frontend's own `deepgramEnabled` is set by an async fetch
-        # fired at page load (see checkDeepgramEnabled in index.html) and
-        # isn't guaranteed resolved yet right here -- fetch the same
-        # endpoint directly instead of racing that variable. By the time
-        # the actual hold/release below reaches onstop (2+ seconds later),
-        # the frontend's own copy has long since resolved either way.
+        # fired at page load and isn't guaranteed resolved yet right here --
+        # fetch the same endpoint directly instead of racing that variable.
+        # By the time the actual hold/release below reaches onstop (2+
+        # seconds later), the frontend's own copy has long since resolved
+        # either way.
         config = await page.evaluate("fetch('/api/voice/config').then(r => r.json())")
         if config.get("error"):
             # Rate-limited (RATE_LIMIT_MAX, see server.py) or some other
@@ -233,50 +205,46 @@ async def check_ptt_trailing_words_not_dropped(playwright, base_url):
             return True, f"skipped: /api/voice/config errored: {config['error']!r}", errors
         if not config.get("deepgram"):
             return True, "skipped: DEEPGRAM_API_KEY not configured on the server", errors
-        await page.locator("#pttHoldTab").click()
-        await page.wait_for_timeout(200)
-        btn = page.locator("#pttBtn")
+        await page.locator('.ui-tab[data-ui="text"]').click()
+        await page.wait_for_timeout(200)  # let the tab switch/layout settle before trusting a bounding box
+        btn = page.locator("#composerMicBtn")
         box = await btn.bounding_box()
         await page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
         await page.mouse.down()
-        bubble = page.locator("#thread .msg.employee.transcript").last
-        await bubble.wait_for(state="attached", timeout=5000)
-        # Release the instant Deepgram's own live INTERIM transcript shows
-        # the last word, not after a fixed delay -- a fixed delay can't
-        # tell real startup latency (getUserMedia, Deepgram's websocket
-        # handshake) apart from the fixture's own speech actually finishing,
-        # and undercounting either one truncates the audio before the
-        # phrase ends, which isn't the bug this test exists to catch. This
-        # is the real race instead: by the time the interim transcript has
-        # caught up to the last word, the audio is definitely fully sent --
-        # releasing right then is exactly "release right as the last word
-        # finishes," the real trigger (the bug used to drop that FINAL
-        # transcript, which lags behind the interim one).
+        # No live interim BUBBLE in the composer flow (unlike the old
+        # Voice-panel button, which had one in the call transcript) -- but
+        # dgFinalText/dgInterimText (module-level JS state) still accumulate
+        # the exact same way under the hood, just with nothing rendering
+        # them to the page. Poll those directly instead of a UI element --
+        # same signal the old test's bubble-text poll used, confirmed
+        # necessary live: releasing on a fixed delay instead let MediaRecorder's
+        # own webm blob (the Whisper fallback used if Deepgram hasn't produced
+        # anything yet) go out mostly empty in headless/automated runs, an
+        # unrelated environment limitation masked in every other test by
+        # Deepgram almost always winning the race -- confirming Deepgram
+        # actually has the word before releasing avoids depending on that
+        # fallback path at all, same as the old test's own approach.
         deadline = asyncio.get_event_loop().time() + 8
         while asyncio.get_event_loop().time() < deadline:
-            interim = (await bubble.text_content() or "").lower()
-            if "manager" in interim:
+            dg_text = await page.evaluate("(dgFinalText + ' ' + dgInterimText).toLowerCase()")
+            if "manager" in dg_text:
                 break
             await page.wait_for_timeout(50)
         await page.mouse.up()
-        # The live interim update and onstop's own final rewrite both write
-        # the same quoted-text format into this bubble, so text content
-        # alone can't tell interim from final -- but only onstop's final
-        # path removes the 'pending' class (see its own `bubble.classList
-        # .remove('pending')`). Wait for that instead of guessing from text.
-        deadline = asyncio.get_event_loop().time() + 5
+        chat_input = page.locator("#chatInput")
+        deadline = asyncio.get_event_loop().time() + 8
+        text = ""
         while asyncio.get_event_loop().time() < deadline:
-            still_pending = await bubble.evaluate("el => el.classList.contains('pending')")
-            if not still_pending:
+            text = (await chat_input.input_value()).strip()
+            if text:
                 break
             await page.wait_for_timeout(100)
-        text = (await bubble.text_content() or "").strip()
         # Only check for "manager" (TRAILING_WORDS_AUDIO's own last word) --
         # the bug this guards against drops trailing words outright, not
         # individual mid-phrase STT misheard homophones ("a peer" vs.
         # "appear" is a real, separate STT-accuracy question, not this bug).
         ok = "manager" in text.lower()
-        return ok, f"final transcript bubble: {text!r}", errors
+        return ok, f"composer input value: {text!r}", errors
     finally:
         await browser.close()
 
@@ -322,10 +290,8 @@ CHECKS = [
     ("UI tabs (Voice/Text)", check_ui_tabs),
     ("Mute toggle", check_mute_toggle),
     ("Pause/Resume (hands-free)", check_pause_resume_handsfree),
-    ("Pause/Resume (push-to-talk)", check_pause_resume_pushtotalk),
-    ("Push-to-talk mode toggle (Auto/Hold)", check_ptt_mode_toggle),
-    ("Push-to-talk hold/release", check_ptt_hold_release),
-    ("Push-to-talk trailing words not dropped", check_ptt_trailing_words_not_dropped),
+    ("Composer mic hold/release", check_composer_hold_release),
+    ("Composer mic trailing words not dropped", check_composer_trailing_words_not_dropped),
     ("Captions/transcript toggles", check_captions_and_transcript_toggle),
     ("Text chat send", check_text_chat_send),
 ]

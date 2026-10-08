@@ -159,48 +159,23 @@
   .mic-indicator-dot{width:9px; height:9px; border-radius:50%; background:var(--border); transition:background 80ms linear, transform 80ms linear;}
   .mic-indicator-dot.lit{background:#8C3B2E; transform:scale(1.15);}
 
-  /* Inline in .control-bar, between Mute and Captions -- noticeably bigger
-     than the other 44px .ctrl-btn icons there (this is the one control
-     that matters most while push-to-talk is on). Red by default, not just
-     while held -- same #8C3B2E this app already uses everywhere else as
-     its "live/recording" signal (the mic-indicator dot, the you-tile's
-     active-speaker glow's darker sibling), reused here rather than
-     inventing a second red, and distinct at a glance from every other
-     control-bar button's dark green. touch-action:none stops mobile
-     Safari/Chrome from treating a held finger as a scroll/selection
-     gesture, which would otherwise eat the press before JS ever sees it. */
-  /* .ctrl-btn.ptt-circle-btn, not just .ptt-circle-btn -- .ctrl-btn's own
-     background rule sits later in this stylesheet and otherwise wins the
-     cascade at equal specificity (source order, not which class "feels"
-     more specific), so the red here was silently losing to the default
-     dark-green until this combined selector gave it the edge. Confirmed
-     live: the button rendered at the right size but plain green. */
-  /* Resting: white fill, pink outline/icon -- an unarmed "ready to record"
-     look. Holding it reverses that (filled pink, white icon/border) and
-     adds a repeating outward pulse ring, the same "recording in progress"
-     language a camera/voice-memo app's own record button uses, per
-     explicit request ("have the button animate so it looks like its
-     recording"). Brand kit note: Pink measures ~2.2:1 on white, under
-     WCAG AA's 4.5:1 text floor (same reason the state pill went
-     white/ink+pink-dot instead of white/pink text, see that fix's own
-     comment) -- accepted here anyway since this is a single decorative
-     icon with its meaning carried by the title attribute, not body text,
-     and the explicit ask was for pink specifically on both states. */
-  .ctrl-btn.ptt-circle-btn{width:76px; height:76px; font-size:inherit; background:#FFFFFF; border:2.5px solid #F3829A; color:#F3829A; -webkit-user-select:none; user-select:none; touch-action:none; transition:transform 80ms ease, background 80ms ease, color 80ms ease;}
-  .ctrl-btn.ptt-circle-btn.active{background:#F3829A; border-color:#FFFFFF; color:#FFFFFF; transform:scale(.93); animation:ptt-record-pulse 1.3s ease-out infinite;}
-  @keyframes ptt-record-pulse{
-    0%{box-shadow:0 0 0 0 #F3829A80;}
-    70%{box-shadow:0 0 0 16px #F3829A00;}
-    100%{box-shadow:0 0 0 0 #F3829A00;}
+  /* Composer's own hold-to-dictate mic button, next to Send. Plain mic
+     icon, no label -- the standard voice-memo affordance, per explicit
+     request ("people recognize that as a voice memo option"). Same 44px
+     height as .send-btn so the two sit level in the row. Red while held,
+     same #8C3B2E this app already uses everywhere else as its "live/
+     recording" signal (the mic-indicator dot, the you-tile's active-
+     speaker glow's darker sibling) -- reused here rather than inventing a
+     second red. touch-action:none stops mobile Safari/Chrome from treating
+     a held finger as a scroll/selection gesture, which would otherwise eat
+     the press before JS ever sees it. */
+  .composer-mic-btn{width:44px; height:44px; padding:0; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:var(--card); border:1.5px solid var(--border); color:var(--ink-soft); -webkit-user-select:none; user-select:none; touch-action:none; transition:transform 80ms ease, background 80ms ease, color 80ms ease, border-color 80ms ease;}
+  .composer-mic-btn.active{background:#8C3B2E; border-color:#8C3B2E; color:#fff; transform:scale(.93); animation:composer-mic-pulse 1.3s ease-out infinite;}
+  @keyframes composer-mic-pulse{
+    0%{box-shadow:0 0 0 0 #8C3B2E80;}
+    70%{box-shadow:0 0 0 14px #8C3B2E00;}
+    100%{box-shadow:0 0 0 0 #8C3B2E00;}
   }
-  /* First-use coaching tip, not a hover title -- the button's own purpose
-     (hold vs. tap) isn't obvious at a glance, and a title= only shows up on
-     a hover that touch users never get. Shown once per switch into Hold
-     mode (see showPttTooltip), dismissed on first press or after a timeout
-     -- see pttPress(). */
-  .ptt-btn-wrap{position:relative;}
-  .ptt-tooltip{position:absolute; bottom:calc(100% + 12px); left:50%; transform:translateX(-50%); width:200px; padding:10px 13px; border-radius:10px; background:var(--ink); color:var(--paper); font-size:12.5px; line-height:1.4; text-align:center; box-shadow:0 4px 14px rgba(23,55,46,.22); pointer-events:none; z-index:4;}
-  .ptt-tooltip::after{content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--ink);}
 
   /* Zoom-call style layout: the avatar + captions + controls are the main
      event, full attention like a video tile; the transcript is reference
@@ -295,13 +270,8 @@
      align-items so the shorter tab height doesn't throw off the toggle's
      own vertical centering. */
   .ui-toggle{display:flex; align-items:center; height:38px; padding:4px; border-radius:999px; background:#17372E0D; gap:2px; flex-shrink:0;}
-  /* .ptt-tab shares this styling but NOT the .ui-tab class itself -- a
-     pre-existing delegated listener wires up every element matching
-     `.ui-tab` to setUi(btn.dataset.ui) (see that querySelectorAll call),
-     so reusing the class made clicking Auto/Hold also call
-     setUi(undefined) and hide both panels at once. Confirmed live. */
-  .ui-tab, .ptt-tab{font:inherit; font-size:13px; font-weight:700; height:30px; padding:0 16px; display:flex; align-items:center; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
-  .ui-tab.active, .ptt-tab.active{background:var(--accent); color:var(--paper);}
+  .ui-tab{font:inherit; font-size:13px; font-weight:700; height:30px; padding:0 16px; display:flex; align-items:center; border-radius:999px; border:none; cursor:pointer; background:transparent; color:var(--ink);}
+  .ui-tab.active{background:var(--accent); color:var(--paper);}
   /* Hidden for now -- the pink dot on the state pill already signals
      live/active, so this duplicated that. JS still tracks/updates it
      underneath; delete this override to bring it back. */
@@ -347,14 +317,14 @@
        on mobile instead of the full sentence, short enough to stay on one
        line next to the logo with no wrapping anywhere. */
     .privacy-pill{font-size:12px; padding:7px 12px;}
-    /* Same "don't wrap the header" lesson applies now that there are TWO
-       segmented toggles up there (Auto/Hold, Voice/Text) -- confirmed live,
-       they ran off the right edge at 375px with the wordmark still full
-       size. Dropping "Mend" down to icon-only and tightening both toggles'
-       padding frees enough width to keep everything on one line. */
+    /* "Don't wrap the header" lesson -- confirmed live, the wordmark plus
+       the Voice/Text toggle ran off the right edge at 375px with the
+       wordmark still full size. Dropping "Mend" down to icon-only and
+       tightening the toggle's padding frees enough width to keep
+       everything on one line. */
     .brand-name{display:none;}
     .header-right{gap:6px;}
-    .ui-tab, .ptt-tab{font-size:12px; padding:0 11px;}
+    .ui-tab{font-size:12px; padding:0 11px;}
     .privacy-pill-rest{display:none;}
     .feedback-link{font-size:12px;}
     .call-layout{flex-direction:column;}
@@ -425,15 +395,6 @@
       <div class="privacy-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><span>Private<span class="privacy-pill-rest">. Nothing is recorded.</span></span></div>
     </div>
     <div class="header-right">
-      <!-- Short labels on purpose ("Auto"/"Hold", not "Hands-free"/"Push to
-           talk") -- this header already had an explicit "don't let it wrap"
-           lesson from the privacy-pill fix above, and two segmented pills
-           side by side needs to fit a narrow screen without repeating that.
-           title= carries the full meaning for anyone hovering/reading. -->
-      <div class="ui-toggle" id="pttToggleGroup">
-        <button class="ptt-tab active" id="pttHandsFreeTab" type="button" title="Hands-free -- listens automatically">Auto</button>
-        <button class="ptt-tab" id="pttHoldTab" type="button" title="Push to talk -- hold the button to talk">Hold</button>
-      </div>
       <div class="ui-toggle">
         <button class="ui-tab active" data-ui="voice">Voice</button>
         <button class="ui-tab" data-ui="text">Text</button>
@@ -502,22 +463,6 @@
             <div class="control-bar">
               <button id="pauseBtn" class="ctrl-btn" title="Pause"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg></button>
               <button id="muteBtn" class="ctrl-btn" title="Mute"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
-              <!-- Push-to-talk's hold target -- between Mute and Captions,
-                   per explicit placement request. Bigger than the other
-                   44px ctrl-btn icons (this is the one control that matters
-                   most while pttMode is on), but still inline in the same
-                   row rather than its own standalone row like before.
-                   Hidden by default; shown only when pttMode is on and
-                   ui === 'voice' (see refreshPttVisibility). -->
-              <!-- Waveform, not a mic -- the mic icon is already Mute's,
-                   sitting right next to this button; two mic-shaped icons
-                   side by side was the actual confusion to fix. -->
-              <div class="ptt-btn-wrap" hidden>
-                <div class="ptt-tooltip" id="pttTooltip" hidden>Press and hold to talk. Release when you're done speaking to send.</div>
-                <button id="pttBtn" class="ctrl-btn ptt-circle-btn" type="button" title="Hold to talk" hidden>
-                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="10" x2="5" y2="14"></line><line x1="9.5" y1="6" x2="9.5" y2="18"></line><line x1="14" y1="3" x2="14" y2="21"></line><line x1="18.5" y1="7" x2="18.5" y2="17"></line></svg>
-                </button>
-              </div>
               <button id="captionsToggleBtn" class="ctrl-btn" title="Toggle captions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"></path></svg></button>
               <button id="transcriptToggleBtn" class="ctrl-btn" title="Show/hide transcript"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="14" y2="17"></line></svg></button>
             </div>
@@ -578,6 +523,13 @@
       <div class="chat-composer">
         <div class="chat-input-row">
           <textarea id="chatInput" rows="2" placeholder="Tell Thimble what happened&hellip;"></textarea>
+          <!-- Hold to dictate into the textarea (not auto-sent -- release
+               fills the field so it can be reviewed/edited before Send,
+               per explicit request). Plain mic icon, no label: the
+               standard voice-memo affordance next to a chat input. -->
+          <button id="composerMicBtn" class="composer-mic-btn" type="button" title="Hold to record a voice memo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+          </button>
           <button id="chatSendBtn" class="primary send-btn">Send</button>
         </div>
         <div class="chat-hint">Enter to send &middot; Shift+Enter for a new line</div>
@@ -666,9 +618,8 @@ function setUi(next) {
   voicePanel.hidden = ui !== 'voice';
   chatPanel.hidden = ui !== 'text';
   document.querySelectorAll('.ui-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.ui === ui));
+  if (composerHolding) composerRelease(); // leaving Text mid-hold (rare, but possible) -- don't leave a dangling recording with nothing to end it
   if (ui === 'voice') enterVoiceLive(); else exitVoiceLive();
-  refreshPttVisibility();
-  if (ui === 'voice' && pttMode) showPttTooltip(); else hidePttTooltip();
 }
 document.querySelectorAll('.ui-tab').forEach(btn => btn.addEventListener('click', () => setUi(btn.dataset.ui)));
 
@@ -737,10 +688,7 @@ function resumeSession() {
     pausedMidReply = false;
     armLiveMode(); // re-arms liveMode/the live timer so finishSpeechCycle resumes listening once this (and any still-queued) sentence finishes playing, same as if never paused
     avatarState = 'talking';
-    // Push-to-talk owns interrupting on its own (the button itself is the
-    // interrupt) -- the passive barge-in listener this would otherwise arm
-    // is exactly the always-on mic this mode exists to not have.
-    if (!pttMode) startInterruptMonitor(replyGen); // barge-in should still work on the resumed portion, same as before pausing
+    startInterruptMonitor(replyGen); // barge-in should still work on the resumed portion, same as before pausing
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
     // Only the audioEl path needs its own explicit play() call -- a
     // suspended Web Audio fallback buffer already picks back up on its own
@@ -752,12 +700,7 @@ function resumeSession() {
   }
   if (ui === 'voice') {
     armLiveMode();
-    if (!pttMode) startRecordingTurnSafe();
-    // Push-to-talk never had a recording in flight to resume -- nothing
-    // else here sets avatarState back from 'paused', so without this it
-    // stayed stuck reading "Paused" after a resume (reported live: hit
-    // pause, unpaused, it stayed paused) until the button was pressed.
-    else avatarState = 'idle';
+    startRecordingTurnSafe();
   }
 }
 
@@ -775,152 +718,107 @@ muteBtn.addEventListener('click', () => {
 // explicit request after live testing found two real problems with the
 // automatic approach -- the VAD/Deepgram silence-wait feels slow and
 // uncertain ("doesn't seem to know I've finished talking"), and the
-// passive always-on barge-in listener can false-trigger on Thimble's own
-// echo (see MIC_CONSTRAINTS and startInterruptMonitor's own calibration
-// fix above, both aimed at the same report but only partial mitigations).
-// Holding pttBtn is the ONLY thing that starts or ends a recording while
-// pttMode is on: no VAD timer, no silence guess, no passive open mic
-// during Thimble's own reply. Pressing it while Thimble is thinking/
-// talking interrupts on the spot -- the button itself IS the interrupt,
-// not a guess made by a second always-listening stream. Every call site
-// that would otherwise auto-arm hands-free listening or the passive
-// interrupt monitor is individually guarded with `&& !pttMode` (or
-// `if (!pttMode) ...`) rather than this mode replacing those code paths
-// outright -- lower-risk, and switching back to hands-free via the mode
-// toggle needs nothing special to re-enable.
-let pttMode = false;
-let pttHolding = false;
-let pttPressedAt = 0;
+// Voice mode is hands-free only now -- push-to-talk moved to the text
+// composer's own mic button instead (dictate into the input, not an
+// always-on Voice-mode option), per explicit request. holdControlled marks
+// a recording as hold-to-release rather than auto-ending on silence/
+// Deepgram's own endpointing -- the composer's recording sets it; Voice's
+// hands-free recording doesn't. Every call site that used to check
+// `!pttMode` for this reason now checks `!holdControlled` instead.
+let holdControlled = false;
+
+// Composer's own hold-to-dictate mic button: press, hold, release fills
+// the text input with the transcript for review -- NOT auto-sent, per
+// explicit request (unlike Voice mode's old push-to-talk, which did
+// auto-send). Reuses the exact same mediaRecorder/dgSocket/chunks module-
+// level state Voice's hands-free recording uses -- safe because the two
+// are mutually exclusive by construction (exitVoiceLive() tears down any
+// in-flight recording the instant you leave the Voice tab, and this only
+// ever runs while on the Text tab).
+const composerMicBtn = document.getElementById('composerMicBtn');
+let composerHolding = false;
+let composerPressedAt = 0;
 // A quick tap-and-release can call mediaRecorder.stop() before the browser
 // has encoded enough of the webm container to decode -- reached the server
 // as av.error.EOFError (see server.py's /api/voice), surfacing as "couldn't
-// transcribe audio" for exactly the short responses this mode is meant to
+// transcribe audio" for exactly the short responses this is meant to
 // handle well. Delaying the actual stop() until at least this much time has
-// elapsed since press gives the recorder a real clip to work with.
-const PTT_MIN_HOLD_MS = 400;
-const pttToggleGroup = document.getElementById('pttToggleGroup');
-const pttHandsFreeTab = document.getElementById('pttHandsFreeTab');
-const pttHoldTab = document.getElementById('pttHoldTab');
-const pttBtn = document.getElementById('pttBtn');
-const pttBtnWrap = document.querySelector('.ptt-btn-wrap');
-const pttTooltip = document.getElementById('pttTooltip');
-let pttTooltipTimer = null;
-const PTT_TOOLTIP_MS = 5000;
-
-function hidePttTooltip() {
-  clearTimeout(pttTooltipTimer);
-  pttTooltipTimer = null;
-  pttTooltip.hidden = true;
-}
-
-function showPttTooltip() {
-  pttTooltip.hidden = false;
-  clearTimeout(pttTooltipTimer);
-  pttTooltipTimer = setTimeout(hidePttTooltip, PTT_TOOLTIP_MS);
-}
-
-function refreshPttVisibility() {
-  pttBtn.hidden = !pttMode || ui !== 'voice';
-  pttBtnWrap.hidden = pttBtn.hidden; // drop the wrapper from the flex row too, else .control-bar's gap still opens a double-wide space around its empty shell
-  pttToggleGroup.hidden = ui !== 'voice';
-}
-
-function setPttMode(on) {
-  if (on === pttMode) return;
-  pttMode = on;
-  pttHandsFreeTab.classList.toggle('active', !on);
-  pttHoldTab.classList.toggle('active', on);
-  refreshPttVisibility();
-  if (on) {
-    // Switching INTO push-to-talk mid-call: hands-free may already have a
-    // passive interrupt monitor or an auto-armed recording in flight --
-    // both are exactly what this mode exists to not have, so tear them
-    // down the same way a real interrupt or pause would.
-    stopInterruptMonitor();
-    if (mediaRecorder && mediaRecorder.state === 'recording' && !pttHolding) mediaRecorder.stop();
-    if (ui === 'voice') showPttTooltip();
-  } else if (liveMode && ui === 'voice' && avatarState !== 'talking' && avatarState !== 'thinking') {
-    hidePttTooltip();
-    // Switching back TO hands-free mid-call, not mid-reply: re-arm the
-    // normal auto-listening loop same as a fresh live-mode entry would.
-    startRecordingTurnSafe();
-  }
-}
-pttHandsFreeTab.addEventListener('click', () => setPttMode(false));
-pttHoldTab.addEventListener('click', () => setPttMode(true));
-
-// Release-before-recording-started race: pttPress awaits getUserMedia
+// elapsed since press gives the recorder a real clip to work with. Same
+// fix Voice mode's old push-to-talk needed, same reasoning.
+const COMPOSER_MIN_HOLD_MS = 400;
+// Release-before-recording-started race: composerPress awaits getUserMedia
 // before `mediaRecorder` exists at all, and a real press/release can easily
 // land entirely inside that window (permission/device setup can take real
-// time, and a short answer is, deliberately, a short hold). The old
-// pttRelease() only knew how to stop an ALREADY-recording mediaRecorder --
-// a release that arrived before one existed found nothing to stop and was
-// silently dropped, so recording then started moments later with nothing
-// left to ever end it: reported live as "it kept listening," then, once
-// something else (a second press) finally stopped it, a near-empty clip
-// and "couldn't transcribe audio" -- confirmed directly from the server's
-// own upload-size log (110 bytes, i.e. a brand-new recording stopped
-// almost immediately, not the real answer). pttReleaseRequested records
-// that a release happened while still awaiting startRecordingTurn(), and
-// pttPress honors it the moment recording actually begins instead of
-// losing it.
-let pttReleaseRequested = false;
+// time, and a short memo is, deliberately, a short hold). A release that
+// arrives before mediaRecorder exists has nothing to stop yet --
+// composerReleaseRequested records that, and composerPress honors it the
+// moment recording actually begins instead of silently losing it. Same fix
+// Voice mode's old push-to-talk needed (confirmed live there via the
+// server's own upload-size log: a 110-byte clip, a brand-new recording
+// stopped almost immediately, not the real answer).
+let composerReleaseRequested = false;
 
-function pttScheduleStop(elapsedMs) {
-  const stopNow = () => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }; // triggers the same onstop -> transcribe -> reply flow hands-free uses
-  const elapsed = elapsedMs ?? (performance.now() - pttPressedAt);
-  if (elapsed < PTT_MIN_HOLD_MS) setTimeout(stopNow, PTT_MIN_HOLD_MS - elapsed);
+function composerScheduleStop(elapsedMs) {
+  const stopNow = () => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); };
+  const elapsed = elapsedMs ?? (performance.now() - composerPressedAt);
+  if (elapsed < COMPOSER_MIN_HOLD_MS) setTimeout(stopNow, COMPOSER_MIN_HOLD_MS - elapsed);
   else stopNow();
 }
 
-async function pttPress() {
-  if (!pttMode || pttHolding || micMuted || sessionPaused) return;
-  hidePttTooltip(); // they've got it -- no need to keep coaching once they've actually pressed it
-  pttHolding = true;
-  pttReleaseRequested = false;
-  pttPressedAt = performance.now();
-  pttBtn.classList.add('active');
-  pttBtn.title = 'Listening… (release to send)';
-  // Pressing while Thimble is replying is the interrupt -- same cleanup
-  // interruptNow() does for the automatic path, just triggered by a
-  // deliberate press instead of a passive VAD guess.
-  if (avatarState === 'thinking' || avatarState === 'talking') {
-    endReplyCycle();
-    audioEl.pause();
-    stopBufferSource();
-    avatarState = 'idle';
-  }
+async function composerPress() {
+  if (composerHolding || chatInput.disabled) return;
+  composerHolding = true;
+  composerReleaseRequested = false;
+  composerPressedAt = performance.now();
+  composerMicBtn.classList.add('active');
+  composerMicBtn.title = 'Recording… (release to fill the message)';
   if (mediaRecorder && mediaRecorder.state === 'recording') return; // already recording -- shouldn't happen, but don't double-start
   try {
-    await startRecordingTurn();
-    if (pttReleaseRequested) pttScheduleStop();
+    await startComposerRecording();
+    // Pass 0, not the default (performance.now() - composerPressedAt) --
+    // a real bug, caught live via the test suite, present in this logic
+    // since it was Voice mode's own push-to-talk (never triggered there by
+    // ordinary human timing, but reliably triggered by headless/automated
+    // getUserMedia latency): composerPressedAt is the ORIGINAL press time,
+    // not when recording actually started. If getUserMedia took longer
+    // than COMPOSER_MIN_HOLD_MS to resolve (confirmed: >1900ms in one
+    // observed run), that default "elapsed" was already past the minimum-
+    // hold floor by the time recording began, so the floor did nothing --
+    // mediaRecorder.stop() fired within milliseconds of .start(), capturing
+    // a near-empty clip (confirmed via the server's own upload-size log:
+    // 110 bytes, just the webm header). Recording only just started this
+    // instant regardless of how long the original press-to-release gap
+    // was, so the minimum hold has to measure from now, not from press.
+    if (composerReleaseRequested) composerScheduleStop(0);
   } catch (e) {
-    pttHolding = false;
-    pttBtn.classList.remove('active');
-    pttBtn.title = 'Hold to talk';
-    showMicError(e);
+    composerHolding = false;
+    composerMicBtn.classList.remove('active');
+    composerMicBtn.title = 'Hold to record a voice memo';
+    // showMicError() renders into micErrorBanner, which lives in the Voice
+    // panel and is invisible on the Text tab -- same "Voice-only UI element"
+    // issue resolveTurnTranscript's own errors hit, fixed the same way.
+    const restPlaceholder = chatInput.getAttribute('placeholder');
+    chatInput.placeholder = (e && e.name === 'NotFoundError') ? 'No microphone was found on this device.' : 'Microphone blocked -- allow access in your browser, then try again.';
+    setTimeout(() => { if (!chatInput.value) chatInput.placeholder = restPlaceholder; }, 5000);
   }
 }
-function pttRelease() {
-  if (!pttMode || !pttHolding) return;
-  pttHolding = false;
-  pttBtn.classList.remove('active');
-  pttBtn.title = 'Hold to talk';
+function composerRelease() {
+  if (!composerHolding) return;
+  composerHolding = false;
+  composerMicBtn.classList.remove('active');
+  composerMicBtn.title = 'Hold to record a voice memo';
   if (!mediaRecorder || mediaRecorder.state !== 'recording') {
-    // Recording hasn't actually started yet -- see pttReleaseRequested's
-    // own comment above. pttPress's own await picks this up once
-    // startRecordingTurn() resolves.
-    pttReleaseRequested = true;
+    composerReleaseRequested = true;
     return;
   }
-  pttScheduleStop(performance.now() - pttPressedAt);
+  composerScheduleStop(performance.now() - composerPressedAt);
 }
-pttBtn.addEventListener('mousedown', (e) => { e.preventDefault(); pttPress(); });
-pttBtn.addEventListener('mouseup', pttRelease);
-pttBtn.addEventListener('mouseleave', () => { if (pttHolding) pttRelease(); }); // dragged off while held -- same as releasing
-pttBtn.addEventListener('touchstart', (e) => { e.preventDefault(); pttPress(); }, {passive: false});
-pttBtn.addEventListener('touchend', (e) => { e.preventDefault(); pttRelease(); }, {passive: false});
-pttBtn.addEventListener('touchcancel', pttRelease);
+composerMicBtn.addEventListener('mousedown', (e) => { e.preventDefault(); composerPress(); });
+composerMicBtn.addEventListener('mouseup', composerRelease);
+composerMicBtn.addEventListener('mouseleave', () => { if (composerHolding) composerRelease(); }); // dragged off while held -- same as releasing
+composerMicBtn.addEventListener('touchstart', (e) => { e.preventDefault(); composerPress(); }, {passive: false});
+composerMicBtn.addEventListener('touchend', (e) => { e.preventDefault(); composerRelease(); }, {passive: false});
+composerMicBtn.addEventListener('touchcancel', composerRelease);
 
 let liveTimerInterval = null, liveSeconds = 0;
 function startLiveTimer() {
@@ -1166,17 +1064,75 @@ function startDeepgramSocket(sampleRate) {
       // picks up dgFinalText directly -- Pause/Mute/manual-stop all
       // already call mediaRecorder.stop() too, so this reuses every one
       // of those paths unchanged instead of needing its own copy of each.
-      // Suppressed entirely in push-to-talk mode -- holding the button is
-      // the only thing allowed to end that recording, not a silence guess
-      // Deepgram makes on its own (the live partial text above still
-      // updates regardless, so the push-to-talk caption stays live).
-      if (!pttMode && msg.speech_final && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+      // Suppressed entirely for a hold-controlled recording (the composer's
+      // mic button) -- holding it is the only thing allowed to end that
+      // recording, not a silence guess Deepgram makes on its own (the live
+      // partial text above still updates regardless).
+      if (!holdControlled && msg.speech_final && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     } else if (msg.type === 'utterance_end') {
       if (ws.onMessageHint) ws.onMessageHint();
-      if (!pttMode && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+      if (!holdControlled && mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
     }
   };
   return ws;
+}
+
+// Shared by both recording flows (Voice's hands-free turns and the
+// composer's hold-to-dictate button) -- previously duplicated inline in
+// just the Voice flow's onstop; factored out once the composer needed the
+// exact same two steps.
+//
+// Deepgram has real latency between receiving audio and transcribing it --
+// closing dgSocket in the same instant mediaRecorder.stop() fires races
+// that latency and silently drops whatever was said in the last stretch of
+// audio sent right before release (reported live: saying "shes a peer"
+// then releasing never showed up at all). Give Deepgram a short window to
+// send back the transcript for audio already in flight before reading the
+// accumulated text and tearing the socket down. onMessageHint (wired in
+// startDeepgramSocket's onmessage) lets any real traffic -- an interim
+// result, not just a formal is_final/utterance_end -- resolve this early
+// instead of always sitting out the full timeout; the 350ms settle guards
+// against another message landing right after the first. This used to be
+// is_final-only, which gated nearly every push-to-talk turn on the full
+// 1200ms maxTimer (Deepgram's is_final needs its own 1400ms endpointing
+// silence, which a hold-to-release turn never naturally provides -- the
+// release IS the end signal), reported live as voice feeling much slower
+// to respond than typing. resolveTurnTranscript below already reads
+// interim text regardless, so there was never a real need to wait
+// specifically for "final" here.
+async function drainDeepgramSocket() {
+  const dg = dgSocket;
+  if (dg && dg.readyState === WebSocket.OPEN) {
+    await new Promise((resolve) => {
+      let settleTimer = null;
+      const maxTimer = setTimeout(finish, 1200);
+      function finish() {
+        clearTimeout(maxTimer);
+        clearTimeout(settleTimer);
+        dg.onMessageHint = null;
+        resolve();
+      }
+      dg.onMessageHint = () => { clearTimeout(settleTimer); settleTimer = setTimeout(finish, 350); };
+    });
+  }
+  dgSocket = null; // clear after the drain wait so a message already in flight from this socket is ignored by its own `ws !== dgSocket` check
+  if (dg && dg.readyState === WebSocket.OPEN) dg.close();
+}
+
+// Deepgram already has the transcript by the time a turn ends -- it was
+// streaming it live the whole time (see startDeepgramSocket) -- so there's
+// nothing left to transcribe. Falls through to the local Whisper path only
+// if Deepgram came back empty (e.g. its socket dropped mid-turn before any
+// text arrived) -- pcmChunks was still being collected the whole time
+// regardless (see startMicAnalysis), so getFinalTranscript(blob) still
+// works as a real fallback, not just a silent failure.
+async function resolveTurnTranscript(blob) {
+  const dgText = (dgFinalText + ' ' + dgInterimText).trim();
+  if (deepgramEnabled && dgText) return {transcript: dgText};
+  // Finalizing reuses the last partial transcript plus a tail-patch of just
+  // the new audio since then, instead of re-transcribing the whole clip --
+  // see getFinalTranscript's own docstring.
+  return await getFinalTranscript(blob);
 }
 
 let pcmChunks = [];
@@ -1960,8 +1916,8 @@ function animateAvatar(now) {
   if (recording) {
     micIndicatorDot.classList.toggle('lit', employeeLit);
     employeeTile.classList.toggle('lit', employeeLit);
-    if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled && !pttMode) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage; push-to-talk owns end-of-turn instead of either
-    if (liveMode && !micMuted && !sessionPaused && deepgramEnabled && !pttMode) {
+    if (liveMode && !micMuted && !sessionPaused && !deepgramEnabled) checkVad(level, t); // Deepgram does its own endpointing instead -- see dgSocket's onmessage. liveMode alone is enough to exclude the composer's own hold-controlled recording, which never sets liveMode true (Text mode doesn't touch it).
+    if (liveMode && !micMuted && !sessionPaused && deepgramEnabled) {
       // See DG_HANG_BACKSTOP_PRE_MS/_POST_MS/DG_SPEECH_CONFIRM_MS above -- last-resort stop if Deepgram never ends the turn itself.
       if (level > vadThreshold) {
         if (!dgSpeechHeard) {
@@ -2167,7 +2123,7 @@ function advanceSpeechQueue() {
 function finishSpeechCycle() {
   if (avatarState === 'talking') avatarState = 'idle';
   endReplyCycle();
-  if (liveMode && !pttMode) startRecordingTurnSafe(); // push-to-talk waits for the next press instead of auto-listening
+  if (liveMode) startRecordingTurnSafe();
 }
 
 skipIntroBtn.addEventListener('click', () => {
@@ -2178,7 +2134,7 @@ skipIntroBtn.addEventListener('click', () => {
   captionEl.textContent = '';
   avatarState = 'idle';
   armLiveMode(); // no-op if already armed; just ensures liveMode is true
-  if (!pttMode) startRecordingTurnSafe();
+  startRecordingTurnSafe();
 });
 
 // Voice view's transcript sidebar and Text view's chat panel render the same
@@ -2659,6 +2615,7 @@ async function startRecordingTurn() {
   const stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
   mediaRecorder = new MediaRecorder(stream);
   chunks = [];
+  holdControlled = false; // hands-free: silence/Deepgram endpointing ends the turn, not a manual release
   vadSpeaking = false;
   vadSpeechStarted = null;
   vadSilenceSince = null;
@@ -2677,42 +2634,7 @@ async function startRecordingTurn() {
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
     employeeTile.classList.remove('lit');
-    const dg = dgSocket;
-    // Deepgram has real latency between receiving audio and transcribing
-    // it -- the old code read dgFinalText/dgInterimText and killed this
-    // socket in the same instant mediaRecorder.stop() fired, which raced
-    // that latency and silently dropped whatever was said in the last
-    // stretch of audio sent right before release (reported live: saying
-    // "shes a peer" then releasing never showed up at all). Give Deepgram
-    // a short window to send back the transcript for audio already in
-    // flight before reading the accumulated text and tearing the socket
-    // down. onMessageHint (wired in startDeepgramSocket's onmessage) lets
-    // any real traffic -- an interim result, not just a formal is_final/
-    // utterance_end -- resolve this early instead of always sitting out
-    // the full timeout; the 350ms settle guards against another message
-    // landing right after the first. See onMessageHint's own comment for
-    // why this used to be is_final-only: that gated nearly every
-    // push-to-talk turn on the full 1200ms maxTimer (Deepgram's is_final
-    // needs its own 1400ms endpointing silence, which push-to-talk never
-    // naturally provides -- the button release IS the end signal), reported
-    // live as voice feeling much slower to respond than typing. dgText
-    // below already reads interim text regardless, so there was never a
-    // real need to wait specifically for "final" here.
-    if (dg && dg.readyState === WebSocket.OPEN) {
-      await new Promise((resolve) => {
-        let settleTimer = null;
-        const maxTimer = setTimeout(finish, 1200);
-        function finish() {
-          clearTimeout(maxTimer);
-          clearTimeout(settleTimer);
-          dg.onMessageHint = null;
-          resolve();
-        }
-        dg.onMessageHint = () => { clearTimeout(settleTimer); settleTimer = setTimeout(finish, 350); };
-      });
-    }
-    dgSocket = null; // clear after the drain wait so a message already in flight from this socket is ignored by its own `ws !== dgSocket` check
-    if (dg && dg.readyState === WebSocket.OPEN) dg.close();
+    await drainDeepgramSocket();
     partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
     if (discardNextStop) {
       // Pause fired mid-turn -- this stop is a hard abort, not a real end
@@ -2738,29 +2660,7 @@ async function startRecordingTurn() {
     const turnGen = replyGen;
     let myGen = null; // set once the reply cycle (post-transcription) actually starts; null means any catch below is a transcription failure, not an interrupted reply
     try {
-      // Deepgram already has the transcript by the time this turn ends --
-      // it was streaming it live the whole time (see startDeepgramSocket),
-      // so there's nothing left to transcribe. Falls through to the local
-      // Whisper path below only if Deepgram came back empty (e.g. its
-      // socket dropped mid-turn before any final text arrived) -- pcmChunks
-      // was still being collected the whole time regardless, see
-      // startMicAnalysis, so getFinalTranscript(blob) still works as a
-      // real fallback, not just a silent failure.
-      const dgText = (dgFinalText + ' ' + dgInterimText).trim();
-      let voiceData;
-      if (deepgramEnabled && dgText) {
-        voiceData = {transcript: dgText};
-      } else {
-        // Finalizing reuses the last partial transcript plus a tail-patch of
-        // just the new audio since then, instead of re-transcribing the
-        // whole clip -- see getFinalTranscript's own docstring. The Claude
-        // reply is still a separate call to /api/message -- the same path
-        // typed text already takes -- so "transcribing..." only covers the
-        // part that actually is transcribing, instead of silently also
-        // covering however long the Claude call after it takes. Mirrors the
-        // existing TTS split (see facilitator_reply's docstring).
-        voiceData = await getFinalTranscript(blob);
-      }
+      const voiceData = await resolveTurnTranscript(blob);
       if (turnGen !== replyGen) {
         // Paused (or otherwise interrupted) while the transcript was still
         // in flight -- drop the result instead of reviving the turn.
@@ -2773,7 +2673,7 @@ async function startRecordingTurn() {
         avatarState = 'idle';
         if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); } // nothing usable was actually said -- don't leave a stale live-preview bubble behind
         employeeCaption.textContent = '';
-        if (liveMode && !pttMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening; push-to-talk just waits for the next press instead
+        if (liveMode) startRecordingTurnSafe(); // e.g. a VAD-triggered clip too short/quiet to transcribe -- keep listening
         return;
       }
       const transcript = voiceData.transcript;
@@ -2786,9 +2686,7 @@ async function startRecordingTurn() {
       }
       avatarState = 'thinking';
       myGen = ++replyGen;
-      // Push-to-talk's own interrupt IS the button -- no passive listener
-      // to arm here, same reasoning as resumeSession's own pttMode guard.
-      if (!pttMode) startInterruptMonitor(myGen);
+      startInterruptMonitor(myGen);
       resetSpeechQueue(myGen);
       replyAbortController = new AbortController();
       let replyBubble = null;
@@ -2808,7 +2706,7 @@ async function startRecordingTurn() {
       if (myGen !== null) endReplyCycle();
       if (bubble) { bubble.remove(); if (bubble.chatWrap) bubble.chatWrap.remove(); }
       employeeCaption.textContent = '';
-      if (liveMode && !pttMode) startRecordingTurnSafe();
+      if (liveMode) startRecordingTurnSafe();
     } finally {
       setBusy(false);
     }
@@ -2821,6 +2719,55 @@ async function startRecordingTurn() {
   employeeCaption.textContent = '';
   startVadCalibration(performance.now()); // still runs even when deepgramEnabled -- only its own checkVad call site is skipped; harmless to compute
   micIndicator.classList.add('active');
+  if (deepgramEnabled) dgSocket = startDeepgramSocket(pcmSampleRate);
+}
+
+// Composer's own hold-to-dictate recording -- much lighter than
+// startRecordingTurn() above: no avatar state, no transcript bubble on the
+// Voice stage, no VAD/backstop timers (holdControlled=true, manual release
+// is the only way this ends), and release fills the text input for review
+// instead of sending and waiting on a reply.
+async function startComposerRecording() {
+  const stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+  mediaRecorder = new MediaRecorder(stream);
+  chunks = [];
+  holdControlled = true;
+  mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+  mediaRecorder.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    stopMicAnalysis();
+    await drainDeepgramSocket();
+    const blob = new Blob(chunks, {type: 'audio/webm'});
+    composerMicBtn.disabled = true;
+    const restPlaceholder = chatInput.getAttribute('placeholder'); // the markup's own default, not whatever's showing right now
+    chatInput.placeholder = 'Transcribing…';
+    // #status (statusEl) only exists in the Voice panel, invisible while on
+    // the Text tab -- errors here show in the composer's own placeholder
+    // instead, the one thing guaranteed visible regardless of which tab is open.
+    try {
+      const voiceData = await resolveTurnTranscript(blob);
+      if (voiceData.error || !voiceData.transcript) {
+        chatInput.placeholder = voiceData.error || "couldn't transcribe audio -- try again";
+        setTimeout(() => { if (!chatInput.value) chatInput.placeholder = restPlaceholder; }, 4000);
+      } else {
+        // Appends, not replaces -- dictating an addition to whatever's
+        // already typed should keep it, not silently overwrite it.
+        const existing = chatInput.value.trim();
+        chatInput.value = existing ? existing + ' ' + voiceData.transcript : voiceData.transcript;
+        chatInput.placeholder = restPlaceholder;
+        chatInput.focus();
+        chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
+      }
+    } catch (e) {
+      chatInput.placeholder = 'error: ' + e.message;
+      setTimeout(() => { if (!chatInput.value) chatInput.placeholder = restPlaceholder; }, 4000);
+    } finally {
+      composerMicBtn.disabled = false;
+    }
+  };
+  mediaRecorder.start();
+  startMicAnalysis(stream);
+  resetPartialCapture();
   if (deepgramEnabled) dgSocket = startDeepgramSocket(pcmSampleRate);
 }
 
@@ -2876,16 +2823,6 @@ document.addEventListener('visibilitychange', () => {
 
 async function enterVoiceLive() {
   if (liveMode) return;
-  // Push-to-talk: switching into Voice just arms the "live" UI (timer,
-  // layout) -- the mic is never touched until the button is actually
-  // pressed, unlike hands-free below which grabs it immediately.
-  if (pttMode) {
-    liveMode = true;
-    setLiveLayout(true);
-    acquireWakeLock();
-    refreshPttVisibility();
-    return;
-  }
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     liveMode = true;
     setLiveLayout(true);
@@ -2910,7 +2847,6 @@ function exitVoiceLive() {
   liveMode = false;
   setLiveLayout(false);
   if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-  if (pttHolding) { pttHolding = false; pttBtn.classList.remove('active'); pttBtn.title = 'Hold to talk'; }
   releaseWakeLock();
 }
 
@@ -3059,7 +2995,7 @@ async function start() {
       // showed "Listening..." and the live timer running while the mic
       // was never actually requested -- looked like it was working,
       // reported live as "it could not hear me."
-      if (ui === 'voice') { armLiveMode(); if (!pttMode) startRecordingTurnSafe(); }
+      if (ui === 'voice') { armLiveMode(); startRecordingTurnSafe(); }
     }
   } finally {
     setBusy(false);
