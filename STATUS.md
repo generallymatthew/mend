@@ -2,7 +2,7 @@
 
 Updated at natural checkpoints (a completed, verified piece of work), not on every commit. Meant to let anyone — including you, switching between your two Claude accounts on this same machine — pick the project back up cold, without depending on any one conversation's chat history. See `README.md` for what the project actually is, and `ROADMAP.md` for the structural phase-level view (this file is the rolling log of what actually happened; that one is the checklist of what needs to be true next).
 
-**Last updated:** 2026-10-09 (`manager-app`/Loom: added a real mobile layout -- off-canvas cases/plan drawers, a working hamburger toggle -- and switched its logo mark to pink, matching `intake-app`'s `voice-transcript-live.html`; also surveyed how every app currently treats the Mend logo, see below)
+**Last updated:** 2026-10-09 (`manager-app`/Loom: matched the logo wordmark size to `voice-transcript-live.html` too, not just the mark, and made the top-nav privacy chip taller with reworded copy, "Anonymity enforced" instead of "Names stay out of this")
 
 ## Active goal
 
@@ -18,6 +18,7 @@ Updated at natural checkpoints (a completed, verified piece of work), not on eve
 
 ## Recently completed
 
+- **`manager-app`/Loom: matched the top-nav logo wordmark size to `voice-transcript-live.html`, then made the privacy chip taller and reworded its copy.** The mend-mark itself was already resized to 29x21 in an earlier pass, but the "Loom" wordmark next to it was still 18px/700 against voice-live's 26px/800 -- reported live as "the logo does not look the same size," which turned out to be the wordmark, not the mark. Matched to 26px/800. Separately, the "Names stay out of this" privacy chip grew taller (padding 4px/9px -> 8px/14px, font-size 11px -> 12px, icon 11px -> 12px) so it doesn't read cramped next to the now-bigger logo, and its copy changed to "Anonymity enforced" -- same guarantee, shorter, reads as a stated policy rather than a tip.
 - **Surveyed how the Mend logo mark is actually treated across every app right now -- sizes, fill color, and whether a brand lockup exists at all vary more than expected, since each page built its own independently (no shared CSS/JS between apps here, by convention).**
   | App / page | Mark | Size | Wordmark |
   |---|---|---|---|
