@@ -555,7 +555,8 @@
      explicit request, replacing what used to be split across each pane's
      own header. */
   .top-nav{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--card); flex-shrink:0;}
-  .top-bar-brand{display:flex; align-items:center; gap:9px;}
+  .top-bar-brand{display:flex; align-items:center; gap:9px; position:relative;}
+  .disclaimer-tooltip{width:280px;}
   .brand-logo-mark{display:block; color:var(--ink); flex-shrink:0;}
   .brand-mark{font-weight:800; font-size:14px; letter-spacing:-.02em; color:var(--ink); text-transform:lowercase;}
   .privacy-chip{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); background:#17372E0D; border-radius:999px; padding:4px 9px 4px 7px;}
@@ -577,16 +578,16 @@
      visually regardless of that. */
   #skipIntroBtn{display:none !important;}
 
-  /* Mute, relocated from the old control-bar row onto the avatar's own
-     corner (same idea the design reference used) -- .avatar-row becomes
-     the positioning parent. */
-  .avatar-row{position:relative; display:inline-flex;}
-  .avatar-mute-btn{position:absolute; right:-4px; bottom:4px; z-index:2; width:38px; height:38px; border-radius:50%; background:var(--card); border:1px solid var(--border); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(23,55,46,.14); transition:background 120ms ease, color 120ms ease, border-color 120ms ease;}
-  .avatar-mute-btn:hover{color:var(--ink);}
+  /* Mute, relocated into the state pill itself (was anchored to the
+     avatar's own corner before that) -- a small inline icon button, sized
+     to sit comfortably next to "Thimble · Listening…" text. */
+  .pill-mute-btn{width:20px; height:20px; padding:0; margin-left:1px; border-radius:50%; background:transparent; border:none; color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 120ms ease, color 120ms ease;}
+  .pill-mute-btn:hover{color:var(--ink); background:#17372E0D;}
   /* .inactive, not .active -- matches the real muteBtn click handler's own
      class name (toggled true while muted; the slash path's visibility is
      set directly via inline style there too, not a CSS class). */
-  .avatar-mute-btn.inactive{background:#8C3B2E; border-color:#8C3B2E; color:#fff;}
+  .pill-mute-btn.inactive{background:#8C3B2E; color:#fff;}
+  .pill-mute-btn.inactive:hover{background:#7a3226;}
 
   /* Hold-to-talk dock: bottom-right of the voice pane (not the control
      bar). holdRingProgress's stroke-dashoffset is driven by real mic
@@ -632,6 +633,15 @@
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
         Private
       </span>
+      <!-- Disclaimer moved off the persistent footer bar, per explicit
+           ask -- into a tooltip read on interaction instead, same real
+           hover/click mechanism .lock-btn/.lock-tooltip already use
+           elsewhere (document.querySelectorAll('.lock-btn') in the script
+           below wires this one up too, no new JS needed). -->
+      <button id="disclaimerBtn" class="lock-btn" type="button" aria-label="Important information">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><circle cx="12" cy="8" r=".25" fill="currentColor" stroke-width="0"></circle></svg>
+      </button>
+      <div class="lock-tooltip disclaimer-tooltip">Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
     </div>
     <div class="top-nav-actions">
       <button id="hideVoiceBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide voice</button>
@@ -686,14 +696,16 @@
                   </div>
                 </div>
               </div>
-              <!-- Real #muteBtn, relocated here (from the old control-bar
-                   row) and restyled as a small circle anchored to the
-                   avatar's own corner -- same real mute toggle, no script
-                   change, just where it visually lives now. -->
-              <button id="muteBtn" class="avatar-mute-btn" title="Mute"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
             </div>
             <div class="state-pill-row">
-              <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
+              <div class="state-pill" id="statePill">
+                <b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span>
+                <!-- Real #muteBtn, relocated here per explicit ask (was
+                     anchored to the avatar's own corner before that) --
+                     same real mute toggle, no script change, just where
+                     it visually lives now. -->
+                <button id="muteBtn" class="pill-mute-btn" title="Mute"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
+              </div>
             </div>
           </div>
           <div class="roleplay-badge" id="roleplayBadge" hidden>In character: playing the other person</div>
@@ -866,7 +878,11 @@
     <span>Thanks for talking with Thimble. Taking you to a quick feedback survey&hellip;</span>
   </div>
 
-  <div class="disclaimer-footer">Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
+  <!-- Persistent footer bar dropped per explicit ask ("feels weird") --
+       the same real text now lives in the disclaimerBtn tooltip next to
+       the Private chip above, read on interaction instead of always on
+       screen. -->
+  <div class="disclaimer-footer" hidden>Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
 </div>
 
 <!-- Real voice-activity detection (Silero VAD, via ONNX Runtime Web) for
