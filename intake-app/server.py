@@ -110,7 +110,17 @@ _rate_hits: dict[str, list[float]] = {}
 # then get the actual paid reply call rejected with 429 right after --
 # confirmed live: a turn's partials ate the budget, then /api/message came
 # back 429 and Thimble never replied at all.
-RATE_LIMIT_EXEMPT_PATHS = {"/api/voice/partial", "/api/survey", "/api/analytics"}
+RATE_LIMIT_EXEMPT_PATHS = {
+    "/api/voice/partial", "/api/survey", "/api/analytics",
+    # Sentence-streamed TTS (see static/index.html's queueSentence) fires
+    # one /api/speak call per sentence instead of one per reply, so a
+    # multi-paragraph reply burns through the shared budget fast and gets
+    # its later sentences 429'd -- the text stream is unaffected (separate
+    # endpoint), so this surfaced as "the text looks right but the voice
+    # just doesn't say the last paragraph," with no visible error, since a
+    # failed /api/speak call is silently skipped (see queueSentence's catch).
+    "/api/speak", "/api/speak/aura",
+}
 # /api/audio/<filename> just serves an mp3/m4a this process already
 # generated and has sitting on disk -- zero marginal cost, same free-local
 # reasoning as /api/voice/partial above, but it's a dynamic per-file path so
@@ -423,6 +433,31 @@ def floor_met(signal: dict) -> bool:
 
 def floor_uncertain(signal: dict) -> bool:
     return signal.get("screen_result") == "uncertain"
+
+
+# --- Screening-timing diagnostic log --------------------------------------
+# Logs ONLY the <mend_signal> state fields per turn -- never the message
+# text itself, matching this file's existing "no conversation text"
+# boundary (see ANALYTICS_FILE's own comment above) even though real
+# disclosures are exactly what this field screens. Exists to answer "which
+# turn did screen_result actually change on" after a live report that a
+# harassment disclosure wasn't flagged until several turns in.
+SCREEN_LOG_FILE = ROOT / "screen_signal_log.jsonl"
+
+
+def log_screen_signal(session_id: str, turn: int, signal: dict, note: str | None = None) -> None:
+    record = {
+        "ts": time.time(),
+        "session_id": session_id,
+        "turn": turn,
+        "track": signal.get("track"),
+        "phase": signal.get("phase"),
+        "screen_result": signal.get("screen_result"),
+        "floor_triggered": signal.get("floor_triggered"),
+        "note": note,
+    }
+    with SCREEN_LOG_FILE.open("a") as f:
+        f.write(json.dumps(record) + "\n")
 
 
 def vote_flags(signal: dict) -> bool:
@@ -765,14 +800,20 @@ async def post_message(payload: dict):
     text = payload.get("text", "").strip()
     if not text:
         return JSONResponse({"error": "empty message"}, status_code=400)
-    conversation = get_conversation(payload.get("session_id"))
+    session_id = payload.get("session_id") or DEFAULT_SESSION_ID
+    conversation = get_conversation(session_id)
     conversation.append({"role": "user", "content": text})
+    turn = sum(1 for m in conversation if m["role"] == "user")
     snapshot = list(conversation)  # before the primary call appends its own reply -- see maybe_override_via_voting
     result = await run_in_threadpool(facilitator_reply, conversation)
-    return await maybe_override_via_voting(conversation, snapshot, result)
+    log_screen_signal(session_id, turn, parse_mend_signal(result.get("signal")))
+    final = await maybe_override_via_voting(conversation, snapshot, result)
+    if final is not result:
+        log_screen_signal(session_id, turn, parse_mend_signal(final.get("signal")), note="overridden_by_vote")
+    return final
 
 
-def stream_message_reply(conversation: list[dict]):
+def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
     """SSE stream of the facilitator's reply for /api/message/stream -- same
     job as facilitator_reply() above, but yields visible text incrementally
     instead of returning it all at once, so the frontend can show Thimble's
@@ -861,6 +902,7 @@ def stream_message_reply(conversation: list[dict]):
     # itself) -- only the parsed signal still needs to reach the frontend.
     _, signal = strip_signal(full_text)
     conversation.append({"role": "assistant", "content": full_text})
+    log_screen_signal(session_id, turn, parse_mend_signal(signal))
     yield _sse({"done": True, "signal": signal})
 
 
@@ -869,9 +911,11 @@ async def post_message_stream(payload: dict):
     text = payload.get("text", "").strip()
     if not text:
         return JSONResponse({"error": "empty message"}, status_code=400)
-    conversation = get_conversation(payload.get("session_id"))
+    session_id = payload.get("session_id") or DEFAULT_SESSION_ID
+    conversation = get_conversation(session_id)
     conversation.append({"role": "user", "content": text})
-    return StreamingResponse(stream_message_reply(conversation), media_type="text/event-stream")
+    turn = sum(1 for m in conversation if m["role"] == "user")
+    return StreamingResponse(stream_message_reply(conversation, session_id, turn), media_type="text/event-stream")
 
 
 DEEPGRAM_URL = (
