@@ -747,12 +747,22 @@ function setUi(next) {
   chatPanel.hidden = ui !== 'text';
   document.querySelectorAll('.ui-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.ui === ui));
   if (composerHolding) composerRelease(); // leaving Text mid-hold (rare, but possible) -- don't leave a dangling recording with nothing to end it
-  if (ui === 'voice' && prev === 'text') {
-    // Coming from Text, Thimble should greet the switch instead of silently
-    // grabbing the mic -- same reasoning as start()'s own armLiveMode() vs
-    // enterVoiceLive() comment: speak first, armLiveMode() only flips the
-    // live-mode flag, and finishSpeechCycle() (reached once this greeting's
-    // done playing) is what actually calls startRecordingTurnSafe().
+  if (ui === 'voice' && prev === 'text' && analyticsTurnCount === 0) {
+    // Coming from Text with nothing real said yet, Thimble should greet
+    // the switch instead of silently grabbing the mic -- same reasoning
+    // as start()'s own armLiveMode() vs enterVoiceLive() comment: speak
+    // first, armLiveMode() only flips the live-mode flag, and
+    // finishSpeechCycle() (reached once this greeting's done playing) is
+    // what actually arms "Tap to talk".
+    //
+    // Gated on analyticsTurnCount === 0 -- once a real turn has actually
+    // happened, repeating this exact "so just tell me what's going on"
+    // line reads as Thimble ignoring what was already said. Reported
+    // live: confusing the first time if they'd already explained
+    // themselves before ever switching tabs, and confusing on every
+    // later switch once a real conversation was underway. Falls through
+    // to the silent-resume branch below instead, same as any other
+    // return to a tab already in progress.
     const myGen = ++replyGen;
     startInterruptMonitor(myGen);
     resetSpeechQueue(myGen);
@@ -3468,17 +3478,19 @@ async function enterVoiceLive() {
     acquireWakeLock();
     return;
   }
-  try {
-    await startRecordingTurn();
-    liveMode = true;
-    setLiveLayout(true);
-    hideMicError();
-    acquireWakeLock();
-  } catch (e) {
-    // Same redundancy as startRecordingTurnSafe's catch above -- the
-    // mic-error banner already says this.
-    showMicError(e);
-  }
+  // Tap-to-talk: entering Voice (tab click, or setUi's own silent-resume
+  // branch once a real turn has already happened) arms "Tap to talk"
+  // instead of immediately grabbing the mic -- same as every other
+  // "ready for the next turn" moment in the app. Left over from before
+  // tap-to-talk existed, this used to call startRecordingTurn() directly
+  // here, the one remaining hands-free auto-start -- confirmed live:
+  // switching to Talk after a real text turn jumped straight to
+  // "Listening..." and a mic-permission prompt instead of "Tap to talk".
+  liveMode = true;
+  setLiveLayout(true);
+  hideMicError();
+  acquireWakeLock();
+  armTapToTalk();
 }
 
 function exitVoiceLive() {
