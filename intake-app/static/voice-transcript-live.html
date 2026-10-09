@@ -550,27 +550,32 @@
   .talk-mic-btn.recording::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='3' height='6' rx='1.5' fill='%23000'/%3E%3Crect x='8' y='5' width='3' height='14' rx='1.5' fill='%23000'/%3E%3Crect x='14' y='2' width='3' height='20' rx='1.5' fill='%23000'/%3E%3Crect x='20' y='7' width='3' height='10' rx='1.5' fill='%23000'/%3E%3C/svg%3E"); filter:none;}
   .call-controls{align-items:center;}
 
-  /* Top bar: Mend logo + Private chip, ported from the design reference
-     (voice-transcript-split.html) verbatim -- replaces call-header's old
-     Thimble-name+lock-tooltip content on this page. */
+  /* One top nav bar spanning both panes: Mend logo + Private chip (left),
+     voice/chat visibility toggles + End session + Feedback (right). Per
+     explicit request, replacing what used to be split across each pane's
+     own header. */
+  .top-nav{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--card); flex-shrink:0;}
   .top-bar-brand{display:flex; align-items:center; gap:9px;}
   .brand-logo-mark{display:block; color:var(--ink); flex-shrink:0;}
   .brand-mark{font-weight:800; font-size:14px; letter-spacing:-.02em; color:var(--ink); text-transform:lowercase;}
   .privacy-chip{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); background:#17372E0D; border-radius:999px; padding:4px 9px 4px 7px;}
   .privacy-chip svg{flex-shrink:0; color:var(--ink-soft);}
+  .top-nav-actions{display:flex; align-items:center; gap:10px;}
 
-  /* Hide/show rail: a ghost text button in each pane's own header, plus a
-     rail button (positioned by the frame, top corners) that reappears
-     only while that pane is hidden. See the pane-toggle script below. */
-  .ghost-hide-btn{font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-soft); background:transparent; border:1px solid var(--border); border-radius:999px; padding:5px 13px; cursor:pointer; transition:border-color 120ms ease, color 120ms ease;}
-  .ghost-hide-btn:hover{color:var(--ink); border-color:var(--ink-soft);}
-  .ghost-hide-btn.ctrl-hidden{display:none;}
-  .show-rail-btn{display:none; position:absolute; top:34px; z-index:4; font:inherit; font-size:11.5px; font-weight:600; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:7px 14px; cursor:pointer; box-shadow:0 2px 8px rgba(23,55,46,.12);}
-  .show-rail-btn.visible{display:inline-flex;}
-  #showVoiceBtn{left:30px;}
-  #showTranscriptBtn{right:30px;}
+  /* nav-toggle-btn: hideVoiceBtn/hideTranscriptBtn, now single toggle
+     buttons (text/aria-pressed flip between Hide/Show) living in the
+     persistent top nav rather than inside the pane they control -- see
+     the pane-toggle script below. disabled (not hidden) on whichever one
+     would hide the only pane still visible. */
+  .nav-toggle-btn{font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-soft); background:transparent; border:1px solid var(--border); border-radius:999px; padding:6px 14px; cursor:pointer; transition:border-color 120ms ease, color 120ms ease;}
+  .nav-toggle-btn:hover:not(:disabled){color:var(--ink); border-color:var(--ink-soft);}
+  .nav-toggle-btn:disabled{opacity:.4; cursor:default;}
   .live-split{position:relative;}
   .call-main{display:flex;} /* was already flex; kept explicit since .hold-dock below needs .call-main as its positioning parent */
+  /* Skip dropped per explicit ask -- real element/JS kept (updateStatePill
+     still toggles its own `hidden` attribute every frame), forced off
+     visually regardless of that. */
+  #skipIntroBtn{display:none !important;}
 
   /* Mute, relocated from the old control-bar row onto the avatar's own
      corner (same idea the design reference used) -- .avatar-row becomes
@@ -599,13 +604,6 @@
      `[hidden]{display:none}` -- without this, the real wireLivePaneToggle()
      toggle above would silently do nothing visually. */
   .call-layout[hidden], .chat-panel[hidden]{display:none !important;}
-
-  /* chat-hide-btn: pulled out of .chat-header-right's flex flow (see the
-     markup's own comment) and anchored to .chat-header's own corner
-     instead, so it sits cleanly top-right regardless of how many buttons
-     the rest of the header wraps to underneath it. */
-  .chat-header{position:relative;}
-  .chat-hide-btn{position:absolute; top:14px; right:16px;}
 </style>
 </head>
 <body>
@@ -618,35 +616,38 @@
     <button id="videoStartBtn">Start video call</button>
   </div>
 
+  <!-- One top nav bar spanning both panes, replacing the brand/hide/End
+       session/Feedback controls that used to be scattered across each
+       pane's own header -- per explicit request. hideVoiceBtn/
+       hideTranscriptBtn are single toggle buttons now (not a separate
+       hide-button-plus-rail-show-button pair): living in this persistent
+       bar instead of inside the pane they control means they never
+       disappear along with it, so there's no longer a need for a
+       rail-button fallback. See the pane-toggle script below. -->
+  <div class="top-nav">
+    <div class="top-bar-brand">
+      <svg class="brand-logo-mark" width="16" height="12" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+      <span class="brand-mark">mend</span>
+      <span class="privacy-chip">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        Private
+      </span>
+    </div>
+    <div class="top-nav-actions">
+      <button id="hideVoiceBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide voice</button>
+      <button id="hideTranscriptBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide chat</button>
+      <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
+      <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
+        Feedback
+      </a>
+    </div>
+  </div>
   <div id="textMode" class="video-area live-split">
-    <!-- Rail buttons that bring a hidden pane back -- can't live inside
-         the pane they reopen (it would vanish along with everything else
-         in it). Shown only while that pane is actually hidden, see the
-         pane-toggle script below. -->
-    <button id="showVoiceBtn" class="show-rail-btn" type="button">Show voice</button>
-    <button id="showTranscriptBtn" class="show-rail-btn" type="button">Show transcript</button>
     <div class="call-layout" id="voicePanel">
       <div class="call-main">
         <div class="call-header">
-          <!-- Mend's own brand identity (logo mark + wordmark), not
-               Thimble's name -- Thimble is the call's own character and
-               already names itself on the state pill below; the header is
-               the company/privacy framing, same split the design reference
-               (voice-transcript-split.html) made. -->
-          <div class="top-bar-brand">
-            <svg class="brand-logo-mark" width="16" height="12" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
-            <span class="brand-mark">mend</span>
-            <span class="privacy-chip">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-              Private
-            </span>
-          </div>
           <div class="chat-header-right">
-            <!-- hideVoiceBtn: collapses this whole pane, leaving the
-                 transcript as the only visible surface -- showVoiceBtn
-                 (positioned by the frame, not this header) brings it back.
-                 See the pane-toggle script below. -->
-            <button id="hideVoiceBtn" class="ghost-hide-btn" type="button" aria-pressed="false">Hide</button>
             <div class="ui-toggle" hidden>
               <button class="ui-tab active" data-ui="voice">Talk</button>
               <button class="ui-tab" data-ui="text">Text</button>
@@ -669,6 +670,9 @@
         <div class="stage">
           <div class="stage-top-left">
             <div class="live-timer" id="liveTimer" hidden>Live &middot; <span id="liveTimerText">00:00</span></div>
+            <!-- Skip dropped per explicit ask -- real element/JS kept
+                 (updateStatePill still toggles its own `hidden`), forced
+                 off visually instead (see #skipIntroBtn's own CSS rule). -->
             <button id="skipIntroBtn" class="skip-intro-btn" hidden>Skip &rarr;</button>
           </div>
           <div class="avatar-stack">
@@ -771,13 +775,6 @@
     </div>
     <div class="chat-panel" id="chatPanel">
       <div class="chat-header">
-        <!-- Anchored to .chat-header's own top-right corner (see its CSS),
-             out of .chat-header-right's flex flow -- that row already
-             wraps to a second line on this panel's narrow width, which
-             left Hide competing with End session/Feedback instead of
-             sitting cleanly at the top like the voice pane's own Hide
-             button does. Per direct correction. -->
-        <button id="hideTranscriptBtn" class="ghost-hide-btn chat-hide-btn" type="button" aria-pressed="false">Hide</button>
         <div class="chat-header-left">
           <div class="chat-avatar-small">
             <div class="thimble-avatar mini" id="thimbleMiniAvatar">
@@ -809,11 +806,6 @@
             <button class="ui-tab" data-ui="voice">Talk</button>
             <button class="ui-tab active" data-ui="text">Text</button>
           </div>
-          <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
-          <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
-            Feedback
-          </a>
           <!-- Hidden on this page, per explicit ask -- real click handler
                (chatMuteBtn's own listener below) is harmless left wired. -->
           <button id="chatMuteBtn" class="mute-btn" type="button" aria-pressed="false" hidden></button>
@@ -4166,40 +4158,32 @@ chatResetBtn.addEventListener('click', resetAndStart);
 // that ordering, but armLiveMode() (not enterVoiceLive()) is what actually
 // avoids re-recording over Thimble's own greeting -- see its own comment.
 //
-// Pane hide/show: each pane's own "Hide" button collapses it, letting the
-// other fill the whole frame; the rail button that brings it back can't
-// live inside the pane it reopens (it would vanish along with everything
-// else there), so it's a separate button positioned by the frame, shown
-// only while that pane is hidden. Ported from the design reference
-// (voice-transcript-split.html), adapted to toggle the real .call-main /
-// #chatPanel elements instead of its own placeholder markup.
+// Pane hide/show: hideVoiceBtn/hideTranscriptBtn now live in the
+// persistent top nav (not inside the pane they control), so they never
+// disappear along with their own pane -- a single toggle button per pane
+// instead of the old hide-button-plus-rail-show-button pair. Toggles the
+// whole #voicePanel (call-main + its own always-hidden built-in
+// transcript-panel), not just .call-main -- .call-main alone would leave
+// #voicePanel's own bordered/backgrounded box sitting empty on screen
+// once its only visible child disappeared.
 const hideVoiceBtn = document.getElementById('hideVoiceBtn');
-const showVoiceBtn = document.getElementById('showVoiceBtn');
 const hideTranscriptBtn = document.getElementById('hideTranscriptBtn');
-const showTranscriptBtn = document.getElementById('showTranscriptBtn');
 const liveSplitEl = document.querySelector('.video-area.live-split');
-function wireLivePaneToggle(pane, hideBtn, showBtn, otherHideBtn, soloClass) {
-  hideBtn.addEventListener('click', () => {
-    pane.hidden = true;
-    hideBtn.setAttribute('aria-pressed', 'true');
-    showBtn.classList.add('visible');
-    otherHideBtn.classList.add('ctrl-hidden'); // the one remaining visible pane loses its own Hide -- hiding it too would leave a blank frame with no way back
-    liveSplitEl.classList.add(soloClass); // lets the other (now sole) pane's own fixed flex-basis expand to fill the freed space -- see .live-split.<soloClass> below
-  });
-  showBtn.addEventListener('click', () => {
-    pane.hidden = false;
-    hideBtn.setAttribute('aria-pressed', 'false');
-    showBtn.classList.remove('visible');
-    otherHideBtn.classList.remove('ctrl-hidden');
-    liveSplitEl.classList.remove(soloClass);
-  });
+function syncPaneToggleButtons() {
+  hideVoiceBtn.textContent = voicePanel.hidden ? 'Show voice' : 'Hide voice';
+  hideVoiceBtn.setAttribute('aria-pressed', String(voicePanel.hidden));
+  hideTranscriptBtn.textContent = chatPanel.hidden ? 'Show chat' : 'Hide chat';
+  hideTranscriptBtn.setAttribute('aria-pressed', String(chatPanel.hidden));
+  // Disabled, not hidden -- hiding the one pane still visible would leave
+  // a blank frame with no way back.
+  hideVoiceBtn.disabled = chatPanel.hidden;
+  hideTranscriptBtn.disabled = voicePanel.hidden;
+  // Lets the other (now sole) pane's own fixed flex-basis expand to fill
+  // the freed space -- see .live-split.voice-hidden below.
+  liveSplitEl.classList.toggle('voice-hidden', voicePanel.hidden);
 }
-// Toggles the whole #voicePanel (call-main + its own always-hidden
-// built-in transcript-panel), not just .call-main -- .call-main alone
-// would leave #voicePanel's own bordered/backgrounded box sitting empty
-// on screen once its only visible child disappeared.
-wireLivePaneToggle(voicePanel, hideVoiceBtn, showVoiceBtn, hideTranscriptBtn, 'voice-hidden');
-wireLivePaneToggle(chatPanel, hideTranscriptBtn, showTranscriptBtn, hideVoiceBtn, 'transcript-hidden');
+hideVoiceBtn.addEventListener('click', () => { voicePanel.hidden = !voicePanel.hidden; syncPaneToggleButtons(); });
+hideTranscriptBtn.addEventListener('click', () => { chatPanel.hidden = !chatPanel.hidden; syncPaneToggleButtons(); });
 
 // Reload used to RESUME an in-progress conversation (server-side
 // `conversation` survives a reload; /api/start no-ops and /api/history
