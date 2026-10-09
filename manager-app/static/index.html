@@ -6,14 +6,14 @@
 <title>Loom: manager cases</title>
 <style>
   :root {
-    --ink: #2B2A27;
+    --ink: #1D2E22;
     --bg: #FFFFFF;
-    --panel-bg: #FAF9F5;
-    --border: #ECE8DE;
-    --muted: #8A8578;
-    --faint: #A8A294;
+    --panel-bg: #EAF0EC;
+    --border: #D7E6DC;
+    --muted: #74897C;
+    --faint: #9FB0A4;
     --accent: #2F5233;
-    --bubble: #F2EFE6;
+    --bubble: #DCEAE0;
   }
   * { box-sizing: border-box; }
   body {
@@ -50,7 +50,7 @@
   }
   #new-case-btn, #help-btn {
     width: 28px; height: 28px; border-radius: 999px;
-    background: var(--panel-bg); color: #4A473F;
+    background: var(--panel-bg); color: #33453A;
     display: flex; align-items: center; justify-content: center;
     font-size: 16px; cursor: pointer; border: none;
   }
@@ -79,10 +79,10 @@
   .case-row {
     padding: 14px 20px;
     display: flex; flex-direction: column; gap: 3px;
-    border-bottom: 1px solid #F3F1E9;
+    border-bottom: 1px solid #E3EDE6;
     cursor: pointer;
   }
-  .case-row.active { background: #F2F6EF; border-left: 3px solid var(--accent); }
+  .case-row.active { background: #DCEAE0; border-left: 3px solid var(--accent); }
   .case-row .top { display: flex; justify-content: space-between; gap: 8px; }
   .case-row .name { font-size: 14px; font-weight: 600; }
   .case-row .time { font-size: 12px; color: var(--muted); white-space: nowrap; }
@@ -93,7 +93,7 @@
   .case-row.closed { opacity: 0.55; }
   #sidebar-footer {
     margin-top: auto; padding: 16px 20px; font-size: 12px;
-    color: var(--faint); border-top: 1px solid #F3F1E9;
+    color: var(--faint); border-top: 1px solid #E3EDE6;
   }
 
   /* Thread */
@@ -111,7 +111,7 @@
   #thread-header .actions { display: flex; gap: 8px; }
   #handoff-banner {
     margin: 0 32px; margin-top: 16px; padding: 14px 16px; border-radius: 10px;
-    background: #F2F6EF; border: 1px solid #DCE8D6; font-size: 13px; display: none;
+    background: #DCEAE0; border: 1px solid #CFE3D6; font-size: 13px; display: none;
   }
   #handoff-banner .title { font-weight: 600; margin-bottom: 6px; }
   #handoff-banner .desc { color: var(--muted); margin-bottom: 10px; }
@@ -119,11 +119,11 @@
   #handoff-banner .link-row { display: flex; align-items: center; gap: 8px; }
   #handoff-banner .link-row label { width: 90px; color: var(--muted); flex-shrink: 0; }
   #handoff-banner .link-row input {
-    flex: 1; border: 1px solid #E3DFD6; border-radius: 6px; padding: 5px 8px;
+    flex: 1; border: 1px solid #D7E6DC; border-radius: 6px; padding: 5px 8px;
     font-size: 12px; font-family: inherit; background: #fff;
   }
   #handoff-banner .link-row button {
-    border: 1px solid #DCE8D6; background: #fff; border-radius: 6px; padding: 5px 10px;
+    border: 1px solid #CFE3D6; background: #fff; border-radius: 6px; padding: 5px 10px;
     font-size: 12px; cursor: pointer;
   }
   #start-handoff-btn {
@@ -177,7 +177,7 @@
   }
   .flow-step-item { display: flex; gap: 12px; align-items: baseline; }
   .flow-step-item .n {
-    width: 18px; height: 18px; border-radius: 999px; background: #fff; border: 1px solid #DCD7C9;
+    width: 18px; height: 18px; border-radius: 999px; background: #fff; border: 1px solid #CBDBD1;
     color: var(--muted); font-size: 11px; font-weight: 600; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; margin-top: 1px;
   }
@@ -199,7 +199,7 @@
     display: flex; gap: 10px;
   }
   #composer {
-    flex: 1; border: 1px solid #E3DFD6; border-radius: 20px; background: var(--panel-bg);
+    flex: 1; border: 1px solid #D7E6DC; border-radius: 20px; background: var(--panel-bg);
     padding: 11px 16px; font-size: 14px; resize: none; font-family: inherit;
     max-height: 120px;
   }
@@ -218,11 +218,11 @@
   #plan-header {
     padding: 20px 20px 14px 20px; display: flex; align-items: center; justify-content: space-between;
   }
-  #plan-header .title { font-size: 13px; font-weight: 600; color: #6B6758; }
+  #plan-header .title { font-size: 13px; font-weight: 600; color: #44584B; }
   #incident-section {
     padding: 18px 20px; border-bottom: 1px solid var(--border);
   }
-  #incident-section .title { font-size: 13px; font-weight: 600; color: #6B6758; margin-bottom: 6px; }
+  #incident-section .title { font-size: 13px; font-weight: 600; color: #44584B; margin-bottom: 6px; }
   #incident-text { font-size: 13px; line-height: 1.45; color: var(--ink); }
   #incident-text.placeholder { color: var(--faint); font-style: italic; }
   #plan-steps { padding: 0 20px; display: flex; flex-direction: column; gap: 16px; overflow: auto; flex: 1; }
@@ -237,7 +237,7 @@
   .step .row { display: flex; gap: 10px; align-items: flex-start; }
   .step .check {
     margin-top: 2px; width: 16px; height: 16px; border-radius: 999px; flex-shrink: 0; cursor: pointer;
-    border: 1.5px solid #D8D2C3; display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid #C1D6C8; display: flex; align-items: center; justify-content: center;
   }
   .step.done .check { background: var(--accent); border-color: var(--accent); }
   .step.done .check svg { display: block; }
@@ -255,7 +255,7 @@
   .step-note:empty::before { content: attr(data-placeholder); color: var(--faint); font-style: normal; }
   #add-step-row { display: flex; gap: 8px; align-items: center; padding: 14px 20px 20px 20px; }
   #add-step-row input {
-    flex: 1; border: 1px solid #E3DFD6; border-radius: 6px; padding: 7px 10px;
+    flex: 1; border: 1px solid #D7E6DC; border-radius: 6px; padding: 7px 10px;
     font-size: 13px; font-family: inherit;
   }
   #add-step-row button {
