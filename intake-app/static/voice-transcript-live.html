@@ -563,7 +563,7 @@
   .voice-fab::before{content:''; width:24px; height:24px; background-repeat:no-repeat; background-position:center; background-size:contain; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F6F1E7' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Ccircle cx='12' cy='12' r='2.75' fill='%23F6F1E7' stroke='none'/%3E%3C/svg%3E");}
   /* Modal close: top-right of the voice modal's own header, same icon-
      square scale as the top nav's other controls. */
-  .voice-modal-close{display:none; width:34px; height:34px; padding:0; border-radius:50%; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--card); color:var(--ink-soft); cursor:pointer; flex-shrink:0; font-size:0;}
+  .voice-modal-close{display:none; width:34px; height:34px; padding:0; align-items:center; justify-content:center; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; flex-shrink:0; font-size:0;}
   .voice-modal-close::before{content:''; width:16px; height:16px; background-repeat:no-repeat; background-position:center; background-size:contain; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233C4C49' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");}
   /* Phone: stacking both panes (the 860px rule above) still makes each one
      fight the other for a phone's limited height -- Text becomes the one
@@ -595,8 +595,10 @@
     .voice-fab{display:flex;}
     .voice-modal-close{display:flex;}
     /* The desktop-pattern nav toggles duplicate what the FAB/modal close
-       button now do on mobile -- one way to reach Voice, not two. */
-    #hideVoiceBtn, #hideTranscriptBtn, .nav-sep{display:none;}
+       button now do on mobile -- one way to reach Voice, not two. The
+       voice modal's own overflow menu (Start over) isn't needed in this
+       small a card either, per explicit ask. */
+    #hideVoiceBtn, #hideTranscriptBtn, .nav-sep, #voicePanel .overflow-wrap{display:none;}
   }
 
   /* talkMicBtn: was a small text pill ("Tap to talk"), now the page's main
