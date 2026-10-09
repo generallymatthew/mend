@@ -177,7 +177,15 @@
      of the text itself, so the pill reads as "Thimble" while staying
      readable -- ink text is the same accessible color already used
      everywhere else in the app. */
-  .state-pill{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--border); color:var(--ink); font-size:13px; white-space:nowrap; box-shadow:0 2px 8px rgba(23,55,46,.08);}
+  /* Fixed width (not just padding) so the pill doesn't resize/jump as
+     STATE_WORDS's own entries change length turn to turn ("Listening…" vs
+     "Empathizing…") -- sized for the longest real entry
+     ("Thimble: Empathizing…" + the mute icon) plus a little breathing
+     room, per explicit ask. state-word gets the leftover space and is
+     left-aligned within it, so shorter words don't center-shift the mic
+     icon around. */
+  .state-pill{display:inline-flex; align-items:center; gap:7px; width:190px; padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--border); color:var(--ink); font-size:13px; white-space:nowrap; box-shadow:0 2px 8px rgba(23,55,46,.08);}
+  .state-pill .state-word{flex:1; overflow:hidden; text-overflow:ellipsis;}
   .state-pill::before{content:''; width:8px; height:8px; border-radius:50%; background:#F3829A; flex-shrink:0;}
   .state-pill b{font-weight:700;}
   .state-pill .state-word{opacity:.72; font-weight:500;}
@@ -699,7 +707,7 @@
             </div>
             <div class="state-pill-row">
               <div class="state-pill" id="statePill">
-                <b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span>
+                <b>Thimble:</b> <span class="state-word" id="stateWord">Listening&hellip;</span>
                 <!-- Real #muteBtn, relocated here per explicit ask (was
                      anchored to the avatar's own corner before that) --
                      same real mute toggle, no script change, just where
