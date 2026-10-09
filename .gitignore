@@ -8,3 +8,4 @@ classifier/data/gen_stderr.txt
 intake-app/survey_responses.jsonl
 intake-app/analytics_events.jsonl
 manager-app/cases.db
+.obsidian/

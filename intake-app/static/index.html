@@ -205,7 +205,15 @@
      finger as a scroll/selection gesture, which would otherwise eat the
      press before JS ever sees it. */
   .composer-mic-btn{width:64px; height:44px; padding:0; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:var(--card); border:1.5px solid var(--border); color:var(--ink-soft); -webkit-user-select:none; user-select:none; touch-action:none; transition:transform 80ms ease, background 80ms ease, color 80ms ease, border-color 80ms ease;}
-  .composer-mic-btn.active{background:#F3829A; border-color:#F3829A; color:var(--ink); transform:scale(.96); animation:talk-mic-pulse 1.4s ease-in-out infinite;}
+  /* .active = pressed (button down), on the instant of press, before the
+     mic is confirmed working -- scale only, no color, so "pressed" and
+     "actually recording" read as two different states. .recording = pink,
+     added only once startComposerRecording's getUserMedia/beep actually
+     fire (see its own comment) and removed only once mediaRecorder.onstop
+     actually runs, so the color tracks real mic state through the release
+     grace delay too (composerScheduleStop), not just the button hold. */
+  .composer-mic-btn.active{transform:scale(.96);}
+  .composer-mic-btn.recording{background:#F3829A; border-color:#F3829A; color:var(--ink); animation:talk-mic-pulse 1.4s ease-in-out infinite;}
   .composer-mic-wrap{position:relative; flex-shrink:0; display:flex; align-items:center;}
   .mic-tip{position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); width:220px; background:var(--ink); color:var(--paper); font-size:12.5px; line-height:1.5; padding:10px 28px 10px 12px; border-radius:10px; box-shadow:0 4px 14px rgba(23,55,46,.2); z-index:5;}
   .mic-tip::after{content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--ink);}
@@ -1018,6 +1026,15 @@ let composerRecordingStartedAt = 0;
 // elapsed since press gives the recorder a real clip to work with. Same
 // fix Voice mode's old push-to-talk needed, same reasoning.
 const COMPOSER_MIN_HOLD_MS = 400;
+// Grace period applied on release, on top of (not instead of)
+// COMPOSER_MIN_HOLD_MS above -- the mic used to stop the instant the
+// button came up, which clips whatever word was still landing right as a
+// real hold ends (release naturally lands AT the end of the last word, no
+// trailing silence to work with). Keeping the mic open a bit longer past
+// release gives that last word somewhere to go. Bias here is toward
+// longer, not snappier -- a half-second of extra listening is cheap, a
+// dropped word isn't.
+const COMPOSER_RELEASE_GRACE_MS = 600;
 // Release-before-recording-started race: composerPress awaits getUserMedia
 // before `mediaRecorder` exists at all, and a real press/release can easily
 // land entirely inside that window (permission/device setup can take real
@@ -1033,8 +1050,12 @@ let composerReleaseRequested = false;
 function composerScheduleStop(elapsedMs) {
   const stopNow = () => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); };
   const elapsed = elapsedMs ?? (performance.now() - composerPressedAt);
-  if (elapsed < COMPOSER_MIN_HOLD_MS) setTimeout(stopNow, COMPOSER_MIN_HOLD_MS - elapsed);
-  else stopNow();
+  const minHoldRemaining = Math.max(0, COMPOSER_MIN_HOLD_MS - elapsed);
+  // Always at least the release grace, even once the min-hold floor is
+  // already satisfied -- that floor is about having a decodable clip at
+  // all, not about catching a trailing word, so satisfying it alone
+  // shouldn't skip the grace delay.
+  setTimeout(stopNow, Math.max(minHoldRemaining, COMPOSER_RELEASE_GRACE_MS));
 }
 
 // Separate from audioCtx/ensureAudioGraph() above (the TTS playback graph,
@@ -3509,6 +3530,7 @@ async function startComposerRecording() {
     // genuinely ends regardless of when release happened relative to it.
     composerMicWave.classList.remove('active');
     composerMicBtn.classList.remove('active');
+    composerMicBtn.classList.remove('recording');
     showComposerMicLabel('Stopped recording'); // hidden below once 'Transcribing…' takes over in the placeholder
     playRecordStopBeep();
     // Release is naturally timed right at the end of the last word spoken,
@@ -3588,6 +3610,7 @@ async function startComposerRecording() {
   // getting stuck "on" with nothing left to ever turn it off.
   if (!composerReleaseRequested) {
     composerMicWave.classList.add('active');
+    composerMicBtn.classList.add('recording');
     composerMicBtn.title = 'Recording… (release to fill the message)';
   }
   startMicAnalysis(stream);
