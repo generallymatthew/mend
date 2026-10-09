@@ -168,6 +168,9 @@ async def list_cases():
         return [case_row_to_dict(r) for r in rows]
 
 
+DEFAULT_PLAN_STEPS = ["Action item goes here", "Action item goes here"]
+
+
 @app.post("/api/cases")
 async def create_case():
     now = time.time()
@@ -177,6 +180,12 @@ async def create_case():
             "INSERT INTO cases (id, status, stage, created_at, updated_at) VALUES (?, 'open', NULL, ?, ?)",
             (case_id, now, now),
         )
+        for position, text in enumerate(DEFAULT_PLAN_STEPS):
+            conn.execute(
+                "INSERT INTO plan_steps (id, case_id, text, done, note, position, created_at, updated_at) "
+                "VALUES (?, ?, ?, 0, NULL, ?, ?, ?)",
+                (str(uuid.uuid4()), case_id, text, position, now, now),
+            )
         case = get_case(conn, case_id)
     CONVERSATIONS[case_id] = []
     return case

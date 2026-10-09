@@ -210,6 +210,10 @@
   #incident-text.placeholder { color: var(--faint); font-style: italic; }
   #plan-steps { padding: 0 20px; display: flex; flex-direction: column; gap: 16px; overflow: auto; flex: 1; }
   .step { display: flex; flex-direction: column; gap: 6px; }
+  .step-label {
+    font-size: 10px; font-weight: 700; color: var(--faint); text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
   .step .row { display: flex; gap: 10px; align-items: flex-start; }
   .step .check {
     margin-top: 2px; width: 16px; height: 16px; border-radius: 999px; flex-shrink: 0; cursor: pointer;
@@ -568,14 +572,19 @@ async function closeCase() {
 function renderPlan(steps) {
   const container = document.getElementById("plan-steps");
   container.innerHTML = "";
-  for (const s of steps) {
-    container.appendChild(renderStep(s));
-  }
+  steps.forEach((s, i) => {
+    container.appendChild(renderStep(s, i));
+  });
 }
 
-function renderStep(s) {
+function renderStep(s, index) {
   const wrap = document.createElement("div");
   wrap.className = "step" + (s.done ? " done" : "");
+
+  const label = document.createElement("div");
+  label.className = "step-label";
+  label.textContent = `Step ${index + 1}`;
+  wrap.appendChild(label);
 
   const row = document.createElement("div");
   row.className = "row";
