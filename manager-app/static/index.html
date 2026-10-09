@@ -23,8 +23,40 @@
     background: var(--bg);
     height: 100vh;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  #app { display: flex; height: 100vh; }
+  #app { display: flex; flex: 1; min-height: 0; }
+
+  /* One persistent top nav bar spanning the whole app, same pattern as
+     ../intake-app/static/voice-transcript-live.html's .top-nav: brand
+     lockup + a privacy chip on the left, global actions on the right --
+     rather than the brand/New case/Help controls living inside the
+     sidebar's own header. */
+  .top-nav {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .top-bar-brand { display: flex; align-items: center; gap: 9px; }
+  .top-bar-brand .mend-mark { color: var(--accent); flex-shrink: 0; }
+  .top-bar-brand .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .privacy-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; letter-spacing: 0.02em; color: var(--accent);
+    background: #2F523314; border-radius: 999px; padding: 4px 9px 4px 7px;
+  }
+  .privacy-chip svg { flex-shrink: 0; color: var(--accent); }
+  .top-nav-actions { display: flex; align-items: center; gap: 8px; }
+  #new-case-btn, #help-btn {
+    width: 28px; height: 28px; border-radius: 999px;
+    background: var(--panel-bg); color: #33453A;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; border: none;
+  }
+  #help-btn { font-size: 13px; font-weight: 600; color: var(--muted); }
 
   /* Conversations list */
   #sidebar {
@@ -34,27 +66,10 @@
     display: flex;
     flex-direction: column;
   }
-  #sidebar-header {
-    padding: 20px 20px 10px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  #sidebar-header .brand { display: flex; align-items: center; gap: 7px; }
-  #sidebar-header .mend-mark { color: var(--accent); flex-shrink: 0; }
-  #sidebar-header .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
-  #sidebar-header .btn-group { display: flex; gap: 8px; }
   #sidebar-subheader {
-    padding: 2px 20px 12px 20px; font-size: 12px; font-weight: 600;
+    padding: 16px 20px 12px 20px; font-size: 12px; font-weight: 600;
     color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
   }
-  #new-case-btn, #help-btn {
-    width: 28px; height: 28px; border-radius: 999px;
-    background: var(--panel-bg); color: #33453A;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; cursor: pointer; border: none;
-  }
-  #help-btn { font-size: 13px; font-weight: 600; color: var(--muted); }
 
   /* Help modal */
   #help-overlay {
@@ -264,18 +279,26 @@
 </style>
 </head>
 <body>
+<!-- One persistent top nav bar spanning the whole app, same consolidation
+     pattern as ../intake-app/static/voice-transcript-live.html's .top-nav:
+     brand lockup + a privacy chip on the left, instead of the brand and
+     New case/Help controls living inside the sidebar's own header. -->
+<div class="top-nav">
+  <div class="top-bar-brand">
+    <svg class="mend-mark" width="16" height="11" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+    <span class="brand-name">Loom</span>
+    <span class="privacy-chip">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+      Names stay out of this
+    </span>
+  </div>
+  <div class="top-nav-actions">
+    <button id="help-btn" title="How this works">?</button>
+    <button id="new-case-btn" title="New case">+</button>
+  </div>
+</div>
 <div id="app">
   <div id="sidebar">
-    <div id="sidebar-header">
-      <div class="brand">
-        <svg class="mend-mark" width="16" height="11" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
-        <span class="brand-name">Loom</span>
-      </div>
-      <div class="btn-group">
-        <button id="help-btn" title="How this works">?</button>
-        <button id="new-case-btn" title="New case">+</button>
-      </div>
-    </div>
     <div id="sidebar-subheader">Cases</div>
     <div id="case-list"></div>
     <div id="sidebar-footer">Names stay out of this by default.</div>
