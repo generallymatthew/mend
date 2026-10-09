@@ -27,6 +27,13 @@
      reads as just a name instead of a name plus a permanent disclaimer. */
   .thimble-name-row{display:flex; align-items:center; gap:6px; position:relative;}
   .lock-btn{width:22px; height:22px; padding:0; border:none; background:transparent; color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:50%;}
+  /* Privacy info now lives once, in the global top nav (disclaimerBtn,
+     next to the Private chip) -- per explicit ask, this second copy next
+     to the "Thimble" name in the transcript header was redundant.
+     Hidden, not deleted, so chatLockBtn's own click/hover wiring (shared
+     with the other .lock-btn instances) stays harmless rather than
+     needing to be picked apart. */
+  #chatLockBtn, #chatLockBtn + .lock-tooltip{display:none;}
   .lock-btn:hover, .lock-btn:focus-visible{color:var(--ink); background:#17372E0D;}
   .lock-tooltip{position:absolute; top:calc(100% + 8px); left:0; width:220px; background:var(--ink); color:var(--paper); font-size:12.5px; line-height:1.5; font-weight:500; padding:10px 12px; border-radius:10px; box-shadow:0 4px 14px rgba(23,55,46,.2); z-index:6; opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .12s ease, transform .12s ease;}
   .lock-btn:hover + .lock-tooltip, .lock-btn.open + .lock-tooltip{opacity:1; visibility:visible; transform:translateY(0);}
@@ -664,19 +671,23 @@
   .privacy-chip{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); background:#17372E0D; border-radius:999px; padding:4px 9px 4px 7px;}
   .privacy-chip svg{flex-shrink:0; color:var(--ink-soft);}
   .top-nav-actions{display:flex; align-items:center; gap:10px;}
-  /* End session's "session" and Feedback's icon are the first things to
-     go once the bar runs out of room on a phone -- the top nav (brand
-     lockup + Private chip + both actions) was overflowing/wrapping
-     under 640px otherwise, per explicit report. End session's
-     accessible name does shorten to just "End" along with it (real
-     markup removed from the tree, not a visual-only trick) -- still
-     unambiguous given where the button lives. Feedback keeps its full
-     name; only the decorative icon beside it drops. */
+  /* Feedback's icon is the first thing to go once the bar runs out of
+     room on a phone -- the top nav (brand lockup + Private chip + both
+     actions) was overflowing/wrapping under 640px otherwise, per
+     explicit report. End session keeps its full label at every width,
+     per explicit follow-up -- dropping the wordmark + this icon, plus
+     the tighter gap below, claws back enough room without shortening
+     it too. */
   @media (max-width:640px){
     .nav-btn-full{display:none;}
     /* "mend" wordmark drops too, same overflow fix -- the mark (logo
        icon) alone still reads as the brand at this size. */
     .brand-mark{display:none;}
+    /* Keeping "End session" in full (see above) ate back most of the
+       margin the other two cuts freed -- still overflowing by a few px
+       at 375 wide until the bar's own gaps tighten too. */
+    .top-nav{gap:10px; padding:14px 14px;}
+    .top-nav-actions{gap:6px;}
   }
 
   /* hideVoiceBtn/hideTranscriptBtn: icon-only squares (secondary, frequent,
@@ -822,13 +833,13 @@
       <button id="hideVoiceBtn" class="nav-icon-btn" type="button" aria-pressed="false">Hide voice</button>
       <button id="hideTranscriptBtn" class="nav-icon-btn nav-icon-chat" type="button" aria-pressed="false">Hide chat</button>
       <div class="nav-sep"></div>
-      <!-- "session"/the feedback icon drop out under 640px (see their own
-           CSS rule) -- the top nav (brand lockup + Private chip + both
-           actions) was overflowing a phone's width otherwise, per explicit
-           report. Real text content kept intact (just a span wrapping the
-           part that hides) rather than swapped via JS, so nothing about
-           the accessible name changes. -->
-      <button id="endSessionBtn" class="end-session-btn" type="button">End<span class="nav-btn-full"> session</span></button>
+      <!-- The feedback icon drops out under 640px (see its own CSS rule)
+           -- the top nav (brand lockup + Private chip + both actions) was
+           overflowing a phone's width otherwise, per explicit report. End
+           session keeps its full label at every width, per explicit
+           follow-up -- the wordmark drop + icon drop already claw back
+           enough room without shortening this one too. -->
+      <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
       <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
         <svg class="nav-btn-full" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
         Feedback
