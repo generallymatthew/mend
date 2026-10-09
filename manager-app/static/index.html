@@ -845,9 +845,9 @@ function updateScrim() {
   scrimEl.classList.toggle("show", isMobile() && open);
 }
 
-function openSidebar() {
-  sidebarEl.classList.remove("closed");
-  planPanelEl.classList.remove("open");
+function toggleSidebar() {
+  sidebarEl.classList.toggle("closed");
+  if (!sidebarEl.classList.contains("closed")) planPanelEl.classList.remove("open");
   updateScrim();
 }
 
@@ -862,7 +862,7 @@ function togglePlanPanel() {
   updateScrim();
 }
 
-document.getElementById("sidebar-toggle").onclick = openSidebar;
+document.getElementById("sidebar-toggle").onclick = toggleSidebar;
 document.getElementById("plan-toggle").onclick = togglePlanPanel;
 scrimEl.onclick = () => {
   sidebarEl.classList.add("closed");
