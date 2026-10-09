@@ -32,6 +32,12 @@
       "port": 8423
     },
     {
+      "name": "mend-manager-app",
+      "runtimeExecutable": "manager-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--reload", "--reload-include", "facilitator-*-system-prompt.md", "--port", "8426", "--app-dir", "manager-app"],
+      "port": 8426
+    },
+    {
       "name": "mend-launchpad",
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8000"],

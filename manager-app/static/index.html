@@ -75,8 +75,30 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   #thread-header .name { font-size: 16px; font-weight: 600; }
-  #close-case-btn {
+  #close-case-btn, #managing-up-btn {
     font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  }
+  #thread-header .actions { display: flex; gap: 8px; }
+  #handoff-banner {
+    margin: 0 32px; margin-top: 16px; padding: 14px 16px; border-radius: 10px;
+    background: #F2F6EF; border: 1px solid #DCE8D6; font-size: 13px; display: none;
+  }
+  #handoff-banner .title { font-weight: 600; margin-bottom: 6px; }
+  #handoff-banner .desc { color: var(--muted); margin-bottom: 10px; }
+  #handoff-banner .links { display: flex; flex-direction: column; gap: 6px; }
+  #handoff-banner .link-row { display: flex; align-items: center; gap: 8px; }
+  #handoff-banner .link-row label { width: 90px; color: var(--muted); flex-shrink: 0; }
+  #handoff-banner .link-row input {
+    flex: 1; border: 1px solid #E3DFD6; border-radius: 6px; padding: 5px 8px;
+    font-size: 12px; font-family: inherit; background: #fff;
+  }
+  #handoff-banner .link-row button {
+    border: 1px solid #DCE8D6; background: #fff; border-radius: 6px; padding: 5px 10px;
+    font-size: 12px; cursor: pointer;
+  }
+  #start-handoff-btn {
+    font-size: 13px; color: #fff; background: var(--accent); border: none;
     border-radius: 6px; padding: 6px 12px; cursor: pointer;
   }
   #messages {
@@ -164,7 +186,16 @@
   <div id="thread-col">
     <div id="thread-header" style="display:none">
       <div class="name" id="thread-title"></div>
-      <button id="close-case-btn">Close case</button>
+      <div class="actions">
+        <button id="managing-up-btn" title="Draft a scripted update for your boss">Draft update for your boss</button>
+        <button id="close-case-btn">Close case</button>
+      </div>
+    </div>
+    <div id="handoff-banner">
+      <div class="title">Both sides seem to agree on the blocker</div>
+      <div class="desc">Thimble thinks this is ready to hand off to a private peer session between the two people involved. The manager loses visibility once it starts.</div>
+      <button id="start-handoff-btn">Start peer session</button>
+      <div class="links" id="handoff-links" style="display:none"></div>
     </div>
     <div id="messages" style="display:none"></div>
     <div id="empty-state">Pick a case on the left, or start a new one.</div>
@@ -269,6 +300,58 @@ function renderThread(data) {
     appendBubble(m.role, m.content);
   }
   renderPlan(data.plan);
+  renderHandoffBanner(data.case);
+}
+
+async function renderHandoffBanner(caseObj) {
+  const banner = document.getElementById("handoff-banner");
+  banner.style.display = caseObj.handoff_ready ? "block" : "none";
+  const links = document.getElementById("handoff-links");
+  const startBtn = document.getElementById("start-handoff-btn");
+  if (caseObj.handoff_code) {
+    // Links aren't persisted on the case itself (only the room code is) --
+    // re-fetch them from the idempotent handoff endpoint to redisplay.
+    await startHandoff();
+  } else {
+    links.style.display = "none";
+    startBtn.style.display = "inline-block";
+  }
+}
+
+function renderHandoffLinks(caseObj) {
+  const links = document.getElementById("handoff-links");
+  document.getElementById("start-handoff-btn").style.display = "none";
+  links.style.display = "flex";
+  links.innerHTML = `
+    <div class="link-row"><label>Party A</label><input readonly value="${escapeHtml(caseObj.role_a_url)}"><button data-url="${escapeHtml(caseObj.role_a_url)}">Copy</button></div>
+    <div class="link-row"><label>Party B</label><input readonly value="${escapeHtml(caseObj.role_b_url)}"><button data-url="${escapeHtml(caseObj.role_b_url)}">Copy</button></div>
+  `;
+  for (const btn of links.querySelectorAll("button")) {
+    btn.onclick = () => navigator.clipboard.writeText(btn.dataset.url);
+  }
+}
+
+async function startHandoff() {
+  if (!currentCaseId) return;
+  const res = await fetch(`/api/cases/${currentCaseId}/handoff`, { method: "POST" });
+  const body = await res.json();
+  renderHandoffLinks(body);
+}
+
+async function draftManagingUp() {
+  if (!currentCaseId) return;
+  const btn = document.getElementById("managing-up-btn");
+  btn.disabled = true;
+  const pending = appendBubble("assistant", "...", true);
+  try {
+    const res = await fetch(`/api/cases/${currentCaseId}/managing-up`, { method: "POST" });
+    const body = await res.json();
+    pending.remove();
+    appendBubble("assistant", body.reply);
+    updateCaseFromResult(body.case);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function appendBubble(role, text, pending) {
@@ -288,6 +371,7 @@ function updateCaseFromResult(updatedCase) {
   cases.sort((a, b) => b.updated_at - a.updated_at);
   renderCaseList();
   document.getElementById("thread-title").textContent = updatedCase.tension_summary || "New case";
+  renderHandoffBanner(updatedCase);
 }
 
 async function sendMessage() {
@@ -406,6 +490,8 @@ async function addStep() {
 
 document.getElementById("new-case-btn").onclick = createCase;
 document.getElementById("close-case-btn").onclick = closeCase;
+document.getElementById("managing-up-btn").onclick = draftManagingUp;
+document.getElementById("start-handoff-btn").onclick = startHandoff;
 document.getElementById("send-btn").onclick = sendMessage;
 document.getElementById("add-step-btn").onclick = addStep;
 document.getElementById("add-step-input").addEventListener("keydown", (e) => {

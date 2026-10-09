@@ -24,6 +24,7 @@ Run:
 import json
 import os
 import re
+import secrets
 import sqlite3
 import time
 import uuid
@@ -41,6 +42,7 @@ load_dotenv(ROOT / ".env")
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-case-plan-system-prompt.md"
 DB_FILE = ROOT / "cases.db"
 MODEL = "claude-sonnet-5"
+JOINT_SESSION_BASE_URL = os.environ.get("JOINT_SESSION_BASE_URL", "http://localhost:8421")
 
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 
@@ -80,10 +82,17 @@ def init_db():
                 last_action TEXT,
                 next_action TEXT,
                 floor_triggered TEXT,
+                handoff_ready INTEGER NOT NULL DEFAULT 0,
+                handoff_code TEXT,
                 created_at REAL NOT NULL,
                 updated_at REAL NOT NULL
             )
         """)
+        existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(cases)")}
+        if "handoff_ready" not in existing_cols:
+            conn.execute("ALTER TABLE cases ADD COLUMN handoff_ready INTEGER NOT NULL DEFAULT 0")
+        if "handoff_code" not in existing_cols:
+            conn.execute("ALTER TABLE cases ADD COLUMN handoff_code TEXT")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS plan_steps (
                 id TEXT PRIMARY KEY,
@@ -110,6 +119,8 @@ def case_row_to_dict(row: sqlite3.Row) -> dict:
         "last_action": row["last_action"],
         "next_action": row["next_action"],
         "floor_triggered": row["floor_triggered"],
+        "handoff_ready": bool(row["handoff_ready"]),
+        "handoff_code": row["handoff_code"],
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
@@ -273,6 +284,8 @@ def facilitator_reply(case_id: str, conn: sqlite3.Connection) -> dict:
         for key in ("stage", "tension_summary", "last_action", "next_action", "floor_triggered"):
             if signal.get(key) is not None:
                 fields[key] = signal[key]
+        if signal.get("handoff_ready") is not None:
+            fields["handoff_ready"] = int(bool(signal["handoff_ready"]))
         if fields:
             set_clause = ", ".join(f"{k} = ?" for k in fields)
             conn.execute(
@@ -311,6 +324,60 @@ async def post_message(case_id: str, body: Message):
         result = facilitator_reply(case_id, conn)
         case = get_case(conn, case_id)
     return {"reply": result["reply"], "case": case}
+
+
+MANAGING_UP_PROMPT = (
+    "(System note, not from the manager: they tapped \"Draft update for your boss.\" "
+    "Reply with ONLY the scripted upward-facing update itself, 2-4 sentences, nothing "
+    "else before or after it -- no preamble like \"here's a draft.\")"
+)
+
+
+@app.post("/api/cases/{case_id}/managing-up")
+async def managing_up(case_id: str):
+    with db() as conn:
+        case = get_case(conn, case_id)
+        if case is None:
+            return JSONResponse({"error": "no such case"}, status_code=404)
+        plan = get_plan_steps(conn, case_id)
+        if case_id not in CONVERSATIONS:
+            CONVERSATIONS[case_id] = []
+            seed = seed_context_message(case, plan)
+            if seed:
+                CONVERSATIONS[case_id].append({"role": "user", "content": seed, "hidden": True})
+                CONVERSATIONS[case_id].append({
+                    "role": "assistant",
+                    "content": "Got it, picking this back up.",
+                    "hidden": True,
+                })
+        CONVERSATIONS[case_id].append({"role": "user", "content": MANAGING_UP_PROMPT, "hidden": True})
+        result = facilitator_reply(case_id, conn)
+        case = get_case(conn, case_id)
+    return {"reply": result["reply"], "case": case}
+
+
+@app.post("/api/cases/{case_id}/handoff")
+async def create_handoff(case_id: str):
+    """Mints a fresh joint-session-app room code for this case's peer hand-off.
+    Carries no case context across -- per WORKFLOW.md, the peer session starts
+    with zero knowledge of the manager's notes, just two anonymous role links.
+    Idempotent per case: calling it again returns the same links rather than
+    minting a new room each time the manager reopens the banner."""
+    with db() as conn:
+        case = get_case(conn, case_id)
+        if case is None:
+            return JSONResponse({"error": "no such case"}, status_code=404)
+        code = case["handoff_code"]
+        if not code:
+            code = secrets.token_urlsafe(8)
+            conn.execute(
+                "UPDATE cases SET handoff_code = ?, updated_at = ? WHERE id = ?",
+                (code, time.time(), case_id),
+            )
+    return {
+        "role_a_url": f"{JOINT_SESSION_BASE_URL}/?code={code}&role=a",
+        "role_b_url": f"{JOINT_SESSION_BASE_URL}/?code={code}&role=b",
+    }
 
 
 @app.post("/api/cases/{case_id}/start")

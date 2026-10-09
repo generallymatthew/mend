@@ -12,7 +12,8 @@ Structural, phase-level view — what needs to be true before the next phase sta
 - [x] `manager-coaching-app` — fifth prototype, manager-side hard-conversation coaching
 - [ ] `manager-coaching-app` real conversation-quality test with a live API key (server verified, persona/floor-logic not yet tried against a real model reply)
 - [x] `manager-app` — sketched, mocked (`App.dc.html`/`canvas.json`), and the underlying philosophy/workflow/facilitator mindset written up (`PHILOSOPHY.md`/`WORKFLOW.md`/`THIMBLE_MINDSET.md`)
-- [ ] `manager-app` real backend, wiring `THIMBLE_MINDSET.md` into an actual system prompt the way the other apps' `facilitator-*-system-prompt.md` files do
+- [x] `manager-app` real backend, wiring `THIMBLE_MINDSET.md` into an actual system prompt the way the other apps' `facilitator-*-system-prompt.md` files do
+- [x] `manager-app`: "managing up" translator and the decoupled hand-off into a peer-to-peer session, wired as real actions (not just prompt text telling Thimble to offer them)
 
 ## Phase 1 — Real-time audio/video, one voice-driven session
 
