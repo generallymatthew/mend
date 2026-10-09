@@ -256,7 +256,7 @@ async def list_cases():
         return [case_row_to_dict(r) for r in rows]
 
 
-DEFAULT_PLAN_STEPS = ["Meet with employee A", "Meet with employee B"]
+DEFAULT_PLAN_STEPS = ["Action item goes here", "Action item goes here"]
 
 
 @app.post("/api/cases")
