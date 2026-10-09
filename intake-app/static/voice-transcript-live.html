@@ -511,7 +511,17 @@
      (.call-layout/.chat-panel) into one frame and restyles talkMicBtn into
      a real hold-to-talk circle (see its own pointerdown/pointerup wiring
      in the script, replacing the dormant tap-to-toggle click handler). */
-  .video-area.live-split{flex-direction:row; gap:16px; align-items:stretch;}
+  /* index.html's .wrap caps out at 1200px, centered with side padding --
+     fine for a windowed call UI, but this page's whole design is a
+     full-bleed frame filling the real browser viewport edge to edge, per
+     direct correction ("thats the whole point of the design"). Also drops
+     .call-layout/.chat-panel's own rounded-corner/border chrome, which
+     read as a smaller card floating inside the now-full-bleed frame
+     instead of the frame itself. */
+  body:has(.live-split) .wrap{max-width:none; margin:0; padding:0; height:100vh; height:100dvh;}
+  .live-split .call-layout, .live-split .chat-panel{border-radius:0; border:none;}
+  .live-split .call-layout{border-right:1px solid var(--border);}
+  .video-area.live-split{flex-direction:row; gap:0; align-items:stretch;}
   /* Voice pane fills whatever's left; the transcript is a narrow fixed
      sidebar, not an equal half -- per explicit correction, the voice
      stage should "take all the rest of the screen," not share it evenly. */
