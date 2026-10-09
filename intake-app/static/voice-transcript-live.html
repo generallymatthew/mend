@@ -618,6 +618,12 @@
        specificity regardless of source order (3 classes vs. 1). */
     .live-split .call-layout .caption-stack{display:flex;}
     .live-split .call-layout .stage{align-items:flex-start; padding-top:36px;}
+    /* Hold-to-talk dropped from its usual 28px-from-bottom-corner spot
+       down near the card's actual bottom edge, per explicit ask -- with
+       the pill now sitting near the top (above), this widens the real
+       vertical gap positionCaptionStack() has to place a multi-line
+       caption into instead of the two staying close together. */
+    .live-split .call-layout .hold-dock{bottom:10px;}
   }
 
   /* talkMicBtn: was a small text pill ("Tap to talk"), now the page's main
@@ -2888,13 +2894,12 @@ function animateAvatar(now) {
   const recording = mediaRecorder && mediaRecorder.state === 'recording';
   const rawLevel = (recording && micAnalyser) ? rmsLevel(micAnalyser, micData) : 0;
   const level = micMuted ? 0 : rawLevel;
-  // Per explicit ask, Thimble doesn't animate on this page -- both the big
-  // call-stage avatar and the chat header's mini copy stay a plain static
-  // circle (the elements' own CSS defaults: border-radius:50%, no mouth)
-  // regardless of avatarState, instead of the wobble/breathe/mouth-shape
-  // engine updateThimbleMotion normally drives every frame. Not called at
-  // all, not called-but-frozen -- the engine itself (and everything it
-  // depends on) is untouched for when this might come back.
+  // Per explicit follow-up, animation is back on for the one real avatar
+  // left on this page (the big call-stage instance) -- thimbleMini is not
+  // called since its own elements were removed from the markup earlier
+  // (thimbleInstance() tolerates that, resolving to a harmless no-op, but
+  // there's nothing left for it to animate).
+  updateThimbleMotion(thimbleBig, t, level, listening);
   const employeeLit = recording && level > VAD_THRESHOLD;
   updateEmployeeMotion(t, level, employeeLit);
   if (recording) {
