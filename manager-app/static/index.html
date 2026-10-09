@@ -67,7 +67,10 @@
     overflow: auto; background: #fff; border-radius: 14px; padding: 28px;
     box-shadow: 0 12px 40px rgba(0,0,0,0.18);
   }
-  #help-modal h1 { font-size: 16px; font-weight: 600; margin: 0 0 8px 0; }
+  #help-modal .brand { display: flex; align-items: center; gap: 7px; margin: 0 0 10px 0; }
+  #help-modal .mend-mark { color: var(--accent); flex-shrink: 0; }
+  #help-modal .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  #help-modal h1 { font-size: 14px; font-weight: 600; color: var(--muted); margin: 0 0 8px 0; }
   #help-modal .close-help {
     float: right; border: none; background: none; color: var(--faint);
     font-size: 18px; cursor: pointer; line-height: 1; margin-left: 12px;
@@ -294,7 +297,11 @@
 <div id="help-overlay">
   <div id="help-modal">
     <button class="close-help" title="Close">&times;</button>
-    <h1>How Loom works</h1>
+    <div class="brand">
+      <svg class="mend-mark" width="16" height="11" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+      <span class="brand-name">Loom</span>
+    </div>
+    <h1>How it works</h1>
     <div id="help-modal-body"></div>
   </div>
 </div>
