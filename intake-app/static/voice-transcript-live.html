@@ -567,13 +567,31 @@
   .voice-modal-close::before{content:''; width:16px; height:16px; background-repeat:no-repeat; background-position:center; background-size:contain; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233C4C49' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");}
   /* Phone: stacking both panes (the 860px rule above) still makes each one
      fight the other for a phone's limited height -- Text becomes the one
-     default view instead, with Voice reached on demand as a full-screen
-     modal via the FAB above. voicePanel.hidden is set true at load under
-     this width by the init script further down; this block only handles
-     the modal's own layout, not whether it starts open. */
+     default view instead, with Voice reached on demand as a real modal
+     (a centered card over a dimmed backdrop, Text still visible/tappable-
+     to-dismiss behind it -- not a full-screen takeover) via the FAB above.
+     voicePanel.hidden is set true at load under this width by the init
+     script further down; this block only handles the modal's own layout,
+     not whether it starts open. */
   @media (max-width:640px){
     .live-split .chat-panel{position:relative; flex:1 1 auto; width:100%; height:100%;}
-    .live-split .call-layout{position:fixed; inset:0; z-index:40; width:100%; height:100%; height:100dvh; flex:none;}
+    /* .call-layout (#voicePanel) becomes the backdrop -- covers the
+       viewport so it can dim Text behind it and catch the dismiss-on-tap
+       click, but is itself invisible chrome (no card styling of its own).
+       Its one child, .call-main, is the actual card: sized to content
+       instead of edge-to-edge, with the rounded/shadowed chrome the
+       full-bleed desktop rule above strips back out. */
+    .live-split .call-layout{position:fixed; inset:0; z-index:40; width:100%; height:100%; height:100dvh; flex:none; display:flex; align-items:center; justify-content:center; padding:32px 16px; background:rgba(23,55,46,.45);}
+    /* height:100% (not just max-height) so the card actually fills the
+       backdrop's padded content box instead of sizing to its own content
+       -- .call-main's content (avatar stage + hold-dock) is naturally
+       taller than a phone viewport leaves room for once there's real
+       padding around the card, which left it overflowing past the bottom
+       edge before this. overflow-x, not overflow:hidden -- keeps
+       .call-main's own overflow-y:auto (its base rule, unmodified) doing
+       the actual vertical scroll/clip instead of silently cutting content
+       off with no way to reach it. */
+    .live-split .call-layout .call-main{width:100%; max-width:420px; height:100%; max-height:100%; border-radius:20px; overflow-x:hidden; box-shadow:0 24px 60px -16px rgba(23,55,46,.5);}
     .voice-fab{display:flex;}
     .voice-modal-close{display:flex;}
     /* The desktop-pattern nav toggles duplicate what the FAB/modal close
@@ -4405,17 +4423,28 @@ hideTranscriptBtn.addEventListener('click', () => { chatPanel.hidden = !chatPane
 // Mobile: Text is the default view (voicePanel starts hidden under the
 // 640px breakpoint, checked once at load -- a mid-session resize across
 // the breakpoint is an edge case not worth a resize listener for). Voice
-// opens as a full-screen modal via voiceFabBtn and closes back to Text via
+// opens as a real modal (centered card over a dimmed backdrop, see the
+// 640px media query above) via voiceFabBtn and closes back to Text via
 // voiceModalCloseBtn, both just driving the same voicePanel.hidden/
-// syncPaneToggleButtons() the desktop nav toggle already uses -- the modal
-// styling itself is CSS-only (see .live-split .call-layout under the
-// 640px media query above).
+// syncPaneToggleButtons() the desktop nav toggle already uses.
 const voiceFabBtn = document.getElementById('voiceFabBtn');
 const voiceModalCloseBtn = document.getElementById('voiceModalCloseBtn');
 if (window.matchMedia('(max-width:640px)').matches) voicePanel.hidden = true;
 syncPaneToggleButtons();
 voiceFabBtn.addEventListener('click', () => { voicePanel.hidden = false; syncPaneToggleButtons(); });
 voiceModalCloseBtn.addEventListener('click', () => { voicePanel.hidden = true; syncPaneToggleButtons(); });
+// Backdrop click (the dimmed area around the card, not the card itself)
+// and Escape both dismiss, same convention as showConfirmModal() above --
+// only meaningful while voicePanel is actually acting as a modal (mobile,
+// visible), harmless to leave wired the rest of the time.
+voicePanel.addEventListener('click', (e) => {
+  if (e.target === voicePanel && !voicePanel.hidden) { voicePanel.hidden = true; syncPaneToggleButtons(); }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !voicePanel.hidden && window.matchMedia('(max-width:640px)').matches) {
+    voicePanel.hidden = true; syncPaneToggleButtons();
+  }
+});
 
 // Reload used to RESUME an in-progress conversation (server-side
 // `conversation` survives a reload; /api/start no-ops and /api/history
