@@ -67,6 +67,7 @@
     display: none;
     font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border);
     border-radius: 999px; padding: 6px 14px; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
   }
   #plan-toggle:hover { background: var(--panel-bg); }
   .panel-scrim { display: none; }
@@ -131,13 +132,14 @@
     padding: 20px 32px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
   }
-  #thread-header .name { font-size: 16px; font-weight: 600; }
+  #thread-header .name { font-size: 16px; font-weight: 600; min-width: 0; }
   #close-case-btn {
     font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border);
     border-radius: 999px; padding: 6px 14px; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
   }
   #close-case-btn:hover { background: var(--panel-bg); }
-  #thread-header .actions { display: flex; gap: 8px; }
+  #thread-header .actions { display: flex; gap: 8px; flex-shrink: 0; }
   #handoff-banner {
     margin: 0 32px; margin-top: 16px; padding: 14px 16px; border-radius: 10px;
     background: #DCEAE0; border: 1px solid #CFE3D6; font-size: 13px; display: none;
