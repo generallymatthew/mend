@@ -554,9 +554,27 @@
      recording-in-progress language as the rest of the app, just on a
      bigger target for a deliberate press-and-hold instead of a tap. */
   .talk-mic-btn{width:88px; height:88px; padding:0; border-radius:50%; font-size:0; position:relative; -webkit-user-select:none; user-select:none; touch-action:none; box-shadow:0 8px 18px -6px rgba(23,55,46,.35);}
-  .talk-mic-btn::before{content:''; position:absolute; inset:0; margin:auto; width:28px; height:28px; background-repeat:no-repeat; background-position:center; background-size:contain; filter:invert(1) brightness(2); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Crect x='9' y='2.5' width='6' height='12' rx='3'/%3E%3Cpath d='M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5'/%3E%3C/svg%3E");}
+  /* Resting icon: a tap-target glyph (ring + dot), not another microphone
+     -- per explicit ask, the pill's own mute icon is a mic already, and
+     having two identical mic glyphs in view at once read as a UI bug, not
+     two different controls. This button's real action is the press-and-
+     hold gesture itself (see its own tooltip below), which a tap-target
+     communicates more specifically than a generic mic would anyway. */
+  .talk-mic-btn::before{content:''; position:absolute; inset:0; margin:auto; width:26px; height:26px; background-repeat:no-repeat; background-position:center; background-size:contain; filter:invert(1) brightness(2); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Ccircle cx='12' cy='12' r='2.75' fill='%23000' stroke='none'/%3E%3C/svg%3E");}
+  /* Hover: background flips to white (see .talk-mic-btn:hover's own base
+     rule), which left the icon's white filter invisible against it --
+     swaps to a plain dark-grey glyph (no filter) instead, so the icon
+     stays visible on hover. */
+  .talk-mic-btn:hover:not(:disabled):not(.recording)::before{filter:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233C4C49' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Ccircle cx='12' cy='12' r='2.75' fill='%233C4C49' stroke='none'/%3E%3C/svg%3E");}
   .talk-mic-btn.recording::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='3' height='6' rx='1.5' fill='%23000'/%3E%3Crect x='8' y='5' width='3' height='14' rx='1.5' fill='%23000'/%3E%3Crect x='14' y='2' width='3' height='20' rx='1.5' fill='%23000'/%3E%3Crect x='20' y='7' width='3' height='10' rx='1.5' fill='%23000'/%3E%3C/svg%3E"); filter:none;}
   .call-controls{align-items:center;}
+  /* Hold tip tooltip, relocated into .hold-wrap (its own positioned
+     ancestor) -- reuses index.html's real composer mic-tip component
+     (#micTip, same .mic-tip CSS, same once-ever/hover-or-first-hold
+     logic) verbatim, just wired to talkMicBtn instead of the (hidden on
+     this page) composerMicBtn. See the script below. */
+  .hold-wrap{position:relative;}
+  .hold-wrap .mic-tip{bottom:calc(100% + 14px);}
 
   /* One top nav bar spanning both panes: Mend logo + Private chip (left),
      voice/chat visibility toggles + End session + Feedback (right). Per
@@ -617,6 +635,11 @@
      avatar's own corner before that) -- a small inline icon button, sized
      to sit comfortably next to "Thimble · Listening…" text. */
   .pill-mute-btn{width:20px; height:20px; padding:0; margin-left:1px; border-radius:50%; background:transparent; border:none; color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 120ms ease, color 120ms ease;}
+  /* Glyph nudged right ~2px (scaled down from the "~6px" ask to fit this
+     button's actual 20px size without pushing the icon past its own
+     circle) -- per explicit ask, so the ink's padding reads even on all
+     four sides when muted, not just the icon's own bounding box. */
+  .pill-mute-btn svg{margin-left:2px;}
   .pill-mute-btn:hover{color:var(--ink); background:#17372E0D;}
   /* .inactive, not .active -- matches the real muteBtn click handler's own
      class name (toggled true while muted; the slash path's visibility is
@@ -841,6 +864,15 @@
               <circle class="progress" id="holdRingProgress" cx="52" cy="52" r="48" stroke-dasharray="301.59" stroke-dashoffset="301.59"></circle>
             </svg>
             <button id="talkMicBtn" class="talk-mic-btn" type="button" hidden>Hold to talk</button>
+            <!-- Reuses index.html's real composer mic-tip component
+                 (#micTip), relocated here from the composer (which is
+                 hidden on this page) -- same tooltip text/once-ever
+                 behavior, now explaining this page's actual hold-to-talk
+                 button instead. -->
+            <div class="mic-tip" id="micTip" hidden>
+              Press and hold, then wait to hear the beep before speaking. Release when you're done.
+              <button type="button" id="micTipClose" aria-label="Dismiss">&times;</button>
+            </div>
           </div>
         </div>
       </div>
@@ -907,10 +939,6 @@
                send-immediately) in the same screen reads as two competing
                ways to do the same thing. JS wiring left intact/harmless. -->
           <div class="composer-mic-wrap" hidden>
-            <div class="mic-tip" id="micTip" hidden>
-              Press and hold, then wait to hear the beep before speaking. Release when you're done.
-              <button type="button" id="micTipClose" aria-label="Dismiss">&times;</button>
-            </div>
             <div class="composer-mic-wave" id="composerMicWave"><span></span><span></span><span></span><span></span></div>
             <div class="composer-mic-label" id="composerMicLabel" hidden></div>
             <button id="composerMicBtn" class="composer-mic-btn" type="button" title="Hold to record a voice memo">
@@ -3980,10 +4008,17 @@ function armTapToTalk() {
 // underlying voice-turn pipeline (real transcription, real reply, real
 // TTS) tap-to-talk already used.
 let talkHolding = false;
+// Reuses the real micTip component/micTipSeen flag (see its own
+// declaration below, shared with the now-hidden composer mic) -- hover
+// shows it on desktop (first hover, before it's been seen), a first press
+// shows it on touch (which never fires hover at all).
+talkMicBtn.addEventListener('mouseenter', () => { if (!micTipSeen) showMicTip(); });
+talkMicBtn.addEventListener('mouseleave', () => { if (!talkHolding) hideMicTip(); });
 talkMicBtn.addEventListener('pointerdown', async (e) => {
   e.preventDefault();
   if (talkHolding) return;
   if (mediaRecorder && mediaRecorder.state === 'recording') return; // already recording -- shouldn't happen, but don't double-start
+  if (!micTipSeen) { showMicTip(); markMicTipSeen(); } // first hold ever -- hideMicTip() in talkMicRelease() below clears it as soon as the hold ends
   talkHolding = true;
   try { talkMicBtn.setPointerCapture(e.pointerId); } catch (err) {}
   if (avatarState === 'talking' || avatarState === 'thinking') {
@@ -4018,6 +4053,7 @@ talkMicBtn.addEventListener('pointerdown', async (e) => {
 function talkMicRelease() {
   if (!talkHolding) return;
   talkHolding = false;
+  hideMicTip(); // released -- whatever it had to say, the gesture it describes is already done
   if (mediaRecorder && mediaRecorder.state === 'recording' && holdControlled) {
     mediaRecorder.stop(); // release: end the turn right now, no silence wait at all
   }
