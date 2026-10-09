@@ -613,6 +613,12 @@
      `[hidden]{display:none}` -- without this, the real wireLivePaneToggle()
      toggle above would silently do nothing visually. */
   .call-layout[hidden], .chat-panel[hidden]{display:none !important;}
+
+  /* Chat bubbles fill more of the transcript pane's own width, per
+     explicit ask -- the base 80% max-width (sized for index.html's much
+     wider two-column call view) read as narrow on this panel's fixed
+     ~340-380px sidebar. */
+  .chat-bubble{max-width:94%;}
 </style>
 </head>
 <body>
