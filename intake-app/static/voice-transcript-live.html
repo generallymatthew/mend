@@ -549,6 +549,37 @@
     .video-area.live-split{flex-direction:column;}
     .live-split .call-layout, .live-split .chat-panel{flex:1 1 auto; min-width:0; max-width:none;}
   }
+  /* FAB: bottom-right of the chat panel (absolute within it, not the
+     viewport, so it can't drift over the composer on a short phone
+     screen). Hidden above 640px -- desktop/tablet keep the existing
+     top-nav Hide/Show voice toggle instead. Base rule has to come before
+     its own @media override below for the cascade to flip it on under
+     640px (same selector, same specificity -- later source wins). */
+  /* bottom:132px clears the composer's input row + hint line below it
+     (measured ~115px tall together) with a real gap -- a fixed offset
+     rather than something composer-relative since the composer isn't a
+     positioned ancestor the FAB can anchor to without restructuring it. */
+  .voice-fab{display:none; position:absolute; right:16px; bottom:132px; width:56px; height:56px; border-radius:50%; align-items:center; justify-content:center; border:none; background:var(--ink); color:var(--paper); cursor:pointer; box-shadow:0 10px 24px -8px rgba(23,55,46,.45); z-index:10; font-size:0;}
+  .voice-fab::before{content:''; width:24px; height:24px; background-repeat:no-repeat; background-position:center; background-size:contain; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F6F1E7' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Ccircle cx='12' cy='12' r='2.75' fill='%23F6F1E7' stroke='none'/%3E%3C/svg%3E");}
+  /* Modal close: top-right of the voice modal's own header, same icon-
+     square scale as the top nav's other controls. */
+  .voice-modal-close{display:none; width:34px; height:34px; padding:0; border-radius:50%; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--card); color:var(--ink-soft); cursor:pointer; flex-shrink:0; font-size:0;}
+  .voice-modal-close::before{content:''; width:16px; height:16px; background-repeat:no-repeat; background-position:center; background-size:contain; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233C4C49' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");}
+  /* Phone: stacking both panes (the 860px rule above) still makes each one
+     fight the other for a phone's limited height -- Text becomes the one
+     default view instead, with Voice reached on demand as a full-screen
+     modal via the FAB above. voicePanel.hidden is set true at load under
+     this width by the init script further down; this block only handles
+     the modal's own layout, not whether it starts open. */
+  @media (max-width:640px){
+    .live-split .chat-panel{position:relative; flex:1 1 auto; width:100%; height:100%;}
+    .live-split .call-layout{position:fixed; inset:0; z-index:40; width:100%; height:100%; height:100dvh; flex:none;}
+    .voice-fab{display:flex;}
+    .voice-modal-close{display:flex;}
+    /* The desktop-pattern nav toggles duplicate what the FAB/modal close
+       button now do on mobile -- one way to reach Voice, not two. */
+    #hideVoiceBtn, #hideTranscriptBtn, .nav-sep{display:none;}
+  }
 
   /* talkMicBtn: was a small text pill ("Tap to talk"), now the page's main
      hold-to-record control -- a large circle with the text visually
@@ -757,6 +788,11 @@
       <div class="call-main">
         <div class="call-header">
           <div class="chat-header-right">
+            <!-- Mobile-only: the voice modal's own way back to Text,
+                 mirroring the FAB that opened it. Hidden above 640px,
+                 where the top-nav's Hide voice toggle does this job
+                 instead. -->
+            <button id="voiceModalCloseBtn" class="voice-modal-close" type="button" aria-label="Close voice">Close voice</button>
             <div class="ui-toggle" hidden>
               <button class="ui-tab active" data-ui="voice">Talk</button>
               <button class="ui-tab" data-ui="text">Text</button>
@@ -894,6 +930,11 @@
       </div>
     </div>
     <div class="chat-panel" id="chatPanel">
+      <!-- Mobile-only: Text is the default view on a phone (set in the
+           init script below), reached for Voice via this FAB instead of a
+           second pane stacked under it. Hidden above 640px, where the
+           top-nav's Hide/Show voice toggle covers the same job. -->
+      <button id="voiceFabBtn" class="voice-fab" type="button" aria-label="Talk to Thimble">Talk to Thimble</button>
       <div class="chat-header">
         <div class="chat-header-left">
           <!-- Mini Thimble avatar removed per explicit ask -- the real
@@ -4360,6 +4401,21 @@ function syncPaneToggleButtons() {
 }
 hideVoiceBtn.addEventListener('click', () => { voicePanel.hidden = !voicePanel.hidden; syncPaneToggleButtons(); });
 hideTranscriptBtn.addEventListener('click', () => { chatPanel.hidden = !chatPanel.hidden; syncPaneToggleButtons(); });
+
+// Mobile: Text is the default view (voicePanel starts hidden under the
+// 640px breakpoint, checked once at load -- a mid-session resize across
+// the breakpoint is an edge case not worth a resize listener for). Voice
+// opens as a full-screen modal via voiceFabBtn and closes back to Text via
+// voiceModalCloseBtn, both just driving the same voicePanel.hidden/
+// syncPaneToggleButtons() the desktop nav toggle already uses -- the modal
+// styling itself is CSS-only (see .live-split .call-layout under the
+// 640px media query above).
+const voiceFabBtn = document.getElementById('voiceFabBtn');
+const voiceModalCloseBtn = document.getElementById('voiceModalCloseBtn');
+if (window.matchMedia('(max-width:640px)').matches) voicePanel.hidden = true;
+syncPaneToggleButtons();
+voiceFabBtn.addEventListener('click', () => { voicePanel.hidden = false; syncPaneToggleButtons(); });
+voiceModalCloseBtn.addEventListener('click', () => { voicePanel.hidden = true; syncPaneToggleButtons(); });
 
 // Reload used to RESUME an in-progress conversation (server-side
 // `conversation` survives a reload; /api/start no-ops and /api/history
