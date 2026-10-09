@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend: manager cases</title>
+<style>
+  :root {
+    --ink: #2B2A27;
+    --bg: #FFFFFF;
+    --panel-bg: #FAF9F5;
+    --border: #ECE8DE;
+    --muted: #8A8578;
+    --faint: #A8A294;
+    --accent: #2F5233;
+    --bubble: #F2EFE6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    height: 100vh;
+    overflow: hidden;
+  }
+  #app { display: flex; height: 100vh; }
+
+  /* Conversations list */
+  #sidebar {
+    width: 300px;
+    min-width: 220px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  #sidebar-header {
+    padding: 20px 20px 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #sidebar-header .title { font-size: 17px; font-weight: 600; }
+  #new-case-btn {
+    width: 28px; height: 28px; border-radius: 999px;
+    background: var(--panel-bg); color: #4A473F;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; border: none;
+  }
+  #case-list { flex: 1; overflow: auto; }
+  .case-row {
+    padding: 14px 20px;
+    display: flex; flex-direction: column; gap: 3px;
+    border-bottom: 1px solid #F3F1E9;
+    cursor: pointer;
+  }
+  .case-row.active { background: #F2F6EF; border-left: 3px solid var(--accent); }
+  .case-row .top { display: flex; justify-content: space-between; gap: 8px; }
+  .case-row .name { font-size: 14px; font-weight: 600; }
+  .case-row .time { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .case-row .preview {
+    font-size: 13px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .case-row.closed { opacity: 0.55; }
+  #sidebar-footer {
+    margin-top: auto; padding: 16px 20px; font-size: 12px;
+    color: var(--faint); border-top: 1px solid #F3F1E9;
+  }
+
+  /* Thread */
+  #thread-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  #thread-header {
+    padding: 20px 32px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  #thread-header .name { font-size: 16px; font-weight: 600; }
+  #close-case-btn {
+    font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  }
+  #messages {
+    flex: 1; overflow: auto; padding: 24px 32px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .bubble {
+    max-width: 560px; border-radius: 14px; padding: 12px 16px;
+    font-size: 14px; line-height: 1.5; white-space: pre-wrap;
+  }
+  .bubble.assistant { align-self: flex-start; background: var(--bubble); }
+  .bubble.user { align-self: flex-end; background: var(--accent); color: #fff; }
+  .bubble.pending { opacity: 0.5; }
+  #empty-state {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: var(--faint); font-size: 14px; text-align: center; padding: 40px;
+  }
+  #composer-row {
+    padding: 16px 32px 24px 32px; border-top: 1px solid var(--border);
+    display: flex; gap: 10px;
+  }
+  #composer {
+    flex: 1; border: 1px solid #E3DFD6; border-radius: 20px; background: var(--panel-bg);
+    padding: 11px 16px; font-size: 14px; resize: none; font-family: inherit;
+    max-height: 120px;
+  }
+  #send-btn {
+    width: 40px; height: 40px; border-radius: 999px; background: var(--accent);
+    border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    flex-shrink: 0;
+  }
+  #send-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Plan panel */
+  #plan-panel {
+    width: 260px; min-width: 220px; border-left: 1px solid var(--border);
+    background: var(--panel-bg); display: flex; flex-direction: column;
+  }
+  #plan-header {
+    padding: 20px 20px 14px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  #plan-header .title { font-size: 13px; font-weight: 600; color: #6B6758; }
+  #plan-steps { padding: 0 20px; display: flex; flex-direction: column; gap: 16px; overflow: auto; flex: 1; }
+  .step { display: flex; flex-direction: column; gap: 6px; }
+  .step .row { display: flex; gap: 10px; align-items: flex-start; }
+  .step .check {
+    margin-top: 2px; width: 16px; height: 16px; border-radius: 999px; flex-shrink: 0; cursor: pointer;
+    border: 1.5px solid #D8D2C3; display: flex; align-items: center; justify-content: center;
+  }
+  .step.done .check { background: var(--accent); border-color: var(--accent); }
+  .step.done .check svg { display: block; }
+  .step:not(.done) .check svg { display: none; }
+  .step-text {
+    flex: 1; font-size: 13px; line-height: 1.4; outline: none;
+    border-radius: 4px; padding: 1px 3px;
+  }
+  .step-text:focus { background: #fff; }
+  .step.done .step-text { color: var(--muted); text-decoration: line-through; }
+  .step-note {
+    margin-left: 26px; font-size: 12px; line-height: 1.4; color: var(--muted);
+    font-style: italic; outline: none; min-height: 14px;
+  }
+  .step-note:empty::before { content: attr(data-placeholder); color: var(--faint); font-style: normal; }
+  #add-step-row { display: flex; gap: 8px; align-items: center; padding: 14px 20px 20px 20px; }
+  #add-step-row input {
+    flex: 1; border: 1px solid #E3DFD6; border-radius: 6px; padding: 7px 10px;
+    font-size: 13px; font-family: inherit;
+  }
+  #add-step-row button {
+    border: none; background: none; color: var(--faint); font-size: 16px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <div class="title">Cases</div>
+      <button id="new-case-btn" title="New case">+</button>
+    </div>
+    <div id="case-list"></div>
+    <div id="sidebar-footer">Names stay out of this by default.</div>
+  </div>
+
+  <div id="thread-col">
+    <div id="thread-header" style="display:none">
+      <div class="name" id="thread-title"></div>
+      <button id="close-case-btn">Close case</button>
+    </div>
+    <div id="messages" style="display:none"></div>
+    <div id="empty-state">Pick a case on the left, or start a new one.</div>
+    <div id="composer-row" style="display:none">
+      <textarea id="composer" rows="1" placeholder="Message"></textarea>
+      <button id="send-btn" title="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 11L21 3L13 21L11 13L3 11Z" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="plan-panel" style="display:none">
+    <div id="plan-header">
+      <div class="title">Plan so far</div>
+    </div>
+    <div id="plan-steps"></div>
+    <div id="add-step-row">
+      <input id="add-step-input" placeholder="add a step">
+      <button id="add-step-btn">+</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentCaseId = null;
+let cases = [];
+
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() / 1000 - ts;
+  if (diff < 60) return "now";
+  if (diff < 3600) return Math.floor(diff / 60) + "m";
+  if (diff < 86400) return Math.floor(diff / 3600) + "h";
+  return Math.floor(diff / 86400) + "d";
+}
+
+async function loadCases() {
+  const res = await fetch("/api/cases");
+  cases = await res.json();
+  renderCaseList();
+}
+
+function renderCaseList() {
+  const list = document.getElementById("case-list");
+  list.innerHTML = "";
+  for (const c of cases) {
+    const row = document.createElement("div");
+    row.className = "case-row" + (c.id === currentCaseId ? " active" : "") + (c.status === "closed" ? " closed" : "");
+    const name = c.tension_summary || "New case";
+    const preview = c.next_action || c.last_action || "Just opened";
+    row.innerHTML = `
+      <div class="top"><div class="name">${escapeHtml(name)}</div><div class="time">${timeAgo(c.updated_at)}</div></div>
+      <div class="preview">${escapeHtml(preview)}</div>
+    `;
+    row.onclick = () => openCase(c.id);
+    list.appendChild(row);
+  }
+}
+
+async function createCase() {
+  const res = await fetch("/api/cases", { method: "POST" });
+  const c = await res.json();
+  cases.unshift(c);
+  renderCaseList();
+  await openCase(c.id, true);
+}
+
+async function openCase(caseId, isNew) {
+  currentCaseId = caseId;
+  renderCaseList();
+  document.getElementById("empty-state").style.display = "none";
+  document.getElementById("thread-header").style.display = "flex";
+  document.getElementById("messages").style.display = "flex";
+  document.getElementById("composer-row").style.display = "flex";
+  document.getElementById("plan-panel").style.display = "flex";
+
+  const res = await fetch(`/api/cases/${caseId}`);
+  const data = await res.json();
+  renderThread(data);
+
+  if (isNew || data.messages.length === 0) {
+    const messagesEl = document.getElementById("messages");
+    const pending = appendBubble("assistant", "...", true);
+    const r = await fetch(`/api/cases/${caseId}/start`, { method: "POST" });
+    const body = await r.json();
+    pending.remove();
+    appendBubble("assistant", body.reply);
+    updateCaseFromResult(body.case);
+  }
+}
+
+function renderThread(data) {
+  document.getElementById("thread-title").textContent = data.case.tension_summary || "New case";
+  const messagesEl = document.getElementById("messages");
+  messagesEl.innerHTML = "";
+  for (const m of data.messages) {
+    appendBubble(m.role, m.content);
+  }
+  renderPlan(data.plan);
+}
+
+function appendBubble(role, text, pending) {
+  const messagesEl = document.getElementById("messages");
+  const b = document.createElement("div");
+  b.className = "bubble " + role + (pending ? " pending" : "");
+  b.textContent = text;
+  messagesEl.appendChild(b);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return b;
+}
+
+function updateCaseFromResult(updatedCase) {
+  const idx = cases.findIndex((c) => c.id === updatedCase.id);
+  if (idx >= 0) cases[idx] = updatedCase;
+  else cases.unshift(updatedCase);
+  cases.sort((a, b) => b.updated_at - a.updated_at);
+  renderCaseList();
+  document.getElementById("thread-title").textContent = updatedCase.tension_summary || "New case";
+}
+
+async function sendMessage() {
+  const composer = document.getElementById("composer");
+  const text = composer.value.trim();
+  if (!text || !currentCaseId) return;
+  composer.value = "";
+  composer.style.height = "auto";
+  appendBubble("user", text);
+  document.getElementById("send-btn").disabled = true;
+  const pending = appendBubble("assistant", "...", true);
+  try {
+    const res = await fetch(`/api/cases/${currentCaseId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: text }),
+    });
+    const body = await res.json();
+    pending.remove();
+    appendBubble("assistant", body.reply);
+    updateCaseFromResult(body.case);
+  } finally {
+    document.getElementById("send-btn").disabled = false;
+  }
+}
+
+async function closeCase() {
+  if (!currentCaseId) return;
+  const res = await fetch(`/api/cases/${currentCaseId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "closed" }),
+  });
+  const updated = await res.json();
+  updateCaseFromResult(updated);
+}
+
+// --- Plan panel ---
+
+function renderPlan(steps) {
+  const container = document.getElementById("plan-steps");
+  container.innerHTML = "";
+  for (const s of steps) {
+    container.appendChild(renderStep(s));
+  }
+}
+
+function renderStep(s) {
+  const wrap = document.createElement("div");
+  wrap.className = "step" + (s.done ? " done" : "");
+
+  const row = document.createElement("div");
+  row.className = "row";
+
+  const check = document.createElement("div");
+  check.className = "check";
+  check.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M4 12L9 17L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  check.onclick = async () => {
+    const res = await fetch(`/api/cases/${currentCaseId}/plan/${s.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: !s.done }),
+    });
+    renderPlan(await res.json());
+  };
+
+  const text = document.createElement("div");
+  text.className = "step-text";
+  text.contentEditable = "true";
+  text.textContent = s.text;
+  text.onblur = async () => {
+    if (text.textContent.trim() === s.text) return;
+    const res = await fetch(`/api/cases/${currentCaseId}/plan/${s.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text.textContent.trim() }),
+    });
+    renderPlan(await res.json());
+  };
+
+  row.appendChild(check);
+  row.appendChild(text);
+  wrap.appendChild(row);
+
+  const note = document.createElement("div");
+  note.className = "step-note";
+  note.contentEditable = "true";
+  note.dataset.placeholder = s.done ? "add a note on how it went" : "add a note when it's done";
+  note.textContent = s.note || "";
+  note.onblur = async () => {
+    if ((note.textContent.trim() || null) === s.note) return;
+    const res = await fetch(`/api/cases/${currentCaseId}/plan/${s.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: note.textContent.trim() }),
+    });
+    renderPlan(await res.json());
+  };
+  wrap.appendChild(note);
+
+  return wrap;
+}
+
+async function addStep() {
+  const input = document.getElementById("add-step-input");
+  const text = input.value.trim();
+  if (!text || !currentCaseId) return;
+  input.value = "";
+  const res = await fetch(`/api/cases/${currentCaseId}/plan`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  renderPlan(await res.json());
+}
+
+document.getElementById("new-case-btn").onclick = createCase;
+document.getElementById("close-case-btn").onclick = closeCase;
+document.getElementById("send-btn").onclick = sendMessage;
+document.getElementById("add-step-btn").onclick = addStep;
+document.getElementById("add-step-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addStep();
+});
+const composerEl = document.getElementById("composer");
+composerEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+composerEl.addEventListener("input", () => {
+  composerEl.style.height = "auto";
+  composerEl.style.height = composerEl.scrollHeight + "px";
+});
+
+loadCases();
+</script>
+</body>
+</html>

@@ -1,14 +1,43 @@
 # manager-app
 
-UI mockup for a conflict-case manager tool for people managers, not employees. See `STATUS.md`'s "New product idea sketched and mocked: `manager-app`" entry for the full writeup of the flow and design decisions.
+A conflict-case manager for people managers, not employees. A manager opens a case about a direct report in conflict (with a peer, with someone on another team, or with another direct report), talks it through with Thimble as one continuous chat, and keeps a running plan of agreed next steps. See `STATUS.md`'s "New product idea sketched and mocked: `manager-app`" entry for the original design writeup, and the docs below for the fuller reasoning:
 
-- `App.dc.html` — the mockup itself: a two-pane chat UI (conversation list left, one continuous thread right) with a right-side "plan so far" checklist panel.
-- `canvas.json` — layout metadata from the Claude Artifact (Design canvas) these were authored in.
+- `PHILOSOPHY.md`: the product philosophy, conflict as task/process/relationship, why task conflict mutates into personal conflict, why peer-led resolution outlasts managerial arbitration, and the core reframe (action plan, not "conflict resolution").
+- `WORKFLOW.md`: the concrete manager-facing flow, the step-by-step action-plan pattern, case-state persistence without breaking anonymity, and the decoupled hand-off into a peer-to-peer session.
+- `THIMBLE_MINDSET.md`: the design-conversation notes this app's facilitator persona is drawn from. The actual running prompt is `../facilitator-case-plan-system-prompt.md`, which integrates this with `PHILOSOPHY.md` and `WORKFLOW.md`.
+- `App.dc.html` / `canvas.json`: the original UI mockup, authored as a Claude Artifact (Design canvas). The real frontend is `static/index.html`, which implements the same two-pane chat layout plus the right-side "plan so far" panel. The mockup is kept for reference; its live editable version is at https://claude.ai/artifact/8HrMPhjifgqAUiKVzPHx2L, and it won't render standalone (it references `./support.js`, a runtime only the Artifact page provides).
 
-These are `.dc.html` files from the Claude Artifact design-canvas format (they reference `./support.js`, a runtime the Artifact page provides) — they won't render standalone by opening `App.dc.html` directly in a browser. View/edit the live version at the original artifact: https://claude.ai/artifact/8HrMPhjifgqAUiKVzPHx2L
+## What's real here
 
-Static mockup only. No backend, not wired into any other app in this repo.
+A working FastAPI backend plus a plain HTML/JS frontend, single-user, local-only, no build step, same pattern as this repo's other small apps (`../intake-app`, `../manager-coaching-app`). Text only, no voice.
 
-- `PHILOSOPHY.md`: the product philosophy behind this app: conflict as task/process/relationship, why task conflict mutates into personal conflict, why peer-led resolution outlasts managerial arbitration, and the core reframe (action plan, not "conflict resolution").
-- `WORKFLOW.md`: the concrete manager-facing flow: the step-by-step action-plan pattern, case-state persistence without breaking anonymity, and the decoupled hand-off into a peer-to-peer session.
-- `THIMBLE_MINDSET.md`: draft system-prompt material for this app's facilitator, written to be integrated once there's a real backend here (none of it is wired into a running prompt yet).
+Persistence is deliberately narrow, matching `WORKFLOW.md`'s anonymity design: each case's SQLite record holds only a role-anonymized state anchor (`tension_summary` / `last_action` / `next_action`, written by the facilitator itself via its `<mend_signal>` block) and the plan steps, never a transcript and never a name. The actual conversation text lives only in the running server process's memory and is lost on restart; reopening a case after a restart re-seeds a fresh conversation from the stored anchor and plan instead of replaying old messages, so Thimble still picks the case back up without needing the exact prior wording.
+
+Verified live against the real Claude API: creating a case, getting the opening line ("What's going on?"), a multi-turn conversation that correctly built up `tension_summary` while never storing a name, and plan-step add/toggle/note all round-tripped correctly. Caught and fixed one real bug this way: an early version of the system prompt let the facilitator's own reply text echo back a name the manager had used ("what did Marcus's feedback look like"), even though the persisted anchor was already correctly role-based. The prompt now says explicitly this applies to every reply, not just what gets saved, and a retest confirmed it holds.
+
+Not yet built: the "managing up" translator and the decoupled hand-off into a peer-to-peer session, both described in `WORKFLOW.md` but not wired into the prompt's actual behavior or any UI affordance yet (the prompt does tell Thimble to *offer* the hand-off in conversation, but there's no button or endpoint that actually creates one).
+
+## Setup
+
+```bash
+cd manager-app
+python3.11 -m venv .venv   # or any Python 3.10-3.12
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+You need your own Anthropic API key (from console.anthropic.com). Create a file called `.env` in this directory (it's git-ignored, never commit it or paste it anywhere else) containing:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+## Run
+
+```bash
+uvicorn server:app --reload --port 8426
+```
+
+Open http://localhost:8426 in a browser. Click the `+` next to "Cases" to start a new one; Thimble opens with "What's going on?"
+
+`cases.db` (SQLite, git-ignored) is created in this directory on first run.
