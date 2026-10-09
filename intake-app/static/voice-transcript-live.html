@@ -512,11 +512,18 @@
      a real hold-to-talk circle (see its own pointerdown/pointerup wiring
      in the script, replacing the dormant tap-to-toggle click handler). */
   .video-area.live-split{flex-direction:row; gap:16px; align-items:stretch;}
-  .live-split .call-layout{flex:1.5 1 480px; min-width:0;}
-  .live-split .chat-panel{flex:1 1 360px; min-width:300px;}
+  /* Voice pane fills whatever's left; the transcript is a narrow fixed
+     sidebar, not an equal half -- per explicit correction, the voice
+     stage should "take all the rest of the screen," not share it evenly. */
+  .live-split .call-layout{flex:1 1 auto; min-width:0;}
+  .live-split .chat-panel{flex:0 0 340px; min-width:300px; max-width:380px;}
+  /* When the voice pane is hidden, the transcript is the only thing left
+     -- let it fill the freed width instead of staying pinned at its
+     normal narrow sidebar size. */
+  .live-split.voice-hidden .chat-panel{flex:1 1 auto; max-width:none;}
   @media (max-width:860px){
     .video-area.live-split{flex-direction:column;}
-    .live-split .call-layout, .live-split .chat-panel{flex:1 1 auto; min-width:0;}
+    .live-split .call-layout, .live-split .chat-panel{flex:1 1 auto; min-width:0; max-width:none;}
   }
 
   /* talkMicBtn: was a small text pill ("Tap to talk"), now the page's main
@@ -532,6 +539,56 @@
   .talk-mic-btn::before{content:''; position:absolute; inset:0; margin:auto; width:28px; height:28px; background-repeat:no-repeat; background-position:center; background-size:contain; filter:invert(1) brightness(2); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Crect x='9' y='2.5' width='6' height='12' rx='3'/%3E%3Cpath d='M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5'/%3E%3C/svg%3E");}
   .talk-mic-btn.recording::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='9' width='3' height='6' rx='1.5' fill='%23000'/%3E%3Crect x='8' y='5' width='3' height='14' rx='1.5' fill='%23000'/%3E%3Crect x='14' y='2' width='3' height='20' rx='1.5' fill='%23000'/%3E%3Crect x='20' y='7' width='3' height='10' rx='1.5' fill='%23000'/%3E%3C/svg%3E"); filter:none;}
   .call-controls{align-items:center;}
+
+  /* Top bar: Mend logo + Private chip, ported from the design reference
+     (voice-transcript-split.html) verbatim -- replaces call-header's old
+     Thimble-name+lock-tooltip content on this page. */
+  .top-bar-brand{display:flex; align-items:center; gap:9px;}
+  .brand-logo-mark{display:block; color:var(--ink); flex-shrink:0;}
+  .brand-mark{font-weight:800; font-size:14px; letter-spacing:-.02em; color:var(--ink); text-transform:lowercase;}
+  .privacy-chip{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); background:#17372E0D; border-radius:999px; padding:4px 9px 4px 7px;}
+  .privacy-chip svg{flex-shrink:0; color:var(--ink-soft);}
+
+  /* Hide/show rail: a ghost text button in each pane's own header, plus a
+     rail button (positioned by the frame, top corners) that reappears
+     only while that pane is hidden. See the pane-toggle script below. */
+  .ghost-hide-btn{font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-soft); background:transparent; border:1px solid var(--border); border-radius:999px; padding:5px 13px; cursor:pointer; transition:border-color 120ms ease, color 120ms ease;}
+  .ghost-hide-btn:hover{color:var(--ink); border-color:var(--ink-soft);}
+  .ghost-hide-btn.ctrl-hidden{display:none;}
+  .show-rail-btn{display:none; position:absolute; top:34px; z-index:4; font:inherit; font-size:11.5px; font-weight:600; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:7px 14px; cursor:pointer; box-shadow:0 2px 8px rgba(23,55,46,.12);}
+  .show-rail-btn.visible{display:inline-flex;}
+  #showVoiceBtn{left:30px;}
+  #showTranscriptBtn{right:30px;}
+  .live-split{position:relative;}
+  .call-main{display:flex;} /* was already flex; kept explicit since .hold-dock below needs .call-main as its positioning parent */
+
+  /* Mute, relocated from the old control-bar row onto the avatar's own
+     corner (same idea the design reference used) -- .avatar-row becomes
+     the positioning parent. */
+  .avatar-row{position:relative; display:inline-flex;}
+  .avatar-mute-btn{position:absolute; right:-4px; bottom:4px; z-index:2; width:38px; height:38px; border-radius:50%; background:var(--card); border:1px solid var(--border); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(23,55,46,.14); transition:background 120ms ease, color 120ms ease, border-color 120ms ease;}
+  .avatar-mute-btn:hover{color:var(--ink);}
+  /* .inactive, not .active -- matches the real muteBtn click handler's own
+     class name (toggled true while muted; the slash path's visibility is
+     set directly via inline style there too, not a CSS class). */
+  .avatar-mute-btn.inactive{background:#8C3B2E; border-color:#8C3B2E; color:#fff;}
+
+  /* Hold-to-talk dock: bottom-right of the voice pane (not the control
+     bar). holdRingProgress's stroke-dashoffset is driven by real mic
+     level while recording (see updateHoldRing in the script below) --
+     an honest "it's hearing you" indicator, not a decorative fake timer. */
+  .hold-dock{position:absolute; right:28px; bottom:28px; z-index:3;}
+  .hold-wrap{position:relative; width:104px; height:104px;}
+  .hold-ring{position:absolute; inset:0; pointer-events:none;}
+  .hold-ring circle{fill:none; stroke-width:3;}
+  .hold-ring .track{stroke:var(--border);}
+  .hold-ring .progress{stroke:var(--pink, #F3829A); stroke-linecap:round; transform-origin:50% 50%; transform:rotate(-90deg); transition:stroke-dashoffset 80ms linear;}
+  .hold-dock .talk-mic-btn{position:absolute; inset:9px; width:auto; height:auto;}
+  /* Both .call-main and .chat-panel set their own `display` in the author
+     stylesheet (flex), which otherwise beats the UA stylesheet's plain
+     `[hidden]{display:none}` -- without this, the real wireLivePaneToggle()
+     toggle above would silently do nothing visually. */
+  .call-layout[hidden], .chat-panel[hidden]{display:none !important;}
 </style>
 </head>
 <body>
@@ -545,15 +602,34 @@
   </div>
 
   <div id="textMode" class="video-area live-split">
+    <!-- Rail buttons that bring a hidden pane back -- can't live inside
+         the pane they reopen (it would vanish along with everything else
+         in it). Shown only while that pane is actually hidden, see the
+         pane-toggle script below. -->
+    <button id="showVoiceBtn" class="show-rail-btn" type="button">Show voice</button>
+    <button id="showTranscriptBtn" class="show-rail-btn" type="button">Show transcript</button>
     <div class="call-layout" id="voicePanel">
       <div class="call-main">
         <div class="call-header">
-          <div class="thimble-name-row">
-            <span class="chat-name">Thimble</span>
-            <button id="voiceLockBtn" class="lock-btn" type="button" aria-label="Privacy info"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></button>
-            <div class="lock-tooltip">Private. Nothing is recorded.</div>
+          <!-- Mend's own brand identity (logo mark + wordmark), not
+               Thimble's name -- Thimble is the call's own character and
+               already names itself on the state pill below; the header is
+               the company/privacy framing, same split the design reference
+               (voice-transcript-split.html) made. -->
+          <div class="top-bar-brand">
+            <svg class="brand-logo-mark" width="16" height="12" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+            <span class="brand-mark">mend</span>
+            <span class="privacy-chip">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+              Private
+            </span>
           </div>
           <div class="chat-header-right">
+            <!-- hideVoiceBtn: collapses this whole pane, leaving the
+                 transcript as the only visible surface -- showVoiceBtn
+                 (positioned by the frame, not this header) brings it back.
+                 See the pane-toggle script below. -->
+            <button id="hideVoiceBtn" class="ghost-hide-btn" type="button" aria-pressed="false">Hide</button>
             <div class="ui-toggle" hidden>
               <button class="ui-tab active" data-ui="voice">Talk</button>
               <button class="ui-tab" data-ui="text">Text</button>
@@ -589,6 +665,11 @@
                   </div>
                 </div>
               </div>
+              <!-- Real #muteBtn, relocated here (from the old control-bar
+                   row) and restyled as a small circle anchored to the
+                   avatar's own corner -- same real mute toggle, no script
+                   change, just where it visually lives now. -->
+              <button id="muteBtn" class="avatar-mute-btn" title="Mute"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
             </div>
             <div class="state-pill-row">
               <div class="state-pill" id="statePill"><b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span></div>
@@ -623,17 +704,14 @@
         <div class="call-bottom-row">
           <div class="call-controls">
             <div class="talk-transcript-box" id="talkTranscriptBox" hidden><span id="talkTranscriptText"></span></div>
-            <div class="control-bar">
+            <!-- pauseBtn/captionsToggleBtn/transcriptToggleBtn dropped from
+                 view on this page (not in the design) -- kept in the DOM,
+                 hidden, so the real JS wiring stays harmless/intact rather
+                 than deleted. -->
+            <div class="control-bar" hidden>
               <button id="pauseBtn" class="ctrl-btn" title="Pause"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg></button>
-              <button id="muteBtn" class="ctrl-btn" title="Mute"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
-              <button id="talkMicBtn" class="talk-mic-btn" type="button" hidden>Tap to talk</button>
               <button id="captionsToggleBtn" class="ctrl-btn" title="Toggle captions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3"></path></svg></button>
-              <!-- transcriptToggleBtn/transcriptPanel (voicePanel's own built-in
-                   transcript) is redundant on this page -- the chat-panel on
-                   the right IS the transcript, permanently visible. Left in
-                   the DOM (JS still wires it harmlessly) but not shown, so
-                   there's only one transcript affordance, not two. -->
-              <button id="transcriptToggleBtn" class="ctrl-btn" title="Show/hide transcript" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="14" y2="17"></line></svg></button>
+              <button id="transcriptToggleBtn" class="ctrl-btn" title="Show/hide transcript"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="14" y2="17"></line></svg></button>
             </div>
             <div class="mic-indicator" id="micIndicator" hidden>
               <span class="mic-indicator-dot" id="micIndicatorDot"></span>
@@ -650,6 +728,20 @@
             </div>
             <div class="you-caption" id="employeeCaption"></div>
             <div class="you-tile-label-row"><span class="you-tile-label">You</span> <svg id="youMuteIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" hidden><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg></div>
+          </div>
+        </div>
+        <!-- Hold-to-talk dock: bottom-right of the voice pane, not in the
+             control bar -- the one real action this page's whole left side
+             exists for. holdRing is a real progress ring, driven off the
+             actual mic level while recording (see animateAvatar's own
+             call into updateHoldRing below), not a decorative fake timer. -->
+        <div class="hold-dock">
+          <div class="hold-wrap">
+            <svg class="hold-ring" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
+              <circle class="track" cx="52" cy="52" r="48"></circle>
+              <circle class="progress" id="holdRingProgress" cx="52" cy="52" r="48" stroke-dasharray="301.59" stroke-dashoffset="301.59"></circle>
+            </svg>
+            <button id="talkMicBtn" class="talk-mic-btn" type="button" hidden>Hold to talk</button>
           </div>
         </div>
       </div>
@@ -693,6 +785,7 @@
             <button class="ui-tab" data-ui="voice">Talk</button>
             <button class="ui-tab active" data-ui="text">Text</button>
           </div>
+          <button id="hideTranscriptBtn" class="ghost-hide-btn" type="button" aria-pressed="false">Hide</button>
           <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
           <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
@@ -818,6 +911,7 @@ const transcriptToggleBtn = document.getElementById('transcriptToggleBtn');
 const callLayout = document.querySelector('.call-layout');
 const voicePanel = document.getElementById('voicePanel');
 const talkMicBtn = document.getElementById('talkMicBtn');
+const holdRingProgress = document.getElementById('holdRingProgress');
 const talkTranscriptBox = document.getElementById('talkTranscriptBox');
 const talkTranscriptText = document.getElementById('talkTranscriptText');
 const chatPanel = document.getElementById('chatPanel');
@@ -2569,7 +2663,21 @@ function animateAvatar(now) {
     }
     if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
   }
+  updateHoldRing(recording, rawLevel);
   updateCaption();
+}
+
+// Hold-to-talk's progress ring: real mic level while actually recording,
+// not a decorative fixed-duration fill -- an honest "it's hearing you"
+// indicator instead of a fake countdown. Smoothed (holdRingLvl eases
+// toward rawLevel each frame) so it reads as a breathing meter, not a
+// jittery needle.
+const HOLD_RING_LEN = 301.59; // 2 * PI * 48, matches holdRingProgress's own radius
+let holdRingLvl = 0;
+function updateHoldRing(recording, rawLevel) {
+  const target = recording ? Math.min(1, rawLevel * 3.2) : 0;
+  holdRingLvl += (target - holdRingLvl) * (recording ? 0.35 : 0.2);
+  holdRingProgress.style.strokeDashoffset = String(HOLD_RING_LEN * (1 - holdRingLvl));
 }
 
 audioEl.addEventListener('play', () => { avatarState = 'talking'; revealApp(); });
@@ -4036,6 +4144,41 @@ chatResetBtn.addEventListener('click', resetAndStart);
 // that ordering, but armLiveMode() (not enterVoiceLive()) is what actually
 // avoids re-recording over Thimble's own greeting -- see its own comment.
 //
+// Pane hide/show: each pane's own "Hide" button collapses it, letting the
+// other fill the whole frame; the rail button that brings it back can't
+// live inside the pane it reopens (it would vanish along with everything
+// else there), so it's a separate button positioned by the frame, shown
+// only while that pane is hidden. Ported from the design reference
+// (voice-transcript-split.html), adapted to toggle the real .call-main /
+// #chatPanel elements instead of its own placeholder markup.
+const hideVoiceBtn = document.getElementById('hideVoiceBtn');
+const showVoiceBtn = document.getElementById('showVoiceBtn');
+const hideTranscriptBtn = document.getElementById('hideTranscriptBtn');
+const showTranscriptBtn = document.getElementById('showTranscriptBtn');
+const liveSplitEl = document.querySelector('.video-area.live-split');
+function wireLivePaneToggle(pane, hideBtn, showBtn, otherHideBtn, soloClass) {
+  hideBtn.addEventListener('click', () => {
+    pane.hidden = true;
+    hideBtn.setAttribute('aria-pressed', 'true');
+    showBtn.classList.add('visible');
+    otherHideBtn.classList.add('ctrl-hidden'); // the one remaining visible pane loses its own Hide -- hiding it too would leave a blank frame with no way back
+    liveSplitEl.classList.add(soloClass); // lets the other (now sole) pane's own fixed flex-basis expand to fill the freed space -- see .live-split.<soloClass> below
+  });
+  showBtn.addEventListener('click', () => {
+    pane.hidden = false;
+    hideBtn.setAttribute('aria-pressed', 'false');
+    showBtn.classList.remove('visible');
+    otherHideBtn.classList.remove('ctrl-hidden');
+    liveSplitEl.classList.remove(soloClass);
+  });
+}
+// Toggles the whole #voicePanel (call-main + its own always-hidden
+// built-in transcript-panel), not just .call-main -- .call-main alone
+// would leave #voicePanel's own bordered/backgrounded box sitting empty
+// on screen once its only visible child disappeared.
+wireLivePaneToggle(voicePanel, hideVoiceBtn, showVoiceBtn, hideTranscriptBtn, 'voice-hidden');
+wireLivePaneToggle(chatPanel, hideTranscriptBtn, showTranscriptBtn, hideVoiceBtn, 'transcript-hidden');
+
 // Reload used to RESUME an in-progress conversation (server-side
 // `conversation` survives a reload; /api/start no-ops and /api/history
 // replays what was already said) -- built that way on purpose, for a
