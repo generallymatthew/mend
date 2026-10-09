@@ -352,6 +352,16 @@ def stream_facilitator_reply(messages: list[dict]):
                 if safe_len > flushed_len:
                     yield chunk({"content": full_text[flushed_len:safe_len]})
                     flushed_len = safe_len
+            # The loop above always withholds the last len(marker)-1 chars
+            # (in case they're the start of <mend_signal>) -- for a reply
+            # that never actually contains the marker, that tail never
+            # gets flushed by anything above once the stream ends, and was
+            # silently lost: every such reply was missing its last ~12
+            # characters. Same bug, same fix, as intake-app/server.py's
+            # own two copies of this same pattern.
+            if not signal_started and len(full_text) > flushed_len:
+                yield chunk({"content": full_text[flushed_len:]})
+                flushed_len = len(full_text)
     except Exception as e:
         yield chunk({"content": f"(server error calling Claude: {e})"})
         yield chunk({}, finish_reason="stop")
