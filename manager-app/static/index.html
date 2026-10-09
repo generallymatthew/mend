@@ -57,6 +57,19 @@
     font-size: 16px; cursor: pointer; border: none;
   }
   #help-btn { font-size: 13px; font-weight: 600; color: var(--muted); }
+  #sidebar-toggle {
+    width: 28px; height: 28px; border-radius: 999px; flex-shrink: 0;
+    background: var(--panel-bg); color: #33453A;
+    display: none; align-items: center; justify-content: center;
+    font-size: 15px; cursor: pointer; border: none;
+  }
+  #plan-toggle {
+    display: none;
+    font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  }
+  #plan-toggle:hover { background: var(--panel-bg); }
+  .panel-scrim { display: none; }
 
   /* Conversations list */
   #sidebar {
@@ -276,6 +289,40 @@
   #add-step-row button {
     border: none; background: none; color: var(--faint); font-size: 16px; cursor: pointer;
   }
+
+  /* Mobile: cases and plan become off-canvas drawers either side of the
+     thread, instead of three columns squeezed into one screen. Cases
+     opens by default on load; plan opens via a toggle in the thread
+     header. */
+  @media (max-width: 860px) {
+    #app { position: relative; overflow: hidden; }
+
+    #sidebar {
+      position: absolute; top: 0; bottom: 0; left: 0;
+      width: 85%; max-width: 320px; z-index: 30;
+      box-shadow: 2px 0 16px rgba(29,46,34,0.16);
+      transform: translateX(0); transition: transform .25s ease;
+    }
+    #sidebar.closed { transform: translateX(-100%); }
+
+    #plan-panel {
+      position: absolute; top: 0; bottom: 0; right: 0;
+      width: 85%; max-width: 340px; z-index: 30;
+      box-shadow: -2px 0 16px rgba(29,46,34,0.16);
+      transform: translateX(100%); transition: transform .25s ease;
+    }
+    #plan-panel.open { transform: translateX(0); }
+
+    #thread-col { width: 100%; }
+
+    #sidebar-toggle { display: flex; }
+    #plan-toggle { display: inline-block; }
+
+    .panel-scrim.show {
+      display: block; position: absolute; inset: 0;
+      background: rgba(23,41,30,0.32); z-index: 25;
+    }
+  }
 </style>
 </head>
 <body>
@@ -293,6 +340,9 @@
     </span>
   </div>
   <div class="top-nav-actions">
+    <button id="sidebar-toggle" title="Cases">
+      <svg width="15" height="11" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="0" y1="1" x2="24" y2="1"/><line x1="0" y1="9" x2="24" y2="9"/><line x1="0" y1="17" x2="24" y2="17"/></svg>
+    </button>
     <button id="help-btn" title="How this works">?</button>
     <button id="new-case-btn" title="New case">+</button>
   </div>
@@ -304,10 +354,13 @@
     <div id="sidebar-footer">Names stay out of this by default.</div>
   </div>
 
+  <div class="panel-scrim" id="panel-scrim"></div>
+
   <div id="thread-col">
     <div id="thread-header" style="display:none">
       <div class="name" id="thread-title"></div>
       <div class="actions">
+        <button id="plan-toggle">Plan</button>
         <button id="close-case-btn">Close case</button>
       </div>
     </div>
@@ -464,6 +517,7 @@ async function openCase(caseId, isNew) {
   document.getElementById("messages").style.display = "flex";
   document.getElementById("composer-row").style.display = "flex";
   document.getElementById("plan-panel").style.display = "flex";
+  closeSidebarOnMobile();
 
   const res = await fetch(`/api/cases/${caseId}`);
   const data = await res.json();
@@ -772,6 +826,49 @@ composerEl.addEventListener("input", () => {
   composerEl.style.height = "auto";
   composerEl.style.height = composerEl.scrollHeight + "px";
 });
+
+// Mobile: cases and plan are off-canvas drawers. Cases opens by default;
+// opening a case closes it so the thread is visible, and either drawer
+// can be reopened from the top nav / thread header.
+const MOBILE_QUERY = "(max-width: 860px)";
+const sidebarEl = document.getElementById("sidebar");
+const planPanelEl = document.getElementById("plan-panel");
+const scrimEl = document.getElementById("panel-scrim");
+
+function isMobile() {
+  return window.matchMedia(MOBILE_QUERY).matches;
+}
+
+function updateScrim() {
+  const open = !sidebarEl.classList.contains("closed") || planPanelEl.classList.contains("open");
+  scrimEl.classList.toggle("show", isMobile() && open);
+}
+
+function openSidebar() {
+  sidebarEl.classList.remove("closed");
+  planPanelEl.classList.remove("open");
+  updateScrim();
+}
+
+function closeSidebarOnMobile() {
+  if (isMobile()) sidebarEl.classList.add("closed");
+  updateScrim();
+}
+
+function togglePlanPanel() {
+  planPanelEl.classList.toggle("open");
+  sidebarEl.classList.add("closed");
+  updateScrim();
+}
+
+document.getElementById("sidebar-toggle").onclick = openSidebar;
+document.getElementById("plan-toggle").onclick = togglePlanPanel;
+scrimEl.onclick = () => {
+  sidebarEl.classList.add("closed");
+  planPanelEl.classList.remove("open");
+  updateScrim();
+};
+updateScrim();
 
 loadCases();
 </script>
