@@ -599,6 +599,13 @@
      `[hidden]{display:none}` -- without this, the real wireLivePaneToggle()
      toggle above would silently do nothing visually. */
   .call-layout[hidden], .chat-panel[hidden]{display:none !important;}
+
+  /* chat-hide-btn: pulled out of .chat-header-right's flex flow (see the
+     markup's own comment) and anchored to .chat-header's own corner
+     instead, so it sits cleanly top-right regardless of how many buttons
+     the rest of the header wraps to underneath it. */
+  .chat-header{position:relative;}
+  .chat-hide-btn{position:absolute; top:14px; right:16px;}
 </style>
 </head>
 <body>
@@ -764,6 +771,13 @@
     </div>
     <div class="chat-panel" id="chatPanel">
       <div class="chat-header">
+        <!-- Anchored to .chat-header's own top-right corner (see its CSS),
+             out of .chat-header-right's flex flow -- that row already
+             wraps to a second line on this panel's narrow width, which
+             left Hide competing with End session/Feedback instead of
+             sitting cleanly at the top like the voice pane's own Hide
+             button does. Per direct correction. -->
+        <button id="hideTranscriptBtn" class="ghost-hide-btn chat-hide-btn" type="button" aria-pressed="false">Hide</button>
         <div class="chat-header-left">
           <div class="chat-avatar-small">
             <div class="thimble-avatar mini" id="thimbleMiniAvatar">
@@ -795,16 +809,14 @@
             <button class="ui-tab" data-ui="voice">Talk</button>
             <button class="ui-tab active" data-ui="text">Text</button>
           </div>
-          <button id="hideTranscriptBtn" class="ghost-hide-btn" type="button" aria-pressed="false">Hide</button>
           <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
           <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
             Feedback
           </a>
-          <!-- Only matters in Text view: a dictated (voice memo) turn normally
-               gets a spoken reply back (see currentReplyShouldSpeak). This
-               lets a tester silence that without leaving Text view. -->
-          <button id="chatMuteBtn" class="mute-btn" type="button" aria-pressed="false"></button>
+          <!-- Hidden on this page, per explicit ask -- real click handler
+               (chatMuteBtn's own listener below) is harmless left wired. -->
+          <button id="chatMuteBtn" class="mute-btn" type="button" aria-pressed="false" hidden></button>
           <div class="overflow-wrap">
             <button id="chatOverflowBtn" class="overflow-btn" type="button" aria-label="More options" aria-haspopup="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
