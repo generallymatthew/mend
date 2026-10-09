@@ -439,38 +439,6 @@ async def post_message(case_id: str, body: Message):
     }
 
 
-MANAGING_UP_PROMPT = (
-    "(System note, not from the manager: they tapped \"Draft update for your boss.\" "
-    "Reply with ONLY the scripted upward-facing update itself, 2-4 sentences, nothing "
-    "else before or after it -- no preamble like \"here's a draft.\")"
-)
-
-
-@app.post("/api/cases/{case_id}/managing-up")
-async def managing_up(case_id: str):
-    with db() as conn:
-        case = get_case(conn, case_id)
-        if case is None:
-            return JSONResponse({"error": "no such case"}, status_code=404)
-        plan = get_plan_steps(conn, case_id)
-        if case_id not in CONVERSATIONS:
-            CONVERSATIONS[case_id] = []
-            seed = seed_context_message(case, plan)
-            if seed:
-                CONVERSATIONS[case_id].append({"role": "user", "content": seed, "hidden": True})
-                CONVERSATIONS[case_id].append({
-                    "role": "assistant",
-                    "content": "Got it, picking this back up.",
-                    "hidden": True,
-                })
-        CONVERSATIONS[case_id].append({"role": "user", "content": MANAGING_UP_PROMPT, "hidden": True})
-        result = facilitator_reply(case_id, conn)
-        case = get_case(conn, case_id)
-        case["roster"] = roster_for_case(case_id)
-        plan = get_plan_steps(conn, case_id)
-    return {"reply": result["reply"], "case": case, "plan": plan}
-
-
 @app.post("/api/cases/{case_id}/handoff")
 async def create_handoff(case_id: str):
     """Mints a fresh joint-session-app room code for this case's peer hand-off.

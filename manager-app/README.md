@@ -17,12 +17,13 @@ Persistence is deliberately narrow, matching `WORKFLOW.md`'s anonymity design: e
 
 Verified live against the real Claude API: creating a case, getting the opening line ("What's going on?"), a multi-turn conversation that correctly built up `tension_summary` while never storing a name, and plan-step add/toggle/note all round-tripped correctly. Caught and fixed one real bug this way: an early version of the system prompt let the facilitator's own reply text echo back a name the manager had used ("what did Marcus's feedback look like"), even though the persisted anchor was already correctly role-based. The prompt now says explicitly this applies to every reply, not just what gets saved, and a retest confirmed it holds.
 
-Both of `WORKFLOW.md`'s remaining pieces are now wired in as real actions, not just prompt text:
+One of `WORKFLOW.md`'s remaining pieces is wired in as a real action, not just prompt text:
 
-- **"Managing up" translator.** A "Draft update for your boss" button (always available once a case is open) hits `POST /api/cases/{id}/managing-up`, which asks Thimble for just the 2-4 sentence scripted upward update, nothing else, and shows it as a normal assistant turn.
 - **Peer-session hand-off.** The facilitator sets `handoff_ready: true` in its `<mend_signal>` block on the turn it actually offers the hand-off (see `facilitator-case-plan-system-prompt.md`), which surfaces a "Start peer session" banner. Clicking it hits `POST /api/cases/{id}/handoff`, which mints a `joint-session-app` room code and returns two role links (`?code=...&role=a` / `role=b`) -- the same link pattern `joint-session-app` already uses for manual pairing. No case context crosses over: the two employees land in a brand-new joint session with zero knowledge of the manager's notes, matching `WORKFLOW.md`'s "zero context leakage" guarantee. The code is idempotent per case (stored as `handoff_code`), so reopening the case or the banner shows the same links rather than minting a new room. `joint-session-app` must be running (`JOINT_SESSION_BASE_URL` env var, defaults to `http://localhost:8421`) for the links to resolve; this app doesn't start it for you.
 
 Not yet built: anything that reports the peer session's binary resolved/not-resolved status back to the manager's case -- `joint-session-app` has no mechanism today to notify anything on completion, so that's still a manual follow-up conversation, not wired automatically.
+
+The "managing up" translator (`WORKFLOW.md`'s executive-update scripting) stays purely conversational, no dedicated button: the facilitator prompt's own "Managing up, on request" section already tells Thimble to produce the scripted update when the manager asks for it in chat, which needs no app-level wiring to work.
 
 ## Setup
 

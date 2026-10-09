@@ -103,10 +103,11 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   #thread-header .name { font-size: 16px; font-weight: 600; }
-  #close-case-btn, #managing-up-btn {
+  #close-case-btn {
     font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border);
-    border-radius: 6px; padding: 6px 12px; cursor: pointer;
+    border-radius: 999px; padding: 6px 14px; cursor: pointer;
   }
+  #close-case-btn:hover { background: var(--panel-bg); }
   #thread-header .actions { display: flex; gap: 8px; }
   #handoff-banner {
     margin: 0 32px; margin-top: 16px; padding: 14px 16px; border-radius: 10px;
@@ -284,7 +285,6 @@
     <div id="thread-header" style="display:none">
       <div class="name" id="thread-title"></div>
       <div class="actions">
-        <button id="managing-up-btn" title="Draft a scripted update for your boss">Draft update for your boss</button>
         <button id="close-case-btn">Close case</button>
       </div>
     </div>
@@ -517,23 +517,6 @@ async function startHandoff() {
   renderHandoffLinks(body);
 }
 
-async function draftManagingUp() {
-  if (!currentCaseId) return;
-  const btn = document.getElementById("managing-up-btn");
-  btn.disabled = true;
-  const pending = appendBubble("assistant", "...", true);
-  try {
-    const res = await fetch(`/api/cases/${currentCaseId}/managing-up`, { method: "POST" });
-    const body = await res.json();
-    pending.remove();
-    appendBubble("assistant", body.reply);
-    updateCaseFromResult(body.case);
-    if (body.plan) renderPlan(body.plan);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
 function appendBubble(role, text, pending) {
   const messagesEl = document.getElementById("messages");
   const b = document.createElement("div");
@@ -749,7 +732,6 @@ document.getElementById("help-overlay").addEventListener("click", (e) => {
   if (e.target.id === "help-overlay") closeHelp();
 });
 document.getElementById("close-case-btn").onclick = closeCase;
-document.getElementById("managing-up-btn").onclick = draftManagingUp;
 document.getElementById("start-handoff-btn").onclick = startHandoff;
 document.getElementById("send-btn").onclick = sendMessage;
 document.getElementById("add-step-btn").onclick = addStep;
