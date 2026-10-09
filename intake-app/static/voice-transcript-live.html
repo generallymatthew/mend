@@ -565,27 +565,47 @@
   .top-nav{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--card); flex-shrink:0;}
   .top-bar-brand{display:flex; align-items:center; gap:9px; position:relative;}
   .disclaimer-tooltip{width:280px;}
-  .brand-logo-mark{display:block; color:var(--ink); flex-shrink:0;}
-  .brand-mark{font-weight:800; font-size:14px; letter-spacing:-.02em; color:var(--ink); text-transform:lowercase;}
+  /* Pink mark (the real mend-mark-pink.svg fill, #F3829A, from the brand
+     kit) instead of the ink-colored mark -- per explicit ask. Fixed fill
+     on the SVG itself now (not currentColor), so this rule only sizes it. */
+  .brand-logo-mark{display:block; flex-shrink:0;}
+  .brand-mark{font-weight:800; font-size:17px; letter-spacing:-.02em; color:var(--ink); text-transform:lowercase;}
   .privacy-chip{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); background:#17372E0D; border-radius:999px; padding:4px 9px 4px 7px;}
   .privacy-chip svg{flex-shrink:0; color:var(--ink-soft);}
   .top-nav-actions{display:flex; align-items:center; gap:10px;}
 
-  /* nav-toggle-btn: hideVoiceBtn/hideTranscriptBtn, now single toggle
-     buttons (text/aria-pressed flip between Hide/Show) living in the
-     persistent top nav rather than inside the pane they control -- see
-     the pane-toggle script below. disabled (not hidden) on whichever one
-     would hide the only pane still visible. */
-  .nav-toggle-group{display:flex; align-items:stretch; height:38px; border:1px solid var(--border); border-radius:8px; overflow:hidden; flex-shrink:0;}
-  .nav-toggle-btn{font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-soft); background:transparent; border:none; border-right:1px solid var(--border); padding:0 14px; cursor:pointer; transition:background 120ms ease, color 120ms ease;}
-  .nav-toggle-btn:last-child{border-right:none;}
-  .nav-toggle-btn:hover:not(:disabled){color:var(--ink); background:#17372E0D;}
-  .nav-toggle-btn:disabled{opacity:.4; cursor:default;}
-  /* End session: same 38px height as the toggle group/Feedback, but a
-     bolder solid-ink outline -- the one control on this bar that actually
-     ends something, deliberately heavier than the toggles' flat segmented
-     look or Feedback's soft accent chip. */
-  .end-session-btn{border-width:1.5px; border-color:var(--ink);}
+  /* hideVoiceBtn/hideTranscriptBtn: icon-only squares (secondary, frequent,
+     low-stakes), living in the persistent top nav rather than inside the
+     pane they control -- see the pane-toggle script below. Real text
+     content still flips Hide/Show (updateStatePill-equivalent logic sets
+     it) and serves as the accessible name -- just visually hidden
+     (font-size:0) behind the icon. aria-pressed=true means that pane is
+     currently hidden; the icon/background swap off that attribute
+     directly, no extra JS. disabled (not hidden) on whichever one would
+     hide the only pane still visible. */
+  .nav-icon-btn{position:relative; width:34px; height:34px; padding:0; font-size:0; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--ink-soft); cursor:pointer; flex-shrink:0; transition:background 120ms ease, border-color 120ms ease, color 120ms ease;}
+  .nav-icon-btn::before{content:''; position:absolute; inset:0; margin:auto; width:16px; height:16px; background-repeat:no-repeat; background-position:center; background-size:contain;}
+  .nav-icon-btn:hover:not(:disabled){border-color:var(--ink-soft); color:var(--ink);}
+  .nav-icon-btn:disabled{opacity:.35; cursor:default;}
+  .nav-icon-btn[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--ink-soft); color:var(--ink);}
+  /* Voice toggle: a speaker/mic glyph. */
+  .nav-icon-btn::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233C4C49' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 4.5 5 8H2v8h3l4.5 3.5z'/%3E%3Cpath d='M17 8a5 5 0 0 1 0 8'/%3E%3C/svg%3E");}
+  .nav-icon-btn[aria-pressed="true"]::before, .nav-icon-btn:hover:not(:disabled)::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317372E' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 4.5 5 8H2v8h3l4.5 3.5z'/%3E%3Cpath d='M17 8a5 5 0 0 1 0 8'/%3E%3C/svg%3E");}
+  /* Chat toggle: a message-bubble glyph -- distinct shape from the voice
+     button's, so which control is which doesn't rely on reading text. */
+  .nav-icon-chat::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233C4C49' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");}
+  .nav-icon-chat[aria-pressed="true"]::before, .nav-icon-chat:hover:not(:disabled)::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2317372E' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");}
+  .nav-sep{width:1px; height:22px; background:var(--border-soft); margin:0 2px; flex-shrink:0;}
+  /* End session: plain outline, same 34-38px scale as the rest -- the
+     occasional action, needs a label, turns red only on hover/focus as a
+     light warning cue rather than standing out by default. */
+  .end-session-btn{border-color:var(--border);}
+  .end-session-btn:hover{border-color:#8C3B2E; color:#8C3B2E;}
+  /* Feedback: the one solid/filled action on the bar -- per the chosen
+     design, it's deliberately the control most worth noticing, not the
+     soft accent chip it was before. */
+  .feedback-btn{background:var(--ink); color:var(--paper);}
+  .feedback-btn:hover{background:#0e241e;}
   .live-split{position:relative;}
   .call-main{display:flex;} /* was already flex; kept explicit since .hold-dock below needs .call-main as its positioning parent */
   /* Skip dropped per explicit ask -- real element/JS kept (updateStatePill
@@ -661,7 +681,7 @@
        rail-button fallback. See the pane-toggle script below. -->
   <div class="top-nav">
     <div class="top-bar-brand">
-      <svg class="brand-logo-mark" width="16" height="12" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+      <svg class="brand-logo-mark" width="19" height="14" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
       <span class="brand-mark">mend</span>
       <span class="privacy-chip">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
@@ -678,14 +698,20 @@
       <div class="lock-tooltip disclaimer-tooltip">Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
     </div>
     <div class="top-nav-actions">
-      <!-- Segmented-control pair, a deliberately different pattern from
-           the pill-button language the rest of the nav/app uses -- two
-           flat tabs sharing one outline, not two separate floating pills.
-           Per explicit ask for a distinct style, not just matched heights. -->
-      <div class="nav-toggle-group">
-        <button id="hideVoiceBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide voice</button>
-        <button id="hideTranscriptBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide chat</button>
-      </div>
+      <!-- Option C from the design review (claude.ai/artifact/W6yD3DFWppFzt79cfvhNqJ),
+           picked over a segmented-toggle pair and a text-only bar: deliberate
+           hierarchy instead of one uniform button style -- icon-only squares
+           for the frequent/low-stakes toggles, an outlined text button for
+           the occasional End session, and the one solid/filled action
+           (Feedback) reads as the thing most worth noticing. Text stays as
+           each toggle's real content (visually hidden, font-size:0 below)
+           so updateStatePill's existing textContent writes ("Hide voice" /
+           "Show voice") still serve as the real accessible name -- only the
+           icon swap/pressed-background is new, driven by the same
+           aria-pressed attribute the script already sets, no new JS. -->
+      <button id="hideVoiceBtn" class="nav-icon-btn" type="button" aria-pressed="false">Hide voice</button>
+      <button id="hideTranscriptBtn" class="nav-icon-btn nav-icon-chat" type="button" aria-pressed="false">Hide chat</button>
+      <div class="nav-sep"></div>
       <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
       <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
@@ -828,17 +854,12 @@
     <div class="chat-panel" id="chatPanel">
       <div class="chat-header">
         <div class="chat-header-left">
-          <div class="chat-avatar-small">
-            <div class="thimble-avatar mini" id="thimbleMiniAvatar">
-              <div class="thimble-ripple" id="thimbleMiniRippleA" hidden></div>
-              <div class="thimble-ring" id="thimbleMiniRing">
-                <div class="thimble-body" id="thimbleMiniBody">
-                  <div class="thimble-blend" id="thimbleMiniBlend"></div>
-                  <div class="thimble-mouth" id="thimbleMiniMouth"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <!-- Mini Thimble avatar removed per explicit ask -- the real
+               elements (thimbleMiniAvatar etc.) and thimbleInstance() that
+               used to query them are untouched; thimbleInstance() just
+               gets null for each getElementById call now, which it
+               already tolerates (the motion engine that would've
+               dereferenced them is disabled -- see animateAvatar). -->
           <div class="chat-header-text">
             <div class="thimble-name-row">
               <span class="chat-name">Thimble</span>
