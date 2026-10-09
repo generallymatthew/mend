@@ -587,7 +587,11 @@
      kit) instead of the ink-colored mark -- per explicit ask. Fixed fill
      on the SVG itself now (not currentColor), so this rule only sizes it. */
   .brand-logo-mark{display:block; flex-shrink:0;}
-  .brand-mark{font-weight:800; font-size:17px; letter-spacing:-.02em; color:var(--ink); text-transform:lowercase;}
+  /* Sized to match the Feedback pill's 38px height/visual weight on the
+     opposite end of this same bar, per explicit ask -- the mark scaled up
+     from its original 19x14 keeping the source SVG's aspect ratio, the
+     wordmark bumped to match. */
+  .brand-mark{font-weight:800; font-size:26px; letter-spacing:-.02em; color:var(--ink); text-transform:lowercase;}
   .privacy-chip{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); background:#17372E0D; border-radius:999px; padding:4px 9px 4px 7px;}
   .privacy-chip svg{flex-shrink:0; color:var(--ink-soft);}
   .top-nav-actions{display:flex; align-items:center; gap:10px;}
@@ -704,7 +708,7 @@
        rail-button fallback. See the pane-toggle script below. -->
   <div class="top-nav">
     <div class="top-bar-brand">
-      <svg class="brand-logo-mark" width="19" height="14" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+      <svg class="brand-logo-mark" width="29" height="21" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
       <span class="brand-mark">mend</span>
       <span class="privacy-chip">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
