@@ -123,6 +123,7 @@ def init_db():
                 id TEXT PRIMARY KEY,
                 status TEXT NOT NULL DEFAULT 'open',
                 stage TEXT,
+                title TEXT,
                 tension_summary TEXT,
                 last_action TEXT,
                 next_action TEXT,
@@ -138,6 +139,8 @@ def init_db():
             conn.execute("ALTER TABLE cases ADD COLUMN handoff_ready INTEGER NOT NULL DEFAULT 0")
         if "handoff_code" not in existing_cols:
             conn.execute("ALTER TABLE cases ADD COLUMN handoff_code TEXT")
+        if "title" not in existing_cols:
+            conn.execute("ALTER TABLE cases ADD COLUMN title TEXT")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS plan_steps (
                 id TEXT PRIMARY KEY,
@@ -164,6 +167,7 @@ def case_row_to_dict(row: sqlite3.Row) -> dict:
         "id": row["id"],
         "status": row["status"],
         "stage": row["stage"],
+        "title": row["title"],
         "tension_summary": row["tension_summary"],
         "last_action": row["last_action"],
         "next_action": row["next_action"],
@@ -378,6 +382,8 @@ def facilitator_reply(case_id: str, conn: sqlite3.Connection) -> dict:
         for key in ("stage", "tension_summary", "last_action", "next_action", "floor_triggered"):
             if signal.get(key) is not None:
                 fields[key] = signal[key]
+        if signal.get("case_title"):
+            fields["title"] = signal["case_title"]
         if signal.get("handoff_ready") is not None:
             fields["handoff_ready"] = int(bool(signal["handoff_ready"]))
         if fields:

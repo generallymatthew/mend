@@ -414,8 +414,8 @@ function renderCaseList() {
   for (const c of cases) {
     const row = document.createElement("div");
     row.className = "case-row" + (c.id === currentCaseId ? " active" : "") + (c.status === "closed" ? " closed" : "");
-    const name = c.tension_summary || "New case";
-    const preview = c.next_action || c.last_action || "Just opened";
+    const name = c.title || "New case";
+    const preview = c.next_action || c.last_action || c.tension_summary || "Just opened";
     row.innerHTML = `
       <div class="top"><div class="name">${escapeHtml(name)}</div><div class="time">${timeAgo(c.updated_at)}</div></div>
       <div class="preview">${escapeHtml(preview)}</div>
@@ -460,7 +460,7 @@ async function openCase(caseId, isNew) {
 
 function renderThread(data) {
   if (data.case.roster) roster = data.case.roster;
-  document.getElementById("thread-title").textContent = data.case.tension_summary || "New case";
+  document.getElementById("thread-title").textContent = data.case.title || "New case";
   const messagesEl = document.getElementById("messages");
   messagesEl.innerHTML = "";
   for (const m of data.messages) {
@@ -605,7 +605,7 @@ function updateCaseFromResult(updatedCase) {
   else cases.unshift(updatedCase);
   cases.sort((a, b) => b.updated_at - a.updated_at);
   renderCaseList();
-  document.getElementById("thread-title").textContent = updatedCase.tension_summary || "New case";
+  document.getElementById("thread-title").textContent = updatedCase.title || "New case";
   renderHandoffBanner(updatedCase);
   renderIncident(updatedCase);
 }

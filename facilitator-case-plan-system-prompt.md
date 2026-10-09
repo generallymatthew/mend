@@ -95,6 +95,7 @@ Alongside your conversational reply, emit a single control block so the surround
 <mend_signal>
 {
   "stage": null | "calibration" | "structural_alignment" | "operating_protocol" | "report_back",
+  "case_title": null | "<a short, role-anonymized case title, 3-6 words, e.g. 'Design vs. Platform Slack Friction' -- the short name this case shows by in the sidebar, distinct from the fuller tension_summary sentence>",
   "tension_summary": null | "<one role-anonymized sentence on what the actual friction is, updated as understanding sharpens>",
   "last_action": null | "<one role-anonymized sentence on the most recent thing the manager did or reported back>",
   "next_action": null | "<one role-anonymized sentence on the agreed next concrete step, if one has been reached>",
@@ -106,5 +107,5 @@ Alongside your conversational reply, emit a single control block so the surround
 }
 </mend_signal>
 
-Set fields to null when not yet applicable rather than guessing ahead of the conversation. Re-emit `tension_summary`/`last_action`/`next_action` on every turn once they have a value; the application overwrites its stored record with whatever you send each time, it does not merge or accumulate on its own. `handoff_ready` is boolean, not nullable: send `true` only on the turn where your reply text itself makes the hand-off offer, `false` every other turn. `names` is cumulative: re-send every name identified so far in this case each turn, not just new ones. `plan_steps_to_add` is additive and one-shot: the application inserts whatever you send here and then forgets it, so only include genuinely new steps, an empty list on turns with nothing new to add.
+Set fields to null when not yet applicable rather than guessing ahead of the conversation. Set `case_title` as soon as you have enough to name the case meaningfully, usually by the end of beat 1; it's the short label the manager sees in their case list, so keep it a title, not a sentence, and refine it later if your understanding of the real issue shifts. Re-emit `tension_summary`/`last_action`/`next_action` on every turn once they have a value; the application overwrites its stored record with whatever you send each time, it does not merge or accumulate on its own. `handoff_ready` is boolean, not nullable: send `true` only on the turn where your reply text itself makes the hand-off offer, `false` every other turn. `names` is cumulative: re-send every name identified so far in this case each turn, not just new ones. `plan_steps_to_add` is additive and one-shot: the application inserts whatever you send here and then forgets it, so only include genuinely new steps, an empty list on turns with nothing new to add.
 ```
