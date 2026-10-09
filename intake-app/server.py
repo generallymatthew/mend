@@ -1165,7 +1165,7 @@ SURVEY_RADIO_FIELDS = {
     "comparison": {"better", "same", "worse", "na"},
     "would_reuse": {"yes", "maybe", "no"},
     "emotional_shift": {"calmer", "same", "worse"},
-    "thimble_relation": {"tool", "presence", "person"},
+    "thimble_relation": {"tool", "presence", "comforting_presence", "person"},
     "thimble_comforting": {"yes", "somewhat", "no"},
     "granted_authority": {"yes", "somewhat", "no", "not_sure"},
 }

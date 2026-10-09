@@ -99,15 +99,6 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="q-label">Did Thimble feel helpful and fair overall?</div>
-      <div class="choice-row" data-radio="felt_fair">
-        <label class="choice"><input type="radio" name="felt_fair" value="yes"> Yes, it felt helpful and neutral</label>
-        <label class="choice"><input type="radio" name="felt_fair" value="somewhat"> Somewhat, it had moments that felt off</label>
-        <label class="choice"><input type="radio" name="felt_fair" value="no"> No, it didn't feel helpful or fair</label>
-      </div>
-    </div>
-
     <div class="section-label">Did it actually work</div>
 
     <div class="card">
@@ -158,24 +149,6 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="q-label">How likely are you to recommend this to a coworker dealing with something similar?</div>
-      <div class="scale scale-11" id="q-nps">
-        <button type="button" data-val="0">0</button>
-        <button type="button" data-val="1">1</button>
-        <button type="button" data-val="2">2</button>
-        <button type="button" data-val="3">3</button>
-        <button type="button" data-val="4">4</button>
-        <button type="button" data-val="5">5</button>
-        <button type="button" data-val="6">6</button>
-        <button type="button" data-val="7">7</button>
-        <button type="button" data-val="8">8</button>
-        <button type="button" data-val="9">9</button>
-        <button type="button" data-val="10">10</button>
-      </div>
-      <div class="scale-labels"><span>Not at all likely</span><span>Extremely likely</span></div>
-    </div>
-
     <div class="section-label">How you're feeling now</div>
 
     <div class="card">
@@ -190,37 +163,13 @@
     <div class="section-label">You and Thimble</div>
 
     <div class="card">
-      <div class="q-label">How did you relate to Thimble during this conversation?</div>
+      <div class="q-label">How did interacting with Thimble feel?</div>
       <div class="choice-row" data-radio="thimble_relation">
         <label class="choice"><input type="radio" name="thimble_relation" value="tool"> Mostly like using a tool or app</label>
-        <label class="choice"><input type="radio" name="thimble_relation" value="presence"> Somewhat like there was a presence or character there</label>
+        <label class="choice"><input type="radio" name="thimble_relation" value="presence"> Like there was a presence there, but not comforting</label>
+        <label class="choice"><input type="radio" name="thimble_relation" value="comforting_presence"> Like there was a presence there, and it was comforting</label>
         <label class="choice"><input type="radio" name="thimble_relation" value="person"> At times, somewhat like talking to a person</label>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="q-label">Did interacting with Thimble feel comforting?</div>
-      <div class="choice-row" data-radio="thimble_comforting">
-        <label class="choice"><input type="radio" name="thimble_comforting" value="yes"> Yes</label>
-        <label class="choice"><input type="radio" name="thimble_comforting" value="somewhat"> Somewhat</label>
-        <label class="choice"><input type="radio" name="thimble_comforting" value="no"> No</label>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="q-label">Did you find yourself treating Thimble's suggestions or framing as authoritative, something to defer to the way you might a person's judgment?</div>
-      <div class="choice-row" data-radio="granted_authority">
-        <label class="choice"><input type="radio" name="granted_authority" value="yes"> Yes</label>
-        <label class="choice"><input type="radio" name="granted_authority" value="somewhat"> Somewhat</label>
-        <label class="choice"><input type="radio" name="granted_authority" value="no"> No</label>
-        <label class="choice"><input type="radio" name="granted_authority" value="not_sure"> Not sure</label>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="q-label">If you did give Thimble some form of authority, what do you think it came from?</div>
-      <div class="q-hint">Its tone, its confidence, the fact it's AI, something else entirely -- or if you didn't grant it any, feel free to say why not.</div>
-      <textarea id="authority_source" placeholder="Optional"></textarea>
     </div>
 
     <div class="card">
@@ -296,7 +245,6 @@ function wireScale(id) {
   return () => val;
 }
 const getOverall = wireScale('q-overall');
-const getNps = wireScale('q-nps');
 const getAiComfort = wireScale('q-ai-comfort');
 
 // Every single-choice question block shares the same radio + highlight
@@ -341,7 +289,6 @@ submitBtn.addEventListener('click', async () => {
   const issues = Array.from(document.querySelectorAll('#issueChoices input:checked')).map(i => i.value);
   const payload = {
     overall_rating: overallRating,
-    felt_fair: getRadio('felt_fair'),
     felt_safe: getRadio('felt_safe'),
     trusted_privacy: getRadio('trusted_privacy'),
     sided: getRadio('sided'),
@@ -350,12 +297,8 @@ submitBtn.addEventListener('click', async () => {
     readiness: getRadio('readiness'),
     comparison: getRadio('comparison'),
     would_reuse: getRadio('would_reuse'),
-    nps: getNps(),
     emotional_shift: getRadio('emotional_shift'),
     thimble_relation: getRadio('thimble_relation'),
-    thimble_comforting: getRadio('thimble_comforting'),
-    granted_authority: getRadio('granted_authority'),
-    authority_source: document.getElementById('authority_source').value.trim(),
     ai_comfort_general: getAiComfort(),
     standout_moment: document.getElementById('standout_moment').value.trim(),
     trust_improvement: document.getElementById('trust_improvement').value.trim(),
