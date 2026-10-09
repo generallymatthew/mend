@@ -599,6 +599,18 @@
        voice modal's own overflow menu (Start over) isn't needed in this
        small a card either, per explicit ask. */
     #hideVoiceBtn, #hideTranscriptBtn, .nav-sep, #voicePanel .overflow-wrap{display:none;}
+    /* Captions were hidden at this width (see the plain .caption-stack
+       rule above, written for index.html's old full-bleed mobile layout)
+       because a long wrapped clause could grow tall enough to climb up
+       into the state pill sitting right above it. The modal card is
+       shorter, which only made that worse -- so per explicit ask, move
+       the avatar+pill group (.stage, normally vertically centered) up to
+       the top of the card instead of fighting for the vertical center,
+       which leaves real room underneath for captions to grow into without
+       reaching the pill. Selector beats the plain .caption-stack rule on
+       specificity regardless of source order (3 classes vs. 1). */
+    .live-split .call-layout .caption-stack{display:flex;}
+    .live-split .call-layout .stage{align-items:flex-start; padding-top:36px;}
   }
 
   /* talkMicBtn: was a small text pill ("Tap to talk"), now the page's main
