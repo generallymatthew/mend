@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mend: manager cases</title>
+<title>Loom: manager cases</title>
 <style>
   :root {
     --ink: #2B2A27;
@@ -35,13 +35,19 @@
     flex-direction: column;
   }
   #sidebar-header {
-    padding: 20px 20px 12px 20px;
+    padding: 20px 20px 10px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  #sidebar-header .title { font-size: 17px; font-weight: 600; }
+  #sidebar-header .brand { display: flex; align-items: center; gap: 7px; }
+  #sidebar-header .mend-mark { color: var(--accent); flex-shrink: 0; }
+  #sidebar-header .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
   #sidebar-header .btn-group { display: flex; gap: 8px; }
+  #sidebar-subheader {
+    padding: 2px 20px 12px 20px; font-size: 12px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
+  }
   #new-case-btn, #help-btn {
     width: 28px; height: 28px; border-radius: 999px;
     background: var(--panel-bg); color: #4A473F;
@@ -137,10 +143,11 @@
   }
   #empty-state .wrap { max-width: 440px; text-align: center; }
   #empty-state .mark {
-    width: 40px; height: 40px; border-radius: 999px; background: var(--accent);
+    width: 44px; height: 44px; border-radius: 999px; background: var(--accent);
     margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 16px; font-weight: 600;
+    color: #fff;
   }
+  #empty-state .mark svg { width: 20px; height: 14px; }
   #empty-state h1 { font-size: 18px; font-weight: 600; margin: 0 0 8px 0; }
   #empty-state p.lede { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0 0 28px 0; }
   .flow-steps {
@@ -227,12 +234,16 @@
 <div id="app">
   <div id="sidebar">
     <div id="sidebar-header">
-      <div class="title">Cases</div>
+      <div class="brand">
+        <svg class="mend-mark" width="16" height="11" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+        <span class="brand-name">Loom</span>
+      </div>
       <div class="btn-group">
         <button id="help-btn" title="How this works">?</button>
         <button id="new-case-btn" title="New case">+</button>
       </div>
     </div>
+    <div id="sidebar-subheader">Cases</div>
     <div id="case-list"></div>
     <div id="sidebar-footer">Names stay out of this by default.</div>
   </div>
@@ -276,7 +287,7 @@
 <div id="help-overlay">
   <div id="help-modal">
     <button class="close-help" title="Close">&times;</button>
-    <h1>How this works</h1>
+    <h1>How Loom works</h1>
     <div id="help-modal-body"></div>
   </div>
 </div>
@@ -306,6 +317,10 @@ async function loadCases() {
   renderEmptyState();
 }
 
+function mendMarkSvg() {
+  return `<svg width="20" height="14" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>`;
+}
+
 function flowStepsHtml() {
   return `
     <div class="flow-steps">
@@ -327,9 +342,9 @@ function renderEmptyState() {
   el.className = hasCases ? "returning" : "";
   el.innerHTML = `
     <div class="wrap">
-      <div class="mark">M</div>
+      <div class="mark">${mendMarkSvg()}</div>
       <h1>${hasCases ? "Pick a case on the left, or start a new one" : "Think through a conflict before you step into it"}</h1>
-      <p class="lede">A private space for you to work out what's going on with a direct report who's in conflict, with a peer or with someone on another team, and figure out what to actually do about it.</p>
+      <p class="lede">Loom is a private space for you to work out what's going on with a direct report who's in conflict, with a peer or with someone on another team, and figure out what to actually do about it. Weave the people back into a working relationship, not just paper over the friction.</p>
       ${flowStepsHtml()}
       ${privacyNoteHtml()}
       <button id="empty-state-cta">${hasCases ? "Start a new case" : "Open your first case"}</button>

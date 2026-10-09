@@ -1,4 +1,6 @@
-# manager-app
+# manager-app (product name: Loom)
+
+The product-facing name for this app is **Loom**, from "weaving" teams back into a working relationship rather than just mediating a one-off dispute. The directory and file names stay `manager-app` throughout the codebase; only the UI (page title, sidebar brand lockup, help copy) shows "Loom."
 
 A conflict-case manager for people managers, not employees. A manager opens a case about a direct report in conflict (with a peer, with someone on another team, or with another direct report), talks it through with Thimble as one continuous chat, and keeps a running plan of agreed next steps. See `STATUS.md`'s "New product idea sketched and mocked: `manager-app`" entry for the original design writeup, and the docs below for the fuller reasoning:
 
