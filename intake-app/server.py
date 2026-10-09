@@ -1382,6 +1382,16 @@ async def survey_page():
     return FileResponse(ROOT / "static" / "survey.html")
 
 
+@app.get("/voice-live")
+async def voice_live_page():
+    # Served at a root-level path, not under /static, for the same reason
+    # index() below is: static/voice-transcript-live.html's own apiPath()
+    # derives BASE_PATH from location.pathname, which only resolves to the
+    # real API routes (e.g. /api/start, not /static/voice-live/api/start)
+    # when the page itself loads from a root-level path like this one.
+    return FileResponse(ROOT / "static" / "voice-transcript-live.html")
+
+
 @app.get("/api/audio/{filename}")
 async def get_audio(filename: str):
     path = AUDIO_DIR / filename

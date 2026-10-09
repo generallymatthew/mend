@@ -1,0 +1,541 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voice + transcript split — design reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /*
+    Design reference for a permanently side-by-side voice stage + transcript
+    layout (vs. static/index.html's current toggled transcript-panel). NOT
+    wired into the real call flow -- no mic, no TTS audio, no websocket --
+    same reason as thimble-states.html: so this can be reviewed without mic
+    permissions or a live session.
+
+    Second pass: the first version placed real app components at the
+    wireframe's positions but didn't design anything -- flat pill, literal
+    "HOLD TO TALK" label, a plain list of bubbles. This pass keeps the real
+    avatar engine and brand tokens but adds actual staging (grounded shadow,
+    ambient glow, breathing room), a redesigned hold-to-talk control (icon
+    button + caption, not stretched all-caps text in a circle), a real
+    lock-style privacy affordance instead of a bordered "Private" pill, and
+    a transcript with sender grouping, timestamps and an input that reacts
+    to content -- the kind of detail a wireframe can't carry, only placement.
+
+    The Thimble avatar engine (domeWobbleRadius, renderThimbleMouth,
+    applyThimbleState) is copied verbatim from static/index.html, same as
+    thimble-states.html -- re-copy it here if that engine changes there.
+  */
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --ink-faint:#8A978F;
+    --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0; --border-soft:#E8E1D2;
+    --stage-bg:#FBF8F3; --pink:#F3829A;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; -webkit-font-smoothing:antialiased;}
+  button{font:inherit;}
+  button{-webkit-tap-highlight-color:transparent;}
+
+  /* Soft ambient vignette behind the frame -- depth without a loud wash;
+     anchored to the viewport, not tiled across the card surfaces inside. */
+  .page{
+    position:relative; width:100%; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px;
+    background:
+      radial-gradient(900px 560px at 18% 8%, #17372E0A, transparent 60%),
+      radial-gradient(760px 520px at 88% 92%, #F3829A10, transparent 55%),
+      var(--paper);
+  }
+
+  /* Shell: stacks the identity bar above the communications window itself
+     and keeps both the same width, so the bar sits flush with the
+     window's left edge rather than centered over the whole page. */
+  .shell{position:relative; width:100%; max-width:1360px; display:flex; flex-direction:column; gap:12px;}
+
+  /* Identity bar: OUTSIDE the window, above its top-left corner -- the
+     Mend mark and wordmark, not Thimble. Thimble is the chat's own
+     character, not the company's -- it belongs inside the window (see
+     .transcript-brand below), not out here next to the logo. */
+  .top-bar{align-self:flex-start;}
+  .top-bar-brand{display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid #17372E12; border-radius:999px; padding:8px 16px; box-shadow:0 2px 8px rgba(23,55,46,.08);}
+  .brand-logo-mark{display:block; color:var(--ink); flex-shrink:0;}
+  .brand-mark{font-weight:800; font-size:15px; letter-spacing:-.03em; color:var(--ink); text-transform:lowercase;}
+
+  /* Chat's own header avatar -- shown in place of the plain "Transcript"
+     eyebrow only once voice is collapsed and text is the whole window,
+     same as any messaging app puts the other party's avatar top-left of
+     the thread once it's the only surface left. */
+  .transcript-brand{display:none; align-items:center; gap:9px;}
+  .transcript-pane.pane-solo .transcript-brand{display:flex;}
+  .transcript-pane.pane-solo .transcript-title{display:none;}
+  .transcript-brand-name{font-size:13.5px; font-weight:700; color:var(--ink);}
+  .thimble-avatar.mini{width:30px; height:30px; filter:drop-shadow(0 2px 4px rgba(23,55,46,.18));}
+
+  .frame{position:relative; width:100%; min-height:800px; display:flex; flex-wrap:wrap; border-radius:28px; overflow:hidden; background:var(--card);
+    box-shadow:0 1px 1px rgba(23,55,46,.05), 0 2px 6px rgba(23,55,46,.05), 0 24px 56px -16px rgba(23,55,46,.28);
+    border:1px solid #17372E12;
+  }
+
+  .show-rail-btn{display:none; position:absolute; top:18px; z-index:4; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.03em; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:7px 14px 7px 12px; cursor:pointer; box-shadow:0 2px 8px rgba(23,55,46,.1); transition:border-color 120ms ease, color 120ms ease, transform 120ms ease;}
+  .show-rail-btn:hover{color:var(--ink); border-color:var(--ink-soft); transform:translateY(-1px);}
+  .show-rail-btn.visible{display:inline-flex;}
+  /* showVoiceBtn sits top-RIGHT, not top-left -- when voice is collapsed,
+     the transcript pane's own header now puts Thimble's avatar top-left
+     (see .transcript-brand), and that corner's right side is free since
+     hideTranscriptBtn is ctrl-hidden in the same state. */
+  #showVoiceBtn{right:18px;}
+  #showTranscriptBtn{left:18px;}
+
+  /* ---- left: voice stage ---- */
+  .voice-pane{position:relative; flex:999 1 620px; min-width:0; background:var(--stage-bg); padding:26px 36px 34px; display:flex; flex-direction:column; overflow:hidden;}
+  .voice-pane.hidden-pane{display:none;}
+
+  .voice-pane-header{position:relative; z-index:2; display:flex; align-items:center; justify-content:flex-end;}
+  .brand-mark{font-weight:800; font-size:15px; letter-spacing:-.01em; color:var(--ink);}
+  .privacy-chip{display:inline-flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.03em; color:var(--ink-soft); background:#17372E0D; border-radius:999px; padding:5px 10px 5px 8px;}
+  .privacy-chip svg{flex-shrink:0; color:var(--ink-soft);}
+
+  .ghost-btn{display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.03em; color:var(--ink-soft); background:transparent; border:1px solid var(--border); border-radius:999px; padding:7px 14px; cursor:pointer; transition:border-color 120ms ease, color 120ms ease, background 120ms ease;}
+  .ghost-btn:hover{color:var(--ink); border-color:var(--ink-soft); background:#17372E08;}
+  /* Hidden, not just disabled, when this pane is the only one left on
+     screen -- hiding it too would leave nothing visible. */
+  .ghost-btn.ctrl-hidden{display:none;}
+
+  /* Ambient staging behind the avatar: a soft, tightly-scoped glow plus a
+     grounding shadow -- not a page-wide gradient wash, just light the
+     avatar itself would plausibly cast. */
+  .voice-stage-center{position:relative; z-index:1; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:10px 0;}
+  .stage-glow{position:absolute; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle, #F3829A22 0%, #F3829A00 68%); pointer-events:none; z-index:0;}
+
+  .avatar-stack{position:relative; z-index:1; width:224px; height:224px;}
+  .avatar-floor{position:absolute; left:50%; bottom:-14px; width:150px; height:26px; transform:translateX(-50%); background:radial-gradient(ellipse, #17372E26 0%, #17372E00 72%); filter:blur(2px); z-index:0;}
+  .thimble-avatar{position:relative; z-index:1; width:224px; height:224px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;
+    filter: drop-shadow(0 14px 20px rgba(23,55,46,.18)) drop-shadow(0 3px 6px rgba(23,55,46,.12));}
+  .thimble-avatar.muted{opacity:.5;}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:var(--pink); filter:blur(18px); z-index:-1;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
+  .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
+
+  .avatar-mute-btn{position:absolute; right:-2px; bottom:-2px; z-index:2; width:40px; height:40px; border-radius:50%; background:var(--card); border:1px solid var(--border); color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 10px rgba(23,55,46,.14); transition:background 120ms ease, color 120ms ease, border-color 120ms ease, transform 120ms ease;}
+  .avatar-mute-btn:hover{color:var(--ink); transform:translateY(-1px);}
+  .avatar-mute-btn[aria-pressed="true"]{background:#8C3B2E; border-color:#8C3B2E; color:#fff;}
+  .avatar-mute-btn .icon-off{display:none;}
+  .avatar-mute-btn[aria-pressed="true"] .icon-on{display:none;}
+  .avatar-mute-btn[aria-pressed="true"] .icon-off{display:block;}
+
+  .state-pill{display:inline-flex; align-items:center; gap:9px; padding:9px 16px 9px 14px; border-radius:999px; background:var(--card); border:1px solid var(--border-soft); color:var(--ink); font-size:13px; white-space:nowrap; box-shadow:0 3px 10px rgba(23,55,46,.07);}
+  .eq{display:flex; align-items:center; gap:2px; height:12px;}
+  .eq span{display:block; width:2.5px; border-radius:2px; background:var(--pink); animation:eq-bar 1.1s ease-in-out infinite;}
+  .eq span:nth-child(1){animation-delay:-.9s;}
+  .eq span:nth-child(2){animation-delay:-.5s;}
+  .eq span:nth-child(3){animation-delay:-.2s;}
+  @keyframes eq-bar{0%,100%{height:4px;} 50%{height:12px;}}
+  .state-pill b{font-weight:700;}
+  .state-pill .state-word{color:var(--ink-soft); font-weight:500;}
+  .state-pill[data-muted="true"] .eq span{animation-play-state:paused; height:3px; background:var(--border);}
+
+  .caption{margin:0; max-width:400px; text-align:center; color:var(--ink-soft); font-size:15px; line-height:1.55; letter-spacing:-.005em;}
+
+  /* Hold-to-talk: no caption -- just the ring and the icon swap. The
+     recording state itself is NOT a new motif -- it's the same language
+     static/index.html already uses for both .talk-mic-btn and
+     .composer-mic-btn (pink fill + talk-mic-pulse's soft box-shadow
+     pulse) and the same 4-bar composer-mic-wave bounce, reused verbatim
+     rather than invented fresh, so "recording" reads the same everywhere
+     in the app. */
+  .hold-dock{position:relative; z-index:1; display:flex; align-items:center; justify-content:flex-end;}
+  .hold-wrap{position:relative; width:104px; height:104px;}
+
+  .hold-ring{position:absolute; inset:0; pointer-events:none;}
+  .hold-ring circle{fill:none; stroke-width:3;}
+  .hold-ring .track{stroke:var(--border); transition:stroke 160ms ease;}
+  .hold-ring .progress{stroke:var(--pink); stroke-linecap:round; transform-origin:50% 50%; transform:rotate(-90deg); transition:stroke-dashoffset 80ms linear;}
+  .hold-btn.recording .hold-ring .track{stroke:#F3829A33;}
+
+  .hold-btn{position:absolute; inset:9px; border-radius:50%; background:var(--ink); color:var(--paper); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-user-select:none; user-select:none; touch-action:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px -6px rgba(23,55,46,.45);
+    transition:background 120ms ease, transform 80ms ease, box-shadow 120ms ease;}
+  .hold-btn:hover{background:#0e241e; transform:translateY(-1px);}
+  /* Pink fill + talk-mic-pulse, copied verbatim from static/index.html's
+     .talk-mic-btn.recording / .composer-mic-btn.recording. */
+  .hold-btn.recording{background:var(--pink); border-color:var(--pink); color:var(--ink); transform:scale(.96); animation:talk-mic-pulse 1.4s ease-in-out infinite;}
+  @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(243,130,154,.45);} 50%{box-shadow:0 0 0 8px rgba(243,130,154,0);}}
+
+  .hold-icon{position:relative; z-index:1; display:flex; align-items:center; justify-content:center; transition:opacity 100ms ease;}
+  .hold-btn.recording .hold-icon-mic{opacity:0;}
+  .hold-icon-wave{position:absolute; opacity:0;}
+  .hold-btn.recording .hold-icon-wave{opacity:1;}
+  /* Composer's recording waveform, copied verbatim (composer-mic-wave /
+     composer-mic-wave-bounce): 4 bars, same widths/timing/delays. */
+  .hold-icon-wave{display:flex; align-items:center; justify-content:center; gap:3px; height:20px;}
+  .hold-icon-wave span{width:3px; border-radius:2px; background:var(--ink); animation:hold-wave-bounce 900ms ease-in-out infinite;}
+  .hold-icon-wave span:nth-child(1){animation-delay:0ms;}
+  .hold-icon-wave span:nth-child(2){animation-delay:150ms;}
+  .hold-icon-wave span:nth-child(3){animation-delay:300ms;}
+  .hold-icon-wave span:nth-child(4){animation-delay:450ms;}
+  @keyframes hold-wave-bounce{0%,100%{height:6px;} 50%{height:20px;}}
+
+  /* ---- right: transcript ---- */
+  .transcript-pane{position:relative; flex:1 1 352px; min-width:320px; background:var(--card); border-left:1px solid var(--border-soft); display:flex; flex-direction:column;}
+  .transcript-pane.hidden-pane{display:none;}
+  .transcript-header{display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border-soft); flex-shrink:0; background:linear-gradient(var(--card), var(--card));}
+  .transcript-title{display:flex; align-items:center; gap:8px;}
+  .transcript-title .dot{width:7px; height:7px; border-radius:50%; background:var(--pink);}
+  .transcript-title span{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft);}
+
+  .thread{flex:1; overflow-y:auto; padding:20px 22px 8px; display:flex; flex-direction:column; gap:2px;}
+  .day-sep{align-self:center; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-faint); background:var(--stage-bg); border-radius:999px; padding:4px 11px; margin:4px 0 14px;}
+
+  .turn{display:flex; flex-direction:column; margin-top:16px;}
+  .turn:first-child{margin-top:0;}
+  .turn.you{align-items:flex-end;}
+  .turn-label{font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:0 2px 5px; letter-spacing:.01em;}
+  .turn.you .turn-label{color:var(--ink-soft);}
+  .msg{max-width:82%; padding:11px 14px; line-height:1.5; font-size:14.5px; white-space:pre-wrap;}
+  .msg.facilitator{background:var(--accent-soft); color:var(--ink); align-self:flex-start; border-radius:4px 14px 14px 14px;}
+  .msg.employee{background:var(--accent); color:#fff; align-self:flex-end; border-radius:14px 4px 14px 14px;}
+  .msg-time{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink-faint); margin:5px 3px 0;}
+  .turn.you .msg-time{align-self:flex-end; margin-right:3px;}
+
+  .composer{padding:14px 18px 18px; border-top:1px solid var(--border-soft);}
+  .chat-input-row{display:flex; align-items:center; gap:6px; background:var(--stage-bg); border:1px solid var(--border); border-radius:20px; padding:6px 6px 6px 16px; transition:border-color 120ms ease, box-shadow 120ms ease;}
+  .chat-input-row:focus-within{border-color:var(--ink-soft); box-shadow:0 0 0 3px #17372E0F;}
+  .chat-input-row input{flex:1; min-width:0; border:none; outline:none; font:inherit; font-size:14.5px; line-height:1.5; color:var(--ink); background:transparent; padding:8px 0;}
+  .chat-input-row input::placeholder{color:var(--ink-faint);}
+  .send-btn{width:38px; height:38px; border-radius:50%; background:var(--border); border:none; color:var(--card); cursor:default; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 140ms ease, transform 100ms ease;}
+  .send-btn.active{background:var(--accent); cursor:pointer;}
+  .send-btn.active:hover{transform:scale(1.05);}
+
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+  :focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+
+  @media (max-width:860px){
+    .page{padding:0;}
+    .frame{min-height:100vh; border-radius:0; border:none;}
+    .voice-pane{min-width:100%;}
+    .transcript-pane{min-width:100%; border-left:none; border-top:1px solid var(--border-soft);}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="shell">
+
+    <div class="top-bar">
+      <div class="top-bar-brand">
+        <svg class="brand-logo-mark" width="18" height="13" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+        <span class="brand-mark">mend</span>
+        <span class="privacy-chip">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+          Private
+        </span>
+      </div>
+    </div>
+
+    <div class="frame">
+    <button class="show-rail-btn" id="showVoiceBtn" type="button">Show voice</button>
+    <button class="show-rail-btn" id="showTranscriptBtn" type="button">Show transcript</button>
+
+    <div class="voice-pane" id="voicePane">
+      <div class="voice-pane-header">
+        <button class="ghost-btn" id="hideVoiceBtn" type="button" aria-pressed="false">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Z"></path><path d="M3 3l18 18"></path></svg>
+          Hide voice
+        </button>
+      </div>
+
+      <div class="voice-stage-center">
+        <div class="stage-glow" aria-hidden="true"></div>
+
+        <div class="avatar-stack">
+          <div class="avatar-floor" aria-hidden="true"></div>
+          <div class="thimble-avatar" id="thimbleAvatar">
+            <div class="thimble-ripple" id="thimbleRippleA" hidden></div>
+            <div class="thimble-ring" id="thimbleRing">
+              <div class="thimble-body" id="thimbleBody">
+                <div class="thimble-blend" id="thimbleBlend"></div>
+                <div class="thimble-mouth" id="thimbleMouth"></div>
+              </div>
+            </div>
+          </div>
+          <button class="avatar-mute-btn" id="avatarMuteBtn" type="button" aria-pressed="false" aria-label="Mute microphone">
+            <svg class="icon-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+            <svg class="icon-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"></path></svg>
+          </button>
+        </div>
+
+        <div class="state-pill" id="statePill" data-muted="false">
+          <span class="eq" aria-hidden="true"><span></span><span></span><span></span></span>
+          <b>Thimble</b> <span class="state-word" id="stateWord">Listening&hellip;</span>
+        </div>
+
+        <p class="caption">“Take your time — tell me what's been going on, and I'll make sure your clinician sees it.”</p>
+      </div>
+
+      <div class="hold-dock">
+        <div class="hold-wrap">
+          <svg class="hold-ring" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
+            <circle class="track" cx="52" cy="52" r="48"></circle>
+            <circle class="progress" id="holdProgress" cx="52" cy="52" r="48" stroke-dasharray="301.59" stroke-dashoffset="301.59"></circle>
+          </svg>
+          <button class="hold-btn" id="holdBtn" type="button" aria-pressed="false" aria-label="Hold to talk">
+            <span class="hold-icon hold-icon-mic">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="12" rx="3"></rect><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3.5"></path></svg>
+            </span>
+            <span class="hold-icon hold-icon-wave" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="transcript-pane" id="transcriptPane">
+      <div class="transcript-header">
+        <div class="transcript-title">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Transcript</span>
+        </div>
+        <div class="transcript-brand">
+          <div class="thimble-avatar mini" id="thimbleMiniAvatar">
+            <div class="thimble-ripple" id="thimbleMiniRippleA" hidden></div>
+            <div class="thimble-ring" id="thimbleMiniRing">
+              <div class="thimble-body" id="thimbleMiniBody">
+                <div class="thimble-blend" id="thimbleMiniBlend"></div>
+                <div class="thimble-mouth" id="thimbleMiniMouth"></div>
+              </div>
+            </div>
+          </div>
+          <span class="transcript-brand-name">Thimble</span>
+        </div>
+        <button class="ghost-btn" id="hideTranscriptBtn" type="button" aria-pressed="false">Hide</button>
+      </div>
+
+      <div class="thread" id="thread">
+        <div class="day-sep">Today, 9:41 AM</div>
+
+        <div class="turn">
+          <div class="turn-label">Thimble</div>
+          <div class="msg facilitator">What brings you in today?</div>
+          <div class="msg-time">9:41 AM</div>
+        </div>
+
+        <div class="turn you">
+          <div class="turn-label">You</div>
+          <div class="msg employee">I've had a cough and some chest tightness for about four days now.</div>
+          <div class="msg-time">9:42 AM</div>
+        </div>
+
+        <div class="turn">
+          <div class="turn-label">Thimble</div>
+          <div class="msg facilitator">Got it. Any fever, or trouble breathing when you're resting?</div>
+          <div class="msg-time">9:42 AM</div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="chat-input-row">
+          <label class="sr-only" for="chatInput">Type a message</label>
+          <input id="chatInput" type="text" placeholder="Type a message…" autocomplete="off">
+          <button class="send-btn" id="sendBtn" type="button" aria-label="Send message">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 8H14M14 8L9 3M14 8L9 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- Thimble avatar engine: copied verbatim from static/index.html
+// (see that file for the full design-handoff reasoning behind every
+// number below). Only the "listening" shape is driven here -- this page
+// is a static layout reference, not a live call, so there's no real mic
+// level or TTS amplitude to react to; a slow synthetic level standing in
+// for it is enough to show the avatar isn't a dead circle. ----
+const THIMBLE_SHAPES = {
+  listening: {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+};
+function domeWobbleRadius(domeFactor, lvl) {
+  const capY = 50 + (12 + 3 * lvl) * domeFactor;
+  const rimY = 50 - (14 + 3 * lvl) * domeFactor;
+  return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+}
+function renderThimbleMouth(inst, state) {
+  const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+  const s = inst.size;
+  inst.mouth.style.top = shape.mouthTop + '%';
+  inst.mouth.style.left = (shape.mouthX || 50) + '%';
+  inst.mouth.style.width = (shape.mouthW * s) + 'px';
+  inst.mouth.style.height = (shape.mouthH * s) + 'px';
+  inst.mouth.style.boxSizing = 'border-box';
+  inst.mouth.style.background = '#F6F1E7';
+  inst.mouth.style.borderRadius = '999px';
+}
+function applyThimbleState(inst, state) {
+  if (state === inst.renderedState) return;
+  inst.renderedState = state;
+  const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+  inst.el.style.transform = shape.lean;
+  inst.body.style.animation = shape.anim;
+  inst.body.style.borderRadius = shape.radius;
+  renderThimbleMouth(inst, state);
+}
+
+function makeAvatarInstance(prefix, size) {
+  const inst = {
+    size,
+    el: document.getElementById(prefix + 'Avatar'),
+    ring: document.getElementById(prefix + 'Ring'),
+    body: document.getElementById(prefix + 'Body'),
+    blend: document.getElementById(prefix + 'Blend'),
+    mouth: document.getElementById(prefix + 'Mouth'),
+    rippleA: document.getElementById(prefix + 'RippleA'),
+    renderedState: null, lvl: 0, wobblePhase: 0, breathePhase: 0, lastT: null,
+  };
+  applyThimbleState(inst, 'listening');
+  return inst;
+}
+// Main stage avatar and the top-bar's mini avatar -- same engine, same
+// instance shape, just two sizes (mirrors static/index.html driving its
+// own full-size + .mini chat-header avatar off one state each frame).
+const avatar = makeAvatarInstance('thimble', 224);
+const avatarMini = makeAvatarInstance('thimbleMini', 30);
+
+let muted = false;
+function updateInstance(inst, now) {
+  const dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
+  inst.lastT = now;
+  inst.el.classList.toggle('muted', muted);
+  const y = 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5);
+  const breathePeriod = 3;
+  inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+  const breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
+  inst.ring.style.transform = `translateY(${y.toFixed(2)}%) scale(${breathe.toFixed(4)})`;
+  const level = muted ? 0 : 0.18 + 0.1 * Math.sin(now / 900);
+  inst.lvl += (level - inst.lvl) * 0.3;
+  const wobblePeriod = 1.6;
+  inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+  const domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
+  inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+}
+function tick(now) {
+  updateInstance(avatar, now);
+  updateInstance(avatarMini, now);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ---- mute button ----
+const avatarMuteBtn = document.getElementById('avatarMuteBtn');
+const stateWord = document.getElementById('stateWord');
+const statePill = document.getElementById('statePill');
+avatarMuteBtn.addEventListener('click', () => {
+  muted = !muted;
+  avatarMuteBtn.setAttribute('aria-pressed', String(muted));
+  statePill.dataset.muted = String(muted);
+  stateWord.textContent = muted ? 'Muted' : 'Listening…';
+});
+
+// ---- hold to talk: press-and-hold fills the ring and fires a quick
+// squash-and-settle on the button itself (the recording.hold-btn
+// transform:scale in CSS), release eases the ring back out ----
+const holdBtn = document.getElementById('holdBtn');
+const holdProgress = document.getElementById('holdProgress');
+const RING_LEN = 301.59; // 2 * PI * 48, matches the SVG's own radius
+let holdStart = null, holdRaf = null;
+function holdFrame() {
+  const held = Math.min(1, (performance.now() - holdStart) / 1800);
+  holdProgress.style.strokeDashoffset = String(RING_LEN * (1 - held));
+  holdRaf = requestAnimationFrame(holdFrame);
+}
+function startHold() {
+  if (muted) return;
+  holdBtn.classList.add('recording');
+  holdBtn.setAttribute('aria-pressed', 'true');
+  holdStart = performance.now();
+  holdFrame();
+}
+function endHold() {
+  holdBtn.classList.remove('recording');
+  holdBtn.setAttribute('aria-pressed', 'false');
+  if (holdRaf) cancelAnimationFrame(holdRaf);
+  holdProgress.style.strokeDashoffset = String(RING_LEN);
+}
+holdBtn.addEventListener('pointerdown', e => { holdBtn.setPointerCapture(e.pointerId); startHold(); });
+holdBtn.addEventListener('pointerup', endHold);
+holdBtn.addEventListener('pointercancel', endHold);
+
+// ---- hide toggles: each panel hides itself, the other expands to fill.
+// The button that reopens a hidden pane can't live inside that pane (it
+// would vanish with everything else), so it's a separate rail button
+// shown only while that pane is hidden. And whichever pane is left on
+// screen alone loses its OWN "Hide" button -- hiding it too would leave
+// a blank frame with no way back. ----
+const voicePane = document.getElementById('voicePane');
+const transcriptPane = document.getElementById('transcriptPane');
+const hideVoiceBtn = document.getElementById('hideVoiceBtn');
+const hideTranscriptBtn = document.getElementById('hideTranscriptBtn');
+
+function syncHideButtons() {
+  const voiceHidden = voicePane.classList.contains('hidden-pane');
+  hideVoiceBtn.classList.toggle('ctrl-hidden', transcriptPane.classList.contains('hidden-pane'));
+  hideTranscriptBtn.classList.toggle('ctrl-hidden', voiceHidden);
+  // Thimble's own avatar shows in the chat header only once voice is
+  // collapsed and text is the whole window -- not while both are visible,
+  // where the voice stage already carries that identity.
+  transcriptPane.classList.toggle('pane-solo', voiceHidden);
+}
+
+function wirePaneToggle(pane, hideBtn, showBtn) {
+  hideBtn.addEventListener('click', () => {
+    pane.classList.add('hidden-pane');
+    hideBtn.setAttribute('aria-pressed', 'true');
+    showBtn.classList.add('visible');
+    syncHideButtons();
+  });
+  showBtn.addEventListener('click', () => {
+    pane.classList.remove('hidden-pane');
+    hideBtn.setAttribute('aria-pressed', 'false');
+    showBtn.classList.remove('visible');
+    syncHideButtons();
+  });
+}
+wirePaneToggle(voicePane, hideVoiceBtn, document.getElementById('showVoiceBtn'));
+wirePaneToggle(transcriptPane, hideTranscriptBtn, document.getElementById('showTranscriptBtn'));
+
+// ---- composer: send button lights up once there's text; Enter sends,
+// appends a grouped turn (no backend -- reference only) ----
+const thread = document.getElementById('thread');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+chatInput.addEventListener('input', () => {
+  sendBtn.classList.toggle('active', chatInput.value.trim().length > 0);
+});
+function timeNow() {
+  return new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+}
+function sendMessage() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  const turn = document.createElement('div');
+  turn.className = 'turn you';
+  turn.innerHTML = `<div class="turn-label">You</div><div class="msg employee"></div><div class="msg-time">${timeNow()}</div>`;
+  turn.querySelector('.msg').textContent = text;
+  thread.appendChild(turn);
+  thread.scrollTop = thread.scrollHeight;
+  chatInput.value = '';
+  sendBtn.classList.remove('active');
+}
+sendBtn.addEventListener('click', sendMessage);
+chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+</script>
+</body>
+</html>
