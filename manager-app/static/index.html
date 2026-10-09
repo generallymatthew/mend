@@ -140,6 +140,22 @@
   .bubble.assistant { align-self: flex-start; background: var(--bubble); }
   .bubble.user { align-self: flex-end; background: var(--accent); color: #fff; }
   .bubble.pending { opacity: 0.5; }
+  .employee-tag {
+    display: inline-block; background: #211F1C; color: #fff; border-radius: 4px;
+    padding: 1px 7px; font-weight: 600; font-size: 0.92em; cursor: pointer;
+  }
+  .employee-tag:hover { background: #3B3A35; }
+  .employee-tag.just-redacted { animation: redact-reveal 650ms ease; }
+  @keyframes redact-reveal {
+    0% { background: #000; color: transparent; }
+    55% { background: #000; color: transparent; }
+    100% { background: #211F1C; color: #fff; }
+  }
+  .employee-tooltip {
+    position: fixed; z-index: 50; background: #211F1C; color: #fff; font-size: 12px;
+    padding: 7px 11px; border-radius: 7px; max-width: 220px; line-height: 1.4;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
   #empty-state {
     flex: 1; display: flex; align-items: center; justify-content: center;
     padding: 40px; overflow: auto;
@@ -213,6 +229,9 @@
   .step-label {
     font-size: 10px; font-weight: 700; color: var(--faint); text-transform: uppercase;
     letter-spacing: 0.04em;
+  }
+  .step-added-by {
+    margin-left: 6px; font-weight: 600; color: #8FA88A; text-transform: none;
   }
   .step .row { display: flex; gap: 10px; align-items: flex-start; }
   .step .check {
@@ -316,6 +335,7 @@
 <script>
 let currentCaseId = null;
 let cases = [];
+let roster = {}; // "Employee A" -> descriptor, for the current case only
 
 function escapeHtml(s) {
   const d = document.createElement("div");
@@ -434,10 +454,12 @@ async function openCase(caseId, isNew) {
     pending.remove();
     appendBubble("assistant", body.reply);
     updateCaseFromResult(body.case);
+    if (body.plan) renderPlan(body.plan);
   }
 }
 
 function renderThread(data) {
+  if (data.case.roster) roster = data.case.roster;
   document.getElementById("thread-title").textContent = data.case.tension_summary || "New case";
   const messagesEl = document.getElementById("messages");
   messagesEl.innerHTML = "";
@@ -506,6 +528,7 @@ async function draftManagingUp() {
     pending.remove();
     appendBubble("assistant", body.reply);
     updateCaseFromResult(body.case);
+    if (body.plan) renderPlan(body.plan);
   } finally {
     btn.disabled = false;
   }
@@ -515,13 +538,68 @@ function appendBubble(role, text, pending) {
   const messagesEl = document.getElementById("messages");
   const b = document.createElement("div");
   b.className = "bubble " + role + (pending ? " pending" : "");
-  b.textContent = text;
+  renderBubbleText(b, text);
   messagesEl.appendChild(b);
   messagesEl.scrollTop = messagesEl.scrollHeight;
   return b;
 }
 
+const EMPLOYEE_TAG_RE = /\bEmployee [A-Z]\b/g;
+
+function renderBubbleText(el, text) {
+  el.innerHTML = "";
+  let lastIndex = 0;
+  EMPLOYEE_TAG_RE.lastIndex = 0;
+  let match;
+  while ((match = EMPLOYEE_TAG_RE.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+    }
+    const label = match[0];
+    const tag = document.createElement("span");
+    tag.className = "employee-tag";
+    tag.textContent = label;
+    tag.tabIndex = 0;
+    tag.onclick = (e) => {
+      e.stopPropagation();
+      showEmployeeTooltip(tag, label);
+    };
+    el.appendChild(tag);
+    lastIndex = match.index + label.length;
+  }
+  if (lastIndex < text.length) {
+    el.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+}
+
+let activeEmployeeTooltip = null;
+
+function showEmployeeTooltip(anchorEl, label) {
+  closeEmployeeTooltip();
+  const tip = document.createElement("div");
+  tip.className = "employee-tooltip";
+  tip.textContent = roster[label] || "No descriptor yet";
+  document.body.appendChild(tip);
+  const rect = anchorEl.getBoundingClientRect();
+  tip.style.left = Math.min(rect.left, window.innerWidth - 236) + "px";
+  tip.style.top = rect.bottom + 6 + "px";
+  activeEmployeeTooltip = tip;
+  setTimeout(() => document.addEventListener("click", closeEmployeeTooltipOnOutsideClick, { once: true }), 0);
+}
+
+function closeEmployeeTooltip() {
+  if (activeEmployeeTooltip) {
+    activeEmployeeTooltip.remove();
+    activeEmployeeTooltip = null;
+  }
+}
+
+function closeEmployeeTooltipOnOutsideClick(e) {
+  if (activeEmployeeTooltip && !activeEmployeeTooltip.contains(e.target)) closeEmployeeTooltip();
+}
+
 function updateCaseFromResult(updatedCase) {
+  if (updatedCase.roster) roster = updatedCase.roster;
   const idx = cases.findIndex((c) => c.id === updatedCase.id);
   if (idx >= 0) cases[idx] = updatedCase;
   else cases.unshift(updatedCase);
@@ -538,7 +616,7 @@ async function sendMessage() {
   if (!text || !currentCaseId) return;
   composer.value = "";
   composer.style.height = "auto";
-  appendBubble("user", text);
+  const userBubble = appendBubble("user", text);
   document.getElementById("send-btn").disabled = true;
   const pending = appendBubble("assistant", "...", true);
   try {
@@ -551,6 +629,13 @@ async function sendMessage() {
     pending.remove();
     appendBubble("assistant", body.reply);
     updateCaseFromResult(body.case);
+    if (body.plan) renderPlan(body.plan);
+    if (body.user_message_redacted && body.user_message_redacted !== text) {
+      renderBubbleText(userBubble, body.user_message_redacted);
+      const tags = userBubble.querySelectorAll(".employee-tag");
+      tags.forEach((t) => t.classList.add("just-redacted"));
+      setTimeout(() => tags.forEach((t) => t.classList.remove("just-redacted")), 700);
+    }
   } finally {
     document.getElementById("send-btn").disabled = false;
   }
@@ -584,6 +669,12 @@ function renderStep(s, index) {
   const label = document.createElement("div");
   label.className = "step-label";
   label.textContent = `Step ${index + 1}`;
+  if (s.added_by === "loom") {
+    const loomTag = document.createElement("span");
+    loomTag.className = "step-added-by";
+    loomTag.textContent = "added by Loom";
+    label.appendChild(loomTag);
+  }
   wrap.appendChild(label);
 
   const row = document.createElement("div");

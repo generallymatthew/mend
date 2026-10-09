@@ -62,6 +62,51 @@ SYSTEM_PROMPT = load_system_prompt()
 # survive a restart.
 CONVERSATIONS: dict[str, list[dict]] = {}
 
+# In-memory per-case name roster (name.lower() -> {"name", "slot", "descriptor"}),
+# same "never touches disk" treatment as CONVERSATIONS -- a real name the
+# manager types is exactly the kind of thing that must never reach cases.db.
+# Used only to redact the manager's own messages for display (see
+# redact_names below); never consulted when building what the model itself
+# sees, which still gets the raw conversation for real continuity.
+ROSTERS: dict[str, dict[str, dict]] = {}
+
+
+def merge_names(case_id: str, names: list[dict] | None) -> None:
+    if not names:
+        return
+    roster = ROSTERS.setdefault(case_id, {})
+    for entry in names:
+        name = (entry.get("name") or "").strip()
+        slot = entry.get("slot")
+        if not name or not slot:
+            continue
+        key = name.lower()
+        existing = roster.get(key)
+        if existing:
+            # Slot is sticky once assigned -- even if the model wobbles on
+            # which letter a name gets later, the display stays consistent.
+            if entry.get("descriptor"):
+                existing["descriptor"] = entry["descriptor"]
+        else:
+            roster[key] = {"name": name, "slot": slot, "descriptor": entry.get("descriptor") or ""}
+
+
+def redact_names(text: str, case_id: str) -> str:
+    roster = ROSTERS.get(case_id)
+    if not roster or not text:
+        return text
+    # Longest name first so e.g. "Dave" doesn't get replaced inside "Dave Jr."
+    # before the longer form has a chance to match.
+    for key in sorted(roster, key=len, reverse=True):
+        info = roster[key]
+        pattern = re.compile(r"\b" + re.escape(info["name"]) + r"\b", re.IGNORECASE)
+        text = pattern.sub(f"Employee {info['slot']}", text)
+    return text
+
+
+def roster_for_case(case_id: str) -> dict:
+    return {f"Employee {info['slot']}": info["descriptor"] for info in ROSTERS.get(case_id, {}).values()}
+
 
 # --- Storage ---------------------------------------------------------------
 
@@ -101,10 +146,14 @@ def init_db():
                 done INTEGER NOT NULL DEFAULT 0,
                 note TEXT,
                 position INTEGER NOT NULL,
+                added_by TEXT NOT NULL DEFAULT 'user',
                 created_at REAL NOT NULL,
                 updated_at REAL NOT NULL
             )
         """)
+        existing_step_cols = {row["name"] for row in conn.execute("PRAGMA table_info(plan_steps)")}
+        if "added_by" not in existing_step_cols:
+            conn.execute("ALTER TABLE plan_steps ADD COLUMN added_by TEXT NOT NULL DEFAULT 'user'")
 
 
 init_db()
@@ -143,9 +192,44 @@ def get_plan_steps(conn: sqlite3.Connection, case_id: str) -> list[dict]:
             "done": bool(r["done"]),
             "note": r["note"],
             "position": r["position"],
+            "added_by": r["added_by"],
         }
         for r in rows
     ]
+
+
+def insert_plan_step(conn: sqlite3.Connection, case_id: str, text: str, added_by: str = "user") -> None:
+    row = conn.execute(
+        "SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM plan_steps WHERE case_id = ?",
+        (case_id,),
+    ).fetchone()
+    now = time.time()
+    conn.execute(
+        "INSERT INTO plan_steps (id, case_id, text, done, note, position, added_by, created_at, updated_at) "
+        "VALUES (?, ?, ?, 0, NULL, ?, ?, ?, ?)",
+        (str(uuid.uuid4()), case_id, text, row["next_pos"], added_by, now, now),
+    )
+    conn.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (now, case_id))
+
+
+def add_loom_plan_steps(conn: sqlite3.Connection, case_id: str, texts: list[str] | None) -> None:
+    """Lets the facilitator itself contribute plan steps (see the signal's
+    `plan_steps_to_add`), not just the manager typing into the "+ add a
+    step" row. De-duplicated by exact trimmed/lowercased text against what's
+    already on the case, since the model isn't shown the current plan list
+    mid-conversation and can otherwise repeat a step it already added."""
+    if not texts:
+        return
+    existing = {
+        r["text"].strip().lower()
+        for r in conn.execute("SELECT text FROM plan_steps WHERE case_id = ?", (case_id,))
+    }
+    for text in texts:
+        text = (text or "").strip()
+        if not text or text.lower() in existing:
+            continue
+        insert_plan_step(conn, case_id, text, added_by="loom")
+        existing.add(text.lower())
 
 
 # --- App ---------------------------------------------------------------
@@ -199,10 +283,11 @@ async def get_case_detail(case_id: str):
             return JSONResponse({"error": "no such case"}, status_code=404)
         plan = get_plan_steps(conn, case_id)
     messages = [
-        {"role": m["role"], "content": m.get("visible", m["content"])}
+        {"role": m["role"], "content": redact_names(m.get("visible", m["content"]), case_id)}
         for m in CONVERSATIONS.get(case_id, [])
         if not m.get("hidden")
     ]
+    case["roster"] = roster_for_case(case_id)
     return {"case": case, "plan": plan, "messages": messages}
 
 
@@ -303,7 +388,13 @@ def facilitator_reply(case_id: str, conn: sqlite3.Connection) -> dict:
             )
         else:
             conn.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (time.time(), case_id))
-    return {"reply": visible, "signal": signal}
+        merge_names(case_id, signal.get("names"))
+        add_loom_plan_steps(conn, case_id, signal.get("plan_steps_to_add"))
+    # Defense in depth: the prompt already tells the model never to use a
+    # real name in its own reply text, but redact here too in case a name
+    # slips through (as it occasionally does) -- same safety net applied to
+    # historical messages on reload (see get_case_detail).
+    return {"reply": redact_names(visible, case_id), "signal": signal}
 
 
 class Message(BaseModel):
@@ -332,7 +423,14 @@ async def post_message(case_id: str, body: Message):
         CONVERSATIONS[case_id].append({"role": "user", "content": body.content, "hidden": False})
         result = facilitator_reply(case_id, conn)
         case = get_case(conn, case_id)
-    return {"reply": result["reply"], "case": case}
+        case["roster"] = roster_for_case(case_id)
+        plan = get_plan_steps(conn, case_id)
+    return {
+        "reply": result["reply"],
+        "case": case,
+        "plan": plan,
+        "user_message_redacted": redact_names(body.content, case_id),
+    }
 
 
 MANAGING_UP_PROMPT = (
@@ -362,7 +460,9 @@ async def managing_up(case_id: str):
         CONVERSATIONS[case_id].append({"role": "user", "content": MANAGING_UP_PROMPT, "hidden": True})
         result = facilitator_reply(case_id, conn)
         case = get_case(conn, case_id)
-    return {"reply": result["reply"], "case": case}
+        case["roster"] = roster_for_case(case_id)
+        plan = get_plan_steps(conn, case_id)
+    return {"reply": result["reply"], "case": case, "plan": plan}
 
 
 @app.post("/api/cases/{case_id}/handoff")
@@ -415,7 +515,9 @@ async def start_case(case_id: str):
         })
         result = facilitator_reply(case_id, conn)
         case = get_case(conn, case_id)
-    return {"reply": result["reply"], "case": case}
+        case["roster"] = roster_for_case(case_id)
+        plan = get_plan_steps(conn, case_id)
+    return {"reply": result["reply"], "case": case, "plan": plan}
 
 
 class PlanStepCreate(BaseModel):
@@ -427,18 +529,7 @@ async def add_plan_step(case_id: str, body: PlanStepCreate):
     with db() as conn:
         if get_case(conn, case_id) is None:
             return JSONResponse({"error": "no such case"}, status_code=404)
-        row = conn.execute(
-            "SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM plan_steps WHERE case_id = ?",
-            (case_id,),
-        ).fetchone()
-        step_id = str(uuid.uuid4())
-        now = time.time()
-        conn.execute(
-            "INSERT INTO plan_steps (id, case_id, text, done, note, position, created_at, updated_at) "
-            "VALUES (?, ?, ?, 0, NULL, ?, ?, ?)",
-            (step_id, case_id, body.text, row["next_pos"], now, now),
-        )
-        conn.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (now, case_id))
+        insert_plan_step(conn, case_id, body.text, added_by="user")
         return get_plan_steps(conn, case_id)
 
 
