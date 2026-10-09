@@ -576,9 +576,16 @@
      persistent top nav rather than inside the pane they control -- see
      the pane-toggle script below. disabled (not hidden) on whichever one
      would hide the only pane still visible. */
-  .nav-toggle-btn{font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-soft); background:transparent; border:1px solid var(--border); border-radius:999px; padding:6px 14px; cursor:pointer; transition:border-color 120ms ease, color 120ms ease;}
-  .nav-toggle-btn:hover:not(:disabled){color:var(--ink); border-color:var(--ink-soft);}
+  .nav-toggle-group{display:flex; align-items:stretch; height:38px; border:1px solid var(--border); border-radius:8px; overflow:hidden; flex-shrink:0;}
+  .nav-toggle-btn{font:inherit; font-size:12.5px; font-weight:600; color:var(--ink-soft); background:transparent; border:none; border-right:1px solid var(--border); padding:0 14px; cursor:pointer; transition:background 120ms ease, color 120ms ease;}
+  .nav-toggle-btn:last-child{border-right:none;}
+  .nav-toggle-btn:hover:not(:disabled){color:var(--ink); background:#17372E0D;}
   .nav-toggle-btn:disabled{opacity:.4; cursor:default;}
+  /* End session: same 38px height as the toggle group/Feedback, but a
+     bolder solid-ink outline -- the one control on this bar that actually
+     ends something, deliberately heavier than the toggles' flat segmented
+     look or Feedback's soft accent chip. */
+  .end-session-btn{border-width:1.5px; border-color:var(--ink);}
   .live-split{position:relative;}
   .call-main{display:flex;} /* was already flex; kept explicit since .hold-dock below needs .call-main as its positioning parent */
   /* Skip dropped per explicit ask -- real element/JS kept (updateStatePill
@@ -619,6 +626,19 @@
      wider two-column call view) read as narrow on this panel's fixed
      ~340-380px sidebar. */
   .chat-bubble{max-width:94%;}
+
+  /* Custom confirm modal, replacing the browser-native confirm() dialog
+     (reported live as jarring/out of place) -- centered in the UI,
+     matching the rest of the app's card/pill-button look. */
+  .confirm-modal-overlay{position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(23,55,46,.32);}
+  .confirm-modal{width:100%; max-width:360px; background:var(--card); border-radius:16px; padding:24px 22px 20px; box-shadow:0 20px 48px -12px rgba(23,55,46,.35);}
+  .confirm-modal-msg{margin:0 0 20px; font-size:14.5px; line-height:1.5; color:var(--ink);}
+  .confirm-modal-actions{display:flex; justify-content:flex-end; gap:10px;}
+  .confirm-modal-cancel, .confirm-modal-ok{font:inherit; font-size:13px; font-weight:700; height:38px; padding:0 18px; border-radius:999px; cursor:pointer;}
+  .confirm-modal-cancel{background:transparent; border:1px solid var(--border); color:var(--ink-soft);}
+  .confirm-modal-cancel:hover{color:var(--ink); border-color:var(--ink-soft);}
+  .confirm-modal-ok{background:var(--ink); border:1px solid var(--ink); color:var(--paper);}
+  .confirm-modal-ok:hover{background:#0e241e;}
 </style>
 </head>
 <body>
@@ -658,8 +678,14 @@
       <div class="lock-tooltip disclaimer-tooltip">Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
     </div>
     <div class="top-nav-actions">
-      <button id="hideVoiceBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide voice</button>
-      <button id="hideTranscriptBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide chat</button>
+      <!-- Segmented-control pair, a deliberately different pattern from
+           the pill-button language the rest of the nav/app uses -- two
+           flat tabs sharing one outline, not two separate floating pills.
+           Per explicit ask for a distinct style, not just matched heights. -->
+      <div class="nav-toggle-group">
+        <button id="hideVoiceBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide voice</button>
+        <button id="hideTranscriptBtn" class="nav-toggle-btn" type="button" aria-pressed="false">Hide chat</button>
+      </div>
       <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
       <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
@@ -897,6 +923,21 @@
        the Private chip above, read on interaction instead of always on
        screen. -->
   <div class="disclaimer-footer" hidden>Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
+</div>
+
+<!-- Custom confirm modal, replacing the browser-native confirm() End
+     session used to call -- centered in the UI, matching the app's own
+     look, instead of a native OS dialog bar. Generic (message swapped in
+     per use via showConfirmModal() in the script below), though End
+     session is the only caller today. -->
+<div class="confirm-modal-overlay" id="confirmModalOverlay" hidden>
+  <div class="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmModalMsg">
+    <p class="confirm-modal-msg" id="confirmModalMsg"></p>
+    <div class="confirm-modal-actions">
+      <button class="confirm-modal-cancel" id="confirmModalCancel" type="button">Cancel</button>
+      <button class="confirm-modal-ok" id="confirmModalOk" type="button">OK</button>
+    </div>
+  </div>
 </div>
 
 <!-- Real voice-activity detection (Silero VAD, via ONNX Runtime Web) for
@@ -3020,6 +3061,39 @@ chatMuteBtn.addEventListener('click', () => {
   if (ttsMuted) stopSpeechPlayback();
 });
 
+// Custom confirm modal -- replaces the browser-native confirm() dialog
+// (reported live as jarring/out of place), centered in the UI instead of
+// a native OS dialog bar. Generic: resolves true/false, same shape
+// confirm() itself has, so any future caller besides End session can
+// reuse it as `if (!(await showConfirmModal('...'))) return;`.
+const confirmModalOverlay = document.getElementById('confirmModalOverlay');
+const confirmModalMsg = document.getElementById('confirmModalMsg');
+const confirmModalCancel = document.getElementById('confirmModalCancel');
+const confirmModalOk = document.getElementById('confirmModalOk');
+function showConfirmModal(message) {
+  return new Promise((resolve) => {
+    confirmModalMsg.textContent = message;
+    confirmModalOverlay.hidden = false;
+    confirmModalOk.focus();
+    function cleanup(result) {
+      confirmModalOverlay.hidden = true;
+      confirmModalOk.removeEventListener('click', onOk);
+      confirmModalCancel.removeEventListener('click', onCancel);
+      confirmModalOverlay.removeEventListener('click', onOverlayClick);
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    function onOverlayClick(e) { if (e.target === confirmModalOverlay) cleanup(false); } // click on the backdrop itself, not the card -- same as Cancel
+    function onKey(e) { if (e.key === 'Escape') cleanup(false); }
+    confirmModalOk.addEventListener('click', onOk);
+    confirmModalCancel.addEventListener('click', onCancel);
+    confirmModalOverlay.addEventListener('click', onOverlayClick);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
 // Manual "End session" -- same destination as the automatic post-signal
 // redirect (checkSurveyRedirect above), but tester-initiated at any point
 // instead of waiting for Thimble to reach a natural end point. Discards an
@@ -3027,8 +3101,8 @@ chatMuteBtn.addEventListener('click', () => {
 // isn't a turn worth submitting), then cancels any in-flight reply/speech
 // the same way endReplyCycle does elsewhere.
 const endSessionBtn = document.getElementById('endSessionBtn');
-endSessionBtn.addEventListener('click', () => {
-  if (!confirm('End this session now and go to the feedback survey?')) return;
+endSessionBtn.addEventListener('click', async () => {
+  if (!(await showConfirmModal('End this session now and go to the feedback survey?'))) return;
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     mediaRecorder.onstop = null;
     mediaRecorder.stop();
