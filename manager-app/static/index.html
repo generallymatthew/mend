@@ -41,7 +41,7 @@
     background: var(--bg);
   }
   .top-bar-brand { display: flex; align-items: center; gap: 9px; }
-  .top-bar-brand .mend-mark { color: var(--accent); flex-shrink: 0; }
+  .top-bar-brand .mend-mark { display: block; flex-shrink: 0; }
   .top-bar-brand .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
   .privacy-chip {
     display: inline-flex; align-items: center; gap: 5px;
@@ -98,7 +98,7 @@
     box-shadow: 0 12px 40px rgba(0,0,0,0.18);
   }
   #help-modal .brand { display: flex; align-items: center; gap: 7px; margin: 0 0 10px 0; }
-  #help-modal .mend-mark { color: var(--accent); flex-shrink: 0; }
+  #help-modal .mend-mark { display: block; flex-shrink: 0; }
   #help-modal .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
   #help-modal h1 { font-size: 14px; font-weight: 600; color: var(--muted); margin: 0 0 8px 0; }
   #help-modal .close-help {
@@ -338,7 +338,7 @@
     <button id="sidebar-toggle" title="Cases">
       <svg width="15" height="11" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="0" y1="1" x2="24" y2="1"/><line x1="0" y1="9" x2="24" y2="9"/><line x1="0" y1="17" x2="24" y2="17"/></svg>
     </button>
-    <svg class="mend-mark" width="16" height="11" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+    <svg class="mend-mark" width="29" height="21" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
     <span class="brand-name">Loom</span>
     <span class="privacy-chip">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
@@ -403,7 +403,7 @@
   <div id="help-modal">
     <button class="close-help" title="Close">&times;</button>
     <div class="brand">
-      <svg class="mend-mark" width="16" height="11" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+      <svg class="mend-mark" width="29" height="21" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
       <span class="brand-name">Loom</span>
     </div>
     <h1>How it works</h1>
