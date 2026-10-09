@@ -664,6 +664,20 @@
   .privacy-chip{display:inline-flex; align-items:center; gap:5px; font-family:inherit; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); background:#17372E0D; border-radius:999px; padding:4px 9px 4px 7px;}
   .privacy-chip svg{flex-shrink:0; color:var(--ink-soft);}
   .top-nav-actions{display:flex; align-items:center; gap:10px;}
+  /* End session's "session" and Feedback's icon are the first things to
+     go once the bar runs out of room on a phone -- the top nav (brand
+     lockup + Private chip + both actions) was overflowing/wrapping
+     under 640px otherwise, per explicit report. End session's
+     accessible name does shorten to just "End" along with it (real
+     markup removed from the tree, not a visual-only trick) -- still
+     unambiguous given where the button lives. Feedback keeps its full
+     name; only the decorative icon beside it drops. */
+  @media (max-width:640px){
+    .nav-btn-full{display:none;}
+    /* "mend" wordmark drops too, same overflow fix -- the mark (logo
+       icon) alone still reads as the brand at this size. */
+    .brand-mark{display:none;}
+  }
 
   /* hideVoiceBtn/hideTranscriptBtn: icon-only squares (secondary, frequent,
      low-stakes), living in the persistent top nav rather than inside the
@@ -808,9 +822,15 @@
       <button id="hideVoiceBtn" class="nav-icon-btn" type="button" aria-pressed="false">Hide voice</button>
       <button id="hideTranscriptBtn" class="nav-icon-btn nav-icon-chat" type="button" aria-pressed="false">Hide chat</button>
       <div class="nav-sep"></div>
-      <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
+      <!-- "session"/the feedback icon drop out under 640px (see their own
+           CSS rule) -- the top nav (brand lockup + Private chip + both
+           actions) was overflowing a phone's width otherwise, per explicit
+           report. Real text content kept intact (just a span wrapping the
+           part that hides) rather than swapped via JS, so nothing about
+           the accessible name changes. -->
+      <button id="endSessionBtn" class="end-session-btn" type="button">End<span class="nav-btn-full"> session</span></button>
       <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
+        <svg class="nav-btn-full" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
         Feedback
       </a>
     </div>
