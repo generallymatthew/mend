@@ -1,0 +1,266 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; how the data actually moves</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9,700&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  a{color:inherit;}
+  .mark{width:28px; height:20px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+
+  .topnav{position:sticky; top:0; z-index:20; background:rgba(246,241,231,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--border);}
+  .topnav-inner{max-width:1080px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:28px;}
+  .brand-row{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .wordmark{font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; color:var(--ink);}
+  .nav-links{display:flex; gap:22px; margin-left:4px; font-size:13.5px; font-weight:700; color:var(--ink-soft);}
+  .nav-links a{text-decoration:none; padding:6px 0; border-bottom:2px solid transparent;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .nav-cta{margin-left:auto; flex-shrink:0; font-size:13px; font-weight:700; color:#fff; background:var(--accent); padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap;}
+  @media (max-width:760px){ .nav-links{display:none;} .topnav-inner{gap:14px;} }
+
+  .wrap{max-width:760px; margin:0 auto; padding:48px 20px 60px;}
+
+  /* ---- hero, same shape as about.html: avatar + speech bubble beside the pitch ---- */
+  .hero-badge{display:inline-flex; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent); background:var(--accent-soft); border:1px solid rgba(23,55,46,0.1); padding:6px 14px; border-radius:999px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:18px;}
+  .hero{display:flex; align-items:center; gap:36px; margin-bottom:4px;}
+  .hero-text{flex:1; min-width:0;}
+  .hero-visual{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .hero-avatar{position:relative; width:176px; height:176px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 50%, rgba(243,130,154,0.16) 0%, rgba(243,130,154,0.16) 45%, rgba(233,185,73,0) 72%);}
+  .hero-avatar .core{width:92px; height:92px; border-radius:50%; background:var(--accent);}
+  .avatar-status{display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); padding:5px 11px; border-radius:999px; white-space:nowrap;}
+  .avatar-status .dot{width:6px; height:6px; border-radius:50%; background:#3D9B6E; flex-shrink:0;}
+  .speech-bubble{position:absolute; top:6px; right:-6px; display:flex; align-items:center; gap:4px; background:#fff; border:1px solid var(--border); border-radius:14px; padding:9px 11px; box-shadow:0 6px 14px rgba(23,55,46,0.14);}
+  .speech-bubble::after{content:''; position:absolute; bottom:-6px; left:16px; width:11px; height:11px; background:#fff; border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:rotate(45deg);}
+  .typing-dot{width:5px; height:5px; border-radius:50%; background:var(--ink-soft); animation:typing-bounce 1.3s infinite ease-in-out;}
+  .typing-dot:nth-child(2){animation-delay:.15s;}
+  .typing-dot:nth-child(3){animation-delay:.3s;}
+  @keyframes typing-bounce{0%,60%,100%{transform:translateY(0); opacity:.4;} 30%{transform:translateY(-3px); opacity:1;}}
+  @media (prefers-reduced-motion: reduce){ .typing-dot{animation:none; opacity:.7;} }
+  @media (max-width:600px){ .hero{flex-direction:column; align-items:flex-start; gap:22px;} .hero-visual{align-self:center;} .hero-avatar{width:120px; height:120px;} .hero-avatar .core{width:64px; height:64px;} }
+
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.15rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:700;}
+  h2{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase;}
+  h3.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:48px 0 10px; color:var(--ink); line-height:1.25;}
+  h2 + h3.section-headline{margin-top:0;}
+  p.lede{font-size:1.05rem; color:var(--ink-soft); margin:0 0 8px; max-width:48ch;}
+  p.section-sub{font-size:14px; color:var(--ink-soft); margin:0 0 18px; max-width:54ch;}
+  p{margin:0 0 14px;}
+
+  .btn-top{display:inline-flex; align-items:center; gap:6px; margin-top:18px; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 2px 6px rgba(23,55,46,0.18);}
+  .btn-top:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(23,55,46,0.24);}
+  .btn-top.ghost{background:#fff; color:var(--ink); border:1px solid var(--border); box-shadow:none; margin-left:10px;}
+  @media (max-width:600px){ .btn-top{width:100%; justify-content:center; margin-left:0!important; margin-top:10px;} }
+
+  section.block{margin-top:48px;}
+
+  /* ---- door-grid, same pattern as about.html's "Three Ways to Use Mend" ---- */
+  .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
+  @media (max-width:760px){ .door-grid{grid-template-columns:1fr;} }
+  .door-card{min-width:0; background:var(--card); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; box-shadow:0 1px 2px rgba(23,55,46,0.04); transition:transform .15s ease, box-shadow .15s ease;}
+  .door-card:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(23,55,46,0.08);}
+  .door-card:nth-child(2){border-top-color:var(--pink);}
+  .door-card:nth-child(3){border-top-color:var(--honey);}
+  .door-ico{width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .door-ico svg{width:22px; height:22px;}
+  .door-card:nth-child(1) .door-ico{background:var(--accent);}
+  .door-card:nth-child(2) .door-ico{background:var(--pink);}
+  .door-card:nth-child(3) .door-ico{background:var(--honey);}
+  .door-t{font-weight:700; font-size:15px; margin-bottom:8px; line-height:1.3;}
+  .door-d{font-size:13px; color:var(--ink-soft); line-height:1.5; flex:1; margin-bottom:18px;}
+  .door-btn{display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13px; color:var(--accent); text-decoration:none;}
+  .door-btn:hover{text-decoration:underline;}
+  .door-footnote{font-size:12.5px; color:var(--muted); text-align:center; margin:18px 0 0;}
+
+  /* ---- stat band: the hours-lost data, pulled out as its own callout ---- */
+  .stat-band{display:grid; grid-template-columns:1fr 1fr; gap:1px; margin-top:4px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  @media (max-width:600px){ .stat-band{grid-template-columns:1fr;} }
+  .stat-tile{padding:24px 22px;}
+  .stat-tile:first-child{background:var(--accent-soft);}
+  .stat-num{font-family:'IBM Plex Mono',monospace; font-size:2.2rem; font-weight:700; color:var(--accent); line-height:1;}
+  .stat-label{font-size:13px; font-weight:700; color:var(--ink); margin-top:8px;}
+  .stat-d{font-size:12.5px; color:var(--ink-soft); margin-top:4px; line-height:1.5;}
+
+  /* ---- why-columns, same pattern as about.html's employee/company split ---- */
+  .why-columns{display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:6px;}
+  @media (max-width:600px){ .why-columns{grid-template-columns:1fr;} }
+  .why-col{min-width:0;}
+  .why-col-t{font-weight:700; font-size:14px; line-height:1.3; min-height:36px; display:flex; align-items:flex-end; margin-bottom:16px; color:var(--ink);}
+  .why-item{margin-bottom:16px;}
+  .why-item:last-child{margin-bottom:0;}
+  .why-k{font-weight:700; font-size:13.5px; margin-bottom:3px; display:flex; align-items:center; gap:8px;}
+  .why-k::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0;}
+  .why-col.company .why-k::before{background:var(--honey);}
+  .why-v{font-size:13px; color:var(--ink-soft); line-height:1.5; padding-left:15px;}
+
+  /* ---- compare-grid, same pattern as about.html's "Cost of the Usual Options" ---- */
+  .compare-grid{display:flex; flex-direction:column; gap:1px; margin-top:4px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .compare-row{display:flex; flex-direction:column; gap:4px; font-size:14px; padding:14px 18px; border-bottom:1px solid var(--border);}
+  .compare-row:last-child{border-bottom:none;}
+  .compare-row .k{font-weight:800; color:var(--ink);}
+  .compare-row .v{color:var(--ink-soft);}
+  .compare-row.highlight{background:var(--accent-soft);}
+  .compare-row.highlight .k{color:var(--accent);}
+  .compare-row.highlight .v{color:var(--ink);}
+  .belief-line{margin-top:14px; font-size:13.5px; color:var(--ink-soft); font-style:italic;}
+
+  /* ---- privacy-grid, same pattern as about.html's "Radical Zero-Trace Privacy" ---- */
+  .privacy-grid{display:flex; flex-direction:column; gap:1px; margin-top:4px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .privacy-row{display:flex; flex-direction:column; gap:4px; font-size:14px; padding:14px 18px; border-bottom:1px solid var(--border);}
+  .privacy-row:last-child{border-bottom:none;}
+  .privacy-row .k{font-weight:800; color:var(--ink); display:flex; align-items:center; gap:8px;}
+  .privacy-row .k::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0;}
+  .privacy-row:nth-child(3) .k::before{background:var(--pink);}
+  .privacy-row .v{color:var(--ink-soft);}
+
+  .cta{margin-top:48px; background:linear-gradient(155deg,var(--accent) 0%,#0F2A21 100%); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 12px 28px rgba(23,55,46,0.18); position:relative; overflow:hidden;}
+  .cta h2{color:#D9E5DF; margin:0 0 8px;}
+  .cta h3.section-headline{color:#fff; margin:0 0 8px; font-size:1.3rem;}
+  .cta p{color:#CBDBD4; margin:0 0 20px; font-size:14px;}
+  .cta a.btn-top{background:#fff; color:var(--accent);}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="brand-row" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
+    <nav class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="philosophy.html">Philosophy</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="videos.html">Videos</a>
+      <a href="stack.html">Tech Stack</a>
+    </nav>
+    <a class="nav-cta" href="../about.html">Start a Session &rarr;</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-text">
+      <div class="hero-badge">Trust, shown, not just claimed</div>
+      <h1>Where Your Words Go, and Where They Stop.</h1>
+      <p class="lede">A confidential AI sounding board and peer mediator, built on the belief that most workplace conflict is structural, not personal. This is the case for it: the philosophy behind the facilitator, what it means for you and your company, and the architecture that makes "nothing is recorded" true instead of a slogan.</p>
+      <a class="btn-top" href="../about.html">Start a Private Session</a>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-avatar">
+        <div class="core"></div>
+        <div class="speech-bubble" aria-hidden="true"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+      </div>
+      <div class="avatar-status"><span class="dot"></span>Nothing recorded, ever</div>
+    </div>
+  </div>
+
+  <section class="block">
+    <h3 class="section-headline">Three Ways to Use Mend</h3>
+    <p class="section-sub">No invite required, and no menu to click through. Each one opens the same conversation with Thimble; just start talking, and it steers from what you say.</p>
+    <div class="door-grid">
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="16" cy="20" r="10" stroke="#fff" stroke-width="2"/><circle cx="24" cy="20" r="10" stroke="#fff" stroke-width="2" stroke-opacity=".55"/></svg></div>
+        <div class="door-t">Work Through It on Your Own</div>
+        <div class="door-d">Deconstruct what happened without judgment. Map the hidden role pressures and opposing KPIs driving the other person's behavior so you can spot what's actually going on.</div>
+        <a class="door-btn" href="../about.html">Process Privately &rarr;</a>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
+        <div class="door-t">Practice a Hard Conversation First</div>
+        <div class="door-d">Do a 3-minute mock conversation against a realistic AI colleague before you have the real sync. Test your talking points and refine your boundaries with zero stakes.</div>
+        <a class="door-btn" href="../about.html">Rehearse Conversation &rarr;</a>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="11" stroke="#17372E" stroke-width="2"/><path d="M14 20l4 4 8-8" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="door-t">Prep a Tough Talk With a Direct Report</div>
+        <div class="door-d">Build a clear, fair game plan for delivering hard feedback or addressing a performance issue, without it turning into a complaint waiting to happen. Walk in with the right words, not just good intentions.</div>
+        <a class="door-btn" href="../about.html">Build My Game Plan &rarr;</a>
+      </div>
+    </div>
+    <p class="door-footnote">Need to align with a colleague together? Joint, decoupled peer mediation can be initiated from inside any solo session.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">What Unresolved Friction Actually Costs</h3>
+    <p class="section-sub">Not an abstraction. These are the hours a team loses every week while a conflict sits there unaddressed.</p>
+    <div class="stat-band">
+      <div class="stat-tile">
+        <div class="stat-num">2.8 hrs</div>
+        <div class="stat-label">Lost per employee, per week</div>
+        <div class="stat-d">Circular avoidance, re-reading Slack messages, and context switching around the unresolved tension.</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num">3&ndash;5 hrs</div>
+        <div class="stat-label">Spent by HR and managers, per week</div>
+        <div class="stat-d">Acting as informal arbiters for everyday communication bumps that were never actually HR cases.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Operational Discipline</h2>
+    <h3 class="section-headline">Standard Sprint Maintenance, Not an Escalation</h3>
+    <p class="section-sub">Working through peer tension isn't an emergency or a personal failing. It's proactive team hygiene that keeps projects shipping.</p>
+    <div class="why-columns">
+      <div class="why-col employee">
+        <div class="why-col-t">What You Get as an Employee</div>
+        <div class="why-item"><div class="why-k">Zero Career Risk</div><div class="why-v">Resolving friction peer-to-peer prevents you or your coworker from getting tagged as "difficult" or "culture risks" on a management radar.</div></div>
+        <div class="why-item"><div class="why-k">Drop the Defenses</div><div class="why-v">Without managers or HR watching, you don't have to posture or defend your ego. You can own your part and fix the dynamic with your dignity intact.</div></div>
+        <div class="why-item"><div class="why-k">Full Autonomy</div><div class="why-v">You decide what actions to take. If you only want to process your thoughts or rehearse solo, you never have to invite anyone else.</div></div>
+      </div>
+      <div class="why-col company">
+        <div class="why-col-t">Why HR &amp; Leadership Support This</div>
+        <div class="why-item"><div class="why-k">Protects Sprint Velocity</div><div class="why-v">Unresolved tension leaks into the entire room, pulling surrounding teammates into toxic backchannels and lost focus.</div></div>
+        <div class="why-item"><div class="why-k">Reclaims 2.8 Hours a Week</div><div class="why-v">Cuts the 2.8 hours per employee lost each week to circular avoidance, re-reading Slack messages, and context switching.</div></div>
+        <div class="why-item"><div class="why-k">Frees HR for High-Value Strategy</div><div class="why-v">Shields People Ops and managers from spending 3&ndash;5 hours a week acting as informal arbiters for everyday communication bumps.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">The Cost of the Usual Options</h3>
+    <p class="section-sub">Most conflict at work isn't personal, it's structural: unclear roles, competing incentives, bad process. Treating it as a character problem instead of a structural one is why it almost never gets fixed.</p>
+    <div class="compare-grid">
+      <div class="compare-row"><span class="k">Say Nothing (Avoidance)</span><span class="v">The default choice. Tension festers, code reviews get delayed, and team collaboration quietly grinds to a halt.</span></div>
+      <div class="compare-row"><span class="k">Vent to a Coworker</span><span class="v">Feels cathartic for an hour, but fixes nothing structurally and drags uninvolved teammates into backchannel politics.</span></div>
+      <div class="compare-row"><span class="k">Escalate to HR or Management</span><span class="v">Creates an adversarial paper trail for an issue that was simply two people out of sync, turning normal friction into a formal performance risk.</span></div>
+      <div class="compare-row highlight"><span class="k">Resolve with Mend</span><span class="v">Talk it through privately with Mend first, then work out how to actually fix it. Mend is trained on current conflict-resolution methodology and specifically on the distinction between a misunderstanding and harassment, so it knows when to help you work things out and when to route straight to the Safety Floor instead.</span></div>
+    </div>
+    <p class="belief-line">Resolving conflict directly is a sign of maturity, not a failure. The people who engage with it should be seen as the adults in the room, not as the source of the problem.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Radical Zero-Trace Privacy</h3>
+    <p class="section-sub">Trust isn't a marketing tag. It is the technical foundation of the product, and the full breakdown lives on the Architecture page.</p>
+    <div class="privacy-grid">
+      <div class="privacy-row"><span class="k">What is Recorded</span><span class="v">Nothing. Sessions run in volatile memory and are never written to disk. We don't "record then delete": it is never saved in the first place.</span></div>
+      <div class="privacy-row"><span class="k">What Managers See</span><span class="v">Zero visibility into voluntary sessions. For sessions formally assigned by a manager, they receive only a binary confirmation: "Resolved" or "Unresolved", never conversation content.</span></div>
+      <div class="privacy-row"><span class="k">The Non-Configurable Safety Floor</span><span class="v">Total privacy for everyday peer friction, backed by an immutable legal boundary. Any detection of Title VII harassment, discrimination, or physical threats immediately halts the session and routes to corporate HR.</span></div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <h3 class="section-headline">Ready to See the Rest?</h3>
+    <p>The philosophy, the architecture, and the stack are each one click away. Start wherever the trust question actually sits for you.</p>
+    <a class="btn-top" href="philosophy.html">Start with the Philosophy &rarr;</a>
+  </div>
+
+  <footer>
+    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. Full details: <a href="../product-spec.html">product spec</a> &middot; <a href="../about.html">about</a> &middot; <a href="../launchpad.html">launchpad</a>.</div>
+  </footer>
+</div>
+
+</body>
+</html>

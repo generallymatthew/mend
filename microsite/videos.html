@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; videos</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9,700&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .mark{width:28px; height:20px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+
+  .topnav{position:sticky; top:0; z-index:20; background:rgba(246,241,231,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--border);}
+  .topnav-inner{max-width:1080px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:28px;}
+  .brand-row{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .wordmark{font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; color:var(--ink);}
+  .nav-links{display:flex; gap:22px; margin-left:4px; font-size:13.5px; font-weight:700; color:var(--ink-soft);}
+  .nav-links a{text-decoration:none; padding:6px 0; border-bottom:2px solid transparent;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .nav-cta{margin-left:auto; flex-shrink:0; font-size:13px; font-weight:700; color:#fff; background:var(--accent); padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap;}
+  @media (max-width:760px){ .nav-links{display:none;} .topnav-inner{gap:14px;} }
+
+  .wrap{max-width:900px; margin:0 auto; padding:48px 20px 80px;}
+  .page-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); background:var(--accent-soft); display:inline-block; padding:5px 12px; border-radius:999px; margin-bottom:16px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.1rem; font-weight:700; letter-spacing:-0.015em; margin:0 0 14px; line-height:1.2;}
+  p.lede{font-size:15.5px; color:var(--ink-soft); max-width:58ch; margin:0 0 8px;}
+
+  .video-block{margin-top:48px;}
+  .video-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px; flex-wrap:wrap;}
+  .video-head h2{font-size:1.25rem; font-weight:800; margin:0;}
+  .video-head .dur{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted);}
+  .video-d{font-size:13.5px; color:var(--ink-soft); margin:0 0 14px; max-width:60ch;}
+  .video-frame{position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--border); background:#000; box-shadow:0 10px 28px rgba(23,55,46,0.12); aspect-ratio:16/9;}
+  .video-frame iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+  .video-fallback{padding:14px 18px; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-top:10px; font-size:12.5px; color:var(--ink-soft);}
+  .video-fallback a{color:var(--accent); font-weight:700; text-decoration:none;}
+
+  .serve-note{margin-top:52px; background:var(--honey-soft); border:1px solid var(--honey); border-radius:14px; padding:16px 18px; font-size:13px; color:var(--ink-soft);}
+  .serve-note code{background:rgba(255,255,255,0.6); padding:2px 6px; border-radius:5px; font-family:'IBM Plex Mono',monospace; font-size:12px;}
+
+  .pitch-cta{margin-top:40px; display:flex; align-items:center; justify-content:space-between; gap:16px; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px 22px; flex-wrap:wrap;}
+  .pitch-cta .t{font-weight:800; font-size:14.5px;}
+  .pitch-cta .d{font-size:13px; color:var(--ink-soft); margin-top:3px;}
+  .pitch-cta a.btn{flex-shrink:0; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none;}
+
+  .pagenav{display:flex; justify-content:space-between; margin-top:56px; padding-top:20px; border-top:1px solid var(--border); font-size:13.5px; font-weight:700;}
+  .pagenav a{text-decoration:none; color:var(--accent);}
+
+  footer{border-top:1px solid var(--border); padding:28px 0 40px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6; max-width:1080px; margin:0 auto; padding:0 20px;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="brand-row" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="philosophy.html">Philosophy</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="videos.html" class="active">Videos</a>
+      <a href="stack.html">Tech Stack</a>
+    </nav>
+    <a class="nav-cta" href="../about.html">Start a Session &rarr;</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="page-eyebrow">See it, don't just take our word</div>
+  <h1>Two short videos, the real thing</h1>
+  <p class="lede">Both are the live pitch-deck videos, embedded directly, not re-recorded or simplified for this page.</p>
+
+  <div class="video-block" id="workflow">
+    <div class="video-head"><h2>Mend Workflow</h2><span class="dur">~1 min</span></div>
+    <p class="video-d">The employee-initiated flow end to end: private processing, the pre-session screen, the facilitated session, and the private follow-up where resolution actually happens.</p>
+    <div class="video-frame">
+      <iframe src="../Mend%20Pitch/Mend%20Workflow%20Video.dc.html" loading="lazy" title="Mend Workflow Video" allow="autoplay"></iframe>
+    </div>
+    <div class="video-fallback">If this doesn't render here, it needs a real file server, not <code>file://</code>: run <code>python3 -m http.server 8000</code> from the repo root, then open <a href="http://localhost:8000/microsite/videos.html">localhost:8000/microsite/videos.html</a>. Direct link: <a href="../Mend%20Pitch/Mend%20Workflow%20Video.dc.html">Mend Workflow Video.dc.html</a>.</div>
+  </div>
+
+  <div class="video-block" id="opening">
+    <div class="video-head"><h2>Session Opening</h2><span class="dur">intake &rarr; joint &rarr; side conversation</span></div>
+    <p class="video-d">What it actually feels like when a session opens: the initial side conversation, one on one, before the facilitated joint session begins.</p>
+    <div class="video-frame">
+      <iframe src="../Mend%20Pitch/Mend%20Session%20Opening.dc.html" loading="lazy" title="Mend Session Opening" allow="autoplay"></iframe>
+    </div>
+    <div class="video-fallback">Direct link: <a href="../Mend%20Pitch/Mend%20Session%20Opening.dc.html">Mend Session Opening.dc.html</a>.</div>
+  </div>
+
+  <div class="serve-note">Both videos load other files by relative path (<code>animations-v3.jsx</code>, <code>support.js</code>, the <code>_ds/</code> design tokens) and pull React + fonts from the internet, same requirement as the standalone pitch page. Served over <code>file://</code>, the browser blocks those loads and the frame above will sit blank.</div>
+
+  <div class="pitch-cta">
+    <div>
+      <div class="t">Want the full pitch deck these came from?</div>
+      <div class="d">Layout A/B switch, bottom right (same videos, in their original context).</div>
+    </div>
+    <a class="btn" href="../Mend%20Pitch/Mend%20Pitch%20v2.dc.html">Open the pitch page &rarr;</a>
+  </div>
+
+  <div class="pagenav">
+    <a href="architecture.html">&larr; Architecture</a>
+    <a href="stack.html">Next: Tech Stack &rarr;</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. Full details: <a href="../product-spec.html">product spec</a> &middot; <a href="../about.html">about</a>.</div>
+</footer>
+
+</body>
+</html>

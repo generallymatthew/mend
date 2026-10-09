@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; data &amp; privacy architecture</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9,700&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .mark{width:28px; height:20px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+
+  .topnav{position:sticky; top:0; z-index:20; background:rgba(246,241,231,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--border);}
+  .topnav-inner{max-width:1080px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:28px;}
+  .brand-row{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .wordmark{font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; color:var(--ink);}
+  .nav-links{display:flex; gap:22px; margin-left:4px; font-size:13.5px; font-weight:700; color:var(--ink-soft);}
+  .nav-links a{text-decoration:none; padding:6px 0; border-bottom:2px solid transparent;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .nav-cta{margin-left:auto; flex-shrink:0; font-size:13px; font-weight:700; color:#fff; background:var(--accent); padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap;}
+  @media (max-width:760px){ .nav-links{display:none;} .topnav-inner{gap:14px;} }
+
+  .wrap{max-width:800px; margin:0 auto; padding:48px 20px 80px;}
+  .page-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); background:var(--accent-soft); display:inline-block; padding:5px 12px; border-radius:999px; margin-bottom:16px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.1rem; font-weight:700; letter-spacing:-0.015em; margin:0 0 14px; line-height:1.2;}
+  p.lede{font-size:15.5px; color:var(--ink-soft); max-width:58ch; margin:0 0 8px;}
+
+  section.block{margin-top:52px;}
+  h2.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  p.section-sub{font-size:14px; color:var(--ink-soft); margin:0 0 20px; max-width:58ch;}
+
+  .stored-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:600px){ .stored-grid{grid-template-columns:1fr;} }
+  .stored-card{border-radius:16px; padding:20px 22px;}
+  .stored-card.yes{background:var(--accent-soft); border:1px solid rgba(23,55,46,0.18);}
+  .stored-card.no{background:var(--pink-soft); border:1px solid rgba(243,130,154,0.35);}
+  .stored-card .label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; margin-bottom:10px; display:block;}
+  .stored-card.yes .label{color:var(--accent);}
+  .stored-card.no .label{color:#9A3E52;}
+  .stored-card ul{margin:0; padding-left:18px; font-size:13.5px; color:var(--ink-soft); display:flex; flex-direction:column; gap:8px;}
+
+  .flow-diagram{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-top:8px;}
+  .flow-row{display:flex; align-items:center; gap:4px; flex-wrap:wrap;}
+  .flow-node{font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--paper); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--ink-soft);}
+  .flow-node.tier1{border-color:var(--ink-soft);}
+  .flow-node.tier2{background:var(--honey-soft); border-color:var(--honey); color:var(--ink);}
+  .flow-node.tier3{background:var(--pink-soft); border-color:var(--pink); color:var(--ink);}
+  .flow-arrow{color:var(--muted); font-size:13px; padding:0 2px;}
+
+  .tier{border-left:3px solid var(--border); padding:4px 0 4px 16px; margin:16px 0;}
+  .tier.ceiling{border-left-color:var(--ink-soft);}
+  .tier.floor{border-left-color:var(--pink);}
+  .tier-label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); font-weight:700; display:block; margin-bottom:4px;}
+  .tier.floor .tier-label{color:#9A3E52;}
+  .tier p{font-size:13.5px; color:var(--ink-soft); margin:0;}
+
+  .proof-stack{display:flex; flex-direction:column; gap:14px; margin-top:6px;}
+  .proof-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; position:relative;}
+  .proof-card .rank{position:absolute; top:18px; right:20px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted);}
+  .proof-card .t{font-weight:800; font-size:14.5px; margin-bottom:6px; padding-right:60px;}
+  .proof-card .d{font-size:13.5px; color:var(--ink-soft); line-height:1.55;}
+  .proof-card.strongest{background:var(--accent-soft); border-color:rgba(23,55,46,0.2);}
+
+  .callout{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-top:14px;}
+  .callout .label{font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:700; display:block; margin-bottom:6px;}
+  .callout p{font-size:13.5px; color:var(--ink-soft); margin:0;}
+
+  .pagenav{display:flex; justify-content:space-between; margin-top:56px; padding-top:20px; border-top:1px solid var(--border); font-size:13.5px; font-weight:700;}
+  .pagenav a{text-decoration:none; color:var(--accent);}
+
+  footer{border-top:1px solid var(--border); padding:28px 0 40px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6; max-width:1080px; margin:0 auto; padding:0 20px;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="brand-row" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="philosophy.html">Philosophy</a>
+      <a href="architecture.html" class="active">Architecture</a>
+      <a href="videos.html">Videos</a>
+      <a href="stack.html">Tech Stack</a>
+    </nav>
+    <a class="nav-cta" href="../about.html">Start a Session &rarr;</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="page-eyebrow">Section 07, in detail</div>
+  <h1>Nothing is recorded, then deleted. Nothing is recorded.</h1>
+  <p class="lede">The private-by-default promise is enforced architecturally, not by a retention policy. That distinction matters: a retention policy is a promise about what happens to a record that exists; this is about there never being a record to begin with.</p>
+
+  <section class="block">
+    <h2 class="section-headline">What's stored vs. what never is</h2>
+    <p class="section-sub">The only things that survive a session are the outcome and, if triggered, the category. Never the words that produced it.</p>
+    <div class="stored-grid">
+      <div class="stored-card yes">
+        <span class="label">Stored</span>
+        <ul>
+          <li>Date, participants, session type</li>
+          <li>Resolved: yes / no, per person</li>
+          <li>Reconfirmed: yes / no, per person</li>
+          <li>Which floor category fired, if any, and its severity level (category and level only, never the words that produced it)</li>
+        </ul>
+      </div>
+      <div class="stored-card no">
+        <span class="label">Never stored</span>
+        <ul>
+          <li>Session transcript or audio</li>
+          <li>Pre-session summary text</li>
+          <li>Anything said in private processing conversations</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">Where it actually dies</h2>
+    <p class="section-sub">Everything operates on ephemeral in-memory streams. The transcript window exists only long enough to feed the classifier and the facilitator's own context, then is discarded.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <span class="flow-node">mic audio</span><span class="flow-arrow">&rarr;</span>
+        <span class="flow-node">streaming STT</span><span class="flow-arrow">&rarr;</span>
+        <span class="flow-node tier1">rolling transcript window</span><span class="flow-arrow">&rarr;</span>
+        <span class="flow-node tier2">fast classifier + facilitator LLM</span><span class="flow-arrow">&rarr;</span>
+        <span class="flow-node tier3">discarded, not written to disk</span>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="label">The one narrow exception</span>
+      <p>The tamper-evident trigger record: category and timestamp only, cryptographically signed or append-only logged, not a row in an ordinary database Mend's own engineers could edit. It's deliberately built to function as evidence in itself, so HR can treat "this met harassment, level 3" as established while conducting its own independent investigation.</p>
+    </div>
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Recording sessions and auto-deleting them once both parties confirmed resolution, specifically so they couldn't be subpoenaed later. Rejected: that's spoliation of evidence, not a privacy feature. Never creating the record in the first place sidesteps this entirely: nothing to subpoena because nothing was made.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">Mid-session escalation, three tiers</h2>
+    <p class="section-sub">Not every tier needs a floor trigger. Only the narrowest one needs hard real-time gating.</p>
+    <div class="tier ceiling">
+      <span class="tier-label">Rising tension, not a violation</span>
+      <p>The facilitator can pause and check in privately, no floor trigger required. The person decides whether to continue or end it, not the bot.</p>
+    </div>
+    <div class="tier ceiling">
+      <span class="tier-label">Serious, not acute</span>
+      <p>The bot doesn't announce it live. It steers to the same routine-sounding close every session gets, then tells each person individually, once apart, what's being escalated and why.</p>
+    </div>
+    <div class="tier floor">
+      <span class="tier-label">Active, escalating, imminent</span>
+      <p>A short delay, the broadcast-delay pattern, sits between what's said and what's received. Content crossing this bar is cut before delivery, not interrupted after the fact.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">Proving it, not just claiming it</h2>
+    <p class="section-sub">"Trust us, we don't log it" is a weak claim on its own. There's a real hierarchy of ways to back it up.</p>
+    <div class="proof-stack">
+      <div class="proof-card">
+        <span class="rank">01</span>
+        <div class="t">Table stakes</div>
+        <div class="d">A SOC 2 Type II or ISO 27001 audit: an independent auditor reviewing the real architecture and logging config over months, attesting there's no persistence path for conversation content. Plus published architecture diagrams showing what's ephemeral vs. actually stored, and a contractual warranty with audit rights and real penalties, ideally extended to employees themselves as third-party beneficiaries, not just the employer.</div>
+      </div>
+      <div class="proof-card">
+        <span class="rank">02</span>
+        <div class="t">Verifiable, not just attested</div>
+        <div class="d">Third-party code review or code escrow, under NDA, confirming there's no code path that writes conversation content anywhere durable: the implementation, not a description of it. An open "prove it leaked" bug bounty adds an adversarial check on top.</div>
+      </div>
+      <div class="proof-card strongest">
+        <span class="rank">03</span>
+        <div class="t">Strongest available today</div>
+        <div class="d">Confidential computing: live session processing inside a hardware-isolated Trusted Execution Environment, so even Mend's own engineers can't access memory contents during processing, with cryptographic attestation that the enclave is running exactly the audited code. Not speculative: Apple's Private Cloud Compute ships the same pattern today. The same mechanism covers the trigger record: a signed, append-only transparency log, provable and tamper-evident without ever logging the words behind it.</div>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="label">Realistic path</span>
+      <p>Table stakes is what closes early deals. Confidential computing is a genuine, achievable differentiator, not vaporware: a roadmap item once "provably private" becomes central to the pitch rather than a day-one requirement.</p>
+    </div>
+  </section>
+
+  <div class="pagenav">
+    <a href="philosophy.html">&larr; Philosophy</a>
+    <a href="videos.html">Next: Videos &rarr;</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. Full details: <a href="../product-spec.html">product spec</a> &middot; <a href="../about.html">about</a>.</div>
+</footer>
+
+</body>
+</html>

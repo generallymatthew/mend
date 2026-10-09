@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; philosophy</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9,700&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .mark{width:28px; height:20px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+
+  .topnav{position:sticky; top:0; z-index:20; background:rgba(246,241,231,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--border);}
+  .topnav-inner{max-width:1080px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:28px;}
+  .brand-row{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .wordmark{font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; color:var(--ink);}
+  .nav-links{display:flex; gap:22px; margin-left:4px; font-size:13.5px; font-weight:700; color:var(--ink-soft);}
+  .nav-links a{text-decoration:none; padding:6px 0; border-bottom:2px solid transparent;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .nav-cta{margin-left:auto; flex-shrink:0; font-size:13px; font-weight:700; color:#fff; background:var(--accent); padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap;}
+  @media (max-width:760px){ .nav-links{display:none;} .topnav-inner{gap:14px;} }
+
+  .wrap{max-width:760px; margin:0 auto; padding:48px 20px 80px;}
+  .page-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); background:var(--accent-soft); display:inline-block; padding:5px 12px; border-radius:999px; margin-bottom:16px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.1rem; font-weight:700; letter-spacing:-0.015em; margin:0 0 14px; line-height:1.2;}
+  p.lede{font-size:15.5px; color:var(--ink-soft); max-width:56ch; margin:0 0 8px;}
+
+  .tenet{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px 22px; margin:14px 0; display:flex; gap:14px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .tenet .dot{width:9px; height:9px; border-radius:50%; background:var(--accent); flex-shrink:0; margin-top:7px;}
+  .tenet:nth-child(2n) .dot{background:var(--pink);}
+  .tenet:nth-child(3n) .dot{background:var(--honey);}
+  .tenet .t{font-weight:800; font-size:14.5px; margin-bottom:4px;}
+  .tenet .d{font-size:13.5px; color:var(--ink-soft); line-height:1.55;}
+
+  section.block{margin-top:52px;}
+  h2.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  p.section-sub{font-size:14px; color:var(--ink-soft); margin:0 0 20px; max-width:56ch;}
+
+  .collision-grid{display:flex; flex-direction:column; gap:14px;}
+  .collision-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px;}
+  .collision-card .k{font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); margin-bottom:6px; display:block;}
+  .collision-card .v{font-size:13.5px; color:var(--ink-soft); line-height:1.55;}
+
+  .quote-block{margin:34px 0; padding:22px 24px; background:var(--honey-soft); border-left:3px solid var(--honey); border-radius:0 14px 14px 0; font-size:15px; font-style:italic; color:var(--ink); line-height:1.6;}
+
+  .conflict-table{display:flex; flex-direction:column; gap:1px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-top:6px;}
+  .conflict-row{padding:14px 18px; border-bottom:1px solid var(--border); font-size:13.5px;}
+  .conflict-row:last-child{border-bottom:none;}
+  .conflict-row.highlight{background:var(--accent-soft);}
+  .conflict-row .k{font-weight:800; display:block; margin-bottom:3px;}
+  .conflict-row.highlight .k{color:var(--accent);}
+  .conflict-row .v{color:var(--ink-soft);}
+
+  .scope-grid{display:flex; flex-direction:column; gap:1px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-top:6px;}
+  .scope-row{padding:14px 18px; border-bottom:1px solid var(--border); font-size:13.5px; display:flex; gap:10px;}
+  .scope-row:last-child{border-bottom:none;}
+  .scope-row .mark2{flex-shrink:0; width:18px; font-weight:800;}
+  .scope-row.yes .mark2{color:var(--accent);}
+  .scope-row.no .mark2{color:var(--pink);}
+  .scope-row .v{color:var(--ink-soft);}
+  .scope-row .v b{color:var(--ink);}
+
+  .value-columns{display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:6px;}
+  @media (max-width:640px){ .value-columns{grid-template-columns:1fr;} }
+  .value-col-t{font-weight:700; font-size:14px; line-height:1.3; min-height:36px; display:flex; align-items:flex-end; margin-bottom:16px; color:var(--ink);}
+  .value-item{margin-bottom:16px;}
+  .value-item:last-child{margin-bottom:0;}
+  .value-k{font-weight:700; font-size:13.5px; margin-bottom:3px; display:flex; align-items:center; gap:8px;}
+  .value-k::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0;}
+  .value-col.company .value-k::before{background:var(--honey);}
+  .value-v{font-size:13px; color:var(--ink-soft); line-height:1.5; padding-left:15px;}
+
+  .pagenav{display:flex; justify-content:space-between; margin-top:56px; padding-top:20px; border-top:1px solid var(--border); font-size:13.5px; font-weight:700;}
+  .pagenav a{text-decoration:none; color:var(--accent);}
+
+  footer{border-top:1px solid var(--border); padding:28px 0 40px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6; max-width:1080px; margin:0 auto; padding:0 20px;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="brand-row" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="philosophy.html" class="active">Philosophy</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="videos.html">Videos</a>
+      <a href="stack.html">Tech Stack</a>
+    </nav>
+    <a class="nav-cta" href="../about.html">Start a Session &rarr;</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="page-eyebrow">The Mend Manifesto</div>
+  <h1>We solve the system, not the personality</h1>
+  <p class="lede">Workplace friction stems from colliding incentives, competing KPIs, and overloaded schedules, not malice or "bad people." Everything below is the operating philosophy behind every session Thimble runs, not a mission-statement paragraph bolted on after the fact.</p>
+
+  <section class="block" style="margin-top:40px;">
+    <h2 class="section-headline">The problem, and what Mend actually does about it</h2>
+    <p class="section-sub">Working through peer tension isn't an emergency or a personal failing. It's proactive team hygiene that keeps projects shipping, and the value lands differently depending on which side of the relationship you're on.</p>
+    <div class="value-columns">
+      <div class="value-col employee">
+        <div class="value-col-t">What you get as an employee</div>
+        <div class="value-item"><div class="value-k">Zero career risk</div><div class="value-v">Resolving friction peer-to-peer prevents you or your coworker from getting tagged as "difficult" or "culture risks" on a management radar.</div></div>
+        <div class="value-item"><div class="value-k">Drop the defenses</div><div class="value-v">Without managers or HR watching, you don't have to posture or defend your ego. You can own your part and fix the dynamic with your dignity intact.</div></div>
+        <div class="value-item"><div class="value-k">Full autonomy</div><div class="value-v">You decide what actions to take. If you only want to process your thoughts or rehearse solo, you never have to invite anyone else.</div></div>
+      </div>
+      <div class="value-col company">
+        <div class="value-col-t">Why HR &amp; leadership support this</div>
+        <div class="value-item"><div class="value-k">Protects sprint velocity</div><div class="value-v">Unresolved tension leaks into the entire room, pulling surrounding teammates into toxic backchannels and lost focus.</div></div>
+        <div class="value-item"><div class="value-k">Reclaims 2.8 hours a week</div><div class="value-v">Cuts the 2.8 hours per employee lost each week to circular avoidance, re-reading Slack messages, and context switching.</div></div>
+        <div class="value-item"><div class="value-k">Frees HR for high-value strategy</div><div class="value-v">Shields People Ops and managers from spending 3&ndash;5 hours a week acting as informal arbiters for everyday communication bumps.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">What we value over</h2>
+    <p class="section-sub">Five commitments, each one a deliberate trade against a more conventional, more comfortable alternative.</p>
+
+    <div class="tenet">
+      <div class="dot"></div>
+      <div><div class="t">Structural clarity over litigating blame</div><div class="d">Workplace friction stems from colliding incentives, competing KPIs, and overloaded schedules, not malice or "bad people." We solve the system, not the personality.</div></div>
+    </div>
+    <div class="tenet">
+      <div class="dot"></div>
+      <div><div class="t">Radical privacy over managerial surveillance</div><div class="d">Honest resolution cannot survive an audience. People only own their part when their words cannot be weaponized on a performance review or an HR docket.</div></div>
+    </div>
+    <div class="tenet">
+      <div class="dot"></div>
+      <div><div class="t">Personal agency over forced corporate harmony</div><div class="d">We never demand apologies, preach toxic positivity, or force coworkers to become friends. Setting clear, functional operational boundaries is just as valid.</div></div>
+    </div>
+    <div class="tenet">
+      <div class="dot"></div>
+      <div><div class="t">Decoupled consent over performative truces</div><div class="d">Concessions made under live social pressure fall apart the moment people leave the room. True agreements are evaluated and signed alone, with zero coercion and no audience.</div></div>
+    </div>
+    <div class="tenet">
+      <div class="dot"></div>
+      <div><div class="t">Dissolving sutures over permanent dossiers</div><div class="d">The process exists purely to stabilize the dynamic while it repairs. Once alignment holds, the record dissolves completely.</div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">What we mean by "solving the system"</h2>
+    <p class="section-sub">When an argument feels personal, the instinct is to diagnose the other person as difficult, incompetent, or toxic. In high-velocity teams, conflict almost always comes down to structural design instead.</p>
+    <div class="collision-grid">
+      <div class="collision-card">
+        <span class="k">Colliding incentives</span>
+        <div class="v">Engineering is penalized for regressions and system instability, while Product is measured on delivery speed. Both are doing their jobs, which puts their day-to-day workflows on a direct collision course.</div>
+      </div>
+      <div class="collision-card">
+        <span class="k">Unclear swimlanes &amp; SLAs</span>
+        <div class="v">Vague ownership, ambiguous handoffs, and misaligned turnaround expectations create friction that masquerades as interpersonal hostility.</div>
+      </div>
+      <div class="collision-card">
+        <span class="k">Operational fixes</span>
+        <div class="v">Instead of trying to fix personalities, we fix the machine: aligning delivery criteria, defining explicit handoff boundaries, and removing structural mismatches so both people can succeed without friction.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">Why the usual options don't fix it</h2>
+    <p class="section-sub">Most conflict at work isn't personal, it's structural. Treating it as a character problem instead of a structural one is why it almost never gets fixed.</p>
+    <div class="conflict-table">
+      <div class="conflict-row"><span class="k">Say nothing (avoidance)</span><span class="v">The default choice. Tension festers, code reviews get delayed, and team collaboration quietly grinds to a halt.</span></div>
+      <div class="conflict-row"><span class="k">Vent to a coworker</span><span class="v">Feels cathartic for an hour, but fixes nothing structurally and drags uninvolved teammates into backchannel politics.</span></div>
+      <div class="conflict-row"><span class="k">Escalate to HR or management</span><span class="v">Creates an adversarial paper trail for an issue that was simply two people out of sync, turning normal friction into a formal performance risk.</span></div>
+      <div class="conflict-row highlight"><span class="k">Resolve with Mend</span><span class="v">Talk it through privately with a facilitator trained on current conflict-resolution methodology and specifically on the distinction between a misunderstanding and harassment, so it knows when to help you work things out and when to route straight to the Safety Floor instead.</span></div>
+    </div>
+    <div class="quote-block">Resolving conflict directly is a sign of maturity, not a failure. The people who engage with it should be seen as the adults in the room, not as the source of the problem.</div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">Where advocacy stops</h2>
+    <p class="section-sub">Thimble is not neutral toward the company; it's an advocate for both employees' own interests. That stance has exactly one limit.</p>
+    <div class="scope-grid">
+      <div class="scope-row yes"><span class="mark2">+</span><span class="v">Where a real power imbalance exists, seniority, tenure, a reporting relationship, <b>the more vulnerable party is proactively advised on how to protect themselves</b>, not just how to smooth things over.</span></div>
+      <div class="scope-row no"><span class="mark2">&ndash;</span><span class="v">The advocacy stance yields the moment an employee's own conduct meets the mandatory floor. <b>Being "on your side" was never meant to mean illegal conduct gets a pass.</b></span></div>
+    </div>
+  </section>
+
+  <div class="pagenav">
+    <span></span>
+    <a href="architecture.html">Next: Architecture &rarr;</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. Full details: <a href="../product-spec.html">product spec</a> &middot; <a href="../about.html">about</a>.</div>
+</footer>
+
+</body>
+</html>

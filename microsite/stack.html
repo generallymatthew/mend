@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; tech stack</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9,700&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .mark{width:28px; height:20px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+
+  .topnav{position:sticky; top:0; z-index:20; background:rgba(246,241,231,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--border);}
+  .topnav-inner{max-width:1080px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:28px;}
+  .brand-row{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .wordmark{font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; color:var(--ink);}
+  .nav-links{display:flex; gap:22px; margin-left:4px; font-size:13.5px; font-weight:700; color:var(--ink-soft);}
+  .nav-links a{text-decoration:none; padding:6px 0; border-bottom:2px solid transparent;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .nav-cta{margin-left:auto; flex-shrink:0; font-size:13px; font-weight:700; color:#fff; background:var(--accent); padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap;}
+  @media (max-width:760px){ .nav-links{display:none;} .topnav-inner{gap:14px;} }
+
+  .wrap{max-width:860px; margin:0 auto; padding:48px 20px 80px;}
+  .page-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); background:var(--accent-soft); display:inline-block; padding:5px 12px; border-radius:999px; margin-bottom:16px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.1rem; font-weight:700; letter-spacing:-0.015em; margin:0 0 14px; line-height:1.2;}
+  p.lede{font-size:15.5px; color:var(--ink-soft); max-width:58ch; margin:0 0 8px;}
+
+  section.block{margin-top:52px;}
+  h2.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:0 0 10px;}
+  p.section-sub{font-size:14px; color:var(--ink-soft); margin:0 0 20px; max-width:58ch;}
+
+  .callout{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-top:14px;}
+  .callout .label{font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:700; display:block; margin-bottom:6px;}
+  .callout p{font-size:13.5px; color:var(--ink-soft); margin:0;}
+
+  /* pipeline diagram, static version of the home-page animated one */
+  .pipe{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; overflow-x:auto;}
+  .pipe-row{display:flex; align-items:center; gap:6px; min-width:620px;}
+  .pipe-node{flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--accent-soft); border:1px solid rgba(23,55,46,0.15); color:var(--ink); border-radius:999px; padding:8px 14px; white-space:nowrap;}
+  .pipe-node.gate{background:var(--honey-soft); border-color:var(--honey);}
+  .pipe-arrow{color:var(--muted); font-size:14px; flex-shrink:0;}
+  .pipe-branch{font-size:10.5px; color:var(--muted); margin-top:8px; font-family:'IBM Plex Mono',monospace;}
+
+  .stack-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:4px;}
+  @media (max-width:640px){ .stack-grid{grid-template-columns:1fr;} }
+  .stack-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px;}
+  .stack-card .role{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); display:block; margin-bottom:6px;}
+  .stack-card .name{font-weight:800; font-size:14.5px; margin-bottom:6px;}
+  .stack-card .d{font-size:13px; color:var(--ink-soft); line-height:1.5;}
+
+  .state-machine{display:flex; flex-direction:column; gap:10px; margin-top:8px;}
+  .state-box{background:var(--card); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:0 12px 12px 0; padding:12px 16px;}
+  .state-box.end{border-left-color:var(--pink);}
+  .state-box .name{font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12px; color:var(--ink); margin-bottom:4px;}
+  .state-box .d{font-size:13px; color:var(--ink-soft); line-height:1.5;}
+
+  .limit-grid{display:flex; flex-direction:column; gap:1px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-top:6px;}
+  .limit-row{padding:14px 18px; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink-soft);}
+  .limit-row:last-child{border-bottom:none;}
+
+  .pagenav{display:flex; justify-content:space-between; margin-top:56px; padding-top:20px; border-top:1px solid var(--border); font-size:13.5px; font-weight:700;}
+  .pagenav a{text-decoration:none; color:var(--accent);}
+
+  footer{border-top:1px solid var(--border); padding:28px 0 40px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6; max-width:1080px; margin:0 auto; padding:0 20px;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="brand-row" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="philosophy.html">Philosophy</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="videos.html">Videos</a>
+      <a href="stack.html" class="active">Tech Stack</a>
+    </nav>
+    <a class="nav-cta" href="../about.html">Start a Session &rarr;</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="page-eyebrow">joint-session-architecture.md</div>
+  <h1>Why this can't sit on a vendor avatar API alone</h1>
+  <p class="lede">Tools like Tavus or HeyGen give a managed pipeline: text/audio in, avatar video out. Fine for intake, where the facilitator only ever talks to one person. A joint session needs a buffer inserted <em>between the two humans' audio streams</em>, with the ability to drop content before it's delivered: that requires owning the transport layer, not renting a black-box one.</p>
+
+  <section class="block">
+    <h2 class="section-headline">Per-participant pipeline</h2>
+    <p class="section-sub">Runs twice, once for each employee, both directions, simultaneously.</p>
+    <div class="pipe">
+      <div class="pipe-row">
+        <span class="pipe-node">mic audio</span><span class="pipe-arrow">&rarr;</span>
+        <span class="pipe-node">streaming STT</span><span class="pipe-arrow">&rarr;</span>
+        <span class="pipe-node">rolling transcript window</span><span class="pipe-arrow">&rarr;</span>
+        <span class="pipe-node gate">fast classifier</span><span class="pipe-arrow">&rarr;</span>
+        <span class="pipe-node">facilitator LLM</span>
+      </div>
+      <div class="pipe-branch">fast classifier (per-chunk, low latency) gates the delay buffer below &middot; facilitator LLM runs on full context from both transcripts, drives TTS + avatar output</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">The components</h2>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <span class="role">Transport</span>
+        <div class="name">Self-hosted WebRTC SFU</div>
+        <div class="d">LiveKit or Daily. Each joint session is a room with three participants: employee A, employee B, and the facilitator, a server-side agent, not a human, with per-participant publish/subscribe control.</div>
+      </div>
+      <div class="stack-card">
+        <span class="role">Delay buffer</span>
+        <div class="name">Broadcast-delay pattern</div>
+        <div class="d">Each employee's outbound audio passes through a short ring buffer, on the order of 1&ndash;2 seconds, tunable, before it's released to the other participant.</div>
+      </div>
+      <div class="stack-card">
+        <span class="role">Real-time gating</span>
+        <div class="name">Fast per-chunk classifier</div>
+        <div class="d">Scores each rolling chunk against the "active, escalating, imminent" bar before the buffered audio is released. Crossing it drops the chunk before delivery, and the receiving party never gets it.</div>
+      </div>
+      <div class="stack-card">
+        <span class="role">Severity read</span>
+        <div class="name">Facilitator LLM, full context</div>
+        <div class="d">"Rising tension" and "serious, not acute" don't need sub-second gating. Read by the same model running the session, off the fuller rolling transcript and conversational context.</div>
+      </div>
+      <div class="stack-card">
+        <span class="role">Signal</span>
+        <div class="name">Prosody / tone</div>
+        <div class="d">Proof-of-concept validated, wired into the facilitator LLM as an additional read on escalation beyond words alone.</div>
+      </div>
+      <div class="stack-card">
+        <span class="role">Output</span>
+        <div class="name">TTS + avatar</div>
+        <div class="d">Carries the facilitator's own conversational moves and turn-taking back to both employees, same model output driving voice and the Thimble avatar.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">Session state machine</h2>
+    <p class="section-sub">Three ways in, one way the session ever actually ends: the close looks identical regardless of path.</p>
+    <div class="state-machine">
+      <div class="state-box"><div class="name">ACTIVE &rarr; PAUSED_CHECKIN</div><div class="d">Facilitator senses rising tension, no trigger. Other participant sees a neutral "one moment" state, no content leak. Flagged participant decides: resume or end.</div></div>
+      <div class="state-box"><div class="name">ACTIVE &rarr; WINDING_DOWN (silent)</div><div class="d">Serious-not-acute content surfaces, floor-tripping but not happening live right now. The facilitator does not announce, accuse, or confront.</div></div>
+      <div class="state-box"><div class="name">ACTIVE &rarr; WINDING_DOWN (hard cut)</div><div class="d">Fast classifier fires on a buffered chunk. That chunk is dropped before delivery; session moves to winding down.</div></div>
+      <div class="state-box end"><div class="name">WINDING_DOWN &rarr; ENDED</div><div class="d">Same routine-sounding close every time, no observable difference between an ordinary end and an escalation. Employees move to fully separate rooms; only now does the facilitator tell each person individually what was escalated and why.</div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">No-persistence constraint</h2>
+    <p class="section-sub">The same ephemeral-by-architecture rule from the data page, stated at the component level.</p>
+    <div class="callout">
+      <span class="label">Everything above</span>
+      <p>Operates on ephemeral in-memory streams. STT transcript windows exist only long enough to feed the classifier and the facilitator LLM's context, then are discarded, not written to disk or a database.</p>
+    </div>
+    <div class="callout">
+      <span class="label">The one narrow exception</span>
+      <p>The tamper-evident trigger record, category and timestamp, not transcript content, is the only thing allowed to outlive the live session.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-headline">Real limits, not solved</h2>
+    <div class="limit-grid">
+      <div class="limit-row">There's always some irreducible latency, speech-to-text, classification, and the cut itself all take real time, so the delay buffer shrinks the window, it doesn't erase it to zero.</div>
+      <div class="limit-row">It also adds a small amount of lag to the whole conversation, not just the risky moments, the same tradeoff real broadcast delay accepts.</div>
+      <div class="limit-row">Judging a partial, still-arriving utterance is harder than judging a complete one: this tier needs a much higher, narrower bar, or false positives cost real trust.</div>
+    </div>
+  </section>
+
+  <div class="pagenav">
+    <a href="videos.html">&larr; Videos</a>
+    <a href="index.html">Back to Home &rarr;</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. Full details: <a href="../joint-session-architecture.md">joint-session-architecture.md</a> &middot; <a href="../product-spec.html">product spec</a>.</div>
+</footer>
+
+</body>
+</html>
