@@ -342,6 +342,49 @@ SYSTEM_PROMPT_BLOCKS = [{"type": "text", "text": SYSTEM_PROMPT, "cache_control":
 DEFAULT_SESSION_ID = "default"
 conversations: dict[str, list[dict]] = {}
 
+# Which sessions have already received their hardcoded track-stance sentence
+# (see TRACK_STANCE_SENTENCES / maybe_stance_sentence below) -- separate from
+# `conversations` since it's a one-shot flag, not conversation content.
+stance_shown: dict[str, bool] = {}
+
+# The system prompt used to require the model to state its own advocate
+# (employee-conflict path) or not-simply-on-the-manager's-side
+# (manager-coaching path) stance as part of its first track-specific message.
+# Tested live: banning one disclosure-preamble phrasing ("I want to be
+# upfront with you...") just produced another ("for the record...", "to be
+# straight with you...") on the next run, no matter how the ban was worded --
+# the model reaches for *some* lead-in whenever asked to assert this as a
+# standalone fact. The prompt no longer requires a standalone declaration at
+# all (see facilitator-intake-system-prompt.md's note on this); this fixed,
+# reviewed wording is spliced in by the app itself instead, the one time per
+# session the track first becomes known, so the exact phrasing is guaranteed
+# regardless of what the model would have said on its own.
+TRACK_STANCE_SENTENCES = {
+    "employee_conflict": (
+        "I'm working for your interests in this, not the company's, the same as I would "
+        "if the other person were the one sitting here instead of you. I won't agree with "
+        "everything, if your plan seems likely to backfire I'll say so, but the goal is "
+        "getting you a good outcome."
+    ),
+    "manager_coaching": (
+        "I'm here to help you have this conversation well, not simply to take your side "
+        "against your report. If something you're planning seems unfair or likely to "
+        "blindside them, I'll say so."
+    ),
+}
+
+
+def maybe_stance_sentence(session_id: str, signal_dict: dict) -> str | None:
+    """Returns the hardcoded stance sentence for this session's track the
+    first turn that track becomes known, None on every other turn (including
+    turns before the track is known, and every turn after the first one for
+    an already-disclosed track)."""
+    sentence = TRACK_STANCE_SENTENCES.get(signal_dict.get("track"))
+    if not sentence or stance_shown.get(session_id):
+        return None
+    stance_shown[session_id] = True
+    return sentence
+
 
 def get_conversation(session_id: str | None) -> list[dict]:
     return conversations.setdefault(session_id or DEFAULT_SESSION_ID, [])
@@ -810,6 +853,9 @@ async def post_message(payload: dict):
     final = await maybe_override_via_voting(conversation, snapshot, result)
     if final is not result:
         log_screen_signal(session_id, turn, parse_mend_signal(final.get("signal")), note="overridden_by_vote")
+    stance = maybe_stance_sentence(session_id, parse_mend_signal(final.get("signal")))
+    if stance:
+        final = {**final, "reply": f"{final['reply']}\n\n{stance}"}
     return final
 
 
@@ -902,7 +948,11 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
     # itself) -- only the parsed signal still needs to reach the frontend.
     _, signal = strip_signal(full_text)
     conversation.append({"role": "assistant", "content": full_text})
-    log_screen_signal(session_id, turn, parse_mend_signal(signal))
+    signal_dict = parse_mend_signal(signal)
+    log_screen_signal(session_id, turn, signal_dict)
+    stance = maybe_stance_sentence(session_id, signal_dict)
+    if stance:
+        yield _sse({"text": f"\n\n{stance}"})
     yield _sse({"done": True, "signal": signal})
 
 
@@ -1119,7 +1169,9 @@ async def speak_aura(payload: dict):
 @app.post("/api/reset")
 async def reset(payload: dict = None):
     payload = payload or {}
+    session_id = payload.get("session_id") or DEFAULT_SESSION_ID
     get_conversation(payload.get("session_id")).clear()
+    stance_shown.pop(session_id, None)
     # Audio files aren't namespaced per session (random uuid filenames,
     # see synthesize_speech) -- clearing them here is harmless for the real
     # single-session frontend (the only caller that ever uses synthesize
