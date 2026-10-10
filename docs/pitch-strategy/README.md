@@ -21,6 +21,7 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 | [14_WORKPLACE_SCENARIOS.md](14_WORKPLACE_SCENARIOS.md) | 14 pretend workplace-conflict scenarios (peer, manager, harassment, and manager-rehearsal cases) for giving testers something to bring to the app when they don't have a real conflict of their own |
 | [15_USER_TESTING_FEEDBACK_INVITATION.md](15_USER_TESTING_FEEDBACK_INVITATION.md) | The user's own refined version of the tester-outreach email draft (about-page comprehension check + app walkthrough + roleplay scenarios + specific feedback questions) |
 | [16_CONFLICT_RESOLUTION_STRATEGIES_PROMPT_DRAFT.md](16_CONFLICT_RESOLUTION_STRATEGIES_PROMPT_DRAFT.md) | Draft/alternative facilitator system prompt (operational-systems framing, non-judgment stance, safety floor, phased conversational pipeline) -- reference input, not yet reconciled with the real `facilitator-*-system-prompt.md` files at repo root |
+| [17_PROMPT_TRANSPARENCY_AND_ATTESTATION.md](17_PROMPT_TRANSPARENCY_AND_ATTESTATION.md) | Why and how to publish Thimble's real system prompt for trust, SHA-256 manifest + runtime attestation endpoint to prove the deployed app matches what's published, trust-page copy direction |
 
 ## Status
 

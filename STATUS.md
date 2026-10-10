@@ -2,7 +2,7 @@
 
 Updated at natural checkpoints (a completed, verified piece of work), not on every commit. Meant to let anyone — including you, switching between your two Claude accounts on this same machine — pick the project back up cold, without depending on any one conversation's chat history. See `README.md` for what the project actually is, and `ROADMAP.md` for the structural phase-level view (this file is the rolling log of what actually happened; that one is the checklist of what needs to be true next).
 
-**Last updated:** 2026-10-09 (new `microsite/` trust site built: philosophy, data architecture, tech stack, and the pitch videos, each one click apart)
+**Last updated:** 2026-10-10 (Thimble prompt behavior fixes: disclosure-preamble tic, name-calling handling, jargon ban, archetype diversity; new public-prompt transparency strategy doc)
 
 ## Active goal
 
@@ -176,6 +176,9 @@ GitHub (`github.com/generallymatthew/mend`) is **still suspended** (`git ls-remo
 - classifier `batch6`: 100 hand-labeled manager-statement examples, checked against the live v3 model (surfaced that v3 currently has 0% recall on live coercive-retaliation phrasing).
 - `demo-app`'s real signup/invite backend + `run_all.sh`/`Caddyfile` unified local proxy, both verified.
 - Legal counsel outreach template saved to `docs/pitch-strategy/10_LEGAL_COUNSEL_OUTREACH.md` — drafted, not sent.
+
+- **Thimble prompt behavior pass, consolidating several AI-chat-session ideas directly into the live prompt files rather than a separate notes doc.** `facilitator-case-plan-system-prompt.md` (manager-app's live prompt, `THIMBLE_MINDSET.md` updated to match per that file's own "live prompt wins" rule): Beat 2's structural-alignment diagnosis expanded from a single competing-metrics hypothesis into six named drivers (metrics, bandwidth/overload, ownership gap, status/visibility, style clash, missing context) so Thimble stops flattening every case into a KPI collision; added an explicit internal-jargon-to-plain-language translation table (never say "bandwidth panic" or "swimlane" to the manager, even while using those words internally); added a rule against the "I want to be upfront with you, I'm on your side" disclosure-preamble tic (reads as pre-bad-news hedging, not reassurance; alignment should be shown through behavior, not announced); added deflective-reframing guidance for colloquial name-calling ("they're an idiot") that redirects to the specific behavior underneath without HR-style scolding; tightened beat 1 to one clarifying question per turn so a skeptical manager sees value faster. Same disclosure-tic and name-calling fixes mirrored into `facilitator-intake-system-prompt.md`'s shared tone section and `facilitator-persona.md`'s core traits, since both apply beyond manager-app. None of this is live-tested against a real model reply yet.
+- **New `docs/pitch-strategy/17_PROMPT_TRANSPARENCY_AND_ATTESTATION.md`**: rationale and shape for publishing Thimble's real system prompt as a trust-building move (the existing `facilitator-*-system-prompt.md` files are already clean enough to publish as-is), plus a SHA-256 manifest + runtime attestation endpoint as the actual mechanism for proving a deployed instance matches what's published — not yet built, flagged as premature before a real server deployment exists to attest. Open question logged: which repo gets published, given `origin`'s status.
 
 ## Open / next up
 
