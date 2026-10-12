@@ -2659,25 +2659,48 @@ for (const [provider, btn] of Object.entries(ttsOptButtons)) {
   });
 }
 
+// A failed/empty /api/speak call used to be skipped silently on the first
+// try -- no retry, no console trace -- which read live as "the last
+// paragraph sometimes isn't spoken": the trailing sentence is exactly the
+// one most likely to still be in flight when something transient (a slow
+// OpenAI call brushing the server's 8s timeout, a dropped connection) hits.
+// One retry recovers the transient case for free; a console.warn on final
+// failure at least leaves a trace, instead of a reply quietly coming up one
+// sentence short with nothing anywhere to show why.
+function fetchSpeechAudio(speakPath, text, signal, attempt) {
+  return fetch(apiPath(speakPath), {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text}),
+    signal,
+  }).then(res => res.json()).then(data => {
+    if (data.audio_url) return data.audio_url;
+    if (attempt < 1) return fetchSpeechAudio(speakPath, text, signal, attempt + 1);
+    return null;
+  }).catch((e) => {
+    if (e.name === 'AbortError') throw e; // reply cycle ended -- don't retry into a dead signal
+    if (attempt < 1) return fetchSpeechAudio(speakPath, text, signal, attempt + 1);
+    throw e;
+  });
+}
+
 function queueSentence(text) {
   if (!text) return;
   const myGen = speechCycleGen;
   const item = {text, url: null, ready: false};
   speechItems.push(item);
   const speakPath = ttsProvider === 'aura' ? '/api/speak/aura' : '/api/speak';
-  fetch(apiPath(speakPath), {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({text}),
-    signal: speechAbortController ? speechAbortController.signal : undefined,
-  }).then(res => res.json()).then(data => {
+  const signal = speechAbortController ? speechAbortController.signal : undefined;
+  fetchSpeechAudio(speakPath, text, signal, 0).then(url => {
     if (myGen !== replyGen) return;
-    item.url = data.audio_url || null;
+    item.url = url;
     item.ready = true;
+    if (!url) console.warn('[tts] no audio for sentence after retry, skipping:', text.slice(0, 60));
     maybeAdvancePlayback();
   }).catch(() => {
     if (myGen !== replyGen) return;
     item.ready = true; // TTS failed for just this one sentence -- skip it, don't block the rest of the queue
     item.url = null;
+    console.warn('[tts] speak request failed after retry, skipping:', text.slice(0, 60));
     maybeAdvancePlayback();
   });
 }
@@ -3427,6 +3450,17 @@ async function startRecordingTurn(tapMode) {
     // that text never pays: the Deepgram drain and transcript resolution.
     // Visible via the browser console, not sent anywhere.
     const tStop = performance.now();
+    // Tap/hold-to-talk (holdControlled) ends the instant the user releases,
+    // with none of hands-free's natural trailing silence -- the same race
+    // already found and fixed in the composer's hold-to-dictate onstop
+    // (see startComposerRecording): micProcessor's buffered chunk hasn't
+    // necessarily reached dgSocket yet when the track is stopped right on
+    // the last word, and once the track's torn down that audio is gone for
+    // good, no amount of draining after recovers it. Hands-free doesn't
+    // need this -- checkVad/Deepgram endpointing only fire after real
+    // silence has already elapsed, so the last word's audio was sent long
+    // before stop() is ever called here.
+    if (holdControlled) await new Promise((r) => setTimeout(r, 600));
     stream.getTracks().forEach(t => t.stop());
     stopMicAnalysis();
     // Clear the "Listening…" indicator right away -- recording genuinely
