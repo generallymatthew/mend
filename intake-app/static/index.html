@@ -765,12 +765,43 @@
 const BASE_PATH = location.pathname.endsWith('/') ? location.pathname : location.pathname + '/';
 function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
 
-// Anonymous usage analytics -- counts and mode tags only, never conversation
-// text or audio (see server.py's /api/analytics docstring for the same
-// "nothing is recorded" boundary everything else here follows). sessionId is
-// a fresh random id per page load, not tied to any identity, just enough to
-// group one session's turns/interrupts together in the sheet.
-const sessionId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+// Was a fresh random id per page load, used only for analytics grouping --
+// never actually sent on /api/start, /api/message(/stream), /api/history,
+// or /api/reset, so every one of those landed on the server's single
+// DEFAULT_SESSION_ID (see server.py's own comment on `conversations`).
+// Harmless for local single-tester dev; a real live bug once multiple
+// blind testers hit the same deployed URL concurrently -- confirmed live
+// (curled /api/start twice against the live site: the second call came
+// back {"reply": null}, the resume-no-op path, and /api/history then
+// handed back the FIRST caller's turns to the second). One tester's
+// conversation was reachable by the next tester's browser. Reported live
+// as a session stuck silently on "Waiting..." -- a tester's own /api/start
+// landing after someone else's on the shared default session, taking the
+// silent resume branch with nothing to actually say.
+//
+// Persisted in sessionStorage, not just a page-load-local const: this is
+// what actually fixes it -- a stable id per BROWSER TAB, surviving a
+// reload (so "resume on reload" keeps working exactly as before, now
+// scoped to the right person), gone the moment the tab closes (matching
+// the existing "nothing is saved" promise), and never shared with any
+// other tab or visitor.
+function getSessionId() {
+  try {
+    let id = sessionStorage.getItem('mendSessionId');
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      sessionStorage.setItem('mendSessionId', id);
+    }
+    return id;
+  } catch (e) {
+    // Private browsing / storage blocked -- falls back to the old
+    // page-load-local behavior rather than throwing; still isolates THIS
+    // tab's own concurrent requests from a truly different visitor, just
+    // without surviving a reload.
+    return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+}
+const sessionId = getSessionId();
 let analyticsTurnCount = 0;
 function logEvent(event, extra) {
   fetch(apiPath('/api/analytics'), {
@@ -2978,7 +3009,7 @@ async function streamFacilitatorReply(text, onDelta, abortSignal) {
   const res = await fetch(apiPath('/api/message/stream'), {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({text}),
+    body: JSON.stringify({text, session_id: sessionId}),
     signal: abortSignal,
   });
   if (!res.ok || !res.body) {
@@ -3948,7 +3979,7 @@ async function start() {
     const res = await fetch(apiPath('/api/start'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({}),
+      body: JSON.stringify({session_id: sessionId}),
     });
     const data = await res.json();
     if (data.reply) {
@@ -3977,7 +4008,7 @@ async function start() {
       // reported live more than once as "no intro, not reacting" before
       // this existed.
       try {
-        const histRes = await fetch(apiPath('/api/history'));
+        const histRes = await fetch(apiPath('/api/history?session_id=' + encodeURIComponent(sessionId)));
         const hist = await histRes.json();
         if ((hist.turns || []).length) {
           for (const turn of hist.turns) {
@@ -4023,7 +4054,11 @@ async function resetAndStart() {
   avatarState = 'idle';
   resetBtn.disabled = true;
   try {
-    await fetch(apiPath('/api/reset'), {method: 'POST'});
+    await fetch(apiPath('/api/reset'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({session_id: sessionId}),
+    });
     thread.innerHTML = '';
     chatThreadInner.querySelectorAll('.chat-msg-wrap').forEach(el => el.remove());
     banner.hidden = true;
