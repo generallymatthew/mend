@@ -44,7 +44,6 @@
   @media (max-width:600px){ .modal-card{padding:28px 20px 24px;} }
   .wordmark{font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; line-height:1;}
 
-  .hero-badge{display:inline-flex; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent); background:var(--accent-soft); border:1px solid rgba(23,55,46,0.1); padding:6px 14px; border-radius:999px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:18px;}
 
   .hero{display:flex; align-items:center; gap:36px; margin-bottom:4px;}
   .hero-text{flex:1; min-width:0;}
@@ -61,7 +60,21 @@
   @keyframes typing-bounce{0%,60%,100%{transform:translateY(0); opacity:.4;} 30%{transform:translateY(-3px); opacity:1;}}
   @media (prefers-reduced-motion: reduce){ .typing-dot{animation:none; opacity:.7;} }
 
-  @media (max-width:600px){ .hero{flex-direction:column; align-items:flex-start; gap:22px;} .hero-visual{align-self:center;} .hero-avatar{width:120px; height:120px;} }
+  @media (max-width:600px){ .hero{flex-direction:column; align-items:flex-start; gap:22px;} .hero-visual{display:none;} }
+
+  /* Thimble avatar: ported from intake-app/static/index.html's current
+     "Soft Dome" body (dome-wobble clip-path, ring/body/blend/mouth parts),
+     the same shape the live session actually uses -- replaces the older,
+     separate thimble_avatar-new-mow handoff this page used to load. No mic
+     or TTS input here, so the ear-ripple/employee-tile pieces of the
+     intake-app version are dropped; state cycling and levels are faked by
+     the hero/cta loop below instead. */
+  .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease;}
+  .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
 
   h1{font-size:2.15rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:800;}
   h2{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase;}
@@ -76,7 +89,6 @@
 
   .btn-top{display:inline-flex; align-items:center; gap:6px; margin-top:18px; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 2px 6px rgba(23,55,46,0.18);}
   .btn-top:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(23,55,46,0.24);}
-  @media (max-width:600px){ .btn-top{width:100%; justify-content:center;} }
 
   section.block{margin-top:48px;}
 
@@ -142,6 +154,19 @@
   footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
   footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
   footer a{color:var(--ink-soft);}
+
+  .builder-note{background:var(--card); border:1px solid var(--border); border-left:3px solid var(--honey); border-radius:16px; padding:28px 28px 24px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .builder-note .kicker{font-family:Georgia,'Times New Roman',serif; font-style:italic; font-size:14px; color:var(--muted); margin:0 0 10px;}
+  .builder-note .section-headline{margin-top:0;}
+  .builder-note p{font-size:14px; color:var(--ink-soft); max-width:none;}
+  .builder-note .read-more{margin-top:4px;}
+  .builder-note .read-more summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; color:var(--accent); margin-bottom:4px;}
+  .builder-note .read-more summary::-webkit-details-marker{display:none;}
+  .builder-note .read-more summary::after{content:'Read the rest of the letter'; }
+  .builder-note .read-more[open] summary::after{content:'Show less';}
+  .builder-note .read-more summary .chevron{display:inline-block; transition:transform .15s ease;}
+  .builder-note .read-more[open] summary .chevron{transform:rotate(180deg);}
+  .builder-note .read-more .more-body{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -154,7 +179,7 @@
         <button type="button" class="manifesto-link" onclick="document.getElementById('manifestoModal').classList.add('open')">Our Manifesto</button>
       </div>
       <h1>Fix Coworker Friction Before It Becomes an HR File.</h1>
-      <p class="lede">A confidential AI sounding board and peer mediator on your side, not your company's HR docket. Unpack tension, de-escalate misalignments, or rehearse tough conversations solo. Zero transcripts, zero manager visibility, and no one else is looped in unless you choose to.</p>
+      <p class="lede">Work through coworker friction without the company getting involved. Unpack what went wrong, practice tough conversations solo, and clear your head before stepping back into the room. Nothing is recorded, nothing reaches HR, and your manager never knows you used it.</p>
       <a class="btn-top start-link" href="http://localhost:8080/intake/" data-local="http://localhost:8080/intake/" data-live="https://mend-mvp.onrender.com/intake/">Start a Private Session &rarr;</a>
     </div>
     <div class="hero-visual">
@@ -162,8 +187,26 @@
         <div id="heroAvatar"></div>
         <div class="speech-bubble" aria-hidden="true"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
       </div>
+      <div class="avatar-status"><span class="dot"></span>Thimble, your session facilitator</div>
     </div>
   </div>
+
+  <section class="block builder-note">
+    <p class="kicker">A note from the builder</p>
+    <h3 class="section-headline">The Third Way to Be Professional</h3>
+    <p>Earlier in my career, whenever I ran into tension with a coworker, I did what almost everyone does: I asked my friends.</p>
+    <p>Because they cared about me, they validated me. They told me I was right, that the other person was being unreasonable, and that I didn&rsquo;t deserve it. It felt good in the moment. But they didn&rsquo;t tell me what I actually needed to hear: my own part in the dynamic.</p>
+    <details class="read-more">
+      <summary><span class="chevron">&#9662;</span></summary>
+      <div class="more-body">
+        <p>Armed with that validation, I made reactive, defensive choices that set my career back years.</p>
+        <p>People pretend workplace dynamics are common sense. They aren&rsquo;t. They&rsquo;re complicated, emotionally charged, and rarely taught.</p>
+        <p>Worse, corporate culture tells us the only way to be &ldquo;professional&rdquo; is to pretend our humanity doesn&rsquo;t exist: check your feelings at the door, smile through misaligned expectations, and treat emotional friction like an HR malfunction. But suppressing how you feel doesn&rsquo;t make you professional, it just drives the frustration into quiet avoidance and backchannel gossip.</p>
+        <p>We built Mend around a third option: being professionally human.</p>
+        <p>You don&rsquo;t have to turn into an emotionless corporate cog, and you don&rsquo;t have to sabotage your reputation either. Mend is the private, neutral mirror I wish I had back then: a place to drop the filter, be messy and honest off the record, figure out what&rsquo;s actually happening beneath the surface, and handle conflict like a grown-up before walking into the room.</p>
+      </div>
+    </details>
+  </section>
 
   <section class="block">
     <h3 class="section-headline">Three Ways to Use Mend</h3>
@@ -217,7 +260,7 @@
       <div class="compare-row"><span class="k">Escalate to HR or Management</span><span class="v">Creates an adversarial paper trail for an issue that was simply two people out of sync, turning normal friction into a formal performance risk.</span></div>
       <div class="compare-row"><span class="k">Ask the AI App on Your Phone</span><span class="v">A general-purpose chatbot wasn't built for this. It has no grounding in conflict resolution methodology and no way to reliably tell a genuine misunderstanding apart from conduct that's actually harassment, so it can just as easily talk you out of raising something serious.</span></div>
       <div class="compare-divider">We think there's a better way</div>
-      <div class="compare-row highlight"><span class="k">Resolve with Mend</span><span class="v">Talk it through privately with Mend first, then work out how to actually fix it. Mend is trained on current conflict-resolution methodology and specifically on the distinction between a misunderstanding and harassment, so it knows when to help you work things out and when to route straight to the Safety Floor instead. Nothing is recorded, and no one else, not your manager, not HR, ever finds out it happened.</span></div>
+      <div class="compare-row highlight"><span class="k">Resolve with Mend</span><span class="v">Talk it through privately with Mend first, then work out how to actually fix it. Mend is trained on current conflict-resolution methodology and specifically on the distinction between a misunderstanding and harassment, so it knows when to help you work things out and when to automatically route to HR instead. Nothing is recorded, and no one else, not your manager, not HR, ever finds out it happened.</span></div>
     </div>
     <p class="belief-line">Resolving conflict directly is a sign of maturity, not a failure. The people who engage with it should be seen as the adults in the room, not as the source of the problem.</p>
   </section>
@@ -228,7 +271,7 @@
     <div class="privacy-grid">
       <div class="privacy-row"><span class="k">What is Recorded</span><span class="v">Nothing. Sessions run in volatile memory enclaves and are never written to disk. We don't "record then delete": it is never saved in the first place.</span></div>
       <div class="privacy-row"><span class="k">What Managers See</span><span class="v">Zero visibility into voluntary sessions. For sessions formally assigned by a manager, they receive only a binary confirmation: "Resolved" or "Unresolved", never conversation content.</span></div>
-      <div class="privacy-row"><span class="k">The Non-Configurable Safety Floor</span><span class="v">Total privacy for everyday peer friction, backed by an immutable legal boundary. Any detection of Title VII harassment, discrimination, or physical threats immediately halts the session and routes to corporate HR.</span></div>
+      <div class="privacy-row"><span class="k">Automatic Safety Protocols</span><span class="v">Total privacy for everyday peer friction, backed by an immutable legal boundary. If what's being discussed meets the legal standard for Title VII harassment, discrimination, or a physical threat, the session immediately halts and routes to corporate HR.</span></div>
     </div>
   </section>
 
@@ -275,17 +318,107 @@
   });
 })();
 </script>
-<script src="design_handoffs/thimble_avatar-new-mow/thimble-avatar.js"></script>
 <script>
 (function(){
-  // Hero Thimble: cycles idle -> listening -> thinking -> speaking on a
+  // ThimbleAvatarV2: a static-page port of the live avatar's own render
+  // loop (intake-app/static/index.html's THIMBLE_SHAPES, domeWobbleRadius,
+  // applyThimbleState/renderThimbleMouth, updateThimbleMotion), trimmed to
+  // what a mic-less, TTS-less marketing preview needs. setState/setLevel
+  // keep the same call shape the old design-handoff ThimbleAvatar used, so
+  // the cycling loop below didn't need to change.
+  var DOME_RADIUS_CAP = 12, DOME_RADIUS_RIM = 14;
+  var THIMBLE_SHAPES = {
+    idle:      {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
+    listening: {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
+    thinking:  {lean:'none', mouthTop:62, mouthW:.12, mouthH:.07, mouthX:58},
+    talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
+  };
+  function domeWobbleRadius(domeFactor, lvl){
+    var capY = 50 + (DOME_RADIUS_CAP + 3 * lvl) * domeFactor;
+    var rimY = 50 - (DOME_RADIUS_RIM + 3 * lvl) * domeFactor;
+    return '50% 50% 50% 50% / ' + capY.toFixed(1) + '% ' + capY.toFixed(1) + '% ' + rimY.toFixed(1) + '% ' + rimY.toFixed(1) + '%';
+  }
+  function renderMouth(inst, state){
+    var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+    inst.mouth.style.top = shape.mouthTop + '%';
+    inst.mouth.style.left = (shape.mouthX || 50) + '%';
+    inst.mouth.style.width = (shape.mouthW * inst.size) + 'px';
+    inst.mouth.style.height = (shape.mouthH * inst.size) + 'px';
+    inst.mouth.style.background = '#F6F1E7';
+    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
+  }
+  function applyState(inst, state){
+    if (state === inst.renderedState) return;
+    inst.renderedState = state;
+    var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+    inst.el.style.transform = shape.lean;
+    inst.blend.style.opacity = '0';
+    var talking = state === 'talking';
+    inst.ripple.hidden = !talking;
+    inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
+    renderMouth(inst, state);
+  }
+  function tick(inst, now){
+    applyState(inst, inst.state);
+    var dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
+    inst.lastT = now;
+    var speaking = inst.state === 'talking';
+    var thinkingState = inst.state === 'thinking';
+    var nodding = inst.state === 'listening';
+    var y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
+    var wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
+    var breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
+    inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+    var breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
+    inst.ring.style.transform = 'translateY(' + y.toFixed(2) + '%) rotate(' + wiggle.toFixed(2) + 'deg) scale(' + breathe.toFixed(4) + ')';
+    var input = thinkingState ? 0.15 : inst.level;
+    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
+    var wobblePeriod = thinkingState ? 3.4 : 1.6;
+    inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+    var domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
+    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+    if (speaking) {
+      inst.ripple.style.borderRadius = inst.body.style.borderRadius;
+      inst.ripple.style.transform = inst.ring.style.transform + ' scale(' + (1.04 + 0.05 * domeFactor).toFixed(3) + ')';
+      inst.ripple.style.opacity = (0.22 + 0.16 * domeFactor).toFixed(3);
+    }
+    requestAnimationFrame(function(t){ tick(inst, t); });
+  }
+  window.ThimbleAvatarV2 = function(host, opts){
+    var size = (opts && opts.size) || 140;
+    host.innerHTML = '<div class="thimble-avatar" style="width:' + size + 'px;height:' + size + 'px;">' +
+      '<div class="thimble-ripple" hidden></div>' +
+      '<div class="thimble-ring"><div class="thimble-body"><div class="thimble-blend"></div><div class="thimble-mouth"></div></div></div>' +
+    '</div>';
+    var el = host.querySelector('.thimble-avatar');
+    var inst = {
+      size: size, el: el,
+      ring: el.querySelector('.thimble-ring'),
+      body: el.querySelector('.thimble-body'),
+      blend: el.querySelector('.thimble-blend'),
+      mouth: el.querySelector('.thimble-mouth'),
+      ripple: el.querySelector('.thimble-ripple'),
+      renderedState: null, state: 'idle', level: 0, lvl: 0,
+      wobblePhase: 0, breathePhase: 0, lastT: null
+    };
+    requestAnimationFrame(function(t){ tick(inst, t); });
+    return {
+      setState: function(s){ inst.state = s; },
+      setLevel: function(l){ inst.level = l; }
+    };
+  };
+})();
+</script>
+<script>
+(function(){
+  // Hero Thimble: cycles idle -> listening -> thinking -> talking on a
   // loop with a fake amplitude signal, just to give the primer page a
   // living preview of the thing you're about to talk to.
-  if (!window.ThimbleAvatar) return;
+  if (!window.ThimbleAvatarV2) return;
   var heroHost = document.getElementById('heroAvatar');
   if (heroHost) {
-    var hero = new ThimbleAvatar(heroHost, { size: 140 });
-    var states = ['idle', 'listening', 'thinking', 'speaking'];
+    var hero = new ThimbleAvatarV2(heroHost, { size: 140 });
+    var states = ['idle', 'listening', 'thinking', 'talking'];
     var i = 0;
     hero.setState(states[0]);
     setInterval(function(){ i++; hero.setState(states[i % states.length]); }, 3200);
@@ -296,7 +429,7 @@
     }, 80);
   }
   var ctaHost = document.getElementById('ctaAvatar');
-  if (ctaHost) new ThimbleAvatar(ctaHost, { size: 52 });
+  if (ctaHost) new ThimbleAvatarV2(ctaHost, { size: 52 });
 })();
 </script>
 <script>

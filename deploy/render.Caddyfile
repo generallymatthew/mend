@@ -22,6 +22,20 @@
 		file_server
 	}
 
+	# Serves the repo-root testers.html static (no app process behind it) --
+	# the pre-test briefing page for people testing the MVP, linked as
+	# mend-mvp.onrender.com/testers.
+	handle /testers {
+		root * .
+		rewrite * /testers.html
+		file_server
+	}
+
+	handle /testers.html {
+		root * .
+		file_server
+	}
+
 	handle {
 		reverse_proxy 127.0.0.1:8423
 	}

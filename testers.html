@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; before you start testing</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Same brand kit as about.html/story.html: Evergreen ink, Oat paper,
+     Evergreen as the primary accent, Pink reserved for the logo mark,
+     Honey as a highlight fill paired with ink text on top. */
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .brand-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .wordmark{font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; line-height:1;}
+
+  .kicker{font-family:Georgia,'Times New Roman',serif; font-style:italic; font-size:14px; color:var(--muted); margin:0 0 10px;}
+  h1{font-size:2.1rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:800;}
+  h2.eyebrow{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase;}
+  h3.section-headline{font-size:1.3rem; font-weight:800; letter-spacing:-0.01em; margin:44px 0 10px; color:var(--ink); line-height:1.25;}
+  p.lede{font-size:1.05rem; color:var(--ink-soft); margin:0 0 8px; max-width:56ch;}
+  p.section-sub{font-size:14px; color:var(--ink-soft); margin:0 0 18px; max-width:56ch;}
+  p{margin:0 0 14px;}
+  section.block{margin-top:44px;}
+  section.block:first-of-type{margin-top:36px;}
+
+  ol.step-list{margin:4px 0 0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:1px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(23,55,46,0.04); counter-reset:step;}
+  ol.step-list > li{display:flex; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border); font-size:14px; color:var(--ink-soft);}
+  ol.step-list > li:last-child{border-bottom:none;}
+  ol.step-list > li::before{counter-increment:step; content:counter(step); flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center;}
+  ol.step-list li b{color:var(--ink);}
+  @media (max-width:600px){ ol.step-list{background:transparent; border:none; box-shadow:none; border-radius:0;} }
+
+  .scenario-toggle{margin-top:10px;}
+  .scenario-toggle summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13px; color:var(--accent);}
+  .scenario-toggle summary::-webkit-details-marker{display:none;}
+  .scenario-toggle summary::before{content:'\25BE'; display:inline-block; transition:transform .15s ease;}
+  .scenario-toggle[open] summary::before{transform:rotate(180deg);}
+  .scenario-toggle[open] summary{margin-bottom:8px;}
+  .scenario-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px;}
+  .scenario-list li{font-size:13.5px; color:var(--ink-soft);}
+
+  .feedback-grid{display:flex; flex-direction:column; gap:1px; margin-top:4px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .feedback-row{display:flex; flex-direction:column; gap:4px; font-size:14px; padding:14px 18px; border-bottom:1px solid var(--border);}
+  .feedback-row:last-child{border-bottom:none;}
+  .feedback-row .k{font-weight:800; color:var(--ink); display:flex; align-items:center; gap:8px;}
+  .feedback-row .k::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0;}
+  .feedback-row:nth-child(2) .k::before{background:var(--pink);}
+  .feedback-row:nth-child(3) .k::before{background:var(--honey);}
+  .feedback-row .v{color:var(--ink-soft);}
+  @media (max-width:600px){ .feedback-grid{background:transparent; border:none; box-shadow:none; border-radius:0;} }
+
+  .note{background:var(--honey-soft); border:1px solid var(--border); border-radius:14px; padding:16px 18px; font-size:13.5px; color:var(--ink-soft);}
+  .note b{color:var(--ink);}
+
+  .cta{margin-top:44px; background:#fff; border:1px solid var(--border); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .cta h3.section-headline{color:var(--ink); margin:0 0 8px; font-size:1.3rem;}
+  .cta p{color:var(--ink-soft); margin:0 0 20px; font-size:14px;}
+  .cta a.btn{display:inline-block; background:var(--pink); color:#fff; font-weight:700; font-size:14.5px; padding:13px 28px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 2px 6px rgba(243,130,154,0.35);}
+  .cta a.btn:hover{transform:translateY(-1px); box-shadow:0 6px 16px rgba(243,130,154,0.45);}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+
+  .btn-top{display:inline-flex; align-items:center; gap:6px; margin-top:4px; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 2px 6px rgba(23,55,46,0.18);}
+  .btn-top:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(23,55,46,0.24);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand-row">
+    <div class="mark"></div>
+    <div class="wordmark">Mend</div>
+  </div>
+
+  <p class="kicker">A note before you dive in</p>
+  <h1>Thanks for testing this with me.</h1>
+  <p class="lede">You're about to see an early, pre-legal-review prototype, not a finished product. A few minutes of reading this first will make your feedback more useful to me, and save you from guessing what you're looking at.</p>
+  <a class="btn-top start-link" href="http://localhost:8080/intake/" data-local="http://localhost:8080/intake/" data-live="https://mend-mvp.onrender.com/intake/">Start a Private Session &rarr;</a>
+
+  <section class="block">
+    <h3 class="section-headline">What you're about to see</h3>
+    <p class="section-sub">Mend is a private, AI-facilitated way to work through coworker friction before it turns into an HR conversation. You'll land on a pitch page, then talk to Thimble, the AI facilitator, either by typing or by voice.</p>
+    <div class="note">Nothing you say to Thimble is recorded or saved. If what you describe reads as real harassment, discrimination, or a threat, the session will route to a safety flow instead of continuing normally. That's intentional, not a bug.</div>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">How to go through it</h3>
+    <ol class="step-list">
+      <li><div><b>Read the pitch page first.</b> Don't skip ahead to the session. Whatever you think of it, confused, skeptical, sold, that reaction is useful to me.</div></li>
+      <li><div><b>Start a session.</b> Either describe a real (small, low-stakes) piece of coworker friction you've actually experienced, or pick a scenario and roleplay it. Real friction, even minor, tends to produce more honest reactions than an invented one.
+        <details class="scenario-toggle">
+          <summary>Show example scenarios</summary>
+          <ul class="scenario-list">
+            <li>A peer repeatedly takes credit for shared work in front of the team.</li>
+            <li>A manager micromanages while telling you to "use your judgment."</li>
+            <li>A senior colleague sends off-hours messages that drift into uncomfortable territory.</li>
+          </ul>
+        </details>
+      </div></li>
+      <li><div><b>Talk to Thimble like you would a real tool.</b> Interrupt it, correct it, go off-script, try voice if you can. I'd rather you break it than be polite to it.</div></li>
+      <li><div><b>Finish the short survey at the end.</b> It's quick, and it's the one piece of feedback that's structured enough for me to compare across testers.</div></li>
+    </ol>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">What kind of feedback I actually want</h3>
+    <p class="section-sub">A short survey pops up automatically right after your session ends. Some of what's below (neutrality, whether it understood you, whether you'd trust it with something real) is literally what it asks, in multiple choice, so answering it is the single most useful thing you can do. Everything below is what to also tell me directly, in whatever form is easiest for you, since a lot of it doesn't fit in a multiple-choice box.</p>
+    <div class="feedback-grid">
+      <div class="feedback-row"><span class="k">On the pitch page</span><span class="v">Did the problem it describes match something you've actually experienced? Did "nothing is recorded, ever" read as credible, or did you hesitate before clicking Start, and if so, why?</span></div>
+      <div class="feedback-row"><span class="k">On the conversation itself</span><span class="v">Did Thimble feel neutral, or like it sided with you (or against you)? Did it understand your situation, or did you have to keep correcting it? Did anything it said feel off, repetitive, or too slow to arrive?</span></div>
+      <div class="feedback-row"><span class="k">On the rough edges</span><span class="v">Voice or mic glitches, captions that lagged or looked wrong, anything that felt broken rather than just unfinished. I'd rather hear about a bug twice than not at all.</span></div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <h3 class="section-headline">Ready?</h3>
+    <p>Head to the pitch page next. It's the real first thing a new user would see, so start there rather than skipping straight to a session.</p>
+    <a class="btn" href="about.html">Go to the Mend pitch page &rarr;</a>
+  </div>
+
+  <footer>
+    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product.</div>
+  </footer>
+</div>
+<script>
+(function(){
+  // Same local/live link-swap pattern as about.html -- this page gets
+  // opened both from a local dev server and from the live Render deploy.
+  var isLive = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:';
+  if (!isLive) return;
+  document.querySelectorAll('.start-link').forEach(function(a){
+    var live = a.getAttribute('data-live');
+    if (live) a.href = live;
+  });
+})();
+</script>
+</body>
+</html>

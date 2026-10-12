@@ -1,0 +1,507 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; the Conflict story</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9,700&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Same brand kit as about.html: Evergreen ink, Oat paper, Evergreen as the
+     primary accent, Pink reserved for the logo mark, Honey as a highlight
+     fill paired with ink text on top. */
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .brand-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .wordmark{font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; line-height:1;}
+  .hero{display:flex; align-items:center; gap:32px;}
+  .hero-text{flex:1; min-width:0;}
+  .hero-visual{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .hero-avatar{position:relative; width:152px; height:152px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 50%, rgba(243,130,154,0.16) 0%, rgba(243,130,154,0.16) 45%, rgba(233,185,73,0) 72%);}
+  .avatar-status{display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); padding:5px 11px; border-radius:999px; white-space:nowrap;}
+  .avatar-status .dot{width:6px; height:6px; border-radius:50%; background:#3D9B6E; flex-shrink:0;}
+  .speech-bubble{position:absolute; top:4px; right:-6px; display:flex; align-items:center; gap:4px; background:#fff; border:1px solid var(--border); border-radius:14px; padding:9px 11px; box-shadow:0 6px 14px rgba(23,55,46,0.14);}
+  .speech-bubble::after{content:''; position:absolute; bottom:-6px; left:16px; width:11px; height:11px; background:#fff; border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:rotate(45deg);}
+  .typing-dot{width:5px; height:5px; border-radius:50%; background:var(--ink-soft); animation:typing-bounce 1.3s infinite ease-in-out;}
+  .typing-dot:nth-child(2){animation-delay:.15s;}
+  .typing-dot:nth-child(3){animation-delay:.3s;}
+  @keyframes typing-bounce{0%,60%,100%{transform:translateY(0); opacity:.4;} 30%{transform:translateY(-3px); opacity:1;}}
+  @media (prefers-reduced-motion: reduce){ .typing-dot{animation:none; opacity:.7;} }
+  @media (max-width:600px){ .hero{flex-direction:column; align-items:flex-start; gap:20px;} .hero-visual{display:none;} }
+
+  /* Thimble avatar: same port as about.html -- see that file for the
+     fuller comment on where this shape and the render loop below come
+     from (intake-app/static/index.html's live avatar). */
+  .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease;}
+  .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
+
+  .kicker{font-family:Georgia,'Times New Roman',serif; font-style:italic; font-size:14px; color:var(--muted); margin:0 0 10px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.15rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:700;}
+  h2.eyebrow{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase;}
+  h3.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:48px 0 10px; color:var(--ink); line-height:1.25;}
+  p.lede{font-size:1.05rem; color:var(--ink-soft); margin:0 0 8px; max-width:56ch;}
+  p{margin:0 0 14px;}
+  section.block{margin-top:48px;}
+  section.block:first-of-type{margin-top:36px;}
+
+  .advantage-row{display:flex; align-items:center; gap:28px; margin-top:18px;}
+  .advantage-avatar{flex-shrink:0; width:104px; height:104px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 50%, rgba(243,130,154,0.16) 0%, rgba(243,130,154,0.16) 45%, rgba(233,185,73,0) 72%);}
+  .advantage-row .icon-list{flex:1; min-width:0; margin-top:0;}
+  @media (max-width:620px){ .advantage-row{flex-direction:column; align-items:flex-start; gap:20px;} .advantage-avatar{margin:0 auto;} }
+
+  .icon-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
+  .icon-list li{display:flex; gap:14px; align-items:flex-start;}
+  .icon-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
+  .icon-list li:nth-child(2) .ico{background:var(--pink-soft);}
+  .icon-list li:nth-child(3) .ico{background:var(--honey-soft);}
+  .icon-list .ico svg{width:18px; height:18px; display:block;}
+  .icon-list .txt{padding-top:2px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
+  .icon-list .txt b{color:var(--ink); display:block; font-size:14.5px; margin-bottom:2px;}
+
+  .audience-fig{display:flex; justify-content:center; margin:20px 0 4px;}
+  .audience-fig .ico{width:72px; height:72px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
+  .audience-fig .ico svg{width:38px; height:38px; display:block;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:4px;}
+  @media (max-width:420px){ .stat-grid{grid-template-columns:1fr;} }
+  .stat-tile{background:var(--card); border:1px solid var(--border); border-top:3px solid var(--honey); border-radius:16px; padding:20px 20px 18px; box-shadow:0 1px 2px rgba(23,55,46,0.04); overflow:visible;}
+  .stat-tile:nth-child(2){border-top-color:var(--pink);}
+  .stat-num{display:flex; align-items:baseline; gap:3px; font-size:1.9rem; font-weight:800; color:var(--ink); line-height:1.1; margin-bottom:4px;}
+  .stat-label{font-size:13.5px; color:var(--ink-soft);}
+  .stat-info{position:relative; appearance:none; border:none; background:none; padding:0; margin:0 0 2px; cursor:help; font-family:inherit; line-height:1;}
+  .stat-info .mark{font-size:0.95rem; font-weight:700; color:var(--muted);}
+  .stat-info .tooltip{position:absolute; left:0; top:100%; margin-top:8px; width:200px; background:var(--ink); color:#fff; font-size:11px; font-weight:500; line-height:1.5; padding:10px 12px; border-radius:10px; box-shadow:0 8px 20px rgba(23,55,46,0.25); opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .15s ease, transform .15s ease; z-index:5;}
+  .stat-info:hover .tooltip, .stat-info:focus .tooltip, .stat-info:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateY(0);}
+  @media (max-width:600px){ .stat-tile{padding:16px 16px 14px;} .stat-num{font-size:1.5rem;} .stat-label{font-size:12.5px;} .stat-info .tooltip{width:168px;} }
+
+  .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
+  @media (max-width:520px){ .door-grid{grid-template-columns:1fr;} }
+  .door-card{min-width:0; background:var(--card); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:16px; padding:22px 20px; box-shadow:0 1px 2px rgba(23,55,46,0.04); transition:transform .15s ease, box-shadow .15s ease;}
+  .door-card:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(23,55,46,0.08);}
+  .door-card:nth-child(2){border-top-color:var(--pink);}
+  .door-card:nth-child(3){border-top-color:var(--honey);}
+  @media (max-width:700px){ .door-grid{gap:10px;} .door-card{padding:16px 12px;} }
+  @media (max-width:520px){ .door-card{background:transparent; border:none; border-radius:0; box-shadow:none; padding:20px 0; border-bottom:1px solid var(--border);} .door-card:last-child{border-bottom:none;} .door-card:hover{transform:none; box-shadow:none;} }
+  .door-ico{width:38px; height:38px; border-radius:11px; background:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .door-card:nth-child(2) .door-ico{background:var(--pink);}
+  .door-card:nth-child(3) .door-ico{background:var(--honey);}
+  .door-ico svg{width:20px; height:20px; display:block;}
+  @media (max-width:700px){ .door-ico{width:32px; height:32px; margin-bottom:10px;} .door-ico svg{width:17px; height:17px;} }
+  .door-t{font-weight:700; font-size:15px; margin-bottom:8px; line-height:1.3;}
+  .door-d{font-size:13px; color:var(--ink-soft); line-height:1.5;}
+  @media (max-width:700px){ .door-t{font-size:13.5px; margin-bottom:6px;} .door-d{font-size:12px;} }
+
+  .privacy-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
+  .privacy-list li{display:flex; gap:14px; align-items:flex-start;}
+  .privacy-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
+  .privacy-list li:nth-child(2) .ico{background:var(--honey-soft);}
+  .privacy-list .ico svg{width:18px; height:18px; display:block;}
+  .privacy-list .k{font-weight:800; color:var(--ink); font-size:14.5px; display:block; margin-bottom:3px; padding-top:2px;}
+  .privacy-list .v{color:var(--ink-soft); font-size:14px; line-height:1.55;}
+
+  .research-callout{margin-top:18px; display:flex; align-items:center; gap:16px; background:var(--honey-soft); border:1px solid var(--border); border-radius:16px; padding:18px 20px;}
+  .research-callout .ico{flex-shrink:0; width:42px; height:42px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(23,55,46,0.06);}
+  .research-callout .ico svg{width:20px; height:20px; display:block;}
+  .research-callout .txt{flex:1; min-width:0;}
+  .research-callout .txt b{display:block; color:var(--ink); font-size:14px; margin-bottom:2px; line-height:1.35;}
+  .research-callout .txt span{font-size:12.5px; color:var(--ink-soft); line-height:1.5;}
+  .research-callout .callout-btn{flex-shrink:0; background:var(--accent); color:#fff; border:none; font-weight:700; font-size:13px; padding:10px 18px; border-radius:999px; cursor:pointer; white-space:nowrap; font-family:inherit; transition:background .15s ease;}
+  .research-callout .callout-btn:hover{background:#0F2A21;}
+  @media (max-width:580px){ .research-callout{flex-direction:column; align-items:flex-start;} .research-callout .callout-btn{width:100%; text-align:center;} }
+
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(23,55,46,0.45); z-index:50; align-items:flex-start; justify-content:center; padding:48px 20px; overflow-y:auto;}
+  .modal-overlay.open{display:flex;}
+  .modal-card{background:var(--card); border-radius:20px; max-width:640px; width:100%; padding:36px 32px 32px; position:relative; box-shadow:0 24px 60px rgba(23,55,46,0.25);}
+  .modal-close{position:absolute; top:18px; right:18px; width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--paper); color:var(--ink-soft); font-size:16px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .modal-close:hover{color:var(--ink); border-color:var(--ink-soft);}
+  .modal-card h2.modal-title{font-size:1.4rem; font-weight:800; margin:0 0 4px; letter-spacing:-0.01em; line-height:1.3; max-width:46ch; padding-right:36px;}
+  .modal-card .modal-sub{font-size:13px; color:var(--muted); margin:0 0 22px;}
+  .modal-card ul{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:14px;}
+  .modal-card li{font-size:13.5px; line-height:1.55; color:var(--ink-soft);}
+  .modal-card li b{color:var(--ink);}
+  .modal-card p.lead-line{font-size:13.5px; color:var(--ink-soft); font-style:italic; margin:22px 0 0; padding-top:18px; border-top:1px solid var(--border);}
+  @media (max-width:600px){ .modal-card{padding:28px 20px 24px;} }
+
+  .builder-note{margin-top:48px; background:var(--card); border:1px solid var(--border); border-left:3px solid var(--honey); border-radius:16px; padding:28px 28px 24px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .builder-note .kicker{margin-bottom:10px;}
+  .builder-note .section-headline{margin-top:0;}
+  .builder-note p{font-size:14px; color:var(--ink-soft); max-width:none;}
+  .builder-note .read-more summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; color:var(--accent); margin-bottom:4px;}
+  .builder-note .read-more summary::-webkit-details-marker{display:none;}
+  .builder-note .read-more summary::after{content:'Read the rest of the letter';}
+  .builder-note .read-more[open] summary::after{content:'Show less';}
+  .builder-note .read-more summary .chevron{display:inline-block; transition:transform .15s ease;}
+  .builder-note .read-more[open] summary .chevron{transform:rotate(180deg);}
+  .builder-note .read-more .more-body{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
+
+  .cta{margin-top:48px; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .cta h3.section-headline{color:var(--ink); margin:0 0 8px; font-size:1.3rem;}
+  .cta p{color:var(--ink-soft); margin:0 0 20px; font-size:14px;}
+  .cta a.btn{display:inline-block; background:var(--pink); color:#fff; font-weight:700; font-size:14.5px; padding:13px 28px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 4px 12px rgba(243,130,154,0.35);}
+  .cta a.btn:hover{transform:translateY(-1px); box-shadow:0 8px 18px rgba(243,130,154,0.45);}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+
+  .demo-reel{margin-top:16px; background:#0F2A21; border-radius:16px; overflow:hidden; box-shadow:0 10px 24px rgba(23,55,46,0.16); position:relative;}
+  .demo-reel iframe{display:block; width:100%; height:420px; border:0;}
+  .demo-reel-tag{position:absolute; top:12px; left:12px; display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.03em; color:#fff; background:rgba(17,42,34,0.55); border:1px solid rgba(255,255,255,0.25); padding:5px 11px; border-radius:999px; backdrop-filter:blur(3px);}
+  .demo-reel-tag .dot{width:6px; height:6px; border-radius:50%; background:#F3829A; flex-shrink:0;}
+  .demo-caption{margin-top:10px; font-size:12.5px; color:var(--muted);}
+  @media (max-width:600px){ .demo-reel iframe{height:320px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand-row">
+    <div class="mark"></div>
+    <div class="wordmark">Mend</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-text">
+      <p class="kicker">Conflict</p>
+      <h1>Fix Coworker Friction Before It Becomes an HR File.</h1>
+      <p class="lede">Work through coworker friction without the company getting involved. Unpack what went wrong, practice tough conversations solo, and clear your head before stepping back into the room. Nothing is recorded, nothing reaches HR, and your manager never knows you used it.</p>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-avatar">
+        <div id="heroAvatar"></div>
+        <div class="speech-bubble" aria-hidden="true"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+      </div>
+      <div class="avatar-status"><span class="dot"></span>Thimble, your session facilitator</div>
+    </div>
+  </div>
+
+  <section class="block builder-note">
+    <p class="kicker">A note from the builder</p>
+    <h3 class="section-headline">The Third Way to Be Professional</h3>
+    <p>Earlier in my career, whenever I ran into tension with a coworker, I did what almost everyone does: I asked my friends.</p>
+    <p>Because they cared about me, they validated me. They told me I was right, that the other person was being unreasonable, and that I didn&rsquo;t deserve it. It felt good in the moment. But they didn&rsquo;t tell me what I actually needed to hear: my own part in the dynamic.</p>
+    <details class="read-more">
+      <summary><span class="chevron">&#9662;</span></summary>
+      <div class="more-body">
+        <p>Armed with that validation, I made reactive, defensive choices that set my career back years.</p>
+        <p>People pretend workplace dynamics are common sense. They aren&rsquo;t. They&rsquo;re complicated, emotionally charged, and rarely taught.</p>
+        <p>Worse, corporate culture tells us the only way to be &ldquo;professional&rdquo; is to pretend our humanity doesn&rsquo;t exist: check your feelings at the door, smile through misaligned expectations, and treat emotional friction like an HR malfunction. But suppressing how you feel doesn&rsquo;t make you professional, it just drives the frustration into quiet avoidance and backchannel gossip.</p>
+        <p>We built Mend around a third option: being professionally human.</p>
+        <p>You don&rsquo;t have to turn into an emotionless corporate cog, and you don&rsquo;t have to sabotage your reputation either. Mend is the private, neutral mirror I wish I had back then: a place to drop the filter, be messy and honest off the record, figure out what&rsquo;s actually happening beneath the surface, and handle conflict like a grown-up before walking into the room.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">What happens when conflict shows up with an audience</h3>
+    <div class="audience-fig" aria-hidden="true">
+      <div class="ico">
+        <svg viewBox="0 0 40 40" fill="none">
+          <circle cx="13" cy="14" r="6" stroke="#17372E" stroke-width="2"/>
+          <path d="M3 33c0-6.5 4.5-11 10-11s10 4.5 10 11" stroke="#17372E" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="27" cy="14" r="6" stroke="#17372E" stroke-width="2" stroke-opacity=".55"/>
+          <path d="M17 33c0-6.5 4.5-11 10-11s10 4.5 10 11" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-opacity=".55"/>
+        </svg>
+      </div>
+    </div>
+    <p>When conflict happens in the workplace today, if there's an audience, the room usually goes quiet and nothing gets addressed. That leaves the two people involved with no good option for resolving it.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">What employees actually do about it</h3>
+    <ul class="icon-list">
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4a8 8 0 105.3 14" stroke="#17372E" stroke-width="2" stroke-linecap="round"/><path d="M17.5 4.5l1 4-4-1" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="txt"><b>Do nothing and overthink it.</b> Resolves nothing.</div>
+      </li>
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H8l-3 3v-3H5a2 2 0 01-2-2V6z" stroke="#F3829A" stroke-width="2" stroke-linejoin="round"/><path d="M13 9h6a2 2 0 012 2v3a2 2 0 01-2 2h-1v3l-3-3h-1a2 2 0 01-2-2" stroke="#F3829A" stroke-width="2" stroke-linejoin="round" opacity=".6"/></svg></div>
+        <div class="txt"><b>Back-channel to friendly teammates for validation.</b> Resolves nothing, and often spreads the conflict to people who weren't part of it.</div>
+      </li>
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 16V5M12 5l-4 4M12 5l4 4" stroke="#B9872C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#B9872C" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="txt"><b>Take it to a manager or HR.</b> This resolves <i>something</i>, but the resolution is out of the employee's hands, with real career risk if it lands the wrong way.</div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">The cost of unresolved conflict</h3>
+    <div class="stat-grid">
+      <div class="stat-tile">
+        <div class="stat-num">2.8 hrs/week<button type="button" class="stat-info" aria-describedby="statSrc1"><span class="mark">*</span><span class="tooltip" id="statSrc1">CPP Inc., &ldquo;Workplace Conflict and How Businesses Can Harness It to Thrive&rdquo; (2008). ~5,000 employees, nine countries.</span></button></div>
+        <div class="stat-label">Average employee time lost to managing conflict, their own or someone else's: about 7% of a work week.</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num">4.3&ndash;4.4 hrs/week<button type="button" class="stat-info" aria-describedby="statSrc2"><span class="mark">*</span><span class="tooltip" id="statSrc2">The Myers-Briggs Company (CPP Inc., rebranded), &ldquo;Conflict at Work&rdquo; (2022).</span></button></div>
+        <div class="stat-label">Average manager time lost to conflict, roughly double the 2008 figure.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Why Mend was built</h3>
+    <p>Mend lets employees talk with Thimble, a conflict-resolution facilitator whose job is to hear them out, ask questions, and drive toward an understanding of the dynamics that created the conflict in the first place.</p>
+    <p>Mend focuses on the structural forces in a workplace that cause conflict, rather than assigning blame to any one employee, leveraging current conflict-resolution best practices.</p>
+    <h2 class="eyebrow" style="margin-top:28px;">How Mend helps</h2>
+    <div class="door-grid">
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="16" cy="20" r="10" stroke="#fff" stroke-width="2"/><circle cx="24" cy="20" r="10" stroke="#fff" stroke-width="2" stroke-opacity=".55"/></svg></div>
+        <div class="door-t">Solo Mode</div>
+        <div class="door-d">Explain the conflict and its context, get help understanding the pressures driving it, and what to do to resolve it.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
+        <div class="door-t">Rehearse Mode</div>
+        <div class="door-d">For a tough conversation an employee wants to have with another employee, to make sure the framing gets the outcome they're hoping for.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="11" stroke="#17372E" stroke-width="2"/><path d="M14 20l4 4 8-8" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="door-t">Manager Mode</div>
+        <div class="door-d">Conflicts between a manager and their report need different handling, and Thimble makes that transition seamlessly.</div>
+      </div>
+    </div>
+
+    <h2 class="eyebrow" style="margin-top:28px;">See it in motion</h2>
+    <div class="demo-reel">
+      <div class="demo-reel-tag"><span class="dot"></span>Private intake &rarr; joint session walkthrough</div>
+      <iframe src="Mend Pitch/Mend Session Opening.dc.html" title="Mend session opening demo" allow="autoplay" loading="lazy"></iframe>
+    </div>
+    <p class="demo-caption">A full walkthrough: Sam and Priya each start solo with Thimble in a private intake call, then move into a joint session once both are ready.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Why not just use a general-purpose AI chatbot?</h3>
+    <p>A reasonable question, since every employee already has one in their pocket. The honest answer: a general chatbot wasn't built for this. It has no grounding in conflict-resolution methodology, and no reliable way to tell a genuine misunderstanding apart from conduct that's actually harassment, which means it can just as easily talk someone out of raising something serious as help them resolve something minor. Mend is trained specifically on that distinction, which is also what makes the automatic safety protocols below possible.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Will employees actually use a corporate conflict-resolution tool?</h3>
+    <p>None of this matters if employees don't feel safe using the product, because they fear HR or management is &ldquo;listening in.&rdquo;</p>
+    <p>That's why Mend is built from the ground up with total user anonymity: no persistent record of what's shared. Session content is never truly saved; it's held in volatile memory and flushed as soon as the session ends.</p>
+    <ul class="privacy-list">
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.6-3 8.3-7 10-4-1.7-7-5.4-7-10V6l7-3z" stroke="#17372E" stroke-width="2" stroke-linejoin="round"/><path d="M12 8v5M12 16v.01" stroke="#17372E" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><span class="k">A safety net, not a loophole</span><span class="v">A fixed, automatic safety protocol: if what's being discussed meets the legal standard for workplace harassment, discrimination under Title VII, or a physical threat, Thimble routes the session straight to HR on its own, so no one has to rely on a judgment call in the moment.</span></div>
+      </li>
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#B9872C" stroke-width="2"/><path d="M8 11V8a4 4 0 118 0v3" stroke="#B9872C" stroke-width="2" stroke-linecap="round"/><path d="M12 14.5v2" stroke="#B9872C" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><span class="k">Everything else stays off the record</span><span class="v">That one safeguard is what makes the rest of the promise credible: for everyday friction, nothing is saved, nothing reaches HR, and nothing gets back to your manager.</span></div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Mend isn't for every company</h3>
+    <p>The deal Mend makes with customers: they're paying for conflict resolution and team alignment, not control of the process. Control is exactly what prevents employees from feeling safe enough to let their guard down and stop performing for an audience.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">That's a feature, not a bug: AI's advantage here</h3>
+    <div class="advantage-row">
+      <div class="advantage-avatar"><div id="advantageAvatar"></div></div>
+      <ul class="icon-list">
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3M4 6h16M12 6v12M8 21h8" stroke="#17372E" stroke-width="2" stroke-linecap="round"/><path d="M4 6l-2.5 6a3 3 0 006 0L4 6z" stroke="#17372E" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 6l-2.5 6a3 3 0 006 0L20 6z" stroke="#17372E" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+          <div class="txt">An AI conflict-resolution facilitator is unbiased and has no stake in the outcome.</div>
+        </li>
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" stroke="#F3829A" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <div class="txt">People are measurably more comfortable opening up to an AI persona because they don't fear judgment.</div>
+        </li>
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#B9872C" stroke-width="2"/><path d="M12 8v4l3 2" stroke="#B9872C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="txt">Mend is always available and doesn't pull another person's time into resolving someone else's conflict.</div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">The research against &ldquo;no friction, no dissent&rdquo;</h3>
+    <p>A team with zero visible conflict isn't necessarily a healthy team, it can just as easily be a team suppressing disagreement.</p>
+    <div class="research-callout">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 6c-1.8-1.3-4.2-2-6.5-2-.8 0-1.5.7-1.5 1.5v11c0 .8.7 1.5 1.5 1.5 2.3 0 4.7.7 6.5 2m0-14c1.8-1.3 4.2-2 6.5-2 .8 0 1.5.7 1.5 1.5v11c0 .8-.7 1.5-1.5 1.5-2.3 0-4.7.7-6.5 2m0-14v14" stroke="#B9872C" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
+      <div class="txt"><b>Three researchers agree: visible conflict isn't the problem.</b><span>Lencioni, Edmondson, and Gino all point to healthy disagreement as what separates high-performing teams from quietly dysfunctional ones.</span></div>
+      <button type="button" class="callout-btn" onclick="document.getElementById('researchModal').classList.add('open')">Read the research &rarr;</button>
+    </div>
+  </section>
+
+  <div class="cta">
+    <h3 class="section-headline">Ready to Clear the Air?</h3>
+    <p>Pick a practice scenario or simply type what's happening in your own words. Off the record, zero judgment, and completely confidential.</p>
+    <a class="btn start-link" href="http://localhost:8080/intake/" data-local="http://localhost:8080/intake/" data-live="https://mend-mvp.onrender.com/intake/">Start the Conversation &rarr;</a>
+  </div>
+
+  <footer>
+    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. Full details: <a href="product-spec.html">product spec</a> &middot; <a href="about.html">about</a>.</div>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="researchModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="researchTitle">
+    <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('researchModal').classList.remove('open')">&times;</button>
+    <h2 class="modal-title" id="researchTitle">The Research Against &ldquo;No Friction, No Dissent&rdquo;</h2>
+    <p class="modal-sub">Team dynamics and conflict, from three researchers</p>
+    <ul>
+      <li><b>Patrick Lencioni's &ldquo;artificial harmony&rdquo;</b> (<i>The Five Dysfunctions of a Team</i>): teams that avoid conflict end up with unresolved disagreements and unvoiced concerns sitting just under the surface, which resurface later as resentment or disengagement rather than actually going away.</li>
+      <li><b>Amy Edmondson's psychological safety research</b> (Harvard Business School): teams that prioritize harmony over honest discourse consistently make worse decisions than teams where disagreement is normalized. Psychological safety isn't the absence of conflict, it's the thing that makes productive conflict possible.</li>
+      <li><b>Francesca Gino's research on constructive disagreement</b>: teams significantly outperform peers when leaders explicitly model and reward disagreement; task conflict generated by even one or two team members has been shown, across multiple studies, to positively predict team performance.</li>
+    </ul>
+    <p class="lead-line">The goal isn't zero conflict, it's conflict that actually gets resolved instead of either suppressed (false harmony) or escalated unmanaged. Mend is a structured path to resolution, which is different from a tool that just makes conflict disappear.</p>
+  </div>
+</div>
+<script>
+(function(){
+  // Research modal: Escape closes it regardless of focus, same as the
+  // backdrop-click handler inlined on the overlay itself.
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') document.getElementById('researchModal').classList.remove('open');
+  });
+})();
+</script>
+<script>
+(function(){
+  var isLive = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:';
+  if (!isLive) return;
+  document.querySelectorAll('.start-link').forEach(function(a){
+    var live = a.getAttribute('data-live');
+    if (live) a.href = live;
+  });
+})();
+</script>
+<script>
+(function(){
+  // ThimbleAvatarV2: same port as about.html -- see that file for the
+  // fuller comment on where this shape and render loop come from
+  // (intake-app/static/index.html's live avatar).
+  var DOME_RADIUS_CAP = 12, DOME_RADIUS_RIM = 14;
+  var THIMBLE_SHAPES = {
+    idle:      {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
+    listening: {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
+    thinking:  {lean:'none', mouthTop:62, mouthW:.12, mouthH:.07, mouthX:58},
+    talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
+  };
+  function domeWobbleRadius(domeFactor, lvl){
+    var capY = 50 + (DOME_RADIUS_CAP + 3 * lvl) * domeFactor;
+    var rimY = 50 - (DOME_RADIUS_RIM + 3 * lvl) * domeFactor;
+    return '50% 50% 50% 50% / ' + capY.toFixed(1) + '% ' + capY.toFixed(1) + '% ' + rimY.toFixed(1) + '% ' + rimY.toFixed(1) + '%';
+  }
+  function renderMouth(inst, state){
+    var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+    inst.mouth.style.top = shape.mouthTop + '%';
+    inst.mouth.style.left = (shape.mouthX || 50) + '%';
+    inst.mouth.style.width = (shape.mouthW * inst.size) + 'px';
+    inst.mouth.style.height = (shape.mouthH * inst.size) + 'px';
+    inst.mouth.style.background = '#F6F1E7';
+    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
+  }
+  function applyState(inst, state){
+    if (state === inst.renderedState) return;
+    inst.renderedState = state;
+    var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+    inst.el.style.transform = shape.lean;
+    inst.blend.style.opacity = '0';
+    var talking = state === 'talking';
+    inst.ripple.hidden = !talking;
+    inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
+    renderMouth(inst, state);
+  }
+  function tick(inst, now){
+    applyState(inst, inst.state);
+    var dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
+    inst.lastT = now;
+    var speaking = inst.state === 'talking';
+    var thinkingState = inst.state === 'thinking';
+    var nodding = inst.state === 'listening';
+    var y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
+    var wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
+    var breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
+    inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+    var breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
+    inst.ring.style.transform = 'translateY(' + y.toFixed(2) + '%) rotate(' + wiggle.toFixed(2) + 'deg) scale(' + breathe.toFixed(4) + ')';
+    var input = thinkingState ? 0.15 : inst.level;
+    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
+    var wobblePeriod = thinkingState ? 3.4 : 1.6;
+    inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+    var domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
+    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+    if (speaking) {
+      inst.ripple.style.borderRadius = inst.body.style.borderRadius;
+      inst.ripple.style.transform = inst.ring.style.transform + ' scale(' + (1.04 + 0.05 * domeFactor).toFixed(3) + ')';
+      inst.ripple.style.opacity = (0.22 + 0.16 * domeFactor).toFixed(3);
+    }
+    requestAnimationFrame(function(t){ tick(inst, t); });
+  }
+  window.ThimbleAvatarV2 = function(host, opts){
+    var size = (opts && opts.size) || 140;
+    host.innerHTML = '<div class="thimble-avatar" style="width:' + size + 'px;height:' + size + 'px;">' +
+      '<div class="thimble-ripple" hidden></div>' +
+      '<div class="thimble-ring"><div class="thimble-body"><div class="thimble-blend"></div><div class="thimble-mouth"></div></div></div>' +
+    '</div>';
+    var el = host.querySelector('.thimble-avatar');
+    var inst = {
+      size: size, el: el,
+      ring: el.querySelector('.thimble-ring'),
+      body: el.querySelector('.thimble-body'),
+      blend: el.querySelector('.thimble-blend'),
+      mouth: el.querySelector('.thimble-mouth'),
+      ripple: el.querySelector('.thimble-ripple'),
+      renderedState: null, state: 'idle', level: 0, lvl: 0,
+      wobblePhase: 0, breathePhase: 0, lastT: null
+    };
+    requestAnimationFrame(function(t){ tick(inst, t); });
+    return {
+      setState: function(s){ inst.state = s; },
+      setLevel: function(l){ inst.level = l; }
+    };
+  };
+})();
+</script>
+<script>
+(function(){
+  // Hero Thimble: cycles idle -> listening -> thinking -> talking on a
+  // loop with a fake amplitude signal, same as about.html's hero.
+  if (!window.ThimbleAvatarV2) return;
+  var heroHost = document.getElementById('heroAvatar');
+  if (!heroHost) return;
+  var hero = new ThimbleAvatarV2(heroHost, { size: 140 });
+  var states = ['idle', 'listening', 'thinking', 'talking'];
+  var i = 0;
+  hero.setState(states[0]);
+  setInterval(function(){ i++; hero.setState(states[i % states.length]); }, 3200);
+  var t0 = performance.now();
+  setInterval(function(){
+    var t = (performance.now() - t0) / 1000;
+    hero.setLevel(0.35 + 0.35 * Math.abs(Math.sin(t * 1.8)));
+  }, 80);
+
+  // Advantage-section Thimble: same cycling loop, offset out of phase
+  // with the hero one so the two avatars don't lock-step if both are
+  // visible at once while scrolling.
+  var advHost = document.getElementById('advantageAvatar');
+  if (advHost && window.ThimbleAvatarV2) {
+    var adv = new ThimbleAvatarV2(advHost, { size: 104 });
+    var advI = 2;
+    adv.setState(states[advI % states.length]);
+    setInterval(function(){ advI++; adv.setState(states[advI % states.length]); }, 3200);
+    setInterval(function(){
+      var t = (performance.now() - t0) / 1000;
+      adv.setLevel(0.35 + 0.35 * Math.abs(Math.sin(t * 1.8 + 1.5)));
+    }, 80);
+  }
+})();
+</script>
+</body>
+</html>
