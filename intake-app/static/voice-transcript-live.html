@@ -1052,13 +1052,12 @@
       <div class="chat-composer">
         <div class="chat-input-row">
           <textarea id="chatInput" rows="2" placeholder="Explain what happened&hellip;"></textarea>
-          <!-- Composer's own hold-to-dictate mic is hidden on this page --
-               push-to-talk already lives on the voice stage's own hold
-               button (talkMicBtn), and showing two different mic controls
-               for two different gestures (dictate-into-field vs.
-               send-immediately) in the same screen reads as two competing
-               ways to do the same thing. JS wiring left intact/harmless. -->
-          <div class="composer-mic-wrap" hidden>
+          <!-- Re-enabled: this page is meant to match index.html's full
+               feature set (no live voice yet, just a preferred UI), so the
+               composer's dictate-into-field gesture belongs here same as
+               there -- it's a different action from the voice stage's
+               send-immediately hold button, not a competing one. -->
+          <div class="composer-mic-wrap">
             <div class="composer-mic-wave" id="composerMicWave"><span></span><span></span><span></span><span></span></div>
             <div class="composer-mic-label" id="composerMicLabel" hidden></div>
             <button id="composerMicBtn" class="composer-mic-btn" type="button" title="Hold to record a voice memo">
