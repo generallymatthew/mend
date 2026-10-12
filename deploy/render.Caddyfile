@@ -1,38 +1,41 @@
 # Render deploy variant of ../Caddyfile: same path-prefix scheme (demo-app
 # at root, intake-app under /intake/), but listens on Render's injected
 # $PORT instead of a fixed local port, and only proxies the two apps this
-# deploy actually runs. Add more handle_path blocks here as more apps join
-# the Render deploy, mirroring ../Caddyfile.
+# deploy actually runs.
+#
+# Repo-root static pages (about.html, story.html, testers.html, the Mend
+# Pitch/ demo assets they embed, etc.) are served directly from disk when
+# the request matches an existing file -- no per-page handle block needed
+# as more of these get added. Short aliases (/about, /testers, /story)
+# rewrite to their .html file first; everything else falls through to the
+# demo-app reverse proxy.
 
 :{$PORT} {
 	handle_path /intake/* {
 		reverse_proxy 127.0.0.1:8420
 	}
 
-	# Serves the repo-root about.html static (no app process behind it) --
-	# the test-facing primer page, linked as mend-mvp.onrender.com/about.
+	root * .
+
 	handle /about {
-		root * .
 		rewrite * /about.html
 		file_server
 	}
 
-	handle /about.html {
-		root * .
-		file_server
-	}
-
-	# Serves the repo-root testers.html static (no app process behind it) --
-	# the pre-test briefing page for people testing the MVP, linked as
-	# mend-mvp.onrender.com/testers.
 	handle /testers {
-		root * .
 		rewrite * /testers.html
 		file_server
 	}
 
-	handle /testers.html {
-		root * .
+	handle /story {
+		rewrite * /story.html
+		file_server
+	}
+
+	@staticfile {
+		file
+	}
+	handle @staticfile {
 		file_server
 	}
 
