@@ -20,7 +20,17 @@
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
   .wrap{max-width:1200px; margin:0 auto; padding:20px 24px; display:flex; flex-direction:column; height:100vh;}
-  .disclaimer-footer{margin-top:14px; padding:0 4px; font-size:11.5px; line-height:1.5; color:var(--ink-soft); opacity:.65; text-align:center;}
+  .brand-header{display:flex; align-items:center; justify-content:center; gap:9px; padding-bottom:16px; flex-shrink:0; position:relative;}
+  .brand-header img{width:26px; height:26px; display:block;}
+  .brand-header span{font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; font-size:17px; font-weight:800; color:var(--ink); letter-spacing:.01em;}
+  /* Disclaimer trigger: pinned to the row's right edge (so it lines up with
+     the chat/call card's own right edge below it) and vertically centered
+     on the same row as the Mend logo, replacing the old always-visible
+     footer paragraph with an icon that reveals the same text on hover/click. */
+  .disclaimer-btn{position:absolute; right:24px; top:13px; transform:translateY(-50%); width:22px; height:22px; padding:0; border:none; background:transparent; color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:50%;}
+  .disclaimer-btn:hover, .disclaimer-btn:focus-visible{color:var(--ink); background:#17372E0D;}
+  .disclaimer-tooltip{position:absolute; top:calc(100% + 8px); right:0; width:260px; background:var(--ink); color:var(--paper); font-size:12.5px; line-height:1.5; font-weight:500; padding:10px 12px; border-radius:10px; box-shadow:0 4px 14px rgba(23,55,46,.2); z-index:6; opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .12s ease, transform .12s ease; text-align:left;}
+  .disclaimer-btn:hover + .disclaimer-tooltip, .disclaimer-btn.open + .disclaimer-tooltip{opacity:1; visibility:visible; transform:translateY(0);}
   /* Lock icon next to "Thimble" in either header (chat or voice call) --
      replaces the old always-expanded "Private. Nothing is recorded." pill
      with an icon that reveals the same line on hover/click, so the header
@@ -122,7 +132,7 @@
      for its 'muted' state, so "your mic is off" reads on the avatar itself
      and not only on the small You-tile icon. */
   .thimble-avatar.muted{opacity:.5;}
-  .thimble-avatar.mini{width:48px; height:48px;}
+  .thimble-avatar.mini{width:48px; height:48px; filter:none;}
   /* A single soft glow, not a ring -- filter:blur softens the disc's edge
      into a shadow rather than a sharply-outlined circle, so it reads as a
      glow pulsing behind Thimble (set via JS's own opacity/scale breathe,
@@ -449,6 +459,10 @@
        showing -- unsupported browsers just ignore this line and keep the
        100vh above. */
     .wrap{padding:0; height:100vh; height:100dvh;}
+    .brand-header{padding:calc(10px + env(safe-area-inset-top)) 0 10px;}
+    .disclaimer-btn{top:calc(10px + env(safe-area-inset-top) + 13px);}
+    .feedback-btn{width:38px; padding:0; justify-content:center;}
+    .feedback-btn-label{display:none;}
     .chat-panel, .call-layout{border-radius:0; border:none;}
     /* chat-panel's own min-height:420px (sized for the desktop card layout)
        forced the whole .wrap taller than one mobile screen once the
@@ -465,8 +479,9 @@
        disclaimer-footer was a fixed-height row below .video-area that ate
        into .wrap's flex:1 share, so the chat panel never actually reached
        the viewport edges -- real chat apps don't show a footer disclaimer
-       under the input. Dropped on mobile only; stays visible on desktop. */
-    .disclaimer-footer{display:none;}
+       under the input. Kept as just the icon on mobile (same tooltip, no
+       always-on text) so it doesn't eat into that reclaimed space. */
+    .disclaimer-btn{right:16px;}
     /* .chat-header-left (avatar + name/status column) and .chat-header-right
        (Voice/Text toggle + overflow) together measure wider than a 375px
        screen has room for, so .chat-header's own flex-wrap -- there for
@@ -511,6 +526,12 @@
   <div class="app-loading-text">Connecting to Thimble&hellip;</div>
 </div>
 <div class="wrap">
+  <div class="brand-header">
+    <img src="/static/assets/mend-mark-evergreen.svg" alt="" width="26" height="26">
+    <span>Mend</span>
+    <button id="disclaimerBtn" class="disclaimer-btn" type="button" aria-label="Disclaimer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="11" x2="12" y2="16.5"></line><circle cx="12" cy="7.8" r="0.1" fill="currentColor" stroke-width="2.6"></circle></svg></button>
+    <div class="disclaimer-tooltip">Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
+  </div>
   <div class="video-toggle" id="videoToggle" hidden>
     <button id="videoStartBtn">Start video call</button>
   </div>
@@ -660,9 +681,9 @@
             <button class="ui-tab active" data-ui="text">Text</button>
           </div>
           <button id="endSessionBtn" class="end-session-btn" type="button">End session</button>
-          <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener">
+          <a id="feedbackBtn" class="feedback-btn" href="survey" target="_blank" rel="noopener" aria-label="Feedback">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
-            Feedback
+            <span class="feedback-btn-label">Feedback</span>
           </a>
           <!-- Only matters in Text view: a dictated (voice memo) turn normally
                gets a spoken reply back (see currentReplyShouldSpeak). This
@@ -723,7 +744,6 @@
     <span>Thanks for talking with Thimble. Taking you to a quick feedback survey&hellip;</span>
   </div>
 
-  <div class="disclaimer-footer">Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
 </div>
 
 <!-- Real voice-activity detection (Silero VAD, via ONNX Runtime Web) for
@@ -846,6 +866,14 @@ document.querySelectorAll('.lock-btn').forEach(btn => {
     e.stopPropagation();
     const wasOpen = btn.classList.contains('open');
     document.querySelectorAll('.lock-btn.open').forEach(b => b.classList.remove('open'));
+    btn.classList.toggle('open', !wasOpen);
+  });
+});
+document.querySelectorAll('.disclaimer-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const wasOpen = btn.classList.contains('open');
+    document.querySelectorAll('.disclaimer-btn.open').forEach(b => b.classList.remove('open'));
     btn.classList.toggle('open', !wasOpen);
   });
 });

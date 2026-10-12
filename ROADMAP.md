@@ -1,6 +1,6 @@
 # Roadmap
 
-Structural, phase-level view — what needs to be true before the next phase starts. For the rolling "what happened recently" log, see `STATUS.md` instead; this file changes rarely, that one changes often. Check a box when the item is actually done and verified, not just attempted.
+Structural, phase-level view — what needs to be true before the next phase starts. For the rolling "what happened recently" log, see `STATUS.md` instead; this file changes rarely, that one changes often. Check a box when the item is actually done and verified, not just attempted. For raw, not-yet-committed ideas (not phase-level work), see `IDEAS.md` instead.
 
 ## Phase 0 — Local prototypes (mostly done)
 
@@ -39,6 +39,12 @@ Structural, phase-level view — what needs to be true before the next phase sta
 
 ## Phase 3 — Ready for a real pilot
 
+- [ ] `intake-app`: anonymized HR escalation send (employee-conflict path floor-met, with employee consent). Not needed for the current blind-tester phase — no real HR is acting on output during testing (see `STATUS.md`'s active-goal note), so this stays a Phase 3 gate, not something to pull forward. Prompt already updated (`facilitator-intake-system-prompt.md`) to disclose the floor to the employee and ask consent before sending; backend send path not built — no email/Slack/webhook integration exists yet (confirmed: current code only tells the employee, never contacts HR). Full design, from a 2026-10-10 session working through live bugs in the floor-escalation flow:
+  - Consented send builds an anonymized payload (category + severity + timestamp only, no name/session_id/quotes, same as today's spec) and mints a random, unguessable token mapped server-side to that payload (not to the employee's identity or session), with an expiry.
+  - An email goes to a configured HR/manager address with a link carrying that token.
+  - The link opens a **new, separate** conversation, not linked to the employee's own session, seeded with a new, smaller system prompt (e.g. `facilitator-hr-escalation-system-prompt.md`): states the category/severity plainly, answers process questions, and firmly redirects any "what's our legal exposure" question to real employment counsel, reusing the main prompt's existing hard rule that Thimble never claims something is or isn't legally protected or discoverable. No legal-avenue advice from Thimble in that session, by explicit decision.
+  - No transcript storage either way, matching existing behavior.
+  - Still open, needs a decision before building: email provider (SMTP/SendGrid/Gmail API); recipient config (one fixed HR email via env var for a single-org MVP, vs. per-customer config); token lifetime and whether it's single-use or reusable within that window.
 - [ ] GitHub account unsuspended, or an alternative remote/host chosen
 - [ ] `trymend.solutions` actually hosting the pitch page
 - [ ] Real employment counsel engaged (`docs/pitch-strategy/10_LEGAL_COUNSEL_OUTREACH.md` drafted, not sent)

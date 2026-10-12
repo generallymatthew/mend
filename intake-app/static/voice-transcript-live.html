@@ -1310,6 +1310,11 @@ function pauseSession() {
     discardNextStop = true;
     mediaRecorder.stop();
   }
+  // Pausing isn't a between-turns gap, it's the user stepping away --
+  // actually release the mic (not just stop recording) so the browser's
+  // "mic in use" indicator goes dark. resumeSession()'s own armTapToTalk()
+  // call re-warms it.
+  if (!pausedMidReply) releaseWarmMicStream();
   liveMode = false;
   setLiveLayout(false);
   // avatarState = 'paused' alone already makes the big state pill say
@@ -3471,6 +3476,42 @@ let mediaRecorder = null;
 let chunks = [];
 let liveMode = false;
 
+// Warm mic stream: kept open across turns instead of acquiring a fresh one
+// per press (the old behavior -- see startRecordingTurn/onstop below).
+// getUserMedia's own cold-start setup (echoCancellation/noiseSuppression/
+// hardware handshake) is a real, measured several-hundred-ms cost, paid on
+// every single press when the stream is closed between turns -- and since
+// MediaRecorder.start() (the actual moment capture begins) can't fire until
+// it resolves, anything spoken in that window during a press-and-talk-
+// immediately turn is never captured at all, not buffered, not recoverable.
+// Pre-acquiring once and reusing the same live stream for every
+// MediaRecorder means the slow part only happens once, not per turn.
+// Nothing is recorded or sent while idle -- only a MediaRecorder actually
+// capturing into chunks does that, and none runs until a press starts one.
+let warmMicStream = null;
+// Caches the in-flight PROMISE, not just the resolved stream -- without
+// this, a press arriving while armTapToTalk's own pre-warm call is still
+// mid-flight (warmMicStream still null) would see nothing to reuse and
+// fire a SECOND, concurrent getUserMedia() of its own, paying the full
+// cold-start cost anyway and defeating the whole point of pre-warming.
+// Confirmed live: this was the actual reason the very first press after a
+// greeting still lost its opening words even with pre-warming in place.
+let warmMicStreamPromise = null;
+async function getWarmMicStream() {
+  if (warmMicStream && warmMicStream.active) return warmMicStream;
+  if (!warmMicStreamPromise) {
+    warmMicStreamPromise = navigator.mediaDevices.getUserMedia(CAPTURE_MIC_CONSTRAINTS)
+      .then((s) => { warmMicStream = s; return s; })
+      .finally(() => { warmMicStreamPromise = null; });
+  }
+  return warmMicStreamPromise;
+}
+// Actually releases the hardware mic (and the browser's "mic in use"
+// indicator) -- called when leaving Voice/pausing, not after every turn.
+function releaseWarmMicStream() {
+  if (warmMicStream) { warmMicStream.getTracks().forEach(t => t.stop()); warmMicStream = null; }
+}
+
 // Voice-activity detection for live mode: neither TTS backend gives us
 // real-time streaming STT, so a live "conversation" here means auto-stopping
 // the recording once the mic goes quiet, rather than an always-on stream.
@@ -3830,9 +3871,20 @@ const INTERRUPT_MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppress
 const CAPTURE_MIC_CONSTRAINTS = {audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true}};
 
 async function startRecordingTurn(tapMode) {
-  const stream = await navigator.mediaDevices.getUserMedia(CAPTURE_MIC_CONSTRAINTS);
+  const stream = await getWarmMicStream();
   mediaRecorder = new MediaRecorder(stream);
   chunks = [];
+  // Snapshot THIS turn's own Deepgram socket, same pattern
+  // startComposerRecording already uses (myDgSocket there) -- without it,
+  // onstop's drainDeepgramSocket()/resolveTurnTranscript() calls below
+  // default to the global dgSocket, which drainDeepgramSocket itself
+  // already nulled out by the time resolveTurnTranscript reads it. Real,
+  // pre-existing bug found while investigating dropped words: this path
+  // was draining Deepgram's real-time transcript and then discarding it,
+  // falling through to re-transcribing the whole clip with Whisper on
+  // every single turn instead of ever using the live transcript it just
+  // streamed and drained.
+  let myDgSocket = null;
   // tapMode (Talk tab's tap-to-talk button): the second tap is what ends
   // this turn, not a silence guess -- same holdControlled flag the
   // composer's hold-to-dictate already uses to suppress Deepgram's own
@@ -3856,7 +3908,11 @@ async function startRecordingTurn(tapMode) {
     // that text never pays: the Deepgram drain and transcript resolution.
     // Visible via the browser console, not sent anywhere.
     const tStop = performance.now();
-    stream.getTracks().forEach(t => t.stop());
+    // Deliberately NOT stopping stream's tracks here -- it's the warm mic
+    // stream (see getWarmMicStream above), kept open and reused for the
+    // next press instead of closed and reacquired from cold every turn.
+    // Actually released by releaseWarmMicStream() on mute/pause/leaving
+    // Voice, not after every individual turn.
     stopMicAnalysis();
     // Clear the "Listening…" indicator right away -- recording genuinely
     // stopped here. The Deepgram drain below can take up to 1.2s, and
@@ -3866,7 +3922,7 @@ async function startRecordingTurn(tapMode) {
     micIndicator.classList.remove('active');
     micIndicatorDot.classList.remove('lit');
     employeeTile.classList.remove('lit');
-    await drainDeepgramSocket();
+    await drainDeepgramSocket(myDgSocket);
     const tDrained = performance.now();
     partialTurnId++; // this turn is over -- ignore any partial response still in flight for it
     if (discardNextStop) {
@@ -3893,7 +3949,7 @@ async function startRecordingTurn(tapMode) {
     const turnGen = replyGen;
     let myGen = null; // set once the reply cycle (post-transcription) actually starts; null means any catch below is a transcription failure, not an interrupted reply
     try {
-      const voiceData = await resolveTurnTranscript(blob);
+      const voiceData = await resolveTurnTranscript(blob, myDgSocket);
       const tTranscribed = performance.now();
       if (turnGen !== replyGen) {
         // Paused (or otherwise interrupted) while the transcript was still
@@ -3954,7 +4010,7 @@ async function startRecordingTurn(tapMode) {
   employeeCaption.textContent = '';
   startVadCalibration(performance.now()); // still runs even when deepgramEnabled -- only its own checkVad call site is skipped; harmless to compute
   micIndicator.classList.add('active');
-  if (deepgramEnabled) dgSocket = startDeepgramSocket(pcmSampleRate);
+  if (deepgramEnabled) myDgSocket = dgSocket = startDeepgramSocket(pcmSampleRate);
 }
 
 // Composer's own hold-to-dictate recording -- much lighter than
@@ -4117,6 +4173,15 @@ function armLiveMode() {
 function armTapToTalk() {
   if (mediaRecorder && mediaRecorder.state === 'recording') return;
   avatarState = 'ready';
+  // Pre-warm the mic the moment the button becomes press-able, not on the
+  // press itself -- by the time a real press happens, getUserMedia has
+  // usually already resolved, so startRecordingTurn's own getWarmMicStream
+  // call returns instantly instead of paying cold-start latency on press.
+  // Errors swallowed here on purpose: a real press still calls
+  // getWarmMicStream itself and surfaces a real failure via showMicError,
+  // same as before -- this is just an optimistic head start, not the only
+  // place that can acquire the stream.
+  getWarmMicStream().catch(() => {});
 }
 
 // This page wires talkMicBtn as real hold-to-record/release-to-send push-
@@ -4161,8 +4226,14 @@ talkMicBtn.addEventListener('pointerdown', async (e) => {
   // tapRecording there) flips the button to its recording look
   // immediately on press, not once the mic actually finishes opening.
   tapStarting = true;
+  const tPress = performance.now();
+  const alreadyWarm = !!(warmMicStream && warmMicStream.active);
   try {
     await startRecordingTurn(true);
+    // Diagnostic only (console, not sent anywhere): press-to-actually-
+    // recording latency, and whether the stream was already warm at press
+    // time -- tells us whether a given turn paid cold-start cost or not.
+    console.log(`[mic-timing] press-to-recording=${(performance.now() - tPress).toFixed(0)}ms alreadyWarm=${alreadyWarm}`);
   } catch (e) {
     showMicError(e);
   } finally {
@@ -4174,6 +4245,7 @@ function talkMicRelease() {
   talkHolding = false;
   hideMicTip(); // released -- whatever it had to say, the gesture it describes is already done
   if (mediaRecorder && mediaRecorder.state === 'recording' && holdControlled) {
+    console.log(`[mic-timing] release -- dgText at release: ${JSON.stringify(dgSocket ? (dgSocket.finalText + ' ' + dgSocket.interimText).trim() : '(no dgSocket)')}`);
     mediaRecorder.stop(); // release: end the turn right now, no silence wait at all
   }
 }
@@ -4234,6 +4306,7 @@ function exitVoiceLive() {
   liveMode = false;
   setLiveLayout(false);
   if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  releaseWarmMicStream();
   releaseWakeLock();
 }
 

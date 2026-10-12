@@ -1,0 +1,206 @@
+{"ts": 1791566286.654803, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "note": null}
+{"ts": 1791566613.33074, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791566737.65404, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "note": null}
+{"ts": 1791569084.8602629, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791579200.546137, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791583965.453484, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791651105.3791769, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791651127.348701, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791651145.190515, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791651349.8082209, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791651414.723583, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791651519.315777, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791651762.213184, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791651854.652915, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653412.003254, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653415.319415, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653429.5546272, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653437.647264, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653441.043519, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653445.4336362, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653448.23858, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653451.846132, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653456.1190348, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653458.6451929, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653462.808057, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653470.1380548, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653472.0452611, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653474.9138298, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653477.4760199, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653479.1254358, "session_id": "default", "turn": 4, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653483.3159099, "session_id": "default", "turn": 1, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653486.48546, "session_id": "default", "turn": 2, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653515.6788428, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653519.868873, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653525.712081, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653577.4019752, "session_id": "default", "turn": 1, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653656.579818, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653661.69308, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653671.267401, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653677.429271, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653681.410382, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653686.383265, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653692.832788, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653699.176939, "session_id": "default", "turn": 4, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653703.895642, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653729.840878, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653738.913203, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653748.2346408, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653754.2286248, "session_id": "default", "turn": 4, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653760.8152351, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653768.2358038, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653777.627576, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791653784.9505122, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654429.549271, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654436.357792, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654446.590085, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654455.154548, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654471.463318, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654484.1795352, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654491.7563362, "session_id": "default", "turn": 1, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654499.496716, "session_id": "default", "turn": 2, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654508.7123048, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654708.0832121, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654720.272681, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654735.3868968, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654744.673888, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654755.7057579, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654780.369569, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654789.095825, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654799.380039, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791654812.580377, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655404.521905, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655411.846415, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655421.905797, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655429.374572, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655436.04911, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655443.971196, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655453.356364, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655460.929423, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655468.192412, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655476.1884181, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655487.249622, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655494.432665, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655529.441329, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655537.489934, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655545.479924, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655555.984331, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655566.194253, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655580.1454542, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655607.09903, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655617.731765, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655631.531542, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655640.248239, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655650.223029, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791655659.528218, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659793.0825531, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659803.047777, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659819.7468858, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659825.723638, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659832.070603, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659848.112798, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659854.930134, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659861.070484, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659870.217031, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659877.231766, "session_id": "default", "turn": 1, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659886.290297, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659898.8154922, "session_id": "default", "turn": 3, "track": "manager_coaching", "phase": "structuring", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659906.426949, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": "uncertain", "floor_triggered": null, "note": null}
+{"ts": 1791659942.486054, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "note": "overridden_by_vote"}
+{"ts": 1791659951.385279, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659959.3705652, "session_id": "default", "turn": 4, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659966.246615, "session_id": "default", "turn": 1, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659974.47737, "session_id": "default", "turn": 2, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791659985.795431, "session_id": "default", "turn": 3, "track": "manager_coaching", "phase": "structuring", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791660034.605064, "session_id": "default", "turn": 1, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791660043.632895, "session_id": "default", "turn": 2, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791660059.3422232, "session_id": "default", "turn": 3, "track": "manager_coaching", "phase": "structuring", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791660078.087827, "session_id": "default", "turn": 1, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791660086.6617038, "session_id": "default", "turn": 2, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791660101.3835452, "session_id": "default", "turn": 3, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679014.3307881, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679037.500055, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679045.201343, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679052.1995149, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679062.452348, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679078.1242921, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679088.446506, "session_id": "default", "turn": 1, "track": "manager_coaching", "phase": "framing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679095.828127, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679105.762872, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679113.152077, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679123.578958, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679135.668726, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679148.978511, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679157.527885, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679178.571071, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679187.037149, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679194.549642, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679204.174666, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679212.387209, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679221.2005608, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679243.103074, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679250.3552709, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679262.171935, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679270.836961, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679281.3842409, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679287.398467, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679304.045595, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679317.785072, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": "uncertain", "floor_triggered": null, "note": null}
+{"ts": 1791679343.0360289, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679350.507614, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679846.459264, "session_id": "default", "turn": 1, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679884.381251, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679893.707904, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679901.343132, "session_id": "default", "turn": 4, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679907.792147, "session_id": "default", "turn": 5, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679925.5044742, "session_id": "default", "turn": 6, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679932.425556, "session_id": "default", "turn": 7, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679941.5829508, "session_id": "default", "turn": 8, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679951.003541, "session_id": "default", "turn": 9, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791679959.11821, "session_id": "default", "turn": 10, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "note": null}
+{"ts": 1791680338.640175, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680355.2213912, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680365.5279932, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680388.833226, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680397.7255838, "session_id": "default", "turn": 5, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680407.8231528, "session_id": "default", "turn": 6, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680415.84724, "session_id": "default", "turn": 7, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680425.541165, "session_id": "default", "turn": 8, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680435.5086222, "session_id": "default", "turn": 9, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680446.531931, "session_id": "default", "turn": 10, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791680898.3538811, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681048.305773, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": "uncertain", "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681065.5564868, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": "uncertain", "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681093.275829, "session_id": "default", "turn": 5, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681301.605174, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681313.789084, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681322.326014, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681330.7680588, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681338.430826, "session_id": "default", "turn": 5, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681347.988033, "session_id": "default", "turn": 6, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681355.429384, "session_id": "default", "turn": 7, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681364.546746, "session_id": "default", "turn": 8, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681374.8750699, "session_id": "default", "turn": 9, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681382.403264, "session_id": "default", "turn": 10, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681480.719658, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681499.425846, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681515.237752, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681534.2636402, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681543.0745049, "session_id": "default", "turn": 5, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681553.372888, "session_id": "default", "turn": 6, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681561.5112362, "session_id": "default", "turn": 7, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681572.659067, "session_id": "default", "turn": 8, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681583.7748458, "session_id": "default", "turn": 9, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681592.644874, "session_id": "default", "turn": 10, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681841.847509, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": "uncertain", "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681870.612135, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681879.866796, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "pre_session_screen", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681893.597795, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": "uncertain", "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681919.0200682, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": "overridden_by_vote"}
+{"ts": 1791681930.785346, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681943.23231, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": "floor_met", "floor_triggered": "harassment_discrimination", "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681954.838263, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681970.8060212, "session_id": "default", "turn": 3, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681977.688641, "session_id": "default", "turn": 4, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791681988.168136, "session_id": "default", "turn": 5, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1791746494.0671518, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}

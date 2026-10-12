@@ -75,6 +75,53 @@ SCENARIOS = {
         "She's generally a strong performer, this is new over the last month or so.",
         "I think I just want help figuring out how to open the conversation.",
     ],
+    # Pulled from docs/pitch-strategy/14_WORKPLACE_SCENARIOS.md -- a wider
+    # spread of real conflict shapes than the archetypes above cover,
+    # including one (flip_the_frame_own_report) that exercises a prompt
+    # branch ("if the other person is actually a direct report... flip the
+    # frame instead") none of the scenarios above ever reach.
+    "credit_stealing": [
+        "My co-lead on a launch presented our results to the whole company and took credit for everything using \"I\" the entire time, didn't mention me once. This is the second time it's happened in two months. I haven't said anything, I'm not sure if I'm overreacting, and we still have to work closely together for the next launch.",
+        "No, that's really the main thing, it's just happened twice now in the recap meetings specifically.",
+        "I think I want to say something, but I don't want to make it weird since we're still co-leading the next launch together.",
+    ],
+    "micromanagement": [
+        "My manager reviews every single piece of my work line by line, even stuff I've done successfully for over a year, and rewrites small things without explaining why. When I asked for clearer expectations up front, he just said \"use your judgment,\" but then edited the result anyway.",
+        "It's been going on for a few months now, and it's making me second-guess decisions that used to feel automatic.",
+        "I guess I want to figure out how to ask for more trust without sounding like I'm complaining, especially since I'm up for a promotion he'll weigh in on.",
+    ],
+    "passive_aggressive_escalation": [
+        "A coworker and I used to just hash out disagreements directly, but lately it's turned into pointed Slack messages and he's started CC'ing our manager on stuff we used to resolve ourselves. Neither of us has actually said there's a problem, it's all just tone and who's copied on what.",
+        "No, nothing new happened today specifically, it's just been building for a few weeks now.",
+        "I want to actually talk to him directly instead of letting it keep happening over Slack and CCs.",
+    ],
+    "flip_the_frame_own_report": [
+        "One of the people I manage keeps challenging my decisions in front of the rest of the team instead of bringing it up privately. I'm not sure if she's trying to undermine me or if she genuinely just thinks the team benefits from debating things openly and hasn't noticed how it lands.",
+        "No, that's really it, it's specifically happening in team meetings when I make a call on something.",
+        "I want to raise it with her without coming across as thin-skinned or shutting down healthy debate.",
+    ],
+    "harassment_adjacent": [
+        "A coworker keeps commenting on my appearance, stuff like \"you look great today,\" and lingers at my desk to chat about non-work stuff even after I've tried to wrap things up and change the subject. I haven't said anything directly to him because nothing he's said is really over the line on its own, and I don't want to seem difficult.",
+        "No, that's really it, it's just been building up over a few weeks.",
+        "I'm not sure if I'm overreacting or if this is actually worth saying something about.",
+    ],
+    # Neither of intake-app's own two tracks: not the manager's own conflict
+    # (employee-conflict path) and not rehearsing a conversation with their
+    # OWN direct report (manager-coaching path) -- a manager caught between
+    # two OTHER people who report to them is exactly facilitator-case-plan-
+    # system-prompt.md's (manager-app's) job instead. Scripted to see how
+    # intake-app's prompt actually handles a request outside both of its
+    # own tracks, rather than guessing from reading the prompt text.
+    "manager_mediating_two_reports": [
+        "I'm a manager and two people on my team have been openly clashing in meetings for weeks over how a shared process should run. They've both come to me separately asking me to back their side. I've been trying to stay neutral but it's starting to affect how the rest of the team plans around them.",
+        "No, that's really it, it's been building for a few weeks in our team meetings specifically.",
+        "I guess I want help figuring out how to handle this without picking a side or making it worse.",
+    ],
+    "role_elimination_coaching": [
+        "I need to tell one of my direct reports that his role is being eliminated in a reorg. It's not a performance thing at all, it's a budget decision made above me, but I'm anxious about him asking why and me not having a satisfying answer.",
+        "He's been a strong performer, this really is just about the budget, nothing he did.",
+        "I want to be honest with him without being cold about it, I just don't know how to open it.",
+    ],
 }
 
 MAX_TURNS = 4  # repetitive_venting needs 4 turns to exercise its accept-the-pivot-offer step

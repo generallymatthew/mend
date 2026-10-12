@@ -342,50 +342,6 @@ SYSTEM_PROMPT_BLOCKS = [{"type": "text", "text": SYSTEM_PROMPT, "cache_control":
 DEFAULT_SESSION_ID = "default"
 conversations: dict[str, list[dict]] = {}
 
-# Which sessions have already received their hardcoded track-stance sentence
-# (see TRACK_STANCE_SENTENCES / maybe_stance_sentence below) -- separate from
-# `conversations` since it's a one-shot flag, not conversation content.
-stance_shown: dict[str, bool] = {}
-
-# The system prompt used to require the model to state its own advocate
-# (employee-conflict path) or not-simply-on-the-manager's-side
-# (manager-coaching path) stance as part of its first track-specific message.
-# Tested live: banning one disclosure-preamble phrasing ("I want to be
-# upfront with you...") just produced another ("for the record...", "to be
-# straight with you...") on the next run, no matter how the ban was worded --
-# the model reaches for *some* lead-in whenever asked to assert this as a
-# standalone fact. The prompt no longer requires a standalone declaration at
-# all (see facilitator-intake-system-prompt.md's note on this); this fixed,
-# reviewed wording is spliced in by the app itself instead, the one time per
-# session the track first becomes known, so the exact phrasing is guaranteed
-# regardless of what the model would have said on its own.
-TRACK_STANCE_SENTENCES = {
-    "employee_conflict": (
-        "I'm working for your interests in this, not the company's, the same as I would "
-        "if the other person were the one sitting here instead of you. I won't agree with "
-        "everything, if your plan seems likely to backfire I'll say so, but the goal is "
-        "getting you a good outcome."
-    ),
-    "manager_coaching": (
-        "I'm here to help you have this conversation well, not simply to take your side "
-        "against your report. If something you're planning seems unfair or likely to "
-        "blindside them, I'll say so."
-    ),
-}
-
-
-def maybe_stance_sentence(session_id: str, signal_dict: dict) -> str | None:
-    """Returns the hardcoded stance sentence for this session's track the
-    first turn that track becomes known, None on every other turn (including
-    turns before the track is known, and every turn after the first one for
-    an already-disclosed track)."""
-    sentence = TRACK_STANCE_SENTENCES.get(signal_dict.get("track"))
-    if not sentence or stance_shown.get(session_id):
-        return None
-    stance_shown[session_id] = True
-    return sentence
-
-
 def get_conversation(session_id: str | None) -> list[dict]:
     return conversations.setdefault(session_id or DEFAULT_SESSION_ID, [])
 
@@ -396,6 +352,41 @@ def strip_signal(reply_text: str) -> tuple[str, str | None]:
     signal = match.group(1).strip() if match else None
     visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", reply_text, flags=re.S).strip()
     return visible, signal
+
+
+# Catches the disclosure-preamble tic the system prompt already explicitly
+# bans ("I want to be upfront," "to be clear," "let me assure you") as a
+# TEMPLATE, not a fixed phrase list -- confirmed live that banning this at
+# the prompt level alone doesn't hold: across two consecutive test runs the
+# model produced "I want to be clear about that" and then, after the ban's
+# wording was broadened to target the pattern itself, "To be clear, this
+# isn't a judgment on you" anyway, a brand new instance of the exact same
+# shape the ban was just reworded to stop. Stripped here deterministically
+# instead of relying on the model to keep not reaching for it -- same fix
+# shape as the stance-sentence duplicate (see git history around this
+# comment), moving an unreliable prompt-only rule into code that can't be
+# talked out of it. Bounded adjective list (not a generic \w+) to keep this
+# narrow and avoid false-positive stripping something like "to be fair,"
+# which isn't this tic and changes meaning if removed.
+_PREAMBLE_ADJ = r"(?:upfront|transparent|straightforward|clear|honest|frank|direct|blunt)"
+DISCLOSURE_PREAMBLE_RE = re.compile(
+    rf"(?i)(?:^|(?<=[.!?]\s)|(?<=\n))"
+    rf"(?:i want to be {_PREAMBLE_ADJ}(?: with you)?|to be {_PREAMBLE_ADJ}|let me (?:assure|tell) you|for the record)"
+    rf"\s*[:,]\s*"
+)
+
+
+def strip_disclosure_preambles(text: str) -> str:
+    """Removes a leading disclosure-preamble clause wherever one starts a
+    sentence in the reply, then recapitalizes whatever new letter is now at
+    the start of that sentence (stripping "To be clear, this isn't..." must
+    leave "This isn't...", not "this isn't...")."""
+    stripped = DISCLOSURE_PREAMBLE_RE.sub("", text)
+    return re.sub(
+        r"(?:^|(?<=[.!?]\s)|(?<=\n))([a-z])",
+        lambda m: m.group(1).upper(),
+        stripped,
+    )
 
 
 def facilitator_reply(conversation: list[dict], synthesize: bool = False) -> dict:
@@ -454,6 +445,7 @@ def facilitator_reply(conversation: list[dict], synthesize: bool = False) -> dic
         }
     visible, signal = strip_signal(raw)
     conversation.append({"role": "assistant", "content": raw})
+    visible = strip_disclosure_preambles(visible)
     return {"reply": visible, "signal": signal, "audio_url": synthesize_speech(visible) if synthesize else None}
 
 
@@ -485,10 +477,24 @@ def floor_uncertain(signal: dict) -> bool:
 # disclosures are exactly what this field screens. Exists to answer "which
 # turn did screen_result actually change on" after a live report that a
 # harassment disclosure wasn't flagged until several turns in.
+#
+# `raw_signal` (the pre-parse string from strip_signal, or None) is logged
+# separately from the parsed fields specifically to tell apart three
+# different things that all otherwise collapse to the same "every field is
+# null" record: the model legitimately having nothing to report yet, the
+# model omitting the whole <mend_signal> block for that turn (raw_signal is
+# None -- a real bug if it happens on a turn where the visible reply itself
+# clearly acted on a track/floor decision), and a block that was present but
+# failed to parse as JSON (raw_signal is a non-empty string, screen_result
+# still comes back null). Found live: a full 10-turn conversation where the
+# visible replies correctly walked through a harassment-floor disclosure and
+# consent choice, but every single turn's parsed signal came back fully
+# null -- this field is what lets a repeat of that be diagnosed instead of
+# re-guessed.
 SCREEN_LOG_FILE = ROOT / "screen_signal_log.jsonl"
 
 
-def log_screen_signal(session_id: str, turn: int, signal: dict, note: str | None = None) -> None:
+def log_screen_signal(session_id: str, turn: int, signal: dict, raw_signal: str | None = None, note: str | None = None) -> None:
     record = {
         "ts": time.time(),
         "session_id": session_id,
@@ -497,6 +503,8 @@ def log_screen_signal(session_id: str, turn: int, signal: dict, note: str | None
         "phase": signal.get("phase"),
         "screen_result": signal.get("screen_result"),
         "floor_triggered": signal.get("floor_triggered"),
+        "block_present": bool(raw_signal),
+        "parse_failed": bool(raw_signal) and not signal,
         "note": note,
     }
     with SCREEN_LOG_FILE.open("a") as f:
@@ -849,13 +857,10 @@ async def post_message(payload: dict):
     turn = sum(1 for m in conversation if m["role"] == "user")
     snapshot = list(conversation)  # before the primary call appends its own reply -- see maybe_override_via_voting
     result = await run_in_threadpool(facilitator_reply, conversation)
-    log_screen_signal(session_id, turn, parse_mend_signal(result.get("signal")))
+    log_screen_signal(session_id, turn, parse_mend_signal(result.get("signal")), result.get("signal"))
     final = await maybe_override_via_voting(conversation, snapshot, result)
     if final is not result:
-        log_screen_signal(session_id, turn, parse_mend_signal(final.get("signal")), note="overridden_by_vote")
-    stance = maybe_stance_sentence(session_id, parse_mend_signal(final.get("signal")))
-    if stance:
-        final = {**final, "reply": f"{final['reply']}\n\n{stance}"}
+        log_screen_signal(session_id, turn, parse_mend_signal(final.get("signal")), final.get("signal"), note="overridden_by_vote")
     return final
 
 
@@ -875,7 +880,16 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
     Reuses stream_facilitator_reply's own marker-withholding logic (buffer
     until certain text isn't the start of <mend_signal>) rather than
     reinventing it, just shaped as {"text": ...} chunks for this app's own
-    frontend instead of the OpenAI chunk format Tavus needs."""
+    frontend instead of the OpenAI chunk format Tavus needs.
+
+    Does NOT get facilitator_reply()'s strip_disclosure_preambles() pass --
+    text here is flushed to the client as it arrives (withholding only the
+    marker's own trailing chars), so by the time a sentence-starting "To be
+    clear," would be recognized, it's already been shown. Catching it here
+    too would mean buffering at least a full sentence before ever flushing
+    anything, which defeats the actual point of this streaming path (same
+    kind of scope tradeoff maybe_override_via_voting's own docstring notes
+    for why it only covers /api/message, not this one)."""
     if client is None:
         conversation.pop()
         yield _sse({"text": "(server error: ANTHROPIC_API_KEY is not set in this shell)"})
@@ -949,10 +963,7 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
     _, signal = strip_signal(full_text)
     conversation.append({"role": "assistant", "content": full_text})
     signal_dict = parse_mend_signal(signal)
-    log_screen_signal(session_id, turn, signal_dict)
-    stance = maybe_stance_sentence(session_id, signal_dict)
-    if stance:
-        yield _sse({"text": f"\n\n{stance}"})
+    log_screen_signal(session_id, turn, signal_dict, signal)
     yield _sse({"done": True, "signal": signal})
 
 
@@ -1169,9 +1180,7 @@ async def speak_aura(payload: dict):
 @app.post("/api/reset")
 async def reset(payload: dict = None):
     payload = payload or {}
-    session_id = payload.get("session_id") or DEFAULT_SESSION_ID
     get_conversation(payload.get("session_id")).clear()
-    stance_shown.pop(session_id, None)
     # Audio files aren't namespaced per session (random uuid filenames,
     # see synthesize_speech) -- clearing them here is harmless for the real
     # single-session frontend (the only caller that ever uses synthesize
