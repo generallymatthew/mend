@@ -2916,25 +2916,6 @@ function addMessage(text, cls) {
   return div;
 }
 
-// Text-only onboarding nudge, not a real conversation turn -- unlike
-// addMessage() this doesn't mirror into the voice transcript. No longer
-// promotes hands-free (button removed per explicit request) -- just tells
-// the person how to respond: type, or hold the mic for a voice memo.
-function addHandsFreeHintMessage() {
-  const wrap = document.createElement('div');
-  wrap.className = 'chat-msg-wrap theirs';
-  const who = document.createElement('span');
-  who.className = 'chat-who';
-  who.textContent = 'Thimble';
-  wrap.appendChild(who);
-  const bubble = document.createElement('div');
-  bubble.className = 'chat-bubble theirs';
-  bubble.appendChild(document.createTextNode('So what’s going on? You can type here, or hold the mic button to leave a voice memo.'));
-  wrap.appendChild(bubble);
-  chatThreadInner.insertBefore(wrap, chatTyping);
-  chatThread.scrollTop = chatThread.scrollHeight;
-}
-
 const banner = document.getElementById('banner');
 
 const roleplayBadge = document.getElementById('roleplayBadge');
@@ -3917,20 +3898,14 @@ async function start() {
     if (data.reply) {
       logEvent('session_start');
       if (ui === 'text') {
-        // Staggered like messages actually landing, not a wall of text
+        // Staggered like a message actually landing, not a wall of text
         // dumped the instant the page paints: 500ms before the greeting
-        // shows at all ("you just got sent a message"), then a pause
-        // before the hands-free nudge so it reads as a second thought,
-        // not one long paragraph.
+        // shows at all ("you just got sent a message").
         setTimeout(() => {
           addMessage(formatGreeting(data.reply), 'facilitator');
           handleSignal(data.signal);
           feedSpeechText(data.reply, true); // original text, not the display-formatted one -- no-op in Text, but still closes out this reply cycle -- see feedSpeechText
-          avatarState = 'thinking'; // brief "typing" pulse before the second message, same as a real reply would show
-          setTimeout(() => {
-            addHandsFreeHintMessage();
-            avatarState = 'idle';
-          }, 2000);
+          avatarState = 'idle';
         }, 500);
       } else {
         addMessage(formatGreeting(data.reply), 'facilitator');
