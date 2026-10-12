@@ -1052,12 +1052,11 @@
       <div class="chat-composer">
         <div class="chat-input-row">
           <textarea id="chatInput" rows="2" placeholder="Explain what happened&hellip;"></textarea>
-          <!-- Re-enabled: this page is meant to match index.html's full
-               feature set (no live voice yet, just a preferred UI), so the
-               composer's dictate-into-field gesture belongs here same as
-               there -- it's a different action from the voice stage's
-               send-immediately hold button, not a competing one. -->
-          <div class="composer-mic-wrap">
+          <!-- Composer's own hold-to-dictate mic is hidden on this page --
+               explicit call that the hold-dock button (talkMicBtn) works
+               better as the one mic affordance. JS wiring left intact/
+               harmless. -->
+          <div class="composer-mic-wrap" hidden>
             <div class="composer-mic-wave" id="composerMicWave"><span></span><span></span><span></span><span></span></div>
             <div class="composer-mic-label" id="composerMicLabel" hidden></div>
             <button id="composerMicBtn" class="composer-mic-btn" type="button" title="Hold to record a voice memo">

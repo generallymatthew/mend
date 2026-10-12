@@ -14,7 +14,7 @@ Structural, phase-level view — what needs to be true before the next phase sta
 - [x] `manager-app` — sketched, mocked (`App.dc.html`/`canvas.json`), and the underlying philosophy/workflow/facilitator mindset written up (`PHILOSOPHY.md`/`WORKFLOW.md`/`THIMBLE_MINDSET.md`)
 - [x] `manager-app` real backend, wiring `THIMBLE_MINDSET.md` into an actual system prompt the way the other apps' `facilitator-*-system-prompt.md` files do
 - [x] `manager-app`: "managing up" translator and the decoupled hand-off into a peer-to-peer session, wired as real actions (not just prompt text telling Thimble to offer them)
-- [ ] `intake-app`: Playwright smoke test for `voice-transcript-live.html` (`tests/voice_live_smoke_test.py`), mirroring `tests/button_smoke_test.py`'s coverage of `index.html` — mobile FAB opens/closes the voice modal (button, backdrop click, Escape), top nav doesn't overflow at 375px, desktop pane hide/show toggles, "Start over" overflow menu renders fully on-screen (regression guard), captions + avatar animation active inside the modal
+- [ ] `intake-app`: Playwright smoke test for `session.html` (`tests/session_smoke_test.py`), mirroring `tests/button_smoke_test.py`'s coverage of `index.html` — mobile FAB opens/closes the voice modal (button, backdrop click, Escape), top nav doesn't overflow at 375px, desktop pane hide/show toggles, "Start over" overflow menu renders fully on-screen (regression guard), captions + avatar animation active inside the modal
 
 ## Phase 1 — Real-time audio/video, one voice-driven session
 
