@@ -978,9 +978,24 @@ function resumeSession() {
 
 let micMuted = false;
 const muteBtn = document.getElementById('muteBtn');
+// Reported live: "I heard Thimble's voice after I tapped mute". This
+// button previously only muted the user's OWN mic (micMuted) -- a label
+// fix alone ("Mute your mic") wasn't enough, since sitting right next to
+// Thimble's own name/state, the real expectation tapping it is Thimble
+// going silent immediately, like a real conversation. Now does both: mutes
+// the mic AND silences Thimble (ttsMuted, same flag chatMuteBtn uses,
+// stopSpeechPlayback/updateMuteBtn defined further down -- both are plain
+// function declarations, hoisted, so calling them here before their own
+// source position is fine once this actually runs on a later click).
+muteBtn.title = 'Mute';
 muteBtn.addEventListener('click', () => {
   micMuted = !micMuted;
+  ttsMuted = micMuted;
+  try { localStorage.setItem('mendTtsMuted', ttsMuted ? '1' : '0'); } catch (e) {}
+  if (ttsMuted) stopSpeechPlayback();
+  updateMuteBtn();
   muteBtn.classList.toggle('inactive', micMuted);
+  muteBtn.title = micMuted ? 'Unmute' : 'Mute';
   muteBtn.querySelector('.slash').style.display = micMuted ? '' : 'none';
   youMuteIcon.hidden = !micMuted;
   if (micMuted) { employeeTile.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
@@ -2611,7 +2626,16 @@ function extractCompleteSentences(fullText, consumedLen) {
 }
 
 function feedSpeechText(fullText, final) {
-  if (ui !== 'voice' && (!currentReplyShouldSpeak || ttsMuted)) {
+  // ttsMuted checked unconditionally, not just in the ui !== 'voice' branch
+  // below -- reported live as "I heard Thimble's voice after I tapped
+  // mute": Voice view's own muteBtn previously only muted the user's OWN
+  // mic (micMuted), on the documented assumption that "Talk view IS the
+  // audio" and had no mute of its own. That assumption didn't match what
+  // testers actually expect tapping the one "Mute" control on the voice
+  // stage to do -- silence Thimble right now, same as a real conversation.
+  // muteBtn now flips this same ttsMuted flag (see its own click handler)
+  // so this one check covers both views.
+  if (ttsMuted || (ui !== 'voice' && !currentReplyShouldSpeak)) {
     // Text view is silent by default -- no TTS audio unless this reply
     // follows a dictated turn (currentReplyShouldSpeak, set by sendText()),
     // and even then not if the tester has muted it (chatMuteBtn). Still have

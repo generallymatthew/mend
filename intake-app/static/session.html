@@ -1349,9 +1349,25 @@ function resumeSession() {
 
 let micMuted = false;
 const muteBtn = document.getElementById('muteBtn');
+// Reported live: "I heard Thimble's voice after I tapped mute". This
+// button previously only muted the user's OWN mic (micMuted) -- a label
+// fix alone ("Mute your mic") wasn't enough, since sitting right inside
+// the "Thimble: {state}" pill, the real expectation tapping it is Thimble
+// going silent immediately, like a real conversation. Now does both: mutes
+// the mic AND silences Thimble (ttsMuted, same flag the page's own
+// hidden-but-wired chatMuteBtn uses -- stopSpeechPlayback/updateMuteBtn
+// are plain function declarations, hoisted, so calling them here ahead of
+// their own source position is fine once this actually runs on a later
+// click).
+muteBtn.title = 'Mute';
 muteBtn.addEventListener('click', () => {
   micMuted = !micMuted;
+  ttsMuted = micMuted;
+  try { localStorage.setItem('mendTtsMuted', ttsMuted ? '1' : '0'); } catch (e) {}
+  if (ttsMuted) stopSpeechPlayback();
+  updateMuteBtn();
   muteBtn.classList.toggle('inactive', micMuted);
+  muteBtn.title = micMuted ? 'Unmute' : 'Mute';
   muteBtn.querySelector('.slash').style.display = micMuted ? '' : 'none';
   youMuteIcon.hidden = !micMuted;
   if (micMuted) { employeeTile.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
