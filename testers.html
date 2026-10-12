@@ -49,16 +49,6 @@
   .scenario-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px;}
   .scenario-list li{font-size:13.5px; color:var(--ink-soft);}
 
-  .feedback-grid{display:flex; flex-direction:column; gap:1px; margin-top:4px; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
-  .feedback-row{display:flex; flex-direction:column; gap:4px; font-size:14px; padding:14px 18px; border-bottom:1px solid var(--border);}
-  .feedback-row:last-child{border-bottom:none;}
-  .feedback-row .k{font-weight:800; color:var(--ink); display:flex; align-items:center; gap:8px;}
-  .feedback-row .k::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0;}
-  .feedback-row:nth-child(2) .k::before{background:var(--pink);}
-  .feedback-row:nth-child(3) .k::before{background:var(--honey);}
-  .feedback-row .v{color:var(--ink-soft);}
-  @media (max-width:600px){ .feedback-grid{background:transparent; border:none; box-shadow:none; border-radius:0;} }
-
   .note{background:var(--honey-soft); border:1px solid var(--border); border-radius:14px; padding:16px 18px; font-size:13.5px; color:var(--ink-soft);}
   .note b{color:var(--ink);}
 
@@ -86,7 +76,7 @@
   <p class="kicker">A note before you dive in</p>
   <h1>Thanks for testing this with me.</h1>
   <p class="lede">You're about to see an early, pre-legal-review prototype, not a finished product. A few minutes of reading this first will make your feedback more useful to me, and save you from guessing what you're looking at.</p>
-  <a class="btn-top start-link" href="http://localhost:8080/intake/" data-local="http://localhost:8080/intake/" data-live="https://mend-mvp.onrender.com/intake/">Start a Private Session &rarr;</a>
+  <a class="btn-top" href="about.html">Go to the Pitch Page &rarr;</a>
 
   <section class="block">
     <h3 class="section-headline">What you're about to see</h3>
@@ -113,16 +103,6 @@
     </ol>
   </section>
 
-  <section class="block">
-    <h3 class="section-headline">What kind of feedback I actually want</h3>
-    <p class="section-sub">A short survey pops up automatically right after your session ends. Some of what's below (neutrality, whether it understood you, whether you'd trust it with something real) is literally what it asks, in multiple choice, so answering it is the single most useful thing you can do. Everything below is what to also tell me directly, in whatever form is easiest for you, since a lot of it doesn't fit in a multiple-choice box.</p>
-    <div class="feedback-grid">
-      <div class="feedback-row"><span class="k">On the pitch page</span><span class="v">Did the problem it describes match something you've actually experienced? Did "nothing is recorded, ever" read as credible, or did you hesitate before clicking Start, and if so, why?</span></div>
-      <div class="feedback-row"><span class="k">On the conversation itself</span><span class="v">Did Thimble feel neutral, or like it sided with you (or against you)? Did it understand your situation, or did you have to keep correcting it? Did anything it said feel off, repetitive, or too slow to arrive?</span></div>
-      <div class="feedback-row"><span class="k">On the rough edges</span><span class="v">Voice or mic glitches, captions that lagged or looked wrong, anything that felt broken rather than just unfinished. I'd rather hear about a bug twice than not at all.</span></div>
-    </div>
-  </section>
-
   <div class="cta">
     <h3 class="section-headline">Ready?</h3>
     <p>Head to the pitch page next. It's the real first thing a new user would see, so start there rather than skipping straight to a session.</p>
@@ -133,17 +113,5 @@
     <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product.</div>
   </footer>
 </div>
-<script>
-(function(){
-  // Same local/live link-swap pattern as about.html -- this page gets
-  // opened both from a local dev server and from the live Render deploy.
-  var isLive = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:';
-  if (!isLive) return;
-  document.querySelectorAll('.start-link').forEach(function(a){
-    var live = a.getAttribute('data-live');
-    if (live) a.href = live;
-  });
-})();
-</script>
 </body>
 </html>
