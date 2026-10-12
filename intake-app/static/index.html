@@ -3319,13 +3319,31 @@ async function startInterruptMonitor(myGen) {
   v.start();
 }
 
-function interruptNow(myGen) {
+// Confirmed live (headphones vs. speakers, same tap, same phrase): a stuck
+// turn after interrupting Thimble mid-reply was the speakers' own echo
+// still reaching the mic right as it reopens, not a code bug -- pause()/
+// stopBufferSource() above already stop playback with zero async gap. A
+// short settle delay here gives that residual acoustic tail (and the fresh
+// stream's own echoCancellation) a moment to die down before the mic goes
+// live again, so speaker-only testers don't hit the VAD_MAX_TURN_MS backstop
+// the same way headphone testers never did.
+//
+// 100ms, not the first attempt's 200ms -- reported live as making the mic
+// feel slow to start, stacking on top of getUserMedia's own real open-up
+// latency (startRecordingTurn's own comment on tapStarting, just below,
+// already calls that "a noticeable fraction of a second" on its own).
+// Still real time for a digital-instant pause/stop to decay acoustically,
+// just less of it piled onto an already-perceptible wait.
+const INTERRUPT_MIC_SETTLE_MS = 100;
+
+async function interruptNow(myGen) {
   if (myGen !== replyGen) return;
   logEvent('interrupt');
   endReplyCycle();
   audioEl.pause();
   stopBufferSource();
   avatarState = 'idle';
+  await new Promise((r) => setTimeout(r, INTERRUPT_MIC_SETTLE_MS));
   startRecordingTurnSafe();
 }
 
@@ -3549,7 +3567,16 @@ async function startRecordingTurn(tapMode) {
 // is the only way this ends), and release fills the text input for review
 // instead of sending and waiting on a reply.
 async function startComposerRecording() {
+  // Timing log, not a fix -- live report of "it took 1500ms from press to
+  // beep" needs a real number to tell a one-off Bluetooth mic-profile
+  // switch (A2DP -> HFP, a known OS-level tax, not a code bug) apart from
+  // something actually slow in here. getUserMedia is the only await before
+  // the beep fires, so whatever's slow is inside this one call.
+  const tGumStart = performance.now();
   const stream = await navigator.mediaDevices.getUserMedia(CAPTURE_MIC_CONSTRAINTS);
+  const gumMs = performance.now() - tGumStart;
+  if (gumMs > 400) console.warn(`[mic] getUserMedia took ${gumMs.toFixed(0)}ms before the start beep -- if a Bluetooth headset is in use, this is likely its A2DP->HFP profile switch, not the app`);
+  else console.log(`[mic] getUserMedia resolved in ${gumMs.toFixed(0)}ms`);
   mediaRecorder = new MediaRecorder(stream);
   const myChunks = chunks = [];
   holdControlled = true;
@@ -3713,6 +3740,11 @@ talkMicBtn.addEventListener('click', async () => {
     audioEl.pause();
     stopBufferSource();
     avatarState = 'ready';
+    // Same settle delay as interruptNow -- see INTERRUPT_MIC_SETTLE_MS's own
+    // comment. tapStarting flips first (below) so the button still looks
+    // responsive immediately; only the actual mic-open waits out the delay.
+    tapStarting = true;
+    await new Promise((r) => setTimeout(r, INTERRUPT_MIC_SETTLE_MS));
   }
   if (avatarState !== 'ready') return; // e.g. mid-transcription -- nothing to interrupt or start yet
   // getUserMedia can take a real, noticeable fraction of a second even
