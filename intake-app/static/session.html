@@ -1117,20 +1117,27 @@
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.wasm.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.31/dist/bundle.min.js"></script>
 <script>
-// Path-relative, not hardcoded absolute: this page is served at "/"
-// standalone (direct port) but at "/intake/" behind the local Caddy proxy
-// (../Caddyfile). fetch('/api/...') and a server-returned "/api/audio/..."
-// URL are both absolute paths that would otherwise resolve against the
-// proxy's root instead of this app -- same class of bug the WebSocket URL
-// in ../joint-session-app/static/index.html had.
-// index.html derives this from location.pathname because it's always
-// served at the app's actual mount root (reverse-proxy-safe). This page
-// is served from its own route (/voice-live, see server.py) which is NOT
-// the api mount root -- deriving BASE_PATH the same way pointed every
-// fetch at /voice-live/api/... instead of the real /api/... routes
-// (confirmed live: 404s on every single one). Hardcoded to the real root
-// instead, since that's the only thing actually correct here.
-const BASE_PATH = '/';
+// Path-relative, not hardcoded absolute: this page is served at "/session"
+// standalone (direct port) but at "/intake/session" behind both the local
+// Caddy proxy (../Caddyfile) and the live Render deploy (reported live:
+// the hardcoded "/" version below sent every call straight to
+// mend-mvp.onrender.com/api/start, a 404, since the real route needs the
+// /intake prefix too -- confirmed live, this was a real production outage,
+// not just a local quirk). fetch('/api/...') and a server-returned
+// "/api/audio/..." URL are both absolute paths that would otherwise
+// resolve against the proxy's root instead of this app -- same class of
+// bug the WebSocket URL in ../joint-session-app/static/index.html had.
+// index.html can derive this straight from location.pathname because it's
+// always served at the app's actual mount root. This page is served from
+// its OWN route (/session, see server.py), one level below that root --
+// deriving it the same naive way pointed every fetch at
+// /intake/session/api/... instead of /intake/api/... (a previous, now-
+// corrected attempt at this same fix hardcoded "/" instead, which worked
+// locally -- same mount root there -- but broke in production where the
+// real root is "/intake/", not "/"). Stripping only this page's own last
+// path segment handles both: "/intake/session" -> "/intake/", and the
+// local standalone case "/session" -> "/".
+const BASE_PATH = location.pathname.replace(/\/[^/]*$/, '/');
 function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
 
 // Was a fresh random id per page load, used only for analytics grouping --
