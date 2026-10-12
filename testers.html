@@ -40,13 +40,8 @@
   ol.step-list li b{color:var(--ink);}
   @media (max-width:600px){ ol.step-list{background:transparent; border:none; box-shadow:none; border-radius:0;} }
 
-  .scenario-toggle{margin-top:10px;}
-  .scenario-toggle summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13px; color:var(--accent);}
-  .scenario-toggle summary::-webkit-details-marker{display:none;}
-  .scenario-toggle summary::before{content:'\25BE'; display:inline-block; transition:transform .15s ease;}
-  .scenario-toggle[open] summary::before{transform:rotate(180deg);}
-  .scenario-toggle[open] summary{margin-bottom:8px;}
-  .scenario-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px;}
+  .scenario-label{margin-top:10px; font-weight:700; font-size:12.5px; color:var(--accent); text-transform:uppercase; letter-spacing:.04em;}
+  .scenario-list{margin:6px 0 0; padding-left:18px; display:flex; flex-direction:column; gap:6px;}
   .scenario-list li{font-size:13.5px; color:var(--ink-soft);}
 
   .note{background:var(--honey-soft); border:1px solid var(--border); border-radius:14px; padding:16px 18px; font-size:13.5px; color:var(--ink-soft);}
@@ -89,14 +84,12 @@
     <ol class="step-list">
       <li><div><b>Read the pitch page first.</b> Don't skip ahead to the session. Whatever you think of it, confused, skeptical, sold, that reaction is useful to me.</div></li>
       <li><div><b>Start a session.</b> Either describe a real (small, low-stakes) piece of coworker friction you've actually experienced, or pick a scenario and roleplay it. Real friction, even minor, tends to produce more honest reactions than an invented one.
-        <details class="scenario-toggle">
-          <summary>Show example scenarios</summary>
-          <ul class="scenario-list">
-            <li>A peer repeatedly takes credit for shared work in front of the team.</li>
-            <li>A manager micromanages while telling you to "use your judgment."</li>
-            <li>A senior colleague sends off-hours messages that drift into uncomfortable territory.</li>
-          </ul>
-        </details>
+        <div class="scenario-label">Example scenarios</div>
+        <ul class="scenario-list">
+          <li>A peer repeatedly takes credit for shared work in front of the team.</li>
+          <li>A manager micromanages while telling you to "use your judgment."</li>
+          <li>A senior colleague sends off-hours messages that drift into uncomfortable territory.</li>
+        </ul>
       </div></li>
       <li><div><b>Talk to Thimble like you would a real tool.</b> Interrupt it, correct it, go off-script, try voice if you can. I'd rather you break it than be polite to it.</div></li>
       <li><div><b>Finish the short survey at the end.</b> It's quick, and it's the one piece of feedback that's structured enough for me to compare across testers.</div></li>
