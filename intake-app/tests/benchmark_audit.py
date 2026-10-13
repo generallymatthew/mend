@@ -274,7 +274,12 @@ def call_mend(client: Anthropic, system_prompt: str, messages: list[dict]) -> tu
     # nothing to do with facilitator quality).
     resp = client.messages.create(
         model=CLAUDE_MODEL, max_tokens=8192,
-        system=[{"type": "text", "text": system_prompt}],
+        # Same ephemeral cache_control breakpoint server.py uses (see its
+        # SYSTEM_PROMPT_BLOCKS comment) -- without it, this ~14k-token system
+        # prompt gets reprocessed at full input-token price on every single
+        # call. This script fires many calls per run (up to 4 per scenario
+        # pass), so this was the single biggest cost driver before caching.
+        system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
         messages=messages,
     )
     raw = "".join(b.text for b in resp.content if b.type == "text")
