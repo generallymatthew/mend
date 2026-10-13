@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mend &middot; the Conflict story</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Faunces:ital,wght@0,700;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9,700;1,9,500&display=swap" rel="stylesheet">
 <style>
   /* Same brand kit as about.html: Evergreen ink, Oat paper, Evergreen as the
      primary accent, Pink reserved for the logo mark, Honey as a highlight
@@ -16,6 +16,7 @@
     --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
   }
   *{box-sizing:border-box}
+  html{scroll-behavior:smooth;}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
   .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
 
@@ -47,13 +48,16 @@
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
 
-  .kicker{font-family:'Faunces','Times New Roman',serif; font-style:italic; font-size:14px; color:var(--muted); margin:0 0 10px;}
-  h1{font-family:'Faunces','Times New Roman',serif; font-size:2.15rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:700;}
+  .kicker{font-family:'Fraunces',Georgia,serif; font-style:italic; font-size:14px; color:var(--muted); margin:0 0 10px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.15rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:700;}
   h2.eyebrow{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase;}
-  h3.section-headline{font-family:'Faunces','Times New Roman',serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:48px 0 10px; color:var(--ink); line-height:1.25;}
+  h3.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:48px 0 10px; color:var(--ink); line-height:1.25;}
   p.lede{font-size:1.05rem; color:var(--ink-soft); margin:0 0 8px; max-width:56ch;}
-  .btn-top{display:inline-flex; align-items:center; gap:6px; margin-top:18px; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 2px 6px rgba(23,55,46,0.18);}
+  .cta-row{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px;}
+  .btn-top{display:inline-flex; align-items:center; gap:6px; margin:0; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 2px 6px rgba(23,55,46,0.18);}
   .btn-top:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(23,55,46,0.24);}
+  .hr-link{display:inline-flex; align-items:center; gap:6px; margin:0; background:#fff; color:var(--ink); font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; border:1px solid var(--border); transition:transform .15s ease, box-shadow .15s ease;}
+  .hr-link:hover{transform:translateY(-1px); box-shadow:0 2px 6px rgba(23,55,46,0.1);}
   p{margin:0 0 14px;}
   section.block{margin-top:48px;}
   section.block:first-of-type{margin-top:36px;}
@@ -74,19 +78,24 @@
 
   .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:4px;}
   @media (max-width:420px){ .stat-grid{grid-template-columns:1fr;} }
-  .stat-row{display:grid; grid-template-columns:190px 1fr; gap:18px; align-items:center; margin-top:4px;}
+  .stat-row{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:center; margin-top:4px;}
   .stat-row .stat-tile{height:100%; display:flex; flex-direction:column; justify-content:center; padding:16px 16px 14px;}
   .stat-row .stat-num{font-size:1.5rem;}
   .stat-row p{margin:0; font-size:14.5px;}
   @media (max-width:480px){ .stat-row{grid-template-columns:1fr;} }
   .stat-tile{background:var(--card); border:1px solid var(--border); border-top:3px solid var(--honey); border-radius:16px; padding:20px 20px 18px; box-shadow:0 1px 2px rgba(23,55,46,0.04); overflow:visible;}
   .stat-tile:nth-child(2){border-top-color:var(--pink);}
+  .stat-eyebrow{font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0 0 6px;}
   .stat-num{display:flex; align-items:baseline; gap:3px; font-size:1.9rem; font-weight:800; color:var(--ink); line-height:1.1; margin-bottom:4px;}
   .stat-label{font-size:13.5px; color:var(--ink-soft);}
+  .stat-lead{font-size:14.5px; font-weight:700; color:var(--ink-soft); margin:0 0 2px;}
+  .stat-tail{font-size:14.5px; color:var(--ink-soft);}
   .stat-info{position:relative; appearance:none; border:none; background:none; padding:0; margin:0 0 2px; cursor:help; font-family:inherit; line-height:1;}
   .stat-info .mark{font-size:0.95rem; font-weight:700; color:var(--muted);}
-  .stat-info .tooltip{position:absolute; left:0; top:100%; margin-top:8px; width:200px; background:var(--ink); color:#fff; font-size:11px; font-weight:500; line-height:1.5; padding:10px 12px; border-radius:10px; box-shadow:0 8px 20px rgba(23,55,46,0.25); opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .15s ease, transform .15s ease; z-index:5;}
-  .stat-info:hover .tooltip, .stat-info:focus .tooltip, .stat-info:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateY(0);}
+  .stat-info .tooltip{position:absolute; left:50%; top:100%; margin-top:8px; width:200px; max-width:calc(100vw - 24px); background:var(--ink); color:#fff; font-size:11px; font-weight:500; line-height:1.5; padding:10px 12px; border-radius:10px; box-shadow:0 8px 20px rgba(23,55,46,0.25); opacity:0; visibility:hidden; transform:translateX(-50%) translateY(-4px); transition:opacity .15s ease, transform .15s ease; z-index:5;}
+  .stat-info:hover .tooltip, .stat-info:focus .tooltip, .stat-info:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateX(-50%) translateY(0);}
+  .stat-info .tooltip.shift{transform:translateX(calc(-50% + var(--tip-shift,0px))) translateY(-4px);}
+  .stat-info:hover .tooltip.shift, .stat-info:focus .tooltip.shift, .stat-info:focus-visible .tooltip.shift{transform:translateX(calc(-50% + var(--tip-shift,0px))) translateY(0);}
   @media (max-width:600px){ .stat-tile{padding:16px 16px 14px;} .stat-num{font-size:1.5rem;} .stat-label{font-size:12.5px;} .stat-info .tooltip{width:168px;} }
 
   .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
@@ -177,22 +186,17 @@
   <div class="hero">
     <div class="hero-text">
       <p class="kicker">Conflict</p>
-      <h1>You're Angry, Confused, and Not Sure What to Do Next.</h1>
-      <p class="lede">Something happened with a coworker, and now you're stuck replaying it: what actually caused it, whether you're overreacting, what you're supposed to do about it. It's genuinely stressful, interpersonal conflict is one of the fastest ways to lose a job, and there's no one around you who can give you an unbiased read. Mend is a place to think out loud, figure out what's actually going on, and decide your next move before you have to make it in the room.</p>
-      <a class="btn-top start-link" href="http://localhost:8080/intake/session" data-local="http://localhost:8080/intake/session" data-live="https://mend-mvp.onrender.com/intake/session">Start a Private Session &rarr;</a>
-    </div>
-    <div class="hero-visual">
-      <div class="hero-avatar">
-        <div id="heroAvatar"></div>
-        <div class="speech-bubble" aria-hidden="true"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+      <h1>After a Conflict, You're Angry, Confused, and Unsure.</h1>
+      <p class="lede">Something happened with a coworker, and now you can't stop replaying it, trying to figure out what actually caused it, whether you're overreacting, what you're even supposed to do next. It's genuinely stressful, interpersonal conflict is one of the fastest ways to lose a job, and there's no one around you who can give you an unbiased read. Mend is a place to think out loud, figure out what's actually going on, and decide your next move before you have to make it in the room.</p>
+      <div class="cta-row">
+        <a class="btn-top start-link" href="http://localhost:8080/intake/session" data-local="http://localhost:8080/intake/session" data-live="https://mend-mvp.onrender.com/intake/session">Start a Private Session &rarr;</a>
+        <a class="hr-link" href="#for-hr">How Mend Can Help HR &rarr;</a>
       </div>
-      <div class="avatar-status"><span class="dot"></span>Thimble, your session facilitator</div>
     </div>
   </div>
 
   <section class="block builder-note">
-    <p class="kicker">A note from the builder</p>
-    <h3 class="section-headline">The Third Way to Be Professional</h3>
+    <h3 class="section-headline">A note from the builder</h3>
     <p>Earlier in my career, whenever I ran into tension with a coworker, I did what almost everyone does: I asked my friends.</p>
     <p>Because they cared about me, they validated me. They told me I was right, that the other person was being unreasonable, and that I didn&rsquo;t deserve it. It felt good in the moment. But they didn&rsquo;t tell me what I actually needed to hear: my own part in the dynamic.</p>
     <details class="read-more">
@@ -233,12 +237,14 @@
     <h3 class="section-headline">The cost of unresolved conflict</h3>
     <div class="stat-grid">
       <div class="stat-tile">
-        <div class="stat-num">2.8 hrs/week<button type="button" class="stat-info" aria-describedby="statSrc1"><span class="mark">*</span><span class="tooltip" id="statSrc1">CPP Inc., &ldquo;Workplace Conflict and How Businesses Can Harness It to Thrive&rdquo; (2008). ~5,000 employees, nine countries.</span></button></div>
-        <div class="stat-label">Average employee time lost to managing conflict, their own or someone else's: about 7% of a work week.</div>
+        <div class="stat-lead">Employees spend</div>
+        <div class="stat-num">2.8 hrs/week<button type="button" class="stat-info" aria-describedby="statSrc1"><span class="mark">*</span><span class="tooltip" id="statSrc1">Average employee time lost to managing conflict, their own or someone else's: about 7% of a work week. Source: CPP Inc., &ldquo;Workplace Conflict and How Businesses Can Harness It to Thrive&rdquo; (2008). ~5,000 employees, nine countries.</span></button></div>
+        <div class="stat-tail">on work conflicts</div>
       </div>
       <div class="stat-tile">
-        <div class="stat-num">4.3&ndash;4.4 hrs/week<button type="button" class="stat-info" aria-describedby="statSrc2"><span class="mark">*</span><span class="tooltip" id="statSrc2">The Myers-Briggs Company (CPP Inc., rebranded), &ldquo;Conflict at Work&rdquo; (2022).</span></button></div>
-        <div class="stat-label">Average manager time lost to conflict, roughly double the 2008 figure.</div>
+        <div class="stat-lead">Managers spend</div>
+        <div class="stat-num">4.3 hrs/week<button type="button" class="stat-info" aria-describedby="statSrc2"><span class="mark">*</span><span class="tooltip" id="statSrc2">Average manager time lost to conflict, roughly double the 2008 figure. Source: The Myers-Briggs Company (CPP Inc., rebranded), &ldquo;Conflict at Work&rdquo; (2022).</span></button></div>
+        <div class="stat-tail">on work conflicts</div>
       </div>
     </div>
   </section>
@@ -258,7 +264,7 @@
     <h3 class="section-headline">Why Mend was built</h3>
     <p>Mend lets employees talk with Thimble, a conflict-resolution facilitator whose job is to hear them out, ask questions, and drive toward an understanding of the dynamics that created the conflict in the first place.</p>
     <p>Mend focuses on the structural forces in a workplace that cause conflict, rather than assigning blame to any one employee, leveraging current conflict-resolution best practices.</p>
-    <h2 class="eyebrow" style="margin-top:28px;">How Mend helps</h2>
+    <h2 class="eyebrow" style="margin-top:28px;">Ways employees can use Mend</h2>
     <div class="door-grid">
       <div class="door-card">
         <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="16" cy="20" r="10" stroke="#fff" stroke-width="2"/><circle cx="24" cy="20" r="10" stroke="#fff" stroke-width="2" stroke-opacity=".55"/></svg></div>
@@ -291,6 +297,13 @@
     <p>People already feel this gap: they paste real Slack messages into chatbots asking how to reply. That demand is real, it's just unsafe and unstructured. Confidential ombudsman offices, where usage is overwhelmingly solo and voluntary, show what doing it right looks like.</p>
   </section>
 
+  <section class="block" id="for-hr">
+    <h3 class="section-headline">For HR: You Were Never Seeing Most of It</h3>
+    <p>The conflict that reaches HR is already the exception, severe enough that someone's job or standing felt at risk. Everything short of that, the daily friction, the misread Slack message, the credit fight, stays invisible. Not because you're not paying attention, but because reporting it to HR is itself the risky move: admitting you were in conflict with a coworker means handing over something that could follow you, which is exactly why most people won't.</p>
+    <p>Once a conflict is small enough to stay between two people or a small team, there's nothing HR can personally do about it anyway, you weren't in the room and you have no standing to referee it. The only way to actually help is giving employees somewhere that makes them feel safe enough to be honest about what's going on, which starts with that somewhere being genuinely safe to use.</p>
+    <p>Your job is to improve the lives of the people at your company, and sometimes that means stepping out of the way: giving employees somewhere to work through conflict that isn't you, so it gets resolved while it's still minor instead of waiting to become something that has to reach you. You're not giving up oversight of the cases that matter. You're finally getting ahead of the ones that never would have reached you at all.</p>
+  </section>
+
   <section class="block">
     <h3 class="section-headline">Will employees actually use a corporate conflict-resolution tool?</h3>
     <p>None of this matters if employees don't feel safe using the product, because they fear HR or management is &ldquo;listening in.&rdquo;</p>
@@ -305,12 +318,6 @@
         <div><span class="k">Everything else stays off the record</span><span class="v">That one safeguard is what makes the rest of the promise credible: for everyday friction, nothing is saved, nothing reaches HR, and nothing gets back to your manager.</span></div>
       </li>
     </ul>
-  </section>
-
-  <section class="block">
-    <h3 class="section-headline">For HR: You Were Never Seeing Most of It</h3>
-    <p>The conflict that reaches HR is already the exception, severe enough that someone's job or standing felt at risk. Everything short of that, the daily friction, the misread Slack message, the credit fight, stays invisible. Not because you're not paying attention, but because reporting it to HR is itself the risky move: admitting you were in conflict with a coworker means handing over something that could follow you, which is exactly why most people won't.</p>
-    <p>Your job is to improve the lives of the people at your company, and sometimes that means stepping out of the way: giving employees somewhere to work through conflict that isn't you, so it gets resolved while it's still minor instead of waiting to become something that has to reach you. Mend exists in that space, confidential and voluntary, with the same Safety Floor from above still routing anything serious straight to you automatically. You're not giving up oversight of the cases that matter. You're finally getting ahead of the ones that never would have reached you at all.</p>
   </section>
 
   <section class="block">
@@ -344,7 +351,7 @@
     <p>A team with zero visible conflict isn't necessarily a healthy team, it can just as easily be a team suppressing disagreement.</p>
     <div class="research-callout">
       <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 6c-1.8-1.3-4.2-2-6.5-2-.8 0-1.5.7-1.5 1.5v11c0 .8.7 1.5 1.5 1.5 2.3 0 4.7.7 6.5 2m0-14c1.8-1.3 4.2-2 6.5-2 .8 0 1.5.7 1.5 1.5v11c0 .8-.7 1.5-1.5 1.5-2.3 0-4.7.7-6.5 2m0-14v14" stroke="#B9872C" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
-      <div class="txt"><b>Three researchers agree: visible conflict isn't the problem.</b><span>Lencioni, Edmondson, and Gino all point to healthy disagreement as what separates high-performing teams from quietly dysfunctional ones.</span></div>
+      <div class="txt"><b>Visible conflict isn't the problem.</b><span>Noted researchers Lencioni, Edmondson, and Gino all point to healthy disagreement as what separates high-performing teams from quietly dysfunctional ones. That's why destigmatizing conflict at work matters: only once it's safe to name can it actually get resolved. Left alone, it doesn't disappear, it just sits as an unaddressed wound in the organization.</span></div>
       <button type="button" class="callout-btn" onclick="document.getElementById('researchModal').classList.add('open')">Read the research &rarr;</button>
     </div>
   </section>
@@ -379,6 +386,34 @@
   // backdrop-click handler inlined on the overlay itself.
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape') document.getElementById('researchModal').classList.remove('open');
+  });
+})();
+</script>
+<script>
+(function(){
+  // Stat-source tooltips are centered under their asterisk by default, which
+  // clips off-screen for tiles near a viewport edge. Measure before showing
+  // and shift horizontally via --tip-shift so the tooltip stays on screen.
+  var pad = 12;
+  function position(btn){
+    var tip = btn.querySelector('.tooltip');
+    if (!tip) return;
+    tip.classList.remove('shift');
+    tip.style.removeProperty('--tip-shift');
+    var rect = tip.getBoundingClientRect();
+    var overflowRight = rect.right - (window.innerWidth - pad);
+    var overflowLeft = pad - rect.left;
+    var shift = 0;
+    if (overflowRight > 0) shift = -overflowRight;
+    else if (overflowLeft > 0) shift = overflowLeft;
+    if (shift !== 0) {
+      tip.style.setProperty('--tip-shift', shift + 'px');
+      tip.classList.add('shift');
+    }
+  }
+  document.querySelectorAll('.stat-info').forEach(function(btn){
+    btn.addEventListener('mouseenter', function(){ position(btn); });
+    btn.addEventListener('focus', function(){ position(btn); });
   });
 })();
 </script>
