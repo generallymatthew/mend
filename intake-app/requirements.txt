@@ -9,3 +9,5 @@ watchfiles>=0.21  # lets `uvicorn --reload --reload-include '*.md'` (see ../.cla
 websockets>=12  # /ws/voice: both the server side of that route (uvicorn has no WebSocket support at all without this or wsproto installed) and the outbound client connection to Deepgram's streaming API
 gspread>=6  # appends each /api/survey response to a Google Sheet -- see server.py's append_to_sheet() for the required GOOGLE_SHEET_ID/GOOGLE_SERVICE_ACCOUNT_JSON env vars and setup steps
 google-auth>=2.30
+openai>=1.50  # tests/benchmark_audit.py only -- calls ChatGPT directly for the personal-AI comparison audit, not used by server.py
+google-genai>=1.0  # tests/benchmark_audit.py only -- calls Gemini directly for the same audit

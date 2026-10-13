@@ -7,5 +7,6 @@ classifier/data/gen_stderr.txt
 .run_logs/
 intake-app/survey_responses.jsonl
 intake-app/analytics_events.jsonl
+intake-app/tests/benchmark_results_*.json
 manager-app/cases.db
 .obsidian/

@@ -30,6 +30,22 @@ element (tooltip/toggle) or just a style guide for all product copy.
   landing-page interactive widget ("corporate-speak to human" translator).
 - Why not active: copy work, not urgent before MVP testing finishes.
 
+### "Any AI can make you feel good, do you want to feel good or do you want to solve this" counter to "why not just use ChatGPT"
+Direct answer to the sharpest piece of tester feedback so far (six former-colleague
+designers): a personal LLM is an echo chamber for one person — it only hears
+one side, is tuned to validate, and leaves the user with a self-drafted script
+plus 100% of the vulnerability of the real confrontation. Correction worth
+keeping: most employees will never voluntarily invite a peer into a joint
+session (that's realistically manager-triggered), so the solo intake isn't an
+on-ramp to the "real" feature — for most users it IS the product, and this
+argument has to land solo, not assume a joint session exists.
+- Where it could plug in: landing-page objection-handling copy, designer/
+  tester-facing talking points, onboarding copy for the solo flow.
+- Why not active: needs distilling into shipped copy; see
+  `docs/pitch-strategy/19_PERSONAL_AI_BENCHMARK_AUDIT.md` for the full
+  argument plus the research it leans on (not yet source-verified) and a
+  runnable benchmark to back it with evidence instead of assertion.
+
 ### "No managerial surveillance, no scar tissue" as a trust pillar
 Explicit promise: no HR files, no performance review penalties from using
 Mend. Friendship isn't the goal — clean functional boundaries without forced
@@ -239,6 +255,27 @@ transport mode is active.
 - Why not active: explicitly flagged in its own source doc as a captured
   idea, not yet designed against the real LiveKit stack; blocked behind the
   Phase 1 audio/video merge anyway.
+
+### Multi-turn rerun of the personal-AI benchmark audit
+`intake-app/tests/benchmark_audit.py` is built and has run clean (see
+`STATUS.md`): single cold message in, scored by a blind judge. First real
+result was NOT what the pitch argument predicted -- raw Claude with no
+system prompt outscored both Mend and ChatGPT, because Mend's facilitator
+is deliberately paced for multi-turn conversation (ask a grounding question
+before delivering) and that reads as "no deliverable" on a one-shot rubric.
+Next step: let Mend's conversation run 2-3 turns before scoring, matching
+how `conversation_pattern_sweep.py` already tests multi-turn behavior, to
+see whether the gap closes once Mend actually reaches its deliverable phase.
+- Source: strategy conversation reacting to designer tester feedback, then
+  the actual live benchmark run on 2026-10-13.
+- Where it could plug in: extend `intake-app/tests/benchmark_audit.py`
+  directly -- feed each system's turn-1 reply back as a synthetic follow-up
+  and score the final turn instead of turn 1.
+- Why not active yet: the single-turn result needs writing up honestly
+  first (done, see `docs/pitch-strategy/19_PERSONAL_AI_BENCHMARK_AUDIT.md`'s
+  2026-10-13 section) before deciding whether multi-turn is worth the extra
+  API cost, and the underlying research citations (CPP stat, Jehn framing)
+  still need source verification before any of this goes near a buyer.
 
 ### Publish the system prompt with a verifiable attestation
 Publish Thimble's real `facilitator-*-system-prompt.md` files publicly for

@@ -22,6 +22,8 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 | [15_USER_TESTING_FEEDBACK_INVITATION.md](15_USER_TESTING_FEEDBACK_INVITATION.md) | The user's own refined version of the tester-outreach email draft (about-page comprehension check + app walkthrough + roleplay scenarios + specific feedback questions) |
 | [16_CONFLICT_RESOLUTION_STRATEGIES_PROMPT_DRAFT.md](16_CONFLICT_RESOLUTION_STRATEGIES_PROMPT_DRAFT.md) | Draft/alternative facilitator system prompt (operational-systems framing, non-judgment stance, safety floor, phased conversational pipeline) -- reference input, not yet reconciled with the real `facilitator-*-system-prompt.md` files at repo root |
 | [17_PROMPT_TRANSPARENCY_AND_ATTESTATION.md](17_PROMPT_TRANSPARENCY_AND_ATTESTATION.md) | Why and how to publish Thimble's real system prompt for trust, SHA-256 manifest + runtime attestation endpoint to prove the deployed app matches what's published, trust-page copy direction |
+| [18_CONFLICT_STORY_NARRATIVE.md](18_CONFLICT_STORY_NARRATIVE.md) | Narrative pass at the Mend story: what happens today when conflict shows up at work (nothing, back-channeling, or unmanaged HR escalation), the cost in hours/week, and Mend's fix (private sessions with Thimble, total anonymity, non-configurable Safety Floor) |
+| [19_PERSONAL_AI_BENCHMARK_AUDIT.md](19_PERSONAL_AI_BENCHMARK_AUDIT.md) | The "why not just use ChatGPT" objection from real tester feedback: why personal AI is an echo chamber, the solo-first adoption reality, ego-vs-structural-attribution research (not yet source-verified), and a runnable 10-prompt benchmark + rubric + judge harness comparing Mend's facilitator against ChatGPT/Gemini/Claude |
 
 ## Status
 
