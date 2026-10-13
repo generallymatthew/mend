@@ -1,0 +1,5 @@
+{"ts": 1791902449.485097, "app": "intake-app", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 29, "output_tokens": 220, "chars": null, "seconds": null, "cost_usd": 0.003387}
+{"ts": 1791902456.353686, "app": "intake-app", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 29, "output_tokens": 220, "chars": null, "seconds": null, "cost_usd": 0.003387}
+{"ts": 1791902458.154718, "app": "intake-app", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 152, "seconds": null, "cost_usd": 0.00228}
+{"ts": 1791902458.674774, "app": "intake-app", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 70, "seconds": null, "cost_usd": 0.00105}
+{"ts": 1791902459.737922, "app": "intake-app", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 19, "seconds": null, "cost_usd": 0.000285}

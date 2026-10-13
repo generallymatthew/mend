@@ -59,6 +59,11 @@ from fastapi.staticfiles import StaticFiles
 ROOT = Path(__file__).parent
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-joint-session-system-prompt.md"
 
+# Shared local cost/usage logger (../usage_log.py) -- same sys.path trick as
+# the classifier import just below.
+sys.path.insert(0, str(ROOT.parent))
+from usage_log import log_usage
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("mend.joint_session")
 
@@ -208,6 +213,7 @@ def synthesize_speech_openai(text: str) -> str | None:
         resp.raise_for_status()
     except httpx.HTTPError:
         return None
+    log_usage("joint-session-app", "openai", OPENAI_TTS_MODEL, "tts", chars=len(text))
     file_id = uuid.uuid4().hex
     mp3_path = AUDIO_DIR / f"{file_id}.mp3"
     mp3_path.write_bytes(resp.content)
@@ -271,6 +277,8 @@ def facilitator_reply(session: Session) -> dict:
     except Exception as e:
         session.conversation.pop()
         return {"reply": f"(server error calling Claude: {e})", "signal": None}
+    log_usage("joint-session-app", "anthropic", MODEL, "facilitator_reply",
+              input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
     raw = "".join(block.text for block in response.content if block.type == "text")
     if not raw:
         session.conversation.pop()

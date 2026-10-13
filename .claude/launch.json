@@ -2,46 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "mend-intake",
+      "name": "intake-app",
       "runtimeExecutable": "intake-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--reload-include", "facilitator-*-system-prompt.md", "--port", "8420", "--app-dir", "intake-app"],
+      "runtimeArgs": ["server:app", "--port", "8420", "--app-dir", "intake-app"],
       "port": 8420
-    },
-    {
-      "name": "mend-joint-session",
-      "runtimeExecutable": "joint-session-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--port", "8421", "--app-dir", "joint-session-app"],
-      "port": 8421
-    },
-    {
-      "name": "mend-post-session",
-      "runtimeExecutable": "post-session-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--port", "8422", "--app-dir", "post-session-app"],
-      "port": 8422
-    },
-    {
-      "name": "mend-joint-session-audio",
-      "runtimeExecutable": "joint-session-audio/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--port", "8424", "--app-dir", "joint-session-audio"],
-      "port": 8424
-    },
-    {
-      "name": "mend-demo-app",
-      "runtimeExecutable": "demo-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--port", "8423", "--app-dir", "demo-app"],
-      "port": 8423
-    },
-    {
-      "name": "mend-manager-app",
-      "runtimeExecutable": "manager-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--reload-include", "facilitator-*-system-prompt.md", "--port", "8426", "--app-dir", "manager-app"],
-      "port": 8426
-    },
-    {
-      "name": "mend-launchpad",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8000"],
-      "port": 8000
     }
   ]
 }

@@ -19,6 +19,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -37,6 +38,12 @@ import gspread
 
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
+
+# Shared local cost/usage logger (../usage_log.py) -- same sys.path trick
+# joint-session-app already uses to reach ../classifier, since this repo has
+# no shared package layout, just per-app venvs.
+sys.path.insert(0, str(ROOT.parent))
+from usage_log import log_usage
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 MODEL = "claude-sonnet-5"
 AUDIO_DIR = Path(tempfile.mkdtemp(prefix="mend-intake-audio-"))
@@ -187,6 +194,7 @@ def synthesize_speech_openai(text: str) -> str | None:
         body = getattr(e, "response", None)
         print(f"[synthesize_speech_openai] failed: {e!r}" + (f" body={body.text[:300]!r}" if body is not None else ""), flush=True)
         return None
+    log_usage("intake-app", "openai", OPENAI_TTS_MODEL, "tts", chars=len(text))
     file_id = uuid.uuid4().hex
     mp3_path = AUDIO_DIR / f"{file_id}.mp3"
     mp3_path.write_bytes(resp.content)
@@ -244,6 +252,7 @@ def synthesize_speech_aura(text: str) -> str | None:
         body = getattr(e, "response", None)
         print(f"[synthesize_speech_aura] failed: {e!r}" + (f" body={body.text[:300]!r}" if body is not None else ""), flush=True)
         return None
+    log_usage("intake-app", "deepgram", AURA_TTS_MODEL, "tts", chars=len(text))
     file_id = uuid.uuid4().hex
     mp3_path = AUDIO_DIR / f"{file_id}.mp3"
     mp3_path.write_bytes(resp.content)
@@ -435,6 +444,8 @@ def facilitator_reply(conversation: list[dict], synthesize: bool = False) -> dic
     except Exception as e:
         conversation.pop()
         return {"reply": f"(server error calling Claude: {e})", "signal": None}
+    log_usage("intake-app", "anthropic", MODEL, "facilitator_reply",
+              input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
     raw = "".join(block.text for block in response.content if block.type == "text")
     if not raw:
         conversation.pop()
@@ -573,6 +584,8 @@ def _judge_floor_only(conversation_snapshot: list[dict]) -> dict:
         response = client.messages.create(
             model=MODEL, max_tokens=8192, system=SYSTEM_PROMPT_BLOCKS, messages=conversation_snapshot,
         )
+        log_usage("intake-app", "anthropic", MODEL, "judge_vote",
+                  input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
         raw = "".join(block.text for block in response.content if block.type == "text")
     except Exception as e:
         print(f"[vote] throwaway judge call failed (counts as no-flag): {e!r}", flush=True)
@@ -774,6 +787,9 @@ def stream_facilitator_reply(messages: list[dict]):
             if not signal_started and len(full_text) > flushed_len:
                 yield chunk({"content": full_text[flushed_len:]})
                 flushed_len = len(full_text)
+            usage = stream.get_final_message().usage
+            log_usage("intake-app", "anthropic", MODEL, "stream_facilitator_reply",
+                      input_tokens=usage.input_tokens, output_tokens=usage.output_tokens)
     except Exception as e:
         yield chunk({"content": f"(server error calling Claude: {e})"})
         yield chunk({}, finish_reason="stop")
@@ -949,6 +965,8 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
                 f"cache_creation={getattr(u, 'cache_creation_input_tokens', None)} input={u.input_tokens}",
                 flush=True,
             )
+            log_usage("intake-app", "anthropic", MODEL, "stream_message_reply",
+                      input_tokens=u.input_tokens, output_tokens=u.output_tokens)
     except Exception as e:
         conversation.pop()
         yield _sse({"error": f"server error calling Claude: {e}"})
@@ -1038,6 +1056,10 @@ async def ws_voice(websocket: WebSocket):
     sample_rate = websocket.query_params.get("sample_rate", "16000")
     url = f"{DEEPGRAM_URL}&sample_rate={sample_rate}"
 
+    # Deepgram streaming STT bills by connection duration, not per message --
+    # there's no per-call usage field to read, so wall-clock time between
+    # connect and close is the thing to log.
+    connect_started = time.time()
     try:
         async with websockets.connect(url, additional_headers={"Authorization": f"Token {DEEPGRAM_API_KEY}"}) as dg:
             async def browser_to_deepgram():
@@ -1080,6 +1102,7 @@ async def ws_voice(websocket: WebSocket):
         except Exception:
             pass
     finally:
+        log_usage("intake-app", "deepgram", "nova-2", "stt", seconds=time.time() - connect_started)
         try:
             await websocket.close()
         except (RuntimeError, WebSocketDisconnect):

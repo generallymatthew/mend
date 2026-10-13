@@ -19,6 +19,7 @@ Run:
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -31,6 +32,11 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).parent
+
+# Shared local cost/usage logger (../usage_log.py) -- same sys.path trick as
+# intake-app/server.py and joint-session-app/server.py.
+sys.path.insert(0, str(ROOT.parent))
+from usage_log import log_usage
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-post-session-system-prompt.md"
 MODEL = "claude-sonnet-5"
 AUDIO_DIR = Path(tempfile.mkdtemp(prefix="mend-post-audio-"))
@@ -166,6 +172,8 @@ def facilitator_reply(synthesize: bool = False) -> dict:
     except Exception as e:
         conversation.pop()
         return {"reply": f"(server error calling Claude: {e})", "signal": None}
+    log_usage("post-session-app", "anthropic", MODEL, "facilitator_reply",
+              input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
     raw = "".join(block.text for block in response.content if block.type == "text")
     if not raw:
         conversation.pop()
