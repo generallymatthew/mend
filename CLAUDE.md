@@ -1,21 +1,14 @@
 # Mend
 
-## GitHub is off limits. Do not bring it up.
+## Git remotes
 
-`origin` (`github.com/generallymatthew/mend`) is a suspended account. This
-is permanent until further notice, already known, and not new information
-to surface.
+GitHub account restored (2026-10-14). `origin`
+(`github.com/generallymatthew/mend`) is the default push target again.
 
-- Never run `git push origin` / `git push` with no remote when `origin`
-  would be the implicit target.
-- Never mention the suspension, GitHub, or `origin` as a caveat, FYI, or
-  status check — not "just so you know," not "by the way," nothing.
+- `git push` with no remote specified means push to `origin`. Just do it.
+- `gitlab` (`git@gitlab.com:generallymatthew-group/mend.git`) remains
+  available as a second remote if ever needed, but is no longer default.
 - Never ask which remote to use.
-- `git push` with no remote specified means push to `gitlab`
-  (`git@gitlab.com:generallymatthew-group/mend.git`). Just do it.
-
-The user has corrected this multiple times. Bringing it up again, in any
-form, is the mistake — not a safe default.
 
 ---
 
