@@ -356,11 +356,82 @@ def get_conversation(session_id: str | None) -> list[dict]:
 
 
 def strip_signal(reply_text: str) -> tuple[str, str | None]:
-    """Separate the visible reply from the <mend_signal> control block."""
+    """Separate the visible reply from the <mend_signal> control block,
+    and from the private <mend_reasoning> block the system prompt now asks
+    for before the reply -- both are for the system/model only, never the
+    person being talked to."""
     match = re.search(r"<mend_signal>(.*?)</mend_signal>", reply_text, re.S)
     signal = match.group(1).strip() if match else None
-    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", reply_text, flags=re.S).strip()
+    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", reply_text, flags=re.S)
+    visible = re.sub(r"<mend_reasoning>.*?</mend_reasoning>", "", visible, flags=re.S).strip()
     return visible, signal
+
+
+REASONING_OPEN = "<mend_reasoning>"
+REASONING_CLOSE = "</mend_reasoning>"
+SIGNAL_OPEN = "<mend_signal>"
+
+
+class VisibleTextFilter:
+    """Incrementally extracts the visible-reply slice from a raw model
+    text stream that may open with a <mend_reasoning>...</mend_reasoning>
+    block and/or close with a <mend_signal>...</mend_signal> block --
+    neither is ever shown or spoken to the person on the other end. Used
+    by both stream_message_reply() and stream_facilitator_reply() below,
+    which previously duplicated the <mend_signal>-only version of this
+    same withholding logic; adding the reasoning block to one without the
+    other would have let it leak straight into live TTS/text output,
+    since both streams flush text as it arrives rather than buffering a
+    full reply first."""
+
+    def __init__(self):
+        self.full_text = ""
+        self.flushed_len = 0
+        self.signal_started = False
+        self.reasoning_resolved = False
+
+    def feed(self, delta: str) -> str:
+        """Call once per streamed delta. Returns the newly-safe-to-show
+        slice, which may be empty."""
+        self.full_text += delta
+        if self.signal_started:
+            return ""
+        if not self.reasoning_resolved:
+            if len(self.full_text) < len(REASONING_OPEN):
+                if REASONING_OPEN.startswith(self.full_text):
+                    return ""  # still an ambiguous prefix, wait for more
+                self.reasoning_resolved = True  # diverged early, no reasoning block this turn
+            elif self.full_text.startswith(REASONING_OPEN):
+                close_at = self.full_text.find(REASONING_CLOSE)
+                if close_at == -1:
+                    return ""  # inside the reasoning block, keep withholding
+                self.flushed_len = close_at + len(REASONING_CLOSE)
+                self.reasoning_resolved = True
+            else:
+                self.reasoning_resolved = True  # no reasoning block this turn
+        tag_at = self.full_text.find(SIGNAL_OPEN, self.flushed_len)
+        if tag_at != -1:
+            out = self.full_text[self.flushed_len:tag_at] if tag_at > self.flushed_len else ""
+            self.flushed_len = tag_at
+            self.signal_started = True
+            return out
+        safe_len = max(self.flushed_len, len(self.full_text) - (len(SIGNAL_OPEN) - 1))
+        if safe_len > self.flushed_len:
+            out = self.full_text[self.flushed_len:safe_len]
+            self.flushed_len = safe_len
+            return out
+        return ""
+
+    def flush_tail(self) -> str:
+        """Call once after the stream ends, releasing any withheld tail
+        chars for a reply that never actually contained <mend_signal> --
+        otherwise its last few characters (held back in case they were
+        the start of the marker) are silently lost."""
+        if not self.signal_started and len(self.full_text) > self.flushed_len:
+            out = self.full_text[self.flushed_len:]
+            self.flushed_len = len(self.full_text)
+            return out
+        return ""
 
 
 # Catches the disclosure-preamble tic the system prompt already explicitly
@@ -751,10 +822,7 @@ def stream_facilitator_reply(messages: list[dict]):
         yield "data: [DONE]\n\n"
         return
 
-    marker = "<mend_signal>"
-    full_text = ""
-    flushed_len = 0
-    signal_started = False
+    text_filter = VisibleTextFilter()
 
     try:
         with client.messages.stream(
@@ -764,29 +832,18 @@ def stream_facilitator_reply(messages: list[dict]):
             messages=[m for m in messages if m.get("role") in ("user", "assistant")],
         ) as stream:
             for delta in stream.text_stream:
-                full_text += delta
-                if signal_started:
-                    continue
-                tag_at = full_text.find(marker, flushed_len)
-                if tag_at != -1:
-                    if tag_at > flushed_len:
-                        yield chunk({"content": full_text[flushed_len:tag_at]})
-                    flushed_len = tag_at
-                    signal_started = True
-                    continue
-                safe_len = max(flushed_len, len(full_text) - (len(marker) - 1))
-                if safe_len > flushed_len:
-                    yield chunk({"content": full_text[flushed_len:safe_len]})
-                    flushed_len = safe_len
-            # The loop above always withholds the last len(marker)-1 chars
-            # (in case they're the start of <mend_signal>) -- for a reply
+                out = text_filter.feed(delta)
+                if out:
+                    yield chunk({"content": out})
+            # The filter always withholds a trailing partial-marker tail
+            # (in case it's the start of <mend_signal>) -- for a reply
             # that never actually contains the marker, that tail never
             # gets flushed by anything above once the stream ends, and was
             # silently lost: every such reply was missing its last ~12
             # characters, confirmed live as replies cutting off mid-word.
-            if not signal_started and len(full_text) > flushed_len:
-                yield chunk({"content": full_text[flushed_len:]})
-                flushed_len = len(full_text)
+            out = text_filter.flush_tail()
+            if out:
+                yield chunk({"content": out})
             usage = stream.get_final_message().usage
             log_usage("intake-app", "anthropic", MODEL, "stream_facilitator_reply",
                       input_tokens=usage.input_tokens, output_tokens=usage.output_tokens)
@@ -796,7 +853,7 @@ def stream_facilitator_reply(messages: list[dict]):
         yield "data: [DONE]\n\n"
         return
 
-    match = re.search(r"<mend_signal>(.*?)</mend_signal>", full_text, re.S)
+    match = re.search(r"<mend_signal>(.*?)</mend_signal>", text_filter.full_text, re.S)
     latest_video_signal = match.group(1).strip() if match else None
 
     yield chunk({}, finish_reason="stop")
@@ -911,10 +968,7 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
         yield _sse({"text": "(server error: ANTHROPIC_API_KEY is not set in this shell)"})
         yield _sse({"done": True, "signal": None})
         return
-    marker = "<mend_signal>"
-    full_text = ""
-    flushed_len = 0
-    signal_started = False
+    text_filter = VisibleTextFilter()
     t0 = time.time()
     t_first_token = None
     try:
@@ -927,31 +981,21 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
             for delta in stream.text_stream:
                 if t_first_token is None:
                     t_first_token = time.time()
-                full_text += delta
-                if signal_started:
-                    continue
-                tag_at = full_text.find(marker, flushed_len)
-                if tag_at != -1:
-                    if tag_at > flushed_len:
-                        yield _sse({"text": full_text[flushed_len:tag_at]})
-                    flushed_len = tag_at
-                    signal_started = True
-                    continue
-                safe_len = max(flushed_len, len(full_text) - (len(marker) - 1))
-                if safe_len > flushed_len:
-                    yield _sse({"text": full_text[flushed_len:safe_len]})
-                    flushed_len = safe_len
-            # The loop above always withholds the last len(marker)-1 chars
-            # (in case they're the start of <mend_signal>) -- for a reply
+                out = text_filter.feed(delta)
+                if out:
+                    yield _sse({"text": out})
+            # The filter always withholds a trailing partial-marker tail
+            # (in case it's the start of <mend_signal>) -- for a reply
             # that never actually contains the marker, that tail never
             # gets flushed by anything above once the stream ends, and was
             # silently lost: every such reply was missing its last ~12
             # characters, confirmed live as replies cutting off mid-word
             # ("messages keep getting cut off... thimble's thought is not
             # finished").
-            if not signal_started and len(full_text) > flushed_len:
-                yield _sse({"text": full_text[flushed_len:]})
-                flushed_len = len(full_text)
+            out = text_filter.flush_tail()
+            if out:
+                yield _sse({"text": out})
+            full_text = text_filter.full_text
             # Diagnostic only (reported live: "still took a long time" after
             # prompt caching was added) -- logs to stdout, not sent to the
             # client, so it's visible via `preview_logs`/the terminal without

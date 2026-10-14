@@ -98,7 +98,11 @@ def load_mend_system_prompt() -> str:
 def strip_mend_signal(text: str) -> tuple[str, str | None]:
     match = re.search(r"<mend_signal>(.*?)</mend_signal>", text, re.S)
     signal = match.group(1).strip() if match else None
-    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", text, flags=re.S).strip()
+    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", text, flags=re.S)
+    # Also strip the private <mend_reasoning> block the system prompt now
+    # asks for before the reply -- never meant for the judge or the other
+    # systems' comparison transcripts, same as <mend_signal> above.
+    visible = re.sub(r"<mend_reasoning>.*?</mend_reasoning>", "", visible, flags=re.S).strip()
     return visible, signal
 
 
