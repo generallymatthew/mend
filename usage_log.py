@@ -28,6 +28,8 @@ USAGE_LOG_FILE = Path(__file__).parent / "usage_log.jsonl"
 PRICING = {
     ("anthropic", "claude-sonnet-5", "input"): 3.00 / 1_000_000,
     ("anthropic", "claude-sonnet-5", "output"): 15.00 / 1_000_000,
+    ("anthropic", "claude-haiku-4-5-20251001", "input"): 1.00 / 1_000_000,
+    ("anthropic", "claude-haiku-4-5-20251001", "output"): 5.00 / 1_000_000,
     ("openai", "tts-1", "chars"): 15.00 / 1_000_000,
     ("openai", "gpt-4o-mini-tts", "chars"): 12.00 / 1_000_000,
     ("deepgram", "aura-asteria-en", "chars"): 15.00 / 1_000_000,
