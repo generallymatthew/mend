@@ -69,6 +69,19 @@ Static `.dc.html` mockups for engineering/design handoff — same templated form
 
 - [generallymatthew.github.io/mend/](https://generallymatthew.github.io/mend/) — public landing page (pitch + spec). **Currently down**: the GitHub account is suspended, pending appeal — see the repositories note below.
 
+## Conflict resolution reference videos
+
+YouTube videos on workplace conflict / conflict resolution, kept for reference and as candidates for embedding on `story.html` or elsewhere.
+
+- [Embedded on story.html](https://youtu.be/MnaLS7OE2pk)
+- [youtu.be/WfQeH3092Sc](https://youtu.be/WfQeH3092Sc)
+- [Why Conflict at Work Is a Good Thing — Margaret Heffernan](https://www.themuse.com/advice/video-pick-why-conflict-at-work-is-a-good-thing)
+- [The Secret to Conflict Resolution — Shannon Pearson, TEDxSurrey](https://www.youtube.com/watch?v=DoCi_JECwvY)
+- [3 Ways to Resolve a Conflict — Dorothy Walker](https://www.youtube.com/watch?v=r4xPwhcnS-Q)
+- [Conflict Resolution: Skills for Leadership & Professional Development](https://www.youtube.com/watch?v=jojnzqX4HRY)
+- [How to Manage Conflict in the Workplace](https://www.youtube.com/watch?v=LR_DLCYqGnA)
+- [Conflict Resolution Techniques](https://www.youtube.com/watch?v=NJH0XV9jGIE)
+
 ## Repositories
 
 - GitLab (primary push target): `git@gitlab.com:generallymatthew-group/mend.git`

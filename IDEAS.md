@@ -294,6 +294,20 @@ deployed app matches the published prompt.
 
 ## Business model
 
+### Open source maintainer conflict as an adjacent market
+A tester-sourced pitch angle: open source projects where a team can't reach
+consensus, but the conflict is intellectual (technical disagreement), not
+personal — the maintainers often don't know each other well and haven't
+worked together before, so they lack the social/emotional-intelligence
+tooling to resolve it themselves. Mend fits as an unbiased third party that
+facilitates the conversation and drives resolution without taking a side.
+- Where it could plug in: same "episodic/informal groups" bucket as the
+  roommates/bands/co-founders pivot below — a per-incident "truce ticket"
+  model fits an OSS maintainer dispute better than a subscription.
+- Why not active: unexplored market, no pilot, and OSS maintainers as a
+  buyer segment have no obvious payer (no employer, no HR) — would need its
+  own go-to-market thinking distinct from the workplace/HR-buyer pitch.
+
 ### Adjacent-market pivots: co-parenting and episodic/informal groups
 Two unexplored market variants beyond the core workplace product: (a)
 high-conflict co-parenting (court-mandated), priced $12-18/mo split between
