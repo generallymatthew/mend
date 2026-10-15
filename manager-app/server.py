@@ -315,8 +315,7 @@ async def update_case_status(case_id: str, body: StatusUpdate):
 
 def strip_signal(reply_text: str) -> tuple[str, dict | None]:
     match = re.search(r"<mend_signal>(.*?)</mend_signal>", reply_text, re.S)
-    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", reply_text, flags=re.S)
-    visible = re.sub(r"<mend_reasoning>.*?</mend_reasoning>", "", visible, flags=re.S).strip()
+    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", reply_text, flags=re.S).strip()
     if not match:
         return visible, None
     try:

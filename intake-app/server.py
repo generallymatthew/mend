@@ -356,39 +356,27 @@ def get_conversation(session_id: str | None) -> list[dict]:
 
 
 def strip_signal(reply_text: str) -> tuple[str, str | None]:
-    """Separate the visible reply from the <mend_signal> control block,
-    and from the private <mend_reasoning> block the system prompt now asks
-    for before the reply -- both are for the system/model only, never the
-    person being talked to."""
+    """Separate the visible reply from the <mend_signal> control block."""
     match = re.search(r"<mend_signal>(.*?)</mend_signal>", reply_text, re.S)
     signal = match.group(1).strip() if match else None
-    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", reply_text, flags=re.S)
-    visible = re.sub(r"<mend_reasoning>.*?</mend_reasoning>", "", visible, flags=re.S).strip()
+    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", reply_text, flags=re.S).strip()
     return visible, signal
 
 
-REASONING_OPEN = "<mend_reasoning>"
-REASONING_CLOSE = "</mend_reasoning>"
 SIGNAL_OPEN = "<mend_signal>"
 
 
 class VisibleTextFilter:
     """Incrementally extracts the visible-reply slice from a raw model
-    text stream that may open with a <mend_reasoning>...</mend_reasoning>
-    block and/or close with a <mend_signal>...</mend_signal> block --
-    neither is ever shown or spoken to the person on the other end. Used
-    by both stream_message_reply() and stream_facilitator_reply() below,
-    which previously duplicated the <mend_signal>-only version of this
-    same withholding logic; adding the reasoning block to one without the
-    other would have let it leak straight into live TTS/text output,
-    since both streams flush text as it arrives rather than buffering a
-    full reply first."""
+    text stream that closes with a <mend_signal>...</mend_signal> block,
+    never shown or spoken to the person on the other end. Shared by
+    stream_message_reply() and stream_facilitator_reply() below, which
+    previously duplicated this same withholding logic."""
 
     def __init__(self):
         self.full_text = ""
         self.flushed_len = 0
         self.signal_started = False
-        self.reasoning_resolved = False
 
     def feed(self, delta: str) -> str:
         """Call once per streamed delta. Returns the newly-safe-to-show
@@ -396,19 +384,6 @@ class VisibleTextFilter:
         self.full_text += delta
         if self.signal_started:
             return ""
-        if not self.reasoning_resolved:
-            if len(self.full_text) < len(REASONING_OPEN):
-                if REASONING_OPEN.startswith(self.full_text):
-                    return ""  # still an ambiguous prefix, wait for more
-                self.reasoning_resolved = True  # diverged early, no reasoning block this turn
-            elif self.full_text.startswith(REASONING_OPEN):
-                close_at = self.full_text.find(REASONING_CLOSE)
-                if close_at == -1:
-                    return ""  # inside the reasoning block, keep withholding
-                self.flushed_len = close_at + len(REASONING_CLOSE)
-                self.reasoning_resolved = True
-            else:
-                self.reasoning_resolved = True  # no reasoning block this turn
         tag_at = self.full_text.find(SIGNAL_OPEN, self.flushed_len)
         if tag_at != -1:
             out = self.full_text[self.flushed_len:tag_at] if tag_at > self.flushed_len else ""
