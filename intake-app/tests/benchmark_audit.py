@@ -80,7 +80,11 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).parent.parent
 load_dotenv(ROOT / ".env")
 
-CLAUDE_MODEL = "claude-sonnet-5"
+# Override with CLAUDE_MODEL=claude-haiku-4-5-20251001 for a cheap dry run
+# (scenario/turn-count/prompt-wiring check) -- note this changes what's
+# being benchmarked against GPT-4o/Gemini, so switch back to Sonnet for a
+# real audit run.
+CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
 OPENAI_MODEL = "gpt-4o"
 GEMINI_MODEL = "gemini-3.5-flash"  # this key's free tier has 0 quota on *-pro models; flash is what's actually reachable
 

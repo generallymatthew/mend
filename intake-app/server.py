@@ -45,7 +45,9 @@ load_dotenv(ROOT / ".env")
 sys.path.insert(0, str(ROOT.parent))
 from usage_log import log_usage
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
-MODEL = "claude-sonnet-5"
+# Override with CLAUDE_MODEL=claude-haiku-4-5-20251001 for cheap local test
+# runs -- default stays Sonnet for real use.
+MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
 AUDIO_DIR = Path(tempfile.mkdtemp(prefix="mend-intake-audio-"))
 VOICE = "Samantha"  # a built-in macOS voice, used only if OPENAI_API_KEY isn't set; see `say -v ?`
 
@@ -337,6 +339,31 @@ SYSTEM_PROMPT = load_system_prompt()
 # process the new message on top of it.
 SYSTEM_PROMPT_BLOCKS = [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}]
 
+
+def with_cache_breakpoint(conversation: list[dict]) -> list[dict]:
+    """The system-prompt cache above only covers the system prompt itself --
+    the conversation history (growing by one user+assistant turn each call)
+    is still resent and reprocessed at full price every time, so a 5-turn
+    scenario pays full input cost 5x over on the early turns alone. Anthropic
+    also caches message content, so marking a breakpoint on the next-to-last
+    message (everything except the just-appended newest turn) lets each call
+    reuse the cached read of every prior turn and only pay full price for the
+    one new message. Returns a new list -- never mutates the stored
+    conversation, since cache_control requires content as blocks, not the
+    plain strings `conversation.append` elsewhere stores."""
+    if len(conversation) < 2:
+        return conversation
+    msgs = list(conversation)
+    stable = msgs[-2]
+    content = stable["content"]
+    if isinstance(content, str):
+        content = [{"type": "text", "text": content, "cache_control": {"type": "ephemeral"}}]
+    else:
+        content = [*content[:-1], {**content[-1], "cache_control": {"type": "ephemeral"}}]
+    msgs[-2] = {**stable, "content": content}
+    return msgs
+
+
 # In-memory conversation state -- a prototype, not a persistence layer.
 # Keyed by session_id so independent conversations (e.g. several
 # self-consistency "judge" calls fired concurrently for an ambiguous
@@ -485,7 +512,7 @@ def facilitator_reply(conversation: list[dict], synthesize: bool = False) -> dic
             model=MODEL,
             max_tokens=8192,
             system=SYSTEM_PROMPT_BLOCKS,
-            messages=conversation,
+            messages=with_cache_breakpoint(conversation),
         )
     except Exception as e:
         conversation.pop()
@@ -628,7 +655,8 @@ def _judge_floor_only(conversation_snapshot: list[dict]) -> dict:
         return {}
     try:
         response = client.messages.create(
-            model=MODEL, max_tokens=8192, system=SYSTEM_PROMPT_BLOCKS, messages=conversation_snapshot,
+            model=MODEL, max_tokens=8192, system=SYSTEM_PROMPT_BLOCKS,
+            messages=with_cache_breakpoint(conversation_snapshot),
         )
         log_usage("intake-app", "anthropic", MODEL, "judge_vote",
                   input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
@@ -804,7 +832,7 @@ def stream_facilitator_reply(messages: list[dict]):
             model=MODEL,
             max_tokens=8192,
             system=SYSTEM_PROMPT_BLOCKS,
-            messages=[m for m in messages if m.get("role") in ("user", "assistant")],
+            messages=with_cache_breakpoint([m for m in messages if m.get("role") in ("user", "assistant")]),
         ) as stream:
             for delta in stream.text_stream:
                 out = text_filter.feed(delta)
@@ -951,7 +979,7 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
             model=MODEL,
             max_tokens=8192,
             system=SYSTEM_PROMPT_BLOCKS,
-            messages=conversation,
+            messages=with_cache_breakpoint(conversation),
         ) as stream:
             for delta in stream.text_stream:
                 if t_first_token is None:
