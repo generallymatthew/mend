@@ -41,6 +41,10 @@
   .turn.user{background:var(--accent-soft);}
   .turn.assistant{background:var(--paper); border:1px solid var(--border);}
   .turn-role{font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); margin-bottom:3px;}
+  .turn p{margin:0 0 8px;}
+  .turn p:last-child{margin-bottom:0;}
+  .turn ul{margin:0 0 8px; padding-left:20px;}
+  .turn ul:last-child{margin-bottom:0;}
   .rate-box{border-top:1px solid var(--border); margin-top:18px; padding-top:16px;}
   .rate-box h3{font-size:14px; margin:0 0 10px;}
   .name-input{width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:13.5px; background:var(--paper); color:var(--ink); margin-bottom:12px;}
@@ -135,8 +139,8 @@ async function openConversation(id){
   const sr = r.self_report || {};
   const transcriptHtml = (r.transcript || []).map(m => `
     <div class="turn ${m.role}">
-      <div class="turn-role">${m.role}</div>
-      ${escapeHtml(m.content)}
+      <div class="turn-role">${m.role === 'assistant' ? 'Thimble' : m.role}</div>
+      ${renderMarkdown(m.content)}
     </div>
   `).join('');
 
@@ -237,6 +241,36 @@ function closePanel(){
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Minimal markdown for transcript turns -- raw Claude (no system prompt)
+// answers in full markdown (bold, bullets); Mend/CF's prompts steer away
+// from it, so this only visibly matters for raw's turns, but applies to all
+// so every turn renders the same way. Bold, bullet lists, paragraphs only --
+// deliberately not a full markdown parser, just enough for what these
+// transcripts actually use. Escapes first, so no markdown source can inject
+// HTML.
+function renderMarkdown(text){
+  const escaped = escapeHtml(text);
+  const lines = escaped.split('\n');
+  const blocks = [];
+  let listItems = null;
+  for (const line of lines){
+    const bullet = line.match(/^\s*[-*]\s+(.*)/);
+    if (bullet){
+      if (!listItems){ listItems = []; blocks.push(listItems); }
+      listItems.push(bullet[1]);
+    } else {
+      listItems = null;
+      blocks.push(line);
+    }
+  }
+  const inline = s => s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  return blocks.map(b => {
+    if (Array.isArray(b)) return `<ul>${b.map(i => `<li>${inline(i)}</li>`).join('')}</ul>`;
+    if (!b.trim()) return '';
+    return `<p>${inline(b)}</p>`;
+  }).join('');
 }
 
 loadList();
