@@ -140,7 +140,7 @@ function renderAssessBlock(r, target){
             <div class="assess-card">
               <span class="assess-badge ${f.agree ? 'agree' : 'disagree'}">${f.agree ? 'Agrees' : 'Disagrees'}</span>
               <span class="ann-rater">${escapeHtml(f.rater)}</span>
-              <div class="assess-comment">${escapeHtml(f.comment)}</div>
+              ${f.comment ? `<div class="assess-comment">${escapeHtml(f.comment)}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -150,7 +150,7 @@ function renderAssessBlock(r, target){
         <button data-v="false" onclick="pickAgree('${target}', false)">Disagree</button>
       </div>
       <input id="assess-name-${target}" class="name-input" type="text" placeholder="Your name" value="${escapeHtml(getSavedName())}">
-      <textarea id="assess-comment-${target}" placeholder="Why, or why not?"></textarea>
+      <textarea id="assess-comment-${target}" placeholder="Why, or why not? (optional)"></textarea>
       <button class="primary" onclick="submitAssessment('${r.id}', '${target}')">Submit</button>
       <div class="saved-note" id="assess-saved-${target}"></div>
     </div>
@@ -364,10 +364,6 @@ async function submitAssessment(id, target){
   }
   if (AGREE_PENDING[target] == null){
     noteEl.textContent = 'Pick Agree or Disagree first.';
-    return;
-  }
-  if (!comment){
-    noteEl.textContent = 'Say why, or why not.';
     return;
   }
   const res = await fetch(BASE_PATH + '/api/test-conversations/' + id + '/assess', {

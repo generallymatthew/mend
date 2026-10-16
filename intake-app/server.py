@@ -1610,8 +1610,6 @@ async def assess_test_conversation(conv_id: str, request: Request):
         return JSONResponse({"error": f"target must be one of {ASSESSMENT_TARGETS}"}, status_code=400)
     if not isinstance(agree, bool):
         return JSONResponse({"error": "agree must be true or false"}, status_code=400)
-    if not comment:
-        return JSONResponse({"error": "comment (why or why not) is required"}, status_code=400)
     ok = add_assessment_feedback(conv_id, rater, target, agree, comment)
     if not ok:
         return JSONResponse({"error": "not found"}, status_code=404)
