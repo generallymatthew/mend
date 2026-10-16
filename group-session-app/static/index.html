@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mend — Group Session</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F6F4EF; --ink:#1F1D1A; --muted:#8A837A; --line:#E4DFD4; --line-2:#D8D2C6;
+    --card:#fff; --accent:#2F6B5E; --accent-ink:#fff; --tile:#23201B;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--ink)}
+  .label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .btn{border:1px solid var(--line-2);background:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .btn:hover{background:#FBF9F4}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn-primary:hover{background:#275a4f}
+  .btn[disabled]{opacity:.45;cursor:default}
+  input[type=text]{font-family:inherit;font-size:13px;border:1px solid var(--line-2);border-radius:8px;padding:9px 12px;background:#fff;color:var(--ink)}
+  input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+  #join{height:100vh;display:flex;align-items:center;justify-content:center}
+  #join form{display:flex;flex-direction:column;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:32px;width:320px}
+  #join h1{font-family:'Fraunces',serif;font-size:22px;margin:0}
+  #join p{font-size:13px;color:var(--muted);margin:0}
+
+  #room{display:none;height:100vh;flex-direction:column}
+  header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--line);background:#fff;flex-shrink:0}
+  header .issue{display:flex;flex-direction:column;gap:2px}
+  header .issue span:last-child{font-size:14px;font-weight:600}
+  .avatars{display:flex;align-items:center;gap:6px}
+  .avatar{width:28px;height:28px;border-radius:50%;background:var(--line-2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#55504A;border:2px solid var(--bg)}
+
+  main{flex-grow:1;display:flex;min-width:0;overflow:hidden}
+  #stage{flex:1 1 auto;display:flex;flex-direction:column;gap:12px;padding:20px;min-width:0}
+  #grid{flex-grow:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));grid-auto-rows:minmax(0,1fr);gap:12px}
+  .tile{background:var(--tile);border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:10px}
+  .tile.speaking{outline:2px solid var(--accent)}
+  .tile.thimble{background:#1F3B35}
+  .tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .tile-name{position:relative;color:#fff;font-size:12px;font-weight:600;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:5px;display:flex;align-items:center;gap:5px}
+  .tile-initials{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:32px;color:#6b6459}
+  .tile.thimble .tile-initials{color:#7FB8A6}
+  .tile-badges{position:absolute;top:8px;right:8px;display:flex;gap:4px}
+  .tile-badge{background:rgba(0,0,0,.5);border-radius:5px;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .tile-badge svg{width:12px;height:12px;stroke:#fff;fill:none}
+  .facilitator-tag{font-size:9px;letter-spacing:.04em;text-transform:uppercase;background:var(--accent);padding:1px 5px;border-radius:4px}
+
+  #controlbar{display:flex;justify-content:center;gap:8px}
+  #controlbar button{display:flex;align-items:center;gap:6px}
+  #controlbar button svg{width:14px;height:14px;stroke:currentColor;fill:none}
+  #controlbar .btn-danger{border-color:#C14E3A;color:#C14E3A}
+  #controlbar .btn-danger:hover{background:#FBEDE9}
+  #controlbar button.off{background:#F3E4DE;border-color:#D9A98E;color:#8A4B2C}
+
+  #votebar{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px}
+  #votebar .text{flex-grow:1;font-size:14px;font-weight:600}
+  #votebar .tally{font-size:12px;color:var(--muted);margin-left:8px}
+  #novote{color:var(--muted);font-size:13px}
+
+  #sidebar{width:300px;flex-shrink:0;border-left:1px solid var(--line);background:#fff;display:flex;flex-direction:column}
+  #tabs{display:flex;border-bottom:1px solid var(--line)}
+  #tabs button{flex:1;text-align:center;padding:12px;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:inherit}
+  #tabs button.active{font-weight:700;color:var(--ink);border-bottom-color:var(--accent)}
+  #panels{flex-grow:1;min-height:0;display:flex;flex-direction:column}
+  .panel{flex-grow:1;display:none;flex-direction:column;min-height:0}
+  .panel.active{display:flex}
+
+  #chatlog{flex-grow:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:13px}
+  #chatlog .from-thimble{background:#F0F7F4;border:1px solid #CFE4DB;border-radius:8px;padding:8px 10px}
+  #askthimblerow{padding:10px 16px 0}
+  #askthimblerow button{width:100%}
+  #chatform{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px}
+  #chatform input{flex-grow:1}
+
+  #proplist{flex-grow:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+  .proposal-card{border:1px solid var(--line);border-radius:10px;padding:12px}
+  .proposal-card .ptext{font-size:13px;font-weight:600;margin-bottom:8px}
+  .bar-track{height:8px;background:#EDE9DF;border-radius:4px;overflow:hidden}
+  .bar-fill{height:100%;background:var(--accent)}
+  .proposal-card .counts{font-size:11px;color:var(--muted);margin-top:4px}
+  .proposal-card .votebtns{display:flex;gap:6px;margin-top:8px}
+  .proposal-card .votebtns button{flex:1;padding:6px;font-size:12px}
+  #propform{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px}
+  #propform input{flex-grow:1}
+</style>
+</head>
+<body>
+
+<div id="join">
+  <form id="joinform">
+    <h1>Join the session</h1>
+    <p>oss-repo#482 — Deprecate legacy config loader</p>
+    <input type="text" id="namefield" placeholder="Your name" autocomplete="off" required>
+    <button type="submit" class="btn btn-primary">Join</button>
+  </form>
+</div>
+
+<div id="room">
+  <header>
+    <div class="issue">
+      <span class="label">Pinned issue</span>
+      <span id="issuetitle"></span>
+    </div>
+    <div style="flex-grow:1"></div>
+    <div class="avatars" id="avatars"></div>
+  </header>
+  <main>
+    <div id="stage">
+      <div id="grid"></div>
+      <div id="controlbar">
+        <button type="button" class="btn" id="micbtn">Mute mic</button>
+        <button type="button" class="btn" id="camerabtn">Turn off video</button>
+        <button type="button" class="btn btn-danger" id="leavebtn">Leave session</button>
+      </div>
+      <div id="votebar"></div>
+    </div>
+    <div id="sidebar">
+      <div id="tabs">
+        <button data-tab="chat" class="active">Chat</button>
+        <button data-tab="proposals">Proposals</button>
+      </div>
+      <div id="panels">
+        <div class="panel active" id="panel-chat">
+          <div id="chatlog"></div>
+          <div id="askthimblerow">
+            <button type="button" class="btn" id="askthimblebtn">Ask Thimble to weigh in</button>
+          </div>
+          <form id="chatform">
+            <input type="text" id="chatinput" placeholder="Type a message…" autocomplete="off">
+            <button type="submit" class="btn btn-primary">Send</button>
+          </form>
+        </div>
+        <div class="panel" id="panel-proposals">
+          <div id="proplist"></div>
+          <form id="propform">
+            <input type="text" id="propinput" placeholder="Propose an option…" autocomplete="off">
+            <button type="submit" class="btn btn-primary">Add</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const THIMBLE_ID = 'thimble';
+let myId = null;
+let myName = null;
+let state = null;
+let localStream = null;
+
+function initials(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+}
+
+async function join(name) {
+  const res = await fetch('/api/join', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name})
+  });
+  const data = await res.json();
+  myId = data.participant_id;
+  myName = name;
+  render(data.state);
+  document.getElementById('join').style.display = 'none';
+  document.getElementById('room').style.display = 'flex';
+  connectSocket();
+  startCamera();
+}
+
+function connectSocket() {
+  const ws = new WebSocket(`ws://${location.host}/ws/${myId}`);
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.type === 'state') render(msg.state);
+  };
+  ws.onclose = () => setTimeout(connectSocket, 1000);
+}
+
+async function startCamera() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+    const tile = document.querySelector(`.tile[data-id="${myId}"] video`);
+    if (tile) tile.srcObject = localStream;
+  } catch (e) {
+    // camera/mic denied or unavailable -- the initials placeholder stays up,
+    // mute/video buttons still work (they just toggle server-side state),
+    // fine for this prototype
+  }
+}
+
+function myParticipant() {
+  return state ? state.participants.find(p => p.id === myId) : null;
+}
+
+function render(newState) {
+  state = newState;
+  document.getElementById('issuetitle').textContent = state.issue_title;
+
+  document.getElementById('avatars').innerHTML = state.participants.map(p =>
+    `<div class="avatar" title="${escapeHtml(p.name)}">${initials(p.name)}</div>`
+  ).join('');
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = state.participants.map(p => {
+    const isThimble = p.id === THIMBLE_ID;
+    const showVideo = p.id === myId && !p.video_off;
+    const badges = [];
+    if (!isThimble && p.muted) badges.push(micOffBadge());
+    if (!isThimble && p.video_off) badges.push(cameraOffBadge());
+    return `
+      <div class="tile ${p.speaking ? 'speaking' : ''} ${isThimble ? 'thimble' : ''}" data-id="${p.id}">
+        ${showVideo ? '<video autoplay muted playsinline></video>' : ''}
+        <div class="tile-initials">${isThimble ? 'TH' : initials(p.name)}</div>
+        ${badges.length ? `<div class="tile-badges">${badges.join('')}</div>` : ''}
+        <span class="tile-name">${escapeHtml(p.name)}${p.id === myId ? ' (you)' : ''}${p.speaking ? ' · speaking' : ''}${isThimble ? ' <span class="facilitator-tag">Facilitator</span>' : ''}</span>
+      </div>
+    `;
+  }).join('');
+  if (localStream) {
+    const v = grid.querySelector(`.tile[data-id="${myId}"] video`);
+    if (v) v.srcObject = localStream;
+  }
+
+  const me = myParticipant();
+  if (me) {
+    const micbtn = document.getElementById('micbtn');
+    micbtn.textContent = me.muted ? 'Unmute mic' : 'Mute mic';
+    micbtn.classList.toggle('off', me.muted);
+    const camerabtn = document.getElementById('camerabtn');
+    camerabtn.textContent = me.video_off ? 'Turn on video' : 'Turn off video';
+    camerabtn.classList.toggle('off', me.video_off);
+  }
+  const askbtn = document.getElementById('askthimblebtn');
+  askbtn.disabled = !!state.thimble_busy;
+  askbtn.textContent = state.thimble_busy ? 'Thimble is thinking…' : 'Ask Thimble to weigh in';
+
+  const chatlog = document.getElementById('chatlog');
+  const wasAtBottom = chatlog.scrollTop + chatlog.clientHeight >= chatlog.scrollHeight - 20;
+  chatlog.innerHTML = state.messages.map(m =>
+    `<div class="${m.author_id === THIMBLE_ID ? 'from-thimble' : ''}"><strong>${escapeHtml(m.author_name)}</strong> ${escapeHtml(m.text)}</div>`
+  ).join('');
+  if (wasAtBottom) chatlog.scrollTop = chatlog.scrollHeight;
+
+  const openProposal = state.proposals.find(p => p.open);
+  const votebar = document.getElementById('votebar');
+  if (openProposal) {
+    const t = openProposal.tally;
+    const myVote = openProposal.votes[myId];
+    votebar.innerHTML = `
+      <div class="text">${escapeHtml(openProposal.text)}</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn ${myVote === 'abstain' ? 'btn-primary' : ''}" data-vote="abstain" data-pid="${openProposal.id}">Abstain</button>
+        <button class="btn ${myVote === 'no' ? 'btn-primary' : ''}" data-vote="no" data-pid="${openProposal.id}">No · ${t.no}</button>
+        <button class="btn ${myVote === 'yes' ? 'btn-primary' : ''}" data-vote="yes" data-pid="${openProposal.id}">Yes · ${t.yes}</button>
+      </div>
+    `;
+  } else {
+    votebar.innerHTML = `<span id="novote">No open proposal yet — add one under the Proposals tab.</span>`;
+  }
+
+  document.getElementById('proplist').innerHTML = state.proposals.map(pr => {
+    const t = pr.tally;
+    const total = t.yes + t.no + t.abstain || 1;
+    const myVote = pr.votes[myId];
+    return `
+      <div class="proposal-card">
+        <div class="ptext">${escapeHtml(pr.text)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(t.yes / total) * 100}%"></div></div>
+        <div class="counts">${t.yes} yes · ${t.no} no · ${t.abstain} abstain</div>
+        <div class="votebtns">
+          <button class="btn ${myVote === 'yes' ? 'btn-primary' : ''}" data-vote="yes" data-pid="${pr.id}">Yes</button>
+          <button class="btn ${myVote === 'no' ? 'btn-primary' : ''}" data-vote="no" data-pid="${pr.id}">No</button>
+          <button class="btn ${myVote === 'abstain' ? 'btn-primary' : ''}" data-vote="abstain" data-pid="${pr.id}">Abstain</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function micOffBadge() {
+  return '<span class="tile-badge" title="Muted"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18M9 9v3a3 3 0 0 0 5.12 2.12M15 9V6a3 3 0 0 0-5.91-.69M19 11a7 7 0 0 1-1.02 3.66M12 18v3"/></svg></span>';
+}
+function cameraOffBadge() {
+  return '<span class="tile-badge" title="Video off"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8l4-2v12l-4-2M3 3l18 18M3 7v10a1 1 0 0 0 1 1h8l-9-9z"/></svg></span>';
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('joinform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('namefield').value.trim();
+  if (name) join(name);
+});
+
+document.getElementById('chatform').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('chatinput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await fetch('/api/message', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, text})
+  });
+});
+
+document.getElementById('propform').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('propinput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await fetch('/api/proposal', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, text})
+  });
+});
+
+document.getElementById('panels').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-vote]');
+  if (!btn) return;
+  await fetch('/api/vote', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, proposal_id: btn.dataset.pid, choice: btn.dataset.vote})
+  });
+});
+document.getElementById('votebar').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-vote]');
+  if (!btn) return;
+  await fetch('/api/vote', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, proposal_id: btn.dataset.pid, choice: btn.dataset.vote})
+  });
+});
+
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${btn.dataset.tab}`));
+});
+
+document.getElementById('micbtn').addEventListener('click', async () => {
+  const me = myParticipant();
+  if (!me) return;
+  const muted = !me.muted;
+  if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = !muted);
+  await fetch('/api/mute', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, muted})
+  });
+});
+
+document.getElementById('camerabtn').addEventListener('click', async () => {
+  const me = myParticipant();
+  if (!me) return;
+  const videoOff = !me.video_off;
+  if (localStream) localStream.getVideoTracks().forEach(t => t.enabled = !videoOff);
+  await fetch('/api/video', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, video_off: videoOff})
+  });
+});
+
+document.getElementById('leavebtn').addEventListener('click', async () => {
+  await fetch('/api/leave', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId})
+  });
+  if (localStream) localStream.getTracks().forEach(t => t.stop());
+  localStream = null;
+  myId = null;
+  document.getElementById('room').style.display = 'none';
+  document.getElementById('join').style.display = 'flex';
+  document.getElementById('namefield').value = '';
+});
+
+document.getElementById('askthimblebtn').addEventListener('click', async () => {
+  await fetch('/api/ask-thimble', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId})
+  });
+});
+</script>
+</body>
+</html>
