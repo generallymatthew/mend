@@ -98,6 +98,12 @@ function ratingsSummary(ratings){
   return `${n} rating${n > 1 ? 's' : ''}, avg ${avg.toFixed(1)}/5`;
 }
 
+function ratedByText(ratings){
+  if (!ratings || !ratings.length) return 'no one yet';
+  const names = ratings.map(r => escapeHtml(r.rater));
+  return `${ratings.length} person${ratings.length > 1 ? 's' : ''} (${names.join(', ')})`;
+}
+
 async function loadList(){
   const res = await fetch(BASE_PATH + '/api/test-conversations');
   const records = await res.json();
@@ -144,6 +150,7 @@ async function openConversation(id){
       <div><b>Harness:</b> ${r.harness}</div>
       <div><b>Judged score:</b> ${scoreText(score)}</div>
       <div><b>Turns:</b> ${r.turns ?? '?'}</div>
+      <div><b>Rated by:</b> ${ratedByText(r.human_ratings)}</div>
     </div>
 
     ${r.prompt_text ? `<details><summary>Prompt used</summary><pre class="prompt">${escapeHtml(r.prompt_text)}</pre></details>` : ''}
