@@ -1610,9 +1610,19 @@ app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 # it). During active development this app changes every few minutes, so
 # unlike a stable production asset, no caching at all is the right default
 # here -- a reload should always reflect whatever's actually on disk.
+# Root-level pages served via FileResponse outside the /static/ mount (see
+# each route's own comment on why: BASE_PATH derivation needs a root path).
+# Missed here the same stale-cache bug the comment above describes -- a real
+# repro: conversation_history.html got edited several times in one session,
+# and a tab that had loaded it once before a fix kept serving the stale
+# cached copy (row clicks silently not working) while /static/ assets
+# reloaded fine, looking exactly like a JS bug that wasn't actually there.
+NO_CACHE_ROOT_PAGES = {"/", "/session", "/survey", "/conversation-history"}
+
+
 @app.middleware("http")
 async def no_cache_static(request: Request, call_next):
     response = await call_next(request)
-    if request.url.path == "/" or request.url.path.startswith("/static/"):
+    if request.url.path in NO_CACHE_ROOT_PAGES or request.url.path.startswith("/static/"):
         response.headers["Cache-Control"] = "no-store"
     return response
