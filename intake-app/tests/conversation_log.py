@@ -15,6 +15,10 @@ from pathlib import Path
 
 LOG_FILE = Path(__file__).parent / "conversation_log.jsonl"
 
+# Same four dimensions the simulated persona self-reports on -- a human
+# rater scores the same scale, so the two are directly comparable.
+RATING_METRICS = ("feel_equipped", "feel_understood", "trust_advice", "would_say_it")
+
 
 def log_conversation(
     harness,
@@ -39,8 +43,7 @@ def log_conversation(
         "objective_score": objective_score,
         "self_report": self_report,
         "turns": turns,
-        "human_score": None,
-        "human_notes": None,
+        "human_ratings": [],
     }
     with LOG_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
@@ -66,13 +69,19 @@ def get_conversation(conv_id):
     return None
 
 
-def rate_conversation(conv_id, human_score, human_notes=None):
+def add_human_rating(conv_id, rater, scores, notes=None):
+    """Append one more person's rating -- never overwrites an earlier rater's.
+    `scores` is a dict with the four RATING_METRICS keys, each 1-5."""
     records = load_conversations()
     found = False
     for record in records:
         if record["id"] == conv_id:
-            record["human_score"] = human_score
-            record["human_notes"] = human_notes
+            record.setdefault("human_ratings", []).append({
+                "rater": rater,
+                "ts": time.time(),
+                **{m: scores[m] for m in RATING_METRICS},
+                "notes": notes,
+            })
             found = True
     if not found:
         return False

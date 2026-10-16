@@ -42,12 +42,21 @@
   .turn.assistant{background:var(--paper); border:1px solid var(--border);}
   .turn-role{font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); margin-bottom:3px;}
   .rate-box{border-top:1px solid var(--border); margin-top:18px; padding-top:16px;}
-  .scale{display:flex; gap:8px; margin:8px 0 10px;}
+  .rate-box h3{font-size:14px; margin:0 0 10px;}
+  .name-input{width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:13.5px; background:var(--paper); color:var(--ink); margin-bottom:12px;}
+  .metric-row{margin-bottom:10px;}
+  .metric-label{font-size:13px; font-weight:700; margin-bottom:5px;}
+  .scale{display:flex; gap:8px; margin:0 0 4px;}
   .scale button{flex:1; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); border-radius:999px; padding:9px 0; font:inherit; font-weight:700; font-size:14px; cursor:pointer;}
   .scale button.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
-  textarea{width:100%; resize:vertical; min-height:60px; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:13.5px; background:var(--paper); color:var(--ink);}
+  textarea{width:100%; resize:vertical; min-height:60px; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:13.5px; background:var(--paper); color:var(--ink); margin-top:4px;}
   button.primary{border:1.5px solid var(--accent); background:var(--accent); color:#fff; border-radius:999px; padding:10px 22px; font:inherit; font-weight:700; font-size:14px; cursor:pointer; margin-top:10px;}
   .saved-note{font-size:12.5px; color:var(--ink-soft); margin-top:8px;}
+  .ratings-list{display:flex; flex-direction:column; gap:8px; margin-bottom:6px;}
+  .rating-card{border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:12.5px;}
+  .rating-card .rater{font-weight:700; font-size:13px;}
+  .rating-card .metrics{color:var(--ink-soft); font-family:'JetBrains Mono',monospace; margin:3px 0;}
+  .rating-card .notes{color:var(--ink-soft); font-style:italic;}
 </style>
 </head>
 <body>
@@ -70,9 +79,23 @@ function fmtTs(ts){
   return d.toLocaleString();
 }
 
+const METRICS = [
+  ['feel_equipped', 'Feel equipped'],
+  ['feel_understood', 'Feel understood'],
+  ['trust_advice', 'Trust the advice'],
+  ['would_say_it', 'Would say it'],
+];
+
 function scoreText(score){
   if (!score) return '—';
   return score.total != null ? `${score.total}/25` : '—';
+}
+
+function ratingsSummary(ratings){
+  if (!ratings || !ratings.length) return 'not rated';
+  const n = ratings.length;
+  const avg = ratings.reduce((sum, r) => sum + METRICS.reduce((s, [k]) => s + (r[k] || 0), 0) / METRICS.length, 0) / n;
+  return `${n} rating${n > 1 ? 's' : ''}, avg ${avg.toFixed(1)}/5`;
 }
 
 async function loadList(){
@@ -91,7 +114,7 @@ async function loadList(){
       </div>
       <div class="score">
         ${scoreText(r.objective_score)}
-        <span class="human">${r.human_score ? 'you: ' + r.human_score + '/5' : 'not rated'}</span>
+        <span class="human">${ratingsSummary(r.human_ratings)}</span>
       </div>
     </div>
   `).join('');
@@ -101,6 +124,7 @@ async function openConversation(id){
   const res = await fetch(BASE_PATH + '/api/test-conversations/' + id);
   const r = await res.json();
   CURRENT = r;
+  for (const k of Object.keys(PENDING)) delete PENDING[k];
   const score = r.objective_score || {};
   const sr = r.self_report || {};
   const transcriptHtml = (r.transcript || []).map(m => `
@@ -131,11 +155,30 @@ async function openConversation(id){
     <details open><summary>Transcript</summary>${transcriptHtml}</details>
 
     <div class="rate-box">
-      <div style="font-weight:700; font-size:14px;">Your satisfaction score</div>
-      <div class="scale" id="rate-scale">
-        ${[1,2,3,4,5].map(n => `<button data-n="${n}" class="${r.human_score === n ? 'sel' : ''}" onclick="pickScore(${n})">${n}</button>`).join('')}
-      </div>
-      <textarea id="rate-notes" placeholder="Notes (optional)">${r.human_notes || ''}</textarea>
+      ${(r.human_ratings || []).length ? `
+        <h3>Ratings so far (${r.human_ratings.length})</h3>
+        <div class="ratings-list">
+          ${r.human_ratings.map(rating => `
+            <div class="rating-card">
+              <div class="rater">${escapeHtml(rating.rater)}</div>
+              <div class="metrics">${METRICS.map(([k, label]) => `${label}: ${rating[k]}`).join(' &middot; ')}</div>
+              ${rating.notes ? `<div class="notes">${escapeHtml(rating.notes)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      <h3>Add your rating</h3>
+      <input id="rate-name" class="name-input" type="text" placeholder="Your name">
+      ${METRICS.map(([key, label]) => `
+        <div class="metric-row">
+          <div class="metric-label">${label}</div>
+          <div class="scale" data-metric="${key}">
+            ${[1,2,3,4,5].map(n => `<button data-n="${n}" onclick="pickMetric('${key}', ${n})">${n}</button>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <textarea id="rate-notes" placeholder="Notes (optional)"></textarea>
       <button class="primary" onclick="submitRating('${r.id}')">Save rating</button>
       <div class="saved-note" id="saved-note"></div>
     </div>
@@ -143,28 +186,38 @@ async function openConversation(id){
   document.getElementById('overlay').classList.add('open');
 }
 
-function pickScore(n){
-  document.querySelectorAll('#rate-scale button').forEach(b => {
+const PENDING = {};
+
+function pickMetric(key, n){
+  PENDING[key] = n;
+  document.querySelectorAll(`.scale[data-metric="${key}"] button`).forEach(b => {
     b.classList.toggle('sel', Number(b.dataset.n) === n);
   });
-  CURRENT._pickedScore = n;
 }
 
 async function submitRating(id){
-  const score = CURRENT._pickedScore || CURRENT.human_score;
-  if (!score){
-    document.getElementById('saved-note').textContent = 'Pick a score first.';
+  const rater = document.getElementById('rate-name').value.trim();
+  if (!rater){
+    document.getElementById('saved-note').textContent = 'Enter your name first.';
+    return;
+  }
+  const missing = METRICS.filter(([key]) => !PENDING[key]);
+  if (missing.length){
+    document.getElementById('saved-note').textContent = `Rate: ${missing.map(([,l]) => l).join(', ')}.`;
     return;
   }
   const notes = document.getElementById('rate-notes').value;
+  const body = {rater, notes, ...PENDING};
   const res = await fetch(BASE_PATH + '/api/test-conversations/' + id + '/rate', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({human_score: score, human_notes: notes}),
+    body: JSON.stringify(body),
   });
   if (res.ok){
+    for (const k of Object.keys(PENDING)) delete PENDING[k];
     document.getElementById('saved-note').textContent = 'Saved.';
     loadList();
+    openConversation(id);
   } else {
     document.getElementById('saved-note').textContent = 'Failed to save.';
   }

@@ -49,7 +49,7 @@ from usage_log import log_usage
 # wired into the real /api/* session endpoints below -- those stay true to
 # the "nothing is recorded" principle for actual users.
 sys.path.insert(0, str(ROOT / "tests"))
-from conversation_log import load_conversations, rate_conversation
+from conversation_log import load_conversations, add_human_rating, RATING_METRICS
 from conversation_log import get_conversation as get_logged_conversation
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 # Override with CLAUDE_MODEL=claude-haiku-4-5-20251001 for cheap local test
@@ -1548,11 +1548,19 @@ async def get_test_conversation(conv_id: str):
 @app.post("/api/test-conversations/{conv_id}/rate")
 async def rate_test_conversation(conv_id: str, request: Request):
     data = await request.json()
-    score = data.get("human_score")
-    if not isinstance(score, int) or not (1 <= score <= 5):
-        return JSONResponse({"error": "human_score must be an integer 1-5"}, status_code=400)
-    notes = str(data.get("human_notes") or "")[:2000]
-    ok = rate_conversation(conv_id, score, notes)
+    rater = str(data.get("rater") or "").strip()[:80]
+    if not rater:
+        return JSONResponse({"error": "rater (your name) is required"}, status_code=400)
+    scores = {}
+    for metric in RATING_METRICS:
+        value = data.get(metric)
+        if not isinstance(value, int) or not (1 <= value <= 5):
+            return JSONResponse({"error": f"{metric} must be an integer 1-5"}, status_code=400)
+        scores[metric] = value
+    notes = str(data.get("notes") or "")[:2000]
+    # Multiple people can each rate the same conversation -- this appends a
+    # new rating, it never overwrites someone else's.
+    ok = add_human_rating(conv_id, rater, scores, notes)
     if not ok:
         return JSONResponse({"error": "not found"}, status_code=404)
     return {"ok": True}
