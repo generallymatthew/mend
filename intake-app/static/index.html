@@ -685,6 +685,12 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg>
             <span class="feedback-btn-label">Feedback</span>
           </a>
+          <!-- Test-only benchmark conversation log (adaptive_persona_compare.py
+               runs), never real tester sessions -- see conversation_log.py. -->
+          <a id="testLogBtn" class="feedback-btn" href="conversation-history" target="_blank" rel="noopener" aria-label="Test conversation history">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.4 8.6 12 15l-3-3-4 4"></path></svg>
+            <span class="feedback-btn-label">Test Logs</span>
+          </a>
           <!-- Only matters in Text view: a dictated (voice memo) turn normally
                gets a spoken reply back (see currentReplyShouldSpeak). This
                lets a tester silence that without leaving Text view. -->
