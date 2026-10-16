@@ -203,7 +203,7 @@ async function openConversation(id){
       ` : ''}
 
       <h4 style="font-size:13px; margin:4px 0 8px;">Flag something</h4>
-      <input id="ann-name" class="name-input" type="text" placeholder="Your name">
+      <input id="ann-name" class="name-input" type="text" placeholder="Your name" value="${escapeHtml(getSavedName())}">
       <textarea id="ann-quote" placeholder="Paste the exact text you're flagging"></textarea>
       <textarea id="ann-comment" placeholder="What's wrong (or right) about it" style="margin-top:8px;"></textarea>
       <button class="primary" onclick="submitAnnotation('${r.id}')">Add flag</button>
@@ -225,7 +225,7 @@ async function openConversation(id){
       ` : ''}
 
       <h3>Add your rating</h3>
-      <input id="rate-name" class="name-input" type="text" placeholder="Your name">
+      <input id="rate-name" class="name-input" type="text" placeholder="Your name" value="${escapeHtml(getSavedName())}">
       ${METRICS.map(([key, label]) => `
         <div class="metric-row">
           <div class="metric-label">${label}</div>
@@ -270,6 +270,7 @@ async function submitRating(id){
     body: JSON.stringify(body),
   });
   if (res.ok){
+    saveName(rater);
     for (const k of Object.keys(PENDING)) delete PENDING[k];
     document.getElementById('saved-note').textContent = 'Saved.';
     loadList();
@@ -293,6 +294,7 @@ async function submitAnnotation(id){
     body: JSON.stringify({rater, quote, comment}),
   });
   if (res.ok){
+    saveName(rater);
     document.getElementById('ann-saved-note').textContent = 'Saved.';
     loadList();
     openConversation(id);
@@ -321,6 +323,16 @@ function closePanel(){
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Remembers the rater's name per-browser so it only needs to be typed once,
+// for both the rating form and the flag form.
+function getSavedName(){
+  try { return localStorage.getItem('mend_rater_name') || ''; } catch (e) { return ''; }
+}
+
+function saveName(name){
+  try { localStorage.setItem('mend_rater_name', name); } catch (e) {}
 }
 
 // Minimal markdown for transcript turns -- raw Claude (no system prompt)
