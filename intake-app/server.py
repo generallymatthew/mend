@@ -1702,7 +1702,9 @@ async def preload_whisper():
 
 @app.get("/")
 async def index():
-    return FileResponse(ROOT / "static" / "index.html")
+    # static/index.html retired to static/_archive/ -- session.html (served
+    # below at /session too) is the one live front end now.
+    return FileResponse(ROOT / "static" / "session.html")
 
 
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
