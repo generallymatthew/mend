@@ -71,13 +71,17 @@ app = FastAPI()
 # ---------------------------------------------------------------------------
 
 class Participant:
-    def __init__(self, name: str, id: Optional[str] = None):
+    def __init__(self, name: str, id: Optional[str] = None, preferred_method: str = "video"):
         self.id = id or uuid.uuid4().hex[:8]
         self.name = name
         self.joined_at = time.time()
         self.speaking = False
-        self.muted = False
-        self.video_off = False
+        self.preferred_method = preferred_method  # "video" | "text" -- set once, at onboarding
+        # Someone who said they'd rather type starts muted with video off;
+        # either control still works normally after that, this is just the
+        # sensible default to land on, not a restriction.
+        self.muted = preferred_method == "text"
+        self.video_off = preferred_method == "text"
 
 
 class Proposal:
@@ -113,6 +117,7 @@ class Room:
                     "speaking": p.speaking,
                     "muted": p.muted,
                     "video_off": p.video_off,
+                    "preferred_method": p.preferred_method,
                     "is_facilitator": p.id == THIMBLE_ID,
                 }
                 for p in self.participants.values()
@@ -161,6 +166,7 @@ async def broadcast():
 
 class JoinBody(BaseModel):
     name: str
+    preferred_method: str = "video"  # "video" | "text"
 
 
 class MessageBody(BaseModel):
@@ -204,7 +210,8 @@ class AskThimbleBody(BaseModel):
 
 @app.post("/api/join")
 async def join(body: JoinBody):
-    p = Participant(body.name.strip() or "Anonymous")
+    method = body.preferred_method if body.preferred_method in ("video", "text") else "video"
+    p = Participant(body.name.strip() or "Anonymous", preferred_method=method)
     room.participants[p.id] = p
     await broadcast()
     return {"participant_id": p.id, "state": room.state()}

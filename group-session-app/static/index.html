@@ -25,6 +25,22 @@
   #join h1{font-family:'Fraunces',serif;font-size:22px;margin:0}
   #join p{font-size:13px;color:var(--muted);margin:0}
 
+  #onboarding{display:none;height:100vh;align-items:center;justify-content:center;padding:24px}
+  #onboarding .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:32px;width:460px;display:flex;flex-direction:column;gap:18px}
+  #onboarding .thimble-badge{display:flex;align-items:center;gap:8px}
+  #onboarding .thimble-dot{width:28px;height:28px;border-radius:50%;background:#1F3B35;color:#7FB8A6;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:12px;font-weight:600}
+  #onboarding .thimble-badge span{font-size:13px;font-weight:700}
+  #onboarding h1{font-family:'Fraunces',serif;font-size:20px;margin:0}
+  #onboarding p{font-size:13px;line-height:1.55;color:#4A463F;margin:0}
+  #onboarding ul{margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:#4A463F}
+  #onboarding .methodrow{display:flex;gap:10px}
+  #onboarding .method-opt{flex:1;border:1px solid var(--line-2);border-radius:8px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:3px;background:#fff}
+  #onboarding .method-opt:hover{background:#FBF9F4}
+  #onboarding .method-opt.selected{border-color:var(--accent);background:#F0F7F4}
+  #onboarding .method-opt strong{font-size:13px}
+  #onboarding .method-opt span{font-size:12px;color:var(--muted)}
+  #onboarding .method-opt input{display:none}
+
   #room{display:none;height:100vh;flex-direction:column}
   header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--line);background:#fff;flex-shrink:0}
   header .issue{display:flex;flex-direction:column;gap:2px}
@@ -93,7 +109,39 @@
     <h1>Join the session</h1>
     <p>oss-repo#482 — Deprecate legacy config loader</p>
     <input type="text" id="namefield" placeholder="Your name" autocomplete="off" required>
-    <button type="submit" class="btn btn-primary">Join</button>
+    <button type="submit" class="btn btn-primary">Continue</button>
+  </form>
+</div>
+
+<div id="onboarding">
+  <form class="card" id="onboardingform">
+    <div class="thimble-badge"><div class="thimble-dot">TH</div><span>Thimble</span></div>
+    <h1>Before we start, <span id="greetname"></span></h1>
+    <p>I'm Thimble, an AI facilitator. I'll sit in on this session, ask questions, and help keep the discussion moving, but I don't take sides and I don't get a vote.</p>
+    <div>
+      <p style="font-weight:700;margin-bottom:6px">What this session is for</p>
+      <ul>
+        <li>Reach a decision on <strong>oss-repo#482 — Deprecate legacy config loader</strong>, not to decide who's right as people.</li>
+        <li>Anyone can propose an option. Everyone votes yes, no, or abstain.</li>
+        <li>Ask me to weigh in any time if the discussion is stuck or circling.</li>
+      </ul>
+    </div>
+    <div>
+      <p style="font-weight:700;margin-bottom:8px">How would you rather take part?</p>
+      <div class="methodrow">
+        <label class="method-opt selected" data-opt="video">
+          <input type="radio" name="method" value="video" checked>
+          <strong>Video &amp; mic</strong>
+          <span>Camera and mic on when you join. Switch to text any time.</span>
+        </label>
+        <label class="method-opt" data-opt="text">
+          <input type="radio" name="method" value="text">
+          <strong>Text only</strong>
+          <span>Join muted with camera off. Type instead of speaking.</span>
+        </label>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Enter session</button>
   </form>
 </div>
 
@@ -155,19 +203,19 @@ function initials(name) {
   return name.trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 }
 
-async function join(name) {
+async function join(name, preferredMethod) {
   const res = await fetch('/api/join', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({name})
+    body: JSON.stringify({name, preferred_method: preferredMethod})
   });
   const data = await res.json();
   myId = data.participant_id;
   myName = name;
   render(data.state);
-  document.getElementById('join').style.display = 'none';
+  document.getElementById('onboarding').style.display = 'none';
   document.getElementById('room').style.display = 'flex';
   connectSocket();
-  startCamera();
+  if (preferredMethod !== 'text') startCamera();
 }
 
 function connectSocket() {
@@ -215,7 +263,7 @@ function render(newState) {
         ${showVideo ? '<video autoplay muted playsinline></video>' : ''}
         <div class="tile-initials">${isThimble ? 'TH' : initials(p.name)}</div>
         ${badges.length ? `<div class="tile-badges">${badges.join('')}</div>` : ''}
-        <span class="tile-name">${escapeHtml(p.name)}${p.id === myId ? ' (you)' : ''}${p.speaking ? ' · speaking' : ''}${isThimble ? ' <span class="facilitator-tag">Facilitator</span>' : ''}</span>
+        <span class="tile-name">${escapeHtml(p.name)}${p.id === myId ? ' (you)' : ''}${p.speaking ? ' · speaking' : ''}${isThimble ? ' <span class="facilitator-tag">Facilitator</span>' : ''}${!isThimble && p.preferred_method === 'text' ? ' <span class="facilitator-tag" style="background:#8A837A">Text only</span>' : ''}</span>
       </div>
     `;
   }).join('');
@@ -291,10 +339,30 @@ function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+let pendingName = null;
+
 document.getElementById('joinform').addEventListener('submit', (e) => {
   e.preventDefault();
   const name = document.getElementById('namefield').value.trim();
-  if (name) join(name);
+  if (!name) return;
+  pendingName = name;
+  document.getElementById('greetname').textContent = name;
+  document.getElementById('join').style.display = 'none';
+  document.getElementById('onboarding').style.display = 'flex';
+});
+
+document.querySelectorAll('.method-opt').forEach(label => {
+  label.addEventListener('click', () => {
+    document.querySelectorAll('.method-opt').forEach(l => l.classList.remove('selected'));
+    label.classList.add('selected');
+    label.querySelector('input').checked = true;
+  });
+});
+
+document.getElementById('onboardingform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const method = document.querySelector('input[name="method"]:checked').value;
+  join(pendingName, method);
 });
 
 document.getElementById('chatform').addEventListener('submit', async (e) => {
