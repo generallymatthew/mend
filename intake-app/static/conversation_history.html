@@ -37,6 +37,8 @@
   details{border:1px solid var(--border); border-radius:12px; margin-bottom:12px; padding:10px 14px;}
   details summary{cursor:pointer; font-weight:700; font-size:13.5px;}
   pre.prompt{white-space:pre-wrap; font-family:'JetBrains Mono',monospace; font-size:12px; margin:10px 0 0; max-height:300px; overflow-y:auto;}
+  .score-metrics{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-soft); margin-top:8px; line-height:1.6;}
+  .rationale{font-size:13px; line-height:1.5; margin-top:8px;}
   .turn{border-radius:12px; padding:10px 14px; margin-bottom:8px; font-size:13.5px; line-height:1.5;}
   .turn.user{background:var(--accent-soft);}
   .turn.assistant{background:var(--paper); border:1px solid var(--border);}
@@ -99,6 +101,20 @@ const METRICS = [
   ['trust_advice', 'Trust the advice'],
   ['would_say_it', 'Would say it'],
 ];
+
+const JUDGE_LABELS = {
+  reality_testing: 'Reality testing',
+  structural_attribution: 'Structural attribution',
+  diagnostic_restraint: 'Diagnostic restraint',
+  actionable_artifact: 'Actionable artifact',
+  safety_circuit_breaker: 'Safety circuit breaker',
+};
+
+function selfReportAvg(sr){
+  const vals = METRICS.map(([k]) => sr[k]).filter(v => v != null);
+  if (!vals.length) return null;
+  return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+}
 
 function scoreText(score){
   if (!score) return '—';
@@ -169,9 +185,15 @@ async function openConversation(id){
 
     ${r.prompt_text ? `<details><summary>Prompt used</summary><pre class="prompt">${escapeHtml(r.prompt_text)}</pre></details>` : ''}
 
-    ${score.scores ? `<details><summary>Judge breakdown</summary><pre class="prompt">${escapeHtml(JSON.stringify(score.scores, null, 2))}</pre></details>` : ''}
+    ${score.scores ? `<details open><summary>Why this score (${scoreText(score)})</summary>
+      <div class="score-metrics">${Object.entries(score.scores).map(([k, v]) => `${JUDGE_LABELS[k] || k}: ${v}/5`).join(' &middot; ')}</div>
+      ${score.rationale ? `<div class="rationale">${escapeHtml(score.rationale)}</div>` : ''}
+    </details>` : ''}
 
-    ${Object.keys(sr).length ? `<details><summary>Self-report (simulated persona)</summary><pre class="prompt">${escapeHtml(JSON.stringify(sr, null, 2))}</pre></details>` : ''}
+    ${Object.keys(sr).length ? `<details open><summary>How the simulated person said they felt${selfReportAvg(sr) != null ? ` (avg ${selfReportAvg(sr)}/5)` : ''}</summary>
+      <div class="score-metrics">${METRICS.filter(([k]) => sr[k] != null).map(([k, label]) => `${label}: ${sr[k]}/5`).join(' &middot; ')}</div>
+      ${sr.rationale ? `<div class="rationale">&ldquo;${escapeHtml(sr.rationale)}&rdquo;</div>` : ''}
+    </details>` : ''}
 
     <details open><summary>Transcript</summary>${transcriptHtml}</details>
 
