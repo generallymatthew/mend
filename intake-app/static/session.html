@@ -109,7 +109,11 @@
   .mic-error-banner button{font:inherit; font-weight:700; font-size:13px; padding:8px 16px; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:var(--paper); cursor:pointer;}
   .video-area{flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;}
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
-  .avatar-row{display:flex; align-items:center; justify-content:center; width:200px; height:200px;}
+  /* margin-bottom reserves floor space for .thimble-shadow (positioned
+     40px below the avatar's own box) so it has room to render before
+     .state-pill-row starts, instead of the pill sitting right on top of
+     it. */
+  .avatar-row{display:flex; align-items:center; justify-content:center; width:200px; height:200px; margin-bottom:24px;}
   @media (min-width:1024px){
     .avatar-row{width:260px; height:260px;}
     .thimble-avatar:not(.mini){width:260px; height:260px;}
@@ -123,18 +127,51 @@
      talking, nodding honey-blend empathizing) -- DOM/CSS border-radius
      shapes, not the old canvas circle, so the exact shapes/keyframes match
      the handoff instead of an older, different avatar system's motion. */
-  .thimble-avatar{position:relative; width:200px; height:200px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;
-    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));}
+  /* No ambient drop-shadow filter anymore -- it hugged the ball's own edge
+     (8px offset, 12px blur) and read as a shadow still attached to it,
+     fighting .thimble-shadow's floor ellipse 40px below for the same job.
+     The floor ellipse is now the only shadow, so hovering/grounded reads
+     clearly instead of two competing shadow sources. */
+  /* isolation:isolate forces a real stacking context here -- without it,
+     now that .thimble-core (not this element) carries the lean transform,
+     .thimble-avatar never gets a transform value of its own, so
+     .thimble-shadow's z-index:-1 escaped to the ancestor context and
+     painted behind the stage's opaque background instead of staying
+     local (reported live as the shadow disappearing entirely). */
+  .thimble-avatar{position:relative; width:200px; height:200px; transition:opacity .4s ease; isolation:isolate;}
   /* Mic muted: dim Thimble's own avatar too, same opacity the handoff uses
      for its 'muted' state, so "your mic is off" reads on the avatar itself
      and not only on the small You-tile icon. */
   .thimble-avatar.muted{opacity:.5;}
-  .thimble-avatar.mini{width:48px; height:48px;}
+  .thimble-avatar.mini{width:48px; height:48px; filter:none;}
+  /* .thimble-core carries the lean transform (shape.lean, applied by JS)
+     that used to sit directly on .thimble-avatar. Split out so .thimble-
+     shadow -- a sibling, not a child of this -- never inherits listening/
+     idle's rotate(-10deg) lean: that rotation was making the floor shadow
+     visibly tilt/off-center on those states while talking's (lean:'none')
+     stayed flat, reported live as "shadows can't be tilted." */
+  .thimble-core{position:absolute; inset:0; transition:transform .7s cubic-bezier(.3,1.4,.5,1);}
   /* A single soft glow, not a ring -- filter:blur softens the disc's edge
      into a shadow rather than a sharply-outlined circle, so it reads as a
      glow pulsing behind Thimble (set via JS's own opacity/scale breathe,
      see updateThimbleMotion) instead of a band sweeping outward. */
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
+  /* Contact shadow -- a flat ellipse on the floor below Thimble, as if lit
+     from directly above and hovering, not resting on it. A direct child of
+     .thimble-avatar (not .thimble-core), so it never leans/rotates with
+     the body -- always flat, like talking's. Static (no per-frame JS),
+     sits behind everything (z-index:-1, same layer as the ripple glow).
+     Neither .avatar-row/.avatar-stack/.stage clip overflow, so this
+     renders past the avatar's own box fine. */
+  /* ellipse closest-side (not the default farthest-corner) sizes the
+     gradient's own radii to the box's actual width/height, so the glow's
+     falloff is a true scaled copy of the box's oval shape -- brightest at
+     center, fading evenly toward every edge at the same relative rate --
+     instead of farthest-corner's gradient, which reaches past the short
+     (vertical) edges long before the long (horizontal) ones on a wide
+     flat box like this, reading as a harsh band rather than a soft glow. */
+  .thimble-shadow{position:absolute; left:50%; top:calc(100% + 20px); width:66%; height:14px; transform:translateX(-50%); background:radial-gradient(ellipse closest-side at center, rgba(23,55,46,.34) 0%, rgba(23,55,46,.2) 50%, rgba(23,55,46,.07) 78%, rgba(23,55,46,0) 100%); border-radius:50%; pointer-events:none; z-index:-1;}
+  .thimble-avatar.mini .thimble-shadow{display:none;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
   /* will-change hints the browser to keep this on its own composited layer
      rather than re-rasterizing the whole thing fresh each time clip-path
@@ -150,7 +187,20 @@
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
   @keyframes thimble-blob{0%,100%{border-radius:50%; transform:scale(.95);} 25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%; transform:scale(.92) rotate(-3deg);} 50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%; transform:scale(.95);} 75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%; transform:scale(.92) rotate(3deg);}}
-  @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
+  /* Gentle idle bounce -- idle/waiting have no real mic/TTS input to react
+     to, so instead of sitting perfectly still (read as frozen/stuck) they
+     get a slow, small up-down bob via this CSS keyframe on .thimble-body,
+     reusing the existing shape.anim mechanism (see THIMBLE_SHAPES) rather
+     than a new JS-driven motion path. Small (5% of the body's own height,
+     not px, so it scales with the avatar across breakpoints) and slow
+     (2.6s) to read as patient waiting, not twitchy. */
+  @keyframes thimble-idle-bounce{0%,100%{transform:translateY(0);} 50%{transform:translateY(-5%);}}
+  /* Synced to thimble-idle-bounce above -- same 2.6s/ease-in-out, started
+     in the same JS tick (see applyThimbleState) so the two stay in phase.
+     As the body rises (bounce's 50% keyframe), the shadow shrinks and
+     fades, as if the gap to the floor is actually growing; as it comes
+     back down, the shadow grows back to full size/strength. */
+  @keyframes thimble-idle-shadow{0%,100%{transform:translateX(-50%) scale(1); opacity:1;} 50%{transform:translateX(-50%) scale(.7); opacity:.55;}}
   /* Still used by .chat-typing below, not the avatar mouth anymore. */
   @keyframes thimble-dot{0%,100%{opacity:.25; transform:translateY(0);} 50%{opacity:1; transform:translateY(-35%);}}
   /* Caption sits in normal flow right under the state pill now, not
@@ -930,11 +980,14 @@
           <div class="avatar-stack">
             <div class="avatar-row">
               <div class="thimble-avatar" id="thimbleAvatar">
-                <div class="thimble-ripple" id="thimbleRippleA" hidden></div>
-                <div class="thimble-ring" id="thimbleRing">
-                  <div class="thimble-body" id="thimbleBody">
-                    <div class="thimble-blend" id="thimbleBlend"></div>
-                    <div class="thimble-mouth" id="thimbleMouth"></div>
+                <div class="thimble-shadow" id="thimbleShadow"></div>
+                <div class="thimble-core" id="thimbleCore">
+                  <div class="thimble-ripple" id="thimbleRippleA" hidden></div>
+                  <div class="thimble-ring" id="thimbleRing">
+                    <div class="thimble-body" id="thimbleBody">
+                      <div class="thimble-blend" id="thimbleBlend"></div>
+                      <div class="thimble-mouth" id="thimbleMouth"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2359,7 +2412,14 @@ const THIMBLE_SHAPES = {
   // with the lean transform) for the "leaning toward you" asymmetry --
   // only the vertical cap/rim ratio moves to DOME_RADIUS.
   listening:   {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
-  idle:        {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  // idle/ready both get the gentle idle-bounce keyframe (see its own
+  // comment) since neither has real mic/TTS input to react to -- per
+  // explicit request so Thimble doesn't read as frozen while waiting.
+  // ready previously had no entry here at all and fell through to
+  // THIMBLE_SHAPES.listening (same shape, but silently losing out on its
+  // own anim the moment this map gained one); broken out explicitly now.
+  idle:        {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'thimble-idle-bounce 2.6s ease-in-out infinite', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  ready:       {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'thimble-idle-bounce 2.6s ease-in-out infinite', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   // No CSS blob anymore -- thinking's body motion is the same geometry
   // engine as listening/talking (constant geo .6, slow spin, a head-tilt
   // wiggle instead of a nod), ported from the handoff's 'thinking' state in
@@ -2375,7 +2435,6 @@ const THIMBLE_SHAPES = {
   // breathe period and a constant (not threshold-gated) geo target, ported
   // from the handoff's 'speaking' state in updateThimbleMotion below.
   talking:     {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
-  empathizing: {radius: DOME_RADIUS, anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
   // Session paused: frozen (no breathing, no wobble -- see the `active`
   // check in updateThimbleMotion, which excludes 'paused' from the motion
   // branch entirely) and recolored grey via applyThimbleState below, same
@@ -2385,6 +2444,23 @@ const THIMBLE_SHAPES = {
   // resting circle.
   paused:      {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
 };
+// Per-state body colors, layered under THIMBLE_SHAPES above. Every state
+// has an explicit entry now (talking kept as the original brand pink) so
+// the color lerp below always has a real target -- no more "" special
+// case, which depended on the browser's own background transition and
+// wasn't reliably smooth switching state to state.
+const THIMBLE_COLORS = {
+  idle:      '#A3CFE0',
+  listening: '#b0ded1',
+  ready:     '#A3CFE0',
+  thinking:  '#E9B949',
+  talking:   '#F3829A',
+  paused:    '#A9A39A',
+};
+function thimbleHexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
+}
 // Two instances share one avatarState: the big call-stage avatar (voice
 // view) and a 48px mini copy in the text/chat header -- same per-frame
 // motion, just scaled, so switching Voice/Text never looks like a
@@ -2393,6 +2469,8 @@ function thimbleInstance(prefix, size) {
   return {
     size,
     el: document.getElementById(prefix + 'Avatar'),
+    core: document.getElementById(prefix + 'Core'),
+    shadow: document.getElementById(prefix + 'Shadow'),
     ring: document.getElementById(prefix + 'Ring'),
     body: document.getElementById(prefix + 'Body'),
     blend: document.getElementById(prefix + 'Blend'),
@@ -2613,35 +2691,47 @@ function renderThimbleMouth(inst, state) {
   inst.mouth.style.width = (shape.mouthW * s) + 'px';
   inst.mouth.style.height = (shape.mouthH * s) + 'px';
   inst.mouth.style.boxSizing = 'border-box';
-  if (state === 'empathizing') {
-    inst.mouth.style.background = 'none';
-    inst.mouth.style.borderBottom = (0.028 * s) + 'px solid #F6F1E7';
-    inst.mouth.style.borderRadius = '0 0 999px 999px';
-  } else {
-    inst.mouth.style.background = '#F6F1E7';
-    inst.mouth.style.borderBottom = 'none';
-    // Thinking gets the same true-oval 50% radius talking uses
-    // (thimble-avatar.js draws every state's mouth with the same
-    // border-radius:50%, varying only size/position) -- previously it fell
-    // through to the 999px capsule radius along with listening/idle/paused,
-    // back when it had its own dots branch above and never reached this
-    // line at all.
-    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
-  }
+  inst.mouth.style.background = '#F6F1E7';
+  inst.mouth.style.borderBottom = 'none';
+  // Thinking gets the same true-oval 50% radius talking uses
+  // (thimble-avatar.js draws every state's mouth with the same
+  // border-radius:50%, varying only size/position) -- previously it fell
+  // through to the 999px capsule radius along with listening/idle/paused,
+  // back when it had its own dots branch above and never reached this
+  // line at all.
+  inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
 }
 
 function applyThimbleState(inst, state) {
   if (state === inst.renderedState) return;
   inst.renderedState = state;
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
-  inst.el.style.transform = shape.lean;
+  inst.core.style.transform = shape.lean;
   inst.body.style.animation = shape.anim;
   inst.body.style.borderRadius = shape.radius;
-  inst.blend.style.opacity = state === 'empathizing' ? '.85' : '0';
-  // Paused recolors to the handoff's grey (#A9A39A) instead of the usual
-  // pink, so a frozen avatar reads as "paused," not as "stuck" -- cleared
-  // back to the CSS default pink for every other state.
-  inst.body.style.background = state === 'paused' ? '#A9A39A' : '';
+  // Shadow grows/shrinks in sync with the idle/ready bounce (see
+  // thimble-idle-shadow) -- null-guarded since the mini avatar has no
+  // shadow element at all (hidden via CSS, never given the markup).
+  if (inst.shadow) {
+    inst.shadow.style.animation = (state === 'idle' || state === 'ready')
+      ? 'thimble-idle-shadow 2.6s ease-in-out infinite'
+      : 'none';
+  }
+  // Per-state color (see THIMBLE_COLORS) -- set as a target here, not
+  // painted directly. updateThimbleMotion's color lerp below eases
+  // inst.body's backgroundColor toward it every frame, same per-frame
+  // smoothing convention as inst.lvl, instead of relying on a CSS
+  // background transition (unreliable switching in and out of an inline
+  // override -- reported live as reading like a hard cut, not a fade).
+  // The radial-gradient highlight itself stays in the stylesheet's
+  // background-image, untouched by any of this -- only backgroundColor
+  // is JS-driven.
+  const targetHex = THIMBLE_COLORS[state] || THIMBLE_COLORS.talking;
+  inst.colorTargetRGB = thimbleHexToRgb(targetHex);
+  if (!inst.colorRGB) {
+    inst.colorRGB = {...inst.colorTargetRGB};
+    inst.body.style.backgroundColor = targetHex;
+  }
   const talking = state === 'talking';
   inst.rippleA.hidden = !talking;
   // .thimble-mouth's CSS transition (width/height/border-radius, .35s) is
@@ -2680,6 +2770,19 @@ function updateThimbleMotion(inst, now, level, listening) {
   // can't produce one huge catch-up jump instead.
   const dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
   inst.lastT = now;
+  // Color lerp toward inst.colorTargetRGB (set in applyThimbleState above),
+  // every frame regardless of state -- an exponential ease so a fast
+  // double state-change (e.g. listening -> thinking -> talking) still
+  // reads as one continuous color shift, not a snap-stutter-snap. Runs
+  // unconditionally, including paused/idle, so a color change is never
+  // left stranded mid-fade if the state stops animating right after.
+  if (inst.colorRGB) {
+    const colorRate = 1 - Math.pow(0.02, dt); // ~.6s to settle, matches the old CSS transition's own duration
+    inst.colorRGB.r += (inst.colorTargetRGB.r - inst.colorRGB.r) * colorRate;
+    inst.colorRGB.g += (inst.colorTargetRGB.g - inst.colorRGB.g) * colorRate;
+    inst.colorRGB.b += (inst.colorTargetRGB.b - inst.colorRGB.b) * colorRate;
+    inst.body.style.backgroundColor = `rgb(${Math.round(inst.colorRGB.r)}, ${Math.round(inst.colorRGB.g)}, ${Math.round(inst.colorRGB.b)})`;
+  }
   const speaking = avatarState === 'talking';
   const thinkingState = avatarState === 'thinking';
   // Mic-muted dims the avatar (handoff's 'muted' opacity .5) instead of
@@ -2904,8 +3007,8 @@ function splitCaptionParts(text) {
 // which already says that; the pill saying the same thing read as an
 // instruction coming from Thimble, not a status, and was reported live
 // as wrong for exactly that reason.
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', ready: 'Waiting…', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…'};
-const CHAT_STATUS = {idle: 'Your resolution facilitator', listening: 'Your resolution facilitator', ready: 'Waiting for you…', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…', empathizing: 'Replying…'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', ready: 'Waiting…', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…'};
+const CHAT_STATUS = {idle: 'Your resolution facilitator', listening: 'Your resolution facilitator', ready: 'Waiting for you…', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
 const BUSY_STATES = ['thinking', 'talking'];
