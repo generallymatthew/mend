@@ -33,8 +33,36 @@
   .sub{font-size:13.5px; color:var(--ink-soft); margin:0 0 28px; line-height:1.5; max-width:720px;}
   .sub code{background:#17372E0D; padding:1px 5px; border-radius:4px; font-size:12.5px;}
   .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px;}
+  .ripple-panel-wrap{display:flex; align-items:flex-start; gap:16px; margin-bottom:24px;}
+  .ripple-panel{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; width:280px; flex-shrink:0;}
+  .ripple-panel-title{font-weight:700; font-size:13px;}
+  /* Narrower label column + full-width stacked slider (not a two-column
+     grid) -- per explicit "reduce their width to save real estate" so the
+     Listening preview card fits beside the panel instead of the sliders
+     eating the whole row. */
+  .ripple-panel-row{display:flex; flex-direction:column; gap:1px;}
+  .ripple-panel-row label{font-size:11.5px; font-weight:600;}
+  .ripple-panel-row .ripple-val{font-weight:400; color:var(--ink-soft); font-family:'JetBrains Mono',monospace; font-size:11px;}
+  .ripple-panel-row input[type=range]{width:100%;}
+  .ripple-panel-row .ripple-desc{font-size:10.5px; color:var(--ink-soft); line-height:1.25;}
+  #rippleTriggerBtn{align-self:flex-start; background:var(--accent); color:#fff; border:none; border-radius:999px; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer;}
+  #rippleTriggerBtn:hover{opacity:.9;}
+  /* Houses the real Listening card (moved here via JS, not a duplicate
+     instance) so changing a slider shows its effect immediately next to
+     the controls instead of scrolling down to find it in the grid. Per
+     explicit "remove everything except thimble and make thimble bigger":
+     name/pill/description hidden, stage and avatar sized up (see the JS
+     that bumps inst.size to match). */
+  .ripple-preview{width:260px; flex-shrink:0;}
+  .ripple-preview .card{gap:0;}
+  .ripple-preview .card-name, .ripple-preview .card-pill, .ripple-preview .card-desc{display:none;}
+  .ripple-preview .card-stage{height:320px;}
+  .ripple-preview .thimble-avatar{width:180px; height:180px;}
   .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px;}
-  .card-stage{position:relative; height:160px; display:flex; align-items:center; justify-content:center; background:var(--stage-bg); border-radius:12px;}
+  /* Height grown from 160 to give .thimble-shadow (40px below the avatar's
+     own box) room to render inside the stage instead of bleeding into the
+     card text below it. */
+  .card-stage{position:relative; height:224px; display:flex; align-items:center; justify-content:center; background:var(--stage-bg); border-radius:12px; padding-bottom:24px; box-sizing:border-box;}
   .card-name{font-weight:700; font-size:15px;}
   .card-pill{display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:var(--accent-soft); font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink);}
   .card-desc{font-size:12.5px; line-height:1.5; color:var(--ink-soft); min-height:48px;}
@@ -44,17 +72,30 @@
   .card-controls .row{display:flex; align-items:center; gap:8px;}
 
   /* Avatar engine CSS, copied verbatim from static/index.html. */
-  .thimble-avatar{position:relative; width:120px; height:120px; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;
-    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));}
+  /* No ambient drop-shadow filter anymore -- see static/index.html. */
+  /* isolation:isolate -- see static/index.html for why this is needed now
+     that .thimble-core carries the lean transform instead of this element. */
+  .thimble-avatar{position:relative; width:120px; height:120px; transition:opacity .4s ease; isolation:isolate;}
   .thimble-avatar.muted{opacity:.5;}
+  /* Carries the lean transform -- see static/index.html for why this is
+     split out from .thimble-avatar (so .thimble-shadow, a sibling, never
+     inherits listening/idle's rotate and tilts). */
+  .thimble-core{position:absolute; inset:0; transition:transform .7s cubic-bezier(.3,1.4,.5,1);}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
   .thimble-ripple.b{animation-delay:.8s;}
+  /* Contact shadow, copied verbatim from static/index.html -- gap narrowed
+     40px -> 20px per explicit follow-up request. */
+  /* ellipse closest-side -- see static/index.html for why. */
+  .thimble-shadow{position:absolute; left:50%; top:calc(100% + 20px); width:66%; height:14px; transform:translateX(-50%); background:radial-gradient(ellipse closest-side at center, rgba(23,55,46,.34) 0%, rgba(23,55,46,.2) 50%, rgba(23,55,46,.07) 78%, rgba(23,55,46,0) 100%); border-radius:50%; pointer-events:none; z-index:-1;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
   /* "Matte Shade" fill, copied verbatim from static/index.html -- see that file's comment for why. */
   .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
-  @keyframes thimble-nod{0%,100%{transform:translateY(6%) scale(1,.88);} 40%{transform:translateY(11%) scale(1,.8);}}
+  /* Gentle idle bounce -- see static/index.html for the full reasoning. */
+  @keyframes thimble-idle-bounce{0%,100%{transform:translateY(0);} 50%{transform:translateY(-5%);}}
+  /* Synced shadow grow/shrink -- see static/index.html. */
+  @keyframes thimble-idle-shadow{0%,100%{transform:translateX(-50%) scale(1); opacity:1;} 50%{transform:translateX(-50%) scale(.7); opacity:.55;}}
   @keyframes thimble-ripple{0%{transform:scale(1); opacity:.28;} 100%{transform:scale(1.3); opacity:0;}}
 </style>
 </head>
@@ -62,6 +103,53 @@
 <div class="wrap">
   <h1>Thimble states</h1>
   <p class="sub">Every <code>avatarState</code> the real app can be in, running live and side by side, for QA -- no mic, call, or real TTS needed. Sliders marked <b>Auto</b> simulate a mic/TTS level; drag one to freeze it and inspect a specific amplitude.</p>
+  <div class="ripple-panel-wrap">
+    <div class="ripple-panel" id="ripplePanel">
+      <div class="ripple-panel-title">Listening ear-ripple tuning</div>
+      <div class="ripple-panel-row" data-var="HEARING_RIPPLE_ORIGIN_COUNT">
+        <label>Ripple origins <span class="ripple-val"></span></label>
+        <input type="range" min="1" max="16" step="1">
+        <span class="ripple-desc">1 = one wave circumnavigating the whole perimeter (the good version). Higher fragments it into more, shorter-traveling bumps.</span>
+      </div>
+      <div class="ripple-panel-row" data-var="HEARING_RIPPLE_AMP">
+        <label>Amplitude <span class="ripple-val"></span></label>
+        <input type="range" min="2" max="60" step="1">
+        <span class="ripple-desc">peak ripple height, % of radius</span>
+      </div>
+      <div class="ripple-panel-row" data-var="HEARING_RIPPLE_SPATIAL_DECAY">
+        <label>Spatial reach <span class="ripple-val"></span></label>
+        <input type="range" min="0.5" max="8" step="0.1">
+        <span class="ripple-desc">how far the wave carries before dying out -- low = near the ears, high = reaches the far side</span>
+      </div>
+      <div class="ripple-panel-row" data-var="HEARING_RIPPLE_K">
+        <label>Trailing oscillations <span class="ripple-val"></span></label>
+        <input type="range" min="1" max="14" step="1">
+        <span class="ripple-desc">little waves riding behind the front</span>
+      </div>
+      <div class="ripple-panel-row" data-var="HEARING_RIPPLE_SMOOTH">
+        <label>Roundness <span class="ripple-val"></span></label>
+        <input type="range" min="1" max="9" step="2">
+        <span class="ripple-desc">smooths faceted bumps into organic curves. Keep well below the trailing-oscillation period or it cancels the wave instead of rounding it -- if ripples start vanishing, lower this first.</span>
+      </div>
+      <div class="ripple-panel-row" data-var="HEARING_RIPPLE_AGE_DECAY">
+        <label>Settle speed <span class="ripple-val"></span></label>
+        <input type="range" min="0.5" max="8" step="0.1">
+        <span class="ripple-desc">how fast a point calms down once the front passes it</span>
+      </div>
+      <div class="ripple-panel-row" data-var="HEARING_RIPPLE_DURATION">
+        <label>Duration (s) <span class="ripple-val"></span></label>
+        <input type="range" min="0.5" max="5" step="0.1">
+        <span class="ripple-desc">seconds for the front to cross ear -&gt; far side</span>
+      </div>
+      <div class="ripple-panel-row" data-var="HEARING_PING_THRESHOLD">
+        <label>Trigger threshold <span class="ripple-val"></span></label>
+        <input type="range" min="0.05" max="0.6" step="0.01">
+        <span class="ripple-desc">mic level that fires a new ripple</span>
+      </div>
+      <button type="button" id="rippleTriggerBtn">Fire ripple now</button>
+    </div>
+    <div class="ripple-preview" id="ripplePreview"></div>
+  </div>
   <div class="grid" id="grid"></div>
 </div>
 <script>
@@ -75,13 +163,23 @@ const DOME_RADIUS = '50% 50% 50% 50% / 58% 58% 42% 42%';
 const THIMBLE_SHAPES = {
   listening:   {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   listening2:  {radius: '50% 50% 50% 50% / 50% 50% 50% 50%', anim: 'none', lean: 'none', mouthTop: 60, mouthW: .11, mouthH: .028},
-  idle:        {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  // idle/ready both get the gentle idle-bounce keyframe -- see
+  // static/index.html for the full reasoning.
+  idle:        {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'thimble-idle-bounce 2.6s ease-in-out infinite', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  ready:       {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'thimble-idle-bounce 2.6s ease-in-out infinite', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   hearing:     {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-6deg) translate(1%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
   thinking:    {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
   talking:     {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
-  empathizing: {radius: DOME_RADIUS, anim: 'thimble-nod 2.8s ease-in-out infinite', lean: 'none', mouthTop: 68, mouthW: .22, mouthH: .1},
   paused:      {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
 };
+// Mirrors static/index.html's THIMBLE_COLORS/thimbleHexToRgb exactly.
+const THIMBLE_COLORS_BY_STATE = {
+  idle: '#A3CFE0', listening: '#b0ded1', ready: '#A3CFE0', thinking: '#E9B949', talking: '#F3829A', paused: '#A9A39A',
+};
+function thimbleHexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
+}
 
 // listening2: a new listening shape -- circle at rest, a soft dome as you
 // start talking, then the base widens and softens the longer you go. Three
@@ -154,26 +252,36 @@ function renderThimbleMouth(inst, state) {
   inst.mouth.style.width = (shape.mouthW * s) + 'px';
   inst.mouth.style.height = (shape.mouthH * s) + 'px';
   inst.mouth.style.boxSizing = 'border-box';
-  if (state === 'empathizing') {
-    inst.mouth.style.background = 'none';
-    inst.mouth.style.borderBottom = (0.028 * s) + 'px solid #F6F1E7';
-    inst.mouth.style.borderRadius = '0 0 999px 999px';
-  } else {
-    inst.mouth.style.background = '#F6F1E7';
-    inst.mouth.style.borderBottom = 'none';
-    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
-  }
+  inst.mouth.style.background = '#F6F1E7';
+  inst.mouth.style.borderBottom = 'none';
+  inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
 }
 
 function applyThimbleState(inst, state) {
   if (state === inst.renderedState) return;
   inst.renderedState = state;
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
-  inst.el.style.transform = shape.lean;
+  inst.core.style.transform = shape.lean;
   inst.body.style.animation = shape.anim;
   inst.body.style.borderRadius = shape.radius;
-  inst.blend.style.opacity = state === 'empathizing' ? '.85' : '0';
-  inst.body.style.background = state === 'paused' ? '#A9A39A' : '';
+  // Shadow grows/shrinks in sync with the idle/ready bounce -- see
+  // static/index.html for the full reasoning.
+  if (inst.shadow) {
+    inst.shadow.style.animation = (state === 'idle' || state === 'ready')
+      ? 'thimble-idle-shadow 2.6s ease-in-out infinite'
+      : 'none';
+  }
+  // State colors, mirrored from static/index.html's THIMBLE_COLORS. Every
+  // state has an explicit entry (talking = the original brand pink), set
+  // as a target here -- updateCardMotion's color lerp below eases toward
+  // it every frame instead of painting it directly, so switching state
+  // reads as a continuous color fade, not a cut.
+  const targetHex = THIMBLE_COLORS_BY_STATE[state] || THIMBLE_COLORS_BY_STATE.talking;
+  inst.colorTargetRGB = thimbleHexToRgb(targetHex);
+  if (!inst.colorRGB) {
+    inst.colorRGB = {...inst.colorTargetRGB};
+    inst.body.style.backgroundColor = targetHex;
+  }
   const talking = state === 'talking';
   inst.rippleA.hidden = !talking;
   inst.rippleB.hidden = !talking;
@@ -193,7 +301,9 @@ function applyThimbleState(inst, state) {
 // actually making sound), and a quick outward ping fired the instant level
 // crosses a threshold from below -- a visible "I just heard that" beat, not
 // just a continuous wobble you have to stare at to notice.
-const HEARING_PING_THRESHOLD = 0.22;
+// `let`, not `const` -- the Ripple tuning panel below writes these live so
+// you can drag toward a setting instead of guessing hex at blind edits.
+let HEARING_PING_THRESHOLD = 0.22;
 // An actual expanding ripple, not a rotating standing wave (first "whole
 // outline" version didn't read as one -- no sense of something spreading
 // FROM a point). Modeled like a stone dropped in water: a wavefront starts
@@ -206,16 +316,30 @@ const HEARING_PING_THRESHOLD = 0.22;
 // HEARING_RIPPLE_WAVES but as real trailing ripples instead of a static
 // pattern. Rings also weaken a bit the further out they are (spatialDecay),
 // same as real ripples losing energy as they spread.
-const HEARING_RIPPLE_DURATION = 2.2; // matches the production value in static/index.html
-const HEARING_RIPPLE_AMP = 32; // matches the production value in static/index.html
-const HEARING_RIPPLE_K = 5; // how many trailing oscillations ride behind the front
-const HEARING_RIPPLE_AGE_DECAY = 2.2; // how fast a ring settles once the front has passed it
-const HEARING_RIPPLE_SPATIAL_DECAY = 1.3; // how much weaker farther-out rings are
-// Two origins, not one -- "where each ear would be" -- roughly upper-left/
-// upper-right on the dome instead of dead center top, each spreading its
-// own independent wavefront. Summed where they overlap.
-const HEARING_EAR_OFFSET = 0.85; // radians either side of straight-up
-const HEARING_EAR_ORIGINS = [-Math.PI / 2 - HEARING_EAR_OFFSET, -Math.PI / 2 + HEARING_EAR_OFFSET];
+let HEARING_RIPPLE_DURATION = 2.2; // matches the production value in static/index.html
+let HEARING_RIPPLE_AMP = 16; // matches the production value in static/index.html -- moderate, cascades instead of spiking
+let HEARING_RIPPLE_K = 3; // how many trailing oscillations ride behind the front
+let HEARING_RIPPLE_AGE_DECAY = 3; // how fast a ring settles once the front has passed it
+let HEARING_RIPPLE_SPATIAL_DECAY = 3; // matches the production value in static/index.html -- reaches the full perimeter without dying out
+// Origin count tunable now (was a fixed pair of "ear" points near the top)
+// -- per explicit "more ripples around the whole perimeter" request,
+// evenly spaced around the full circle instead of just upper-left/upper-
+// right, each spreading its own independent wavefront, summed where they
+// overlap.
+// 1 = the real circumnavigating version (one origin, wave spreads both
+// ways from the top and meets itself at the bottom, sweeping the ENTIRE
+// perimeter as one continuous ring). Higher counts fragment that single
+// sweep into many tiny bumps that barely travel before meeting their
+// neighbor -- reported live as a regression ("i hate this ripple... we
+// lost that"), so this is NOT a knob to push up by default; it's here
+// for exploring the tradeoff, not because higher is better.
+let HEARING_RIPPLE_ORIGIN_COUNT = 1;
+function computeRippleOrigins(count) {
+  const origins = [];
+  for (let i = 0; i < count; i++) origins.push(-Math.PI / 2 + (i / count) * Math.PI * 2);
+  return origins;
+}
+let HEARING_EAR_ORIGINS = computeRippleOrigins(HEARING_RIPPLE_ORIGIN_COUNT);
 function hearingRippleAt(d, frontPos) {
   if (d > frontPos) return 0;
   const age = frontPos - d;
@@ -223,10 +347,29 @@ function hearingRippleAt(d, frontPos) {
   const ageDecay = Math.exp(-age * HEARING_RIPPLE_AGE_DECAY);
   return HEARING_RIPPLE_AMP * spatialDecay * ageDecay * Math.sin(age * HEARING_RIPPLE_K);
 }
+// How many neighboring samples get box-filter-averaged together, same
+// technique thimblePolygon uses for the body's own hexagon wobble ("120
+// points, each a box-filtered average of 13 samples, is what turns the
+// hexagon's sharp vertices into smoothly rounded corners"). Softens the
+// faceted transitions between the 96 raw sample points into organic
+// curves. MUST stay well under one oscillation's own period (2*PI/K in
+// angular terms, ~9.6 samples at K=10) or the box filter starts
+// averaging a wave against itself and cancels it out instead of just
+// rounding it -- window=9 at K=10 was nearly exactly one period and
+// crushed the ripple's amplitude by more than half (confirmed: raw
+// +-5.6/7.1 range collapsed to +-1.3/2.5 after that filter). 3 stays
+// comfortably below a period even at the slider's max K (14 -> ~6.9
+// samples/period).
+let HEARING_RIPPLE_SMOOTH = 3;
 function hearingRipplePolygon(pingP) {
   const N = 96;
-  const frontPos = pingP * Math.PI; // 0 (at an ear) -> PI (the point opposite it)
-  const pts = [];
+  // Max distance any point can be from its NEAREST origin shrinks as more
+  // origins get added (half the gap between neighbors, PI/count) -- using
+  // a fixed PI here regardless of count would hugely overshoot once count
+  // is above 2, making the front "finish" almost instantly for every
+  // point and losing the traveling-wave/cascade feel entirely.
+  const frontPos = pingP * (Math.PI / HEARING_RIPPLE_ORIGIN_COUNT);
+  const raw = [];
   for (let i = 0; i < N; i++) {
     const th = (i / N) * Math.PI * 2;
     let ripple = 0;
@@ -235,7 +378,16 @@ function hearingRipplePolygon(pingP) {
       d = Math.abs(Math.atan2(Math.sin(d), Math.cos(d))); // unsigned angular distance, [0, PI]
       ripple += hearingRippleAt(d, frontPos);
     }
+    raw.push(ripple);
+  }
+  const half = Math.floor(HEARING_RIPPLE_SMOOTH / 2);
+  const pts = [];
+  for (let i = 0; i < N; i++) {
+    let sum = 0;
+    for (let k = -half; k <= half; k++) sum += raw[(i + k + N) % N]; // wraps around the closed loop, not a line
+    const ripple = sum / (half * 2 + 1);
     const r = 50 + ripple;
+    const th = (i / N) * Math.PI * 2;
     pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
   }
   return `polygon(${pts.join(',')})`;
@@ -281,6 +433,14 @@ function updateCardMotion(inst, now, state, level, muted) {
   // drift from the real engine.
   const dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
   inst.lastT = now;
+  // Color lerp, mirrored from static/index.html's updateThimbleMotion.
+  if (inst.colorRGB) {
+    const colorRate = 1 - Math.pow(0.02, dt);
+    inst.colorRGB.r += (inst.colorTargetRGB.r - inst.colorRGB.r) * colorRate;
+    inst.colorRGB.g += (inst.colorTargetRGB.g - inst.colorRGB.g) * colorRate;
+    inst.colorRGB.b += (inst.colorTargetRGB.b - inst.colorRGB.b) * colorRate;
+    inst.body.style.backgroundColor = `rgb(${Math.round(inst.colorRGB.r)}, ${Math.round(inst.colorRGB.g)}, ${Math.round(inst.colorRGB.b)})`;
+  }
   const speaking = state === 'talking';
   const thinkingState = state === 'thinking';
   const listening = state === 'listening';
@@ -312,6 +472,21 @@ function updateCardMotion(inst, now, state, level, muted) {
       const domePhase = inst.wobblePhase;
       const domeFactor = (1 + Math.cos(domePhase * 2 * Math.PI)) / 2;
       inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+      // Ear-ripple ping, ported from static/index.html's updateThimbleMotion:
+      // production's Listening state picked up this same threshold-crossing
+      // ping (originally built for the Hearing prototype above) and this
+      // card's own listening branch had fallen out of sync with it -- same
+      // arm/advance/clear of pingT, same hearingRipplePolygon clipPath.
+      if (listening) {
+        const wasLoud = inst._hearingLoud || false;
+        const isLoud = !muted && inst.lvl > HEARING_PING_THRESHOLD;
+        if (isLoud && !wasLoud) inst.pingT = 0;
+        inst._hearingLoud = isLoud;
+        if (muted) inst.pingT = 1;
+        else inst.pingT = inst.pingT == null ? 1 : inst.pingT + dt / HEARING_RIPPLE_DURATION;
+        const pingP = Math.min(1, inst.pingT);
+        if (pingP < 1) inst.body.style.clipPath = hearingRipplePolygon(pingP);
+      }
       if (speaking) {
         const rippleFracA = (domePhase - 0.5 + 1) % 1;
         const rippleFracB = (rippleFracA + 0.5) % 1;
@@ -341,15 +516,14 @@ function updateCardMotion(inst, now, state, level, muted) {
 
 // ---- QA page scaffolding (not part of the real app) ----
 
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', listening2: 'Listening…', hearing: 'Listening…', thinking: 'Thinking…', talking: 'Talking…', empathizing: 'Empathizing…', paused: 'Paused'};
+const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', listening2: 'Listening…', hearing: 'Listening…', ready: 'Waiting…', thinking: 'Thinking…', talking: 'Talking…', paused: 'Paused'};
 
 const STATES = [
-  {state: 'idle', title: 'Idle', desc: 'Before the call has really started -- same resting egg shape as listening, just no live mic input yet.', hasLevel: false, hasMuted: true},
-  {state: 'listening', title: 'Listening', desc: 'Leans in, egg-shaped, wobbles with mic level. Continuous nod the whole time, not just on speech.', hasLevel: true, hasMuted: true},
-  {state: 'hearing', title: 'Hearing you (prototype)', desc: 'Same pose as Listening, but the reaction IS the point: fast attack / slow release on the level, nod and dome pulse driven only by your actual level (no idle sway), plus a quick outward ping the instant you cross the threshold. Goal: strong enough on its own to replace the You-box glow.', hasLevel: true, hasMuted: true},
-  {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Small off-center oval mouth, no movement. Covers transcribing and waiting on the reply both -- no separate states for those anymore.', hasLevel: false, hasMuted: false},
   {state: 'talking', title: 'Talking', desc: 'Round, ripples outward. Mouth height tracks TTS amplitude directly (fast attack, slower release) instead of a canned loop.', hasLevel: true, hasMuted: false},
-  {state: 'empathizing', title: 'Empathizing', desc: 'Slow nod, soft closed-mouth smile, honey blend fades in from the side. Not wired to a real trigger yet.', hasLevel: false, hasMuted: false},
+  {state: 'idle', title: 'Idle', desc: 'Before the call has really started -- same resting egg shape as listening, just no live mic input yet. Colored the same light blue as Waiting, since the two are functionally the same resting pose.', hasLevel: false, hasMuted: true},
+  {state: 'ready', title: 'Waiting', desc: 'Mic armed, waiting for you to speak. Same resting shape as listening/idle, colored light blue.', hasLevel: false, hasMuted: true},
+  {state: 'listening', title: 'Listening', desc: 'Leans in, egg-shaped, wobbles with mic level. Continuous nod the whole time, not just on speech. Colored mint green so the state reads at a glance.', hasLevel: true, hasMuted: true},
+  {state: 'thinking', title: 'Thinking', desc: 'Round blob with a slow head-tilt wiggle. Small off-center oval mouth, no movement. Covers transcribing and waiting on the reply both -- no separate states for those anymore. Colored honey so it reads as distinct from Listening/Talking.', hasLevel: false, hasMuted: false},
   {state: 'paused', title: 'Paused', desc: 'Frozen (no breathing/wobble) and recolored grey, so a paused session reads as deliberately stopped, not stuck.', hasLevel: false, hasMuted: false},
 ];
 
@@ -361,12 +535,15 @@ const cards = STATES.map(def => {
   card.innerHTML = `
     <div class="card-stage">
       <div class="thimble-avatar" id="${uid}">
-        <div class="thimble-ripple" id="${uid}RippleA" hidden></div>
-        <div class="thimble-ripple b" id="${uid}RippleB" hidden></div>
-        <div class="thimble-ring" id="${uid}Ring">
-          <div class="thimble-body" id="${uid}Body">
-            <div class="thimble-blend" id="${uid}Blend"></div>
-            <div class="thimble-mouth" id="${uid}Mouth"></div>
+        <div class="thimble-shadow" id="${uid}Shadow"></div>
+        <div class="thimble-core" id="${uid}Core">
+          <div class="thimble-ripple" id="${uid}RippleA" hidden></div>
+          <div class="thimble-ripple b" id="${uid}RippleB" hidden></div>
+          <div class="thimble-ring" id="${uid}Ring">
+            <div class="thimble-body" id="${uid}Body">
+              <div class="thimble-blend" id="${uid}Blend"></div>
+              <div class="thimble-mouth" id="${uid}Mouth"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -383,6 +560,8 @@ const cards = STATES.map(def => {
   const inst = {
     size: 120,
     el: document.getElementById(uid),
+    core: document.getElementById(uid + 'Core'),
+    shadow: document.getElementById(uid + 'Shadow'),
     ring: document.getElementById(uid + 'Ring'),
     body: document.getElementById(uid + 'Body'),
     blend: document.getElementById(uid + 'Blend'),
@@ -417,6 +596,65 @@ const cards = STATES.map(def => {
   return c;
 });
 
+// Ripple tuning panel -- live-editable HEARING_RIPPLE_* constants (see
+// their own comments above for what each one does) so the ear-ripple can
+// be dialed in by dragging instead of guessing values blind. `let`, not
+// `const`, up where they're declared; these setters/getters exist because
+// top-level `let`/`const` bindings in a plain (non-module) script aren't
+// reachable off `window`, unlike `var`, so a plain `window[name] = v`
+// can't reach them.
+const RIPPLE_VARS = {
+  HEARING_RIPPLE_ORIGIN_COUNT: {get: () => HEARING_RIPPLE_ORIGIN_COUNT, set: v => { HEARING_RIPPLE_ORIGIN_COUNT = v; HEARING_EAR_ORIGINS = computeRippleOrigins(v); }},
+  HEARING_RIPPLE_AMP: {get: () => HEARING_RIPPLE_AMP, set: v => HEARING_RIPPLE_AMP = v},
+  HEARING_RIPPLE_SPATIAL_DECAY: {get: () => HEARING_RIPPLE_SPATIAL_DECAY, set: v => HEARING_RIPPLE_SPATIAL_DECAY = v},
+  HEARING_RIPPLE_K: {get: () => HEARING_RIPPLE_K, set: v => HEARING_RIPPLE_K = v},
+  HEARING_RIPPLE_SMOOTH: {get: () => HEARING_RIPPLE_SMOOTH, set: v => HEARING_RIPPLE_SMOOTH = v},
+  HEARING_RIPPLE_AGE_DECAY: {get: () => HEARING_RIPPLE_AGE_DECAY, set: v => HEARING_RIPPLE_AGE_DECAY = v},
+  HEARING_RIPPLE_DURATION: {get: () => HEARING_RIPPLE_DURATION, set: v => HEARING_RIPPLE_DURATION = v},
+  HEARING_PING_THRESHOLD: {get: () => HEARING_PING_THRESHOLD, set: v => HEARING_PING_THRESHOLD = v},
+};
+document.querySelectorAll('.ripple-panel-row').forEach(row => {
+  const varName = row.dataset.var;
+  const binding = RIPPLE_VARS[varName];
+  const input = row.querySelector('input[type=range]');
+  const valEl = row.querySelector('.ripple-val');
+  input.value = binding.get();
+  valEl.textContent = input.value;
+  input.addEventListener('input', () => {
+    binding.set(parseFloat(input.value));
+    valEl.textContent = input.value;
+  });
+});
+// Forces a fresh ripple on demand (crossing the loud threshold from
+// below the next frame) instead of waiting on the Listening card's own
+// Auto random-walk to happen to cross it.
+document.getElementById('rippleTriggerBtn').addEventListener('click', () => {
+  const c = cards.find(c => c.def.state === 'listening');
+  if (!c) return;
+  c.auto = false;
+  c.level = 0;
+  c.inst.lvl = 0;
+  c.inst._hearingLoud = false;
+  c.inst.pingT = 1;
+  requestAnimationFrame(() => { c.level = 0.9; });
+});
+// Moves the real Listening card (same live instance/state, not a clone)
+// out of the grid and into the panel's preview slot, so it sits right
+// next to the sliders that affect it.
+{
+  const listeningCardEl = document.getElementById('av_listening').closest('.card');
+  document.getElementById('ripplePreview').appendChild(listeningCardEl);
+  // Bigger here specifically (180px vs the grid's 120px) -- inst.size
+  // drives the mouth's own pixel dimensions (shape.mouthW * inst.size
+  // etc. in renderThimbleMouth), so bumping it alongside the CSS width/
+  // height keeps the mouth proportioned, not just the ball stretched.
+  // renderedState reset to null forces applyThimbleState to re-run at the
+  // new size instead of early-returning (it only runs on a state change).
+  const listeningCard = cards.find(c => c.def.state === 'listening');
+  listeningCard.inst.size = 180;
+  listeningCard.inst.renderedState = null;
+}
+
 function tick(now) {
   cards.forEach(c => {
     if (c.def.hasLevel && c.auto) {
@@ -429,6 +667,24 @@ function tick(now) {
       if (c._slider) c._slider.value = Math.round(c.level * 100);
     }
     updateCardMotion(c.inst, now, c.def.state, c.level, c.muted);
+    // Auto-loop the ear-ripple on the Listening preview specifically --
+    // without this, a finished ripple (pingT >= 1) just sits there until
+    // the bursty Auto level happens to cross HEARING_PING_THRESHOLD again,
+    // which is rare at a high threshold setting, so a slider change often
+    // had nothing currently playing to show its effect on (reported live
+    // as "sliding every slider to the far right does hardly anything").
+    // A short real-time pause (not a pingT unit) between loops so it reads
+    // as repeating pulses, not one continuous blur.
+    if (c.def.state === 'listening') {
+      if (c.inst.pingT >= 1) {
+        if (c.inst._loopResumeAt == null) c.inst._loopResumeAt = now + 400;
+        else if (now >= c.inst._loopResumeAt) {
+          c.inst.pingT = 0;
+          c.inst._hearingLoud = true;
+          c.inst._loopResumeAt = null;
+        }
+      }
+    }
   });
   requestAnimationFrame(tick);
 }

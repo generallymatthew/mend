@@ -294,6 +294,23 @@ deployed app matches the published prompt.
 
 ## Business model
 
+### Remote conflict statistics as cost-of-inaction / credibility backing
+A research pass on how workplace conflict actually plays out on fully
+remote teams: ~80% of remote knowledge workers report conflict, CPP Inc.'s
+2.8 hrs/week baseline drag, the "Silent Cold War" (camera-off, delayed PR
+reviews, terse replies), Fundamental Attribution Error filling the
+context-vacuum with assumed malice, Jehn's finding that 49-55%+ of
+employees blame "ego" while 80%+ of real root causes are structural (KPI
+collisions, network siloing), and why formal HR escalation only sees 3-10%
+voluntary adoption remotely.
+- Where it could plug in: the remote-specific slice of the cost-of-inaction
+  case (`07_CULTURAL_POSITIONING_AND_ADOPTION.md`), and reinforces the
+  "structural not personal" framing already used for the OSS maintainer
+  angle below.
+- Why not active: needs distilling into copy; see
+  `docs/pitch-strategy/20_REMOTE_CONFLICT_RESEARCH_AND_STATISTICS.md` for
+  the full research (citations not yet source-verified).
+
 ### Open source maintainer conflict as an adjacent market
 A tester-sourced pitch angle: open source projects where a team can't reach
 consensus, but the conflict is intellectual (technical disagreement), not

@@ -1446,6 +1446,15 @@ async def submit_survey(request: Request):
             # concurrent request while it runs. Column order here must match
             # the Sheet's own header row -- see README.md's survey setup
             # section.
+            #
+            # table_range="A1:V1" pins where gspread looks for "the table" to
+            # append after, instead of letting the Sheets API auto-detect it
+            # on every call. Without this, one real submission landed with
+            # all 22 values shifted ~20 columns right (timestamp under the
+            # "issues" header instead of column A) -- confirmed live in the
+            # Sheet, reported by the user. table_range forces every append to
+            # anchor at column A regardless of whatever auto-detection would
+            # otherwise infer from the sheet's current state.
             await run_in_threadpool(
                 sheet.append_row,
                 [
@@ -1472,6 +1481,7 @@ async def submit_survey(request: Request):
                     ", ".join(issues),
                     comments,
                 ],
+                table_range="A1:V1",
             )
         except Exception as e:
             # A real write failure (quota, revoked share, transient network

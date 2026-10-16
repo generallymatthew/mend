@@ -206,3 +206,6 @@
 {"ts": 1791746494.0671518, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
 {"ts": 1791812365.762288, "session_id": "default", "turn": 2, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
 {"ts": 1791837583.752485, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1792078063.376595, "session_id": "default", "turn": 1, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}
+{"ts": 1792078068.925801, "session_id": "default", "turn": 2, "track": null, "phase": null, "screen_result": null, "floor_triggered": null, "block_present": false, "parse_failed": false, "note": null}
+{"ts": 1792078074.766787, "session_id": "default", "turn": 3, "track": "employee_conflict", "phase": "private_processing", "screen_result": null, "floor_triggered": null, "block_present": true, "parse_failed": false, "note": null}

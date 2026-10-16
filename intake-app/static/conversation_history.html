@@ -87,13 +87,30 @@
   .reply-form{display:flex; gap:6px; margin-top:4px;}
   .reply-form textarea{min-height:36px; margin-top:0;}
   .reply-form button{margin-top:0; padding:0 16px; white-space:nowrap;}
+
+  .tabs{display:flex; gap:8px; margin-bottom:18px;}
+  .tab-btn{border:1.5px solid var(--border); background:var(--card); color:var(--ink-soft); border-radius:999px; padding:8px 18px; font:inherit; font-weight:700; font-size:13px; cursor:pointer;}
+  .tab-btn.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .trend-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-bottom:18px;}
+  .trend-head{font-weight:800; font-size:14.5px; margin-bottom:10px;}
+  .trend-charts{display:flex; flex-wrap:wrap; gap:18px;}
+  .trend-chart-block{flex:1; min-width:260px;}
+  .trend-chart-label{font-size:12px; color:var(--ink-soft); margin-bottom:4px; font-weight:700;}
+  .trend-legend{display:flex; gap:14px; margin-top:10px;}
+  .legend-item{font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:5px;}
+  .legend-dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Test conversation history</h1>
   <p class="sub">Test-only data from benchmark/comparison harness runs. Not real user sessions.</p>
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-list-btn" onclick="switchTab('list')">Conversations</button>
+    <button class="tab-btn" id="tab-trends-btn" onclick="switchTab('trends')">Trends</button>
+  </div>
   <div id="list" class="list"><div class="empty">Loading...</div></div>
+  <div id="trends" style="display:none"><div class="empty">Loading...</div></div>
 </div>
 
 <div id="overlay" class="overlay">
@@ -499,6 +516,96 @@ function renderMarkdown(text){
     if (!b.trim()) return '';
     return `<p>${inline(b)}</p>`;
   }).join('');
+}
+
+const SYSTEM_COLORS = {cf: '#C77B3F', mend: '#17372E', raw: '#8A8A8A'};
+
+function switchTab(tab){
+  document.getElementById('list').style.display = tab === 'list' ? '' : 'none';
+  document.getElementById('trends').style.display = tab === 'trends' ? '' : 'none';
+  document.getElementById('tab-list-btn').classList.toggle('active', tab === 'list');
+  document.getElementById('tab-trends-btn').classList.toggle('active', tab === 'trends');
+  if (tab === 'trends') renderTrends();
+}
+
+async function renderTrends(){
+  const res = await fetch(BASE_PATH + '/api/test-conversations');
+  const records = await res.json();
+  const container = document.getElementById('trends');
+  if (!records.length){
+    container.innerHTML = '<div class="empty">No data yet.</div>';
+    return;
+  }
+  const byScenario = new Map();
+  for (const r of records){
+    if (!byScenario.has(r.scenario_id)) byScenario.set(r.scenario_id, []);
+    byScenario.get(r.scenario_id).push(r);
+  }
+  container.innerHTML = [...byScenario.entries()].map(([scenario, rows]) => renderScenarioTrend(scenario, rows)).join('');
+}
+
+function renderScenarioTrend(scenario, rows){
+  const cohortsSeen = new Map();
+  for (const r of rows){
+    const key = cohortKey(r);
+    const startedAt = r.run_started_at || r.ts;
+    if (!cohortsSeen.has(key)) cohortsSeen.set(key, startedAt);
+  }
+  const cohortOrder = [...cohortsSeen.entries()].sort((a, b) => a[1] - b[1]).map(([key]) => key);
+  const systems = [...new Set(rows.map(r => r.system_id))];
+
+  const seriesFor = field => {
+    const out = {};
+    for (const sys of systems){
+      out[sys] = cohortOrder.map(key => {
+        const rec = rows.find(r => cohortKey(r) === key && r.system_id === sys);
+        if (!rec) return null;
+        if (field === 'obj'){
+          return rec.objective_score && rec.objective_score.total != null ? rec.objective_score.total : null;
+        }
+        const avg = selfReportAvg(rec.self_report || {});
+        return avg != null ? Number(avg) : null;
+      });
+    }
+    return out;
+  };
+
+  const objSvg = buildLineChart(seriesFor('obj'), systems, 25);
+  const srSvg = buildLineChart(seriesFor('sr'), systems, 5);
+
+  return `
+    <div class="trend-card">
+      <div class="trend-head">${scenario}</div>
+      <div class="trend-charts">
+        <div class="trend-chart-block"><div class="trend-chart-label">Objective score (/25)</div>${objSvg}</div>
+        <div class="trend-chart-block"><div class="trend-chart-label">Self-report avg (/5)</div>${srSvg}</div>
+      </div>
+      <div class="trend-legend">${systems.map(s => `<span class="legend-item"><span class="legend-dot" style="background:${SYSTEM_COLORS[s] || '#999'}"></span>${s}</span>`).join('')}</div>
+    </div>
+  `;
+}
+
+function buildLineChart(seriesBySystem, systems, maxVal){
+  const W = 280, H = 140, PAD = 20;
+  const n = Math.max(...systems.map(s => seriesBySystem[s].length), 1);
+  const x = i => n > 1 ? PAD + i * (W - 2 * PAD) / (n - 1) : W / 2;
+  const y = v => H - PAD - (v / maxVal) * (H - 2 * PAD);
+
+  const paths = systems.map(sys => {
+    const pts = seriesBySystem[sys]
+      .map((v, i) => v == null ? null : [x(i), y(v)])
+      .filter(p => p != null);
+    if (!pts.length) return '';
+    const color = SYSTEM_COLORS[sys] || '#999';
+    const line = pts.length > 1 ? `<path d="M${pts.map(p => p.join(',')).join(' L')}" fill="none" stroke="${color}" stroke-width="2"/>` : '';
+    const dots = pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${color}"/>`).join('');
+    return line + dots;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">
+    <line x1="${PAD}" y1="${H - PAD}" x2="${W - PAD}" y2="${H - PAD}" stroke="var(--border)" stroke-width="1"/>
+    ${paths}
+  </svg>`;
 }
 
 loadList();
