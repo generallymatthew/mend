@@ -20,6 +20,13 @@ LOG_FILE = Path(__file__).parent / "conversation_log.jsonl"
 RATING_METRICS = ("feel_equipped", "feel_understood", "trust_advice", "would_say_it")
 
 
+def new_run_id():
+    """One of these per harness invocation (e.g. one call to
+    adaptive_persona_compare.py), passed into every log_conversation() call
+    made during that run, so the viewer can group them as one test cohort."""
+    return uuid.uuid4().hex[:10]
+
+
 def log_conversation(
     harness,
     scenario_id,
@@ -30,10 +37,14 @@ def log_conversation(
     objective_score=None,
     self_report=None,
     turns=None,
+    run_id=None,
+    run_started_at=None,
 ):
     record = {
         "id": uuid.uuid4().hex[:12],
         "ts": time.time(),
+        "run_id": run_id,
+        "run_started_at": run_started_at,
         "harness": harness,
         "scenario_id": scenario_id,
         "system_id": system_id,

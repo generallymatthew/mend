@@ -1,7 +1,7 @@
 import sys, os, time, json, re
 sys.path.insert(0, os.path.dirname(__file__))
 from benchmark_audit import call_mend, call_claude_raw, format_transcript, judge, load_mend_system_prompt
-from conversation_log import log_conversation
+from conversation_log import log_conversation, new_run_id
 from anthropic import Anthropic
 
 client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
@@ -145,6 +145,8 @@ def run_adaptive(system_id, scenario_id, max_turns=4):
 
 
 if __name__ == "__main__":
+    run_id = new_run_id()
+    run_started_at = time.time()
     results = {}
     for scenario_id in PERSONAS:
         results[scenario_id] = {}
@@ -170,6 +172,8 @@ if __name__ == "__main__":
                 objective_score=score,
                 self_report=report,
                 turns=turns_used,
+                run_id=run_id,
+                run_started_at=run_started_at,
             )
 
     out_path = os.path.join(os.path.dirname(__file__), "adaptive_persona_compare_results.json")

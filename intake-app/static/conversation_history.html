@@ -16,7 +16,11 @@
   .wrap{max-width:880px; margin:0 auto; padding:28px 24px 60px;}
   h1{font-size:22px; margin:0 0 4px;}
   .sub{color:var(--ink-soft); font-size:14px; margin:0 0 24px;}
-  .list{display:flex; flex-direction:column; gap:10px;}
+  .list{display:flex; flex-direction:column; gap:22px;}
+  .cohort-head{display:flex; flex-direction:column; gap:2px; margin-bottom:10px;}
+  .cohort-head > span:first-child{font-weight:800; font-size:14.5px;}
+  .cohort-sub{font-size:12px; color:var(--ink-soft);}
+  .cohort-rows{display:flex; flex-direction:column; gap:10px;}
   .row{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px;}
   .row:hover{border-color:var(--accent);}
   .row-main{display:flex; flex-direction:column; gap:3px;}
@@ -134,6 +138,31 @@ function ratedByText(ratings){
   return `${ratings.length} person${ratings.length > 1 ? 's' : ''} (${names.join(', ')})`;
 }
 
+function cohortKey(r){
+  // Legacy records logged before run grouping existed have no run_id --
+  // each becomes its own singleton cohort rather than getting merged with
+  // unrelated runs just because timestamps are close.
+  return r.run_id || ('legacy-' + r.id);
+}
+
+function buildCohorts(records){
+  const groups = new Map();
+  for (const r of records){
+    const key = cohortKey(r);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  }
+  const cohorts = [...groups.values()].map(rows => {
+    rows.sort((a, b) => b.ts - a.ts);
+    const startedAt = rows[0].run_started_at || Math.min(...rows.map(r => r.ts));
+    const scenarios = [...new Set(rows.map(r => r.scenario_id))];
+    const systems = [...new Set(rows.map(r => r.system_id))];
+    return {startedAt, rows, scenarios, systems};
+  });
+  cohorts.sort((a, b) => b.startedAt - a.startedAt);
+  return cohorts;
+}
+
 async function loadList(){
   const res = await fetch(BASE_PATH + '/api/test-conversations');
   const records = await res.json();
@@ -142,15 +171,26 @@ async function loadList(){
     list.innerHTML = '<div class="empty">No test conversations logged yet.</div>';
     return;
   }
-  list.innerHTML = records.map(r => `
-    <div class="row" onclick="openConversation('${r.id}')">
-      <div class="row-main">
-        <div class="row-title"><span class="pill">${r.system_id}</span>${r.scenario_id}</div>
-        <div class="row-sub">${r.prompt_name} &middot; ${fmtTs(r.ts)} &middot; ${r.turns ?? '?'} turns</div>
+  const cohorts = buildCohorts(records);
+  list.innerHTML = cohorts.map(cohort => `
+    <div class="cohort">
+      <div class="cohort-head">
+        <span>${fmtTs(cohort.startedAt)}</span>
+        <span class="cohort-sub">${cohort.rows.length} conversation${cohort.rows.length > 1 ? 's' : ''} &middot; ${cohort.scenarios.join(', ')} &middot; ${cohort.systems.join('/')}</span>
       </div>
-      <div class="score">
-        ${scoreText(r.objective_score)}
-        <span class="human">${ratingsSummary(r.human_ratings)}${(r.annotations || []).length ? `, ${r.annotations.length} flag${r.annotations.length > 1 ? 's' : ''}` : ''}</span>
+      <div class="cohort-rows">
+        ${cohort.rows.map(r => `
+          <div class="row" onclick="openConversation('${r.id}')">
+            <div class="row-main">
+              <div class="row-title"><span class="pill">${r.system_id}</span>${r.scenario_id}</div>
+              <div class="row-sub">${r.prompt_name} &middot; ${r.turns ?? '?'} turns</div>
+            </div>
+            <div class="score">
+              ${scoreText(r.objective_score)}
+              <span class="human">${ratingsSummary(r.human_ratings)}${(r.annotations || []).length ? `, ${r.annotations.length} flag${r.annotations.length > 1 ? 's' : ''}` : ''}</span>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>
   `).join('');
