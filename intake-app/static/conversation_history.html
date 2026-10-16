@@ -43,6 +43,16 @@
   pre.prompt{white-space:pre-wrap; font-family:'JetBrains Mono',monospace; font-size:12px; margin:10px 0 0; max-height:300px; overflow-y:auto;}
   .score-metrics{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-soft); margin-top:8px; line-height:1.6;}
   .rationale{font-size:13px; line-height:1.5; margin-top:8px;}
+  .assess-block{border-top:1px solid var(--border); margin-top:14px; padding-top:12px;}
+  .assess-list{display:flex; flex-direction:column; gap:8px; margin-bottom:10px;}
+  .assess-card{border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:12.5px;}
+  .assess-badge{display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:2px 8px; border-radius:999px; margin-right:6px;}
+  .assess-badge.agree{background:var(--accent-soft); color:var(--accent);}
+  .assess-badge.disagree{background:#F6DEDE; color:#8A2E2E;}
+  .assess-comment{margin-top:5px;}
+  .agree-toggle{display:flex; gap:8px; margin-bottom:10px;}
+  .agree-toggle button{flex:1; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); border-radius:999px; padding:9px 0; font:inherit; font-weight:700; font-size:13.5px; cursor:pointer;}
+  .agree-toggle button.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
   .turn{border-radius:12px; padding:10px 14px; margin-bottom:8px; font-size:13.5px; line-height:1.5;}
   .turn.user{background:var(--accent-soft);}
   .turn.assistant{background:var(--paper); border:1px solid var(--border);}
@@ -118,6 +128,33 @@ function selfReportAvg(sr){
   const vals = METRICS.map(([k]) => sr[k]).filter(v => v != null);
   if (!vals.length) return null;
   return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+}
+
+function renderAssessBlock(r, target){
+  const existing = (r.assessment_feedback || []).filter(f => f.target === target);
+  return `
+    <div class="assess-block">
+      ${existing.length ? `
+        <div class="assess-list">
+          ${existing.map(f => `
+            <div class="assess-card">
+              <span class="assess-badge ${f.agree ? 'agree' : 'disagree'}">${f.agree ? 'Agrees' : 'Disagrees'}</span>
+              <span class="ann-rater">${escapeHtml(f.rater)}</span>
+              <div class="assess-comment">${escapeHtml(f.comment)}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      <div class="agree-toggle" data-target="${target}">
+        <button data-v="true" onclick="pickAgree('${target}', true)">Agree</button>
+        <button data-v="false" onclick="pickAgree('${target}', false)">Disagree</button>
+      </div>
+      <input id="assess-name-${target}" class="name-input" type="text" placeholder="Your name" value="${escapeHtml(getSavedName())}">
+      <textarea id="assess-comment-${target}" placeholder="Why, or why not?"></textarea>
+      <button class="primary" onclick="submitAssessment('${r.id}', '${target}')">Submit</button>
+      <div class="saved-note" id="assess-saved-${target}"></div>
+    </div>
+  `;
 }
 
 function scoreText(score){
@@ -201,6 +238,7 @@ async function openConversation(id){
   const r = await res.json();
   CURRENT = r;
   for (const k of Object.keys(PENDING)) delete PENDING[k];
+  for (const k of Object.keys(AGREE_PENDING)) delete AGREE_PENDING[k];
   const score = r.objective_score || {};
   const sr = r.self_report || {};
   const transcriptHtml = (r.transcript || []).map(m => `
@@ -228,11 +266,13 @@ async function openConversation(id){
     ${score.scores ? `<details open><summary>Why this score (${scoreText(score)})</summary>
       <div class="score-metrics">${Object.entries(score.scores).map(([k, v]) => `${JUDGE_LABELS[k] || k}: ${v}/5`).join(' &middot; ')}</div>
       ${score.rationale ? `<div class="rationale">${escapeHtml(score.rationale)}</div>` : ''}
+      ${renderAssessBlock(r, 'objective')}
     </details>` : ''}
 
     ${Object.keys(sr).length ? `<details open><summary>How the simulated person said they felt${selfReportAvg(sr) != null ? ` (avg ${selfReportAvg(sr)}/5)` : ''}</summary>
       <div class="score-metrics">${METRICS.filter(([k]) => sr[k] != null).map(([k, label]) => `${label}: ${sr[k]}/5`).join(' &middot; ')}</div>
       ${sr.rationale ? `<div class="rationale">&ldquo;${escapeHtml(sr.rationale)}&rdquo;</div>` : ''}
+      ${renderAssessBlock(r, 'self_report')}
     </details>` : ''}
 
     <details open><summary>Transcript</summary>${transcriptHtml}</details>
@@ -305,6 +345,45 @@ async function openConversation(id){
 }
 
 const PENDING = {};
+const AGREE_PENDING = {};
+
+function pickAgree(target, v){
+  AGREE_PENDING[target] = v;
+  document.querySelectorAll(`.agree-toggle[data-target="${target}"] button`).forEach(b => {
+    b.classList.toggle('sel', (b.dataset.v === 'true') === v);
+  });
+}
+
+async function submitAssessment(id, target){
+  const rater = document.getElementById(`assess-name-${target}`).value.trim();
+  const comment = document.getElementById(`assess-comment-${target}`).value.trim();
+  const noteEl = document.getElementById(`assess-saved-${target}`);
+  if (!rater){
+    noteEl.textContent = 'Enter your name first.';
+    return;
+  }
+  if (AGREE_PENDING[target] == null){
+    noteEl.textContent = 'Pick Agree or Disagree first.';
+    return;
+  }
+  if (!comment){
+    noteEl.textContent = 'Say why, or why not.';
+    return;
+  }
+  const res = await fetch(BASE_PATH + '/api/test-conversations/' + id + '/assess', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({rater, target, agree: AGREE_PENDING[target], comment}),
+  });
+  if (res.ok){
+    saveName(rater);
+    delete AGREE_PENDING[target];
+    loadList();
+    openConversation(id);
+  } else {
+    noteEl.textContent = 'Failed to save.';
+  }
+}
 
 function pickMetric(key, n){
   PENDING[key] = n;

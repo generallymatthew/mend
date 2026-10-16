@@ -56,6 +56,7 @@ def log_conversation(
         "turns": turns,
         "human_ratings": [],
         "annotations": [],
+        "assessment_feedback": [],
     }
     with LOG_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
@@ -119,6 +120,36 @@ def add_annotation(conv_id, rater, quote, comment):
                 "comment": comment,
                 "reply": None,
                 "reply_ts": None,
+            })
+            found = True
+    if not found:
+        return False
+    with LOG_FILE.open("w") as f:
+        for record in records:
+            f.write(json.dumps(record) + "\n")
+    return True
+
+
+ASSESSMENT_TARGETS = ("objective", "self_report")
+
+
+def add_assessment_feedback(conv_id, rater, target, agree, comment):
+    """Agree/disagree with one of the two automated assessments (the judge's
+    objective score, or the simulated persona's self-report), with a comment
+    on why. Multiple people can each weigh in on the same assessment."""
+    if target not in ASSESSMENT_TARGETS:
+        return False
+    records = load_conversations()
+    found = False
+    for record in records:
+        if record["id"] == conv_id:
+            record.setdefault("assessment_feedback", []).append({
+                "id": uuid.uuid4().hex[:12],
+                "rater": rater,
+                "ts": time.time(),
+                "target": target,
+                "agree": agree,
+                "comment": comment,
             })
             found = True
     if not found:

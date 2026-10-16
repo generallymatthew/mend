@@ -50,6 +50,7 @@ from usage_log import log_usage
 # the "nothing is recorded" principle for actual users.
 sys.path.insert(0, str(ROOT / "tests"))
 from conversation_log import load_conversations, add_human_rating, RATING_METRICS, add_annotation, reply_to_annotation
+from conversation_log import add_assessment_feedback, ASSESSMENT_TARGETS
 from conversation_log import get_conversation as get_logged_conversation
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 # Override with CLAUDE_MODEL=claude-haiku-4-5-20251001 for cheap local test
@@ -1591,6 +1592,27 @@ async def reply_test_annotation(conv_id: str, annotation_id: str, request: Reque
     if not reply:
         return JSONResponse({"error": "reply is required"}, status_code=400)
     ok = reply_to_annotation(conv_id, annotation_id, reply)
+    if not ok:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return {"ok": True}
+
+
+@app.post("/api/test-conversations/{conv_id}/assess")
+async def assess_test_conversation(conv_id: str, request: Request):
+    data = await request.json()
+    rater = str(data.get("rater") or "").strip()[:80]
+    target = str(data.get("target") or "")
+    agree = data.get("agree")
+    comment = str(data.get("comment") or "").strip()[:2000]
+    if not rater:
+        return JSONResponse({"error": "rater (your name) is required"}, status_code=400)
+    if target not in ASSESSMENT_TARGETS:
+        return JSONResponse({"error": f"target must be one of {ASSESSMENT_TARGETS}"}, status_code=400)
+    if not isinstance(agree, bool):
+        return JSONResponse({"error": "agree must be true or false"}, status_code=400)
+    if not comment:
+        return JSONResponse({"error": "comment (why or why not) is required"}, status_code=400)
+    ok = add_assessment_feedback(conv_id, rater, target, agree, comment)
     if not ok:
         return JSONResponse({"error": "not found"}, status_code=404)
     return {"ok": True}
