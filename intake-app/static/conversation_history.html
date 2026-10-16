@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mend test conversation history</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
+  .wrap{max-width:880px; margin:0 auto; padding:28px 24px 60px;}
+  h1{font-size:22px; margin:0 0 4px;}
+  .sub{color:var(--ink-soft); font-size:14px; margin:0 0 24px;}
+  .list{display:flex; flex-direction:column; gap:10px;}
+  .row{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .row:hover{border-color:var(--accent);}
+  .row-main{display:flex; flex-direction:column; gap:3px;}
+  .row-title{font-weight:700; font-size:14.5px;}
+  .row-sub{font-size:12.5px; color:var(--ink-soft);}
+  .pill{display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:3px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent); margin-right:6px;}
+  .score{font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px; white-space:nowrap;}
+  .score .human{color:var(--ink-soft); font-size:12px; display:block; text-align:right;}
+  .empty{color:var(--ink-soft); font-size:14px; padding:30px 0;}
+
+  .overlay{display:none; position:fixed; inset:0; background:rgba(23,55,46,.35); padding:20px; overflow-y:auto;}
+  .overlay.open{display:block;}
+  .panel{max-width:760px; margin:0 auto; background:var(--card); border-radius:18px; padding:26px 26px 30px;}
+  .panel-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;}
+  .close-btn{border:none; background:none; font-size:20px; cursor:pointer; color:var(--ink-soft); line-height:1;}
+  .meta-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 18px; font-size:13px; color:var(--ink-soft); margin:10px 0 18px;}
+  .meta-grid b{color:var(--ink);}
+  details{border:1px solid var(--border); border-radius:12px; margin-bottom:12px; padding:10px 14px;}
+  details summary{cursor:pointer; font-weight:700; font-size:13.5px;}
+  pre.prompt{white-space:pre-wrap; font-family:'JetBrains Mono',monospace; font-size:12px; margin:10px 0 0; max-height:300px; overflow-y:auto;}
+  .turn{border-radius:12px; padding:10px 14px; margin-bottom:8px; font-size:13.5px; line-height:1.5;}
+  .turn.user{background:var(--accent-soft);}
+  .turn.assistant{background:var(--paper); border:1px solid var(--border);}
+  .turn-role{font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); margin-bottom:3px;}
+  .rate-box{border-top:1px solid var(--border); margin-top:18px; padding-top:16px;}
+  .scale{display:flex; gap:8px; margin:8px 0 10px;}
+  .scale button{flex:1; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); border-radius:999px; padding:9px 0; font:inherit; font-weight:700; font-size:14px; cursor:pointer;}
+  .scale button.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
+  textarea{width:100%; resize:vertical; min-height:60px; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font:inherit; font-size:13.5px; background:var(--paper); color:var(--ink);}
+  button.primary{border:1.5px solid var(--accent); background:var(--accent); color:#fff; border-radius:999px; padding:10px 22px; font:inherit; font-weight:700; font-size:14px; cursor:pointer; margin-top:10px;}
+  .saved-note{font-size:12.5px; color:var(--ink-soft); margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Test conversation history</h1>
+  <p class="sub">Test-only data from benchmark/comparison harness runs. Not real user sessions.</p>
+  <div id="list" class="list"><div class="empty">Loading...</div></div>
+</div>
+
+<div id="overlay" class="overlay">
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+const BASE_PATH = location.pathname.replace(/\/conversation-history$/, '');
+let CURRENT = null;
+
+function fmtTs(ts){
+  const d = new Date(ts * 1000);
+  return d.toLocaleString();
+}
+
+function scoreText(score){
+  if (!score) return '—';
+  return score.total != null ? `${score.total}/25` : '—';
+}
+
+async function loadList(){
+  const res = await fetch(BASE_PATH + '/api/test-conversations');
+  const records = await res.json();
+  const list = document.getElementById('list');
+  if (!records.length){
+    list.innerHTML = '<div class="empty">No test conversations logged yet.</div>';
+    return;
+  }
+  list.innerHTML = records.map(r => `
+    <div class="row" onclick="openConversation('${r.id}')">
+      <div class="row-main">
+        <div class="row-title"><span class="pill">${r.system_id}</span>${r.scenario_id}</div>
+        <div class="row-sub">${r.prompt_name} &middot; ${fmtTs(r.ts)} &middot; ${r.turns ?? '?'} turns</div>
+      </div>
+      <div class="score">
+        ${scoreText(r.objective_score)}
+        <span class="human">${r.human_score ? 'you: ' + r.human_score + '/5' : 'not rated'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function openConversation(id){
+  const res = await fetch(BASE_PATH + '/api/test-conversations/' + id);
+  const r = await res.json();
+  CURRENT = r;
+  const score = r.objective_score || {};
+  const sr = r.self_report || {};
+  const transcriptHtml = (r.transcript || []).map(m => `
+    <div class="turn ${m.role}">
+      <div class="turn-role">${m.role}</div>
+      ${escapeHtml(m.content)}
+    </div>
+  `).join('');
+
+  document.getElementById('panel').innerHTML = `
+    <div class="panel-head">
+      <div><span class="pill">${r.system_id}</span><b>${r.scenario_id}</b></div>
+      <button class="close-btn" onclick="closePanel()">&times;</button>
+    </div>
+    <div class="meta-grid">
+      <div><b>Prompt:</b> ${r.prompt_name}</div>
+      <div><b>Harness:</b> ${r.harness}</div>
+      <div><b>Judged score:</b> ${scoreText(score)}</div>
+      <div><b>Turns:</b> ${r.turns ?? '?'}</div>
+    </div>
+
+    ${r.prompt_text ? `<details><summary>Prompt used</summary><pre class="prompt">${escapeHtml(r.prompt_text)}</pre></details>` : ''}
+
+    ${score.scores ? `<details><summary>Judge breakdown</summary><pre class="prompt">${escapeHtml(JSON.stringify(score.scores, null, 2))}</pre></details>` : ''}
+
+    ${Object.keys(sr).length ? `<details><summary>Self-report (simulated persona)</summary><pre class="prompt">${escapeHtml(JSON.stringify(sr, null, 2))}</pre></details>` : ''}
+
+    <details open><summary>Transcript</summary>${transcriptHtml}</details>
+
+    <div class="rate-box">
+      <div style="font-weight:700; font-size:14px;">Your satisfaction score</div>
+      <div class="scale" id="rate-scale">
+        ${[1,2,3,4,5].map(n => `<button data-n="${n}" class="${r.human_score === n ? 'sel' : ''}" onclick="pickScore(${n})">${n}</button>`).join('')}
+      </div>
+      <textarea id="rate-notes" placeholder="Notes (optional)">${r.human_notes || ''}</textarea>
+      <button class="primary" onclick="submitRating('${r.id}')">Save rating</button>
+      <div class="saved-note" id="saved-note"></div>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function pickScore(n){
+  document.querySelectorAll('#rate-scale button').forEach(b => {
+    b.classList.toggle('sel', Number(b.dataset.n) === n);
+  });
+  CURRENT._pickedScore = n;
+}
+
+async function submitRating(id){
+  const score = CURRENT._pickedScore || CURRENT.human_score;
+  if (!score){
+    document.getElementById('saved-note').textContent = 'Pick a score first.';
+    return;
+  }
+  const notes = document.getElementById('rate-notes').value;
+  const res = await fetch(BASE_PATH + '/api/test-conversations/' + id + '/rate', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({human_score: score, human_notes: notes}),
+  });
+  if (res.ok){
+    document.getElementById('saved-note').textContent = 'Saved.';
+    loadList();
+  } else {
+    document.getElementById('saved-note').textContent = 'Failed to save.';
+  }
+}
+
+function closePanel(){
+  document.getElementById('overlay').classList.remove('open');
+  CURRENT = null;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+loadList();
+</script>
+</body>
+</html>

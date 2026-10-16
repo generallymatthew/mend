@@ -1,6 +1,7 @@
 import sys, os, time, json, re
 sys.path.insert(0, os.path.dirname(__file__))
 from benchmark_audit import call_mend, call_claude_raw, format_transcript, judge, load_mend_system_prompt
+from conversation_log import log_conversation
 from anthropic import Anthropic
 
 client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
@@ -86,6 +87,13 @@ Return ONLY valid JSON, no markdown fencing, matching exactly:
 {"feel_equipped": int (1-5, do you feel more equipped to actually handle this now), "feel_understood": int (1-5, did the assistant seem to actually get your specific situation), "trust_advice": int (1-5, do you trust this advice is right for your situation), "would_say_it": int (1-5, would you actually say what was suggested, in your own words, to the real person), "rationale": "two or three honest sentences explaining the scores, in first person, as the character"}"""
 
 
+PROMPT_INFO = {
+    "cf": ("cf-v1", CF_PROMPT),
+    "mend": ("facilitator-intake-system-prompt.md", MEND_PROMPT),
+    "raw": ("raw (no system prompt)", ""),
+}
+
+
 def call_system(system_id, messages):
     if system_id == "cf":
         reply, _ = call_mend(client, CF_PROMPT, messages)
@@ -150,6 +158,19 @@ if __name__ == "__main__":
             print(f"({time.time()-t0:.0f}s, {turns_used}t) OBJECTIVE={score.get('total')} {score.get('scores')}", flush=True)
             print("SELF-REPORT:", json.dumps(report), flush=True)
             results[scenario_id][system_id] = {"objective": score, "self_report": report, "turns": turns_used}
+
+            prompt_name, prompt_text = PROMPT_INFO[system_id]
+            log_conversation(
+                harness="adaptive_persona_compare",
+                scenario_id=scenario_id,
+                system_id=system_id,
+                prompt_name=prompt_name,
+                prompt_text=prompt_text,
+                transcript=messages,
+                objective_score=score,
+                self_report=report,
+                turns=turns_used,
+            )
 
     out_path = os.path.join(os.path.dirname(__file__), "adaptive_persona_compare_results.json")
     with open(out_path, "w") as f:

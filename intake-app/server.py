@@ -44,6 +44,13 @@ load_dotenv(ROOT / ".env")
 # no shared package layout, just per-app venvs.
 sys.path.insert(0, str(ROOT.parent))
 from usage_log import log_usage
+
+# Test-only conversation log (benchmark/comparison harness runs), never
+# wired into the real /api/* session endpoints below -- those stay true to
+# the "nothing is recorded" principle for actual users.
+sys.path.insert(0, str(ROOT / "tests"))
+from conversation_log import load_conversations, rate_conversation
+from conversation_log import get_conversation as get_logged_conversation
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 # Override with CLAUDE_MODEL=claude-haiku-4-5-20251001 for cheap local test
 # runs -- default stays Sonnet for real use.
@@ -1511,6 +1518,44 @@ async def submit_analytics_event(request: Request):
 @app.get("/survey")
 async def survey_page():
     return FileResponse(ROOT / "static" / "survey.html")
+
+
+@app.get("/conversation-history")
+async def conversation_history_page():
+    return FileResponse(ROOT / "static" / "conversation_history.html")
+
+
+@app.get("/api/test-conversations")
+async def list_test_conversations():
+    records = load_conversations()
+    records.sort(key=lambda r: r["ts"], reverse=True)
+    # Omit full transcript/prompt_text from the list view, kept for the detail fetch.
+    summaries = [
+        {k: v for k, v in r.items() if k not in ("transcript", "prompt_text")}
+        for r in records
+    ]
+    return summaries
+
+
+@app.get("/api/test-conversations/{conv_id}")
+async def get_test_conversation(conv_id: str):
+    record = get_logged_conversation(conv_id)
+    if record is None:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return record
+
+
+@app.post("/api/test-conversations/{conv_id}/rate")
+async def rate_test_conversation(conv_id: str, request: Request):
+    data = await request.json()
+    score = data.get("human_score")
+    if not isinstance(score, int) or not (1 <= score <= 5):
+        return JSONResponse({"error": "human_score must be an integer 1-5"}, status_code=400)
+    notes = str(data.get("human_notes") or "")[:2000]
+    ok = rate_conversation(conv_id, score, notes)
+    if not ok:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return {"ok": True}
 
 
 @app.get("/session")
