@@ -61,6 +61,16 @@
   .rating-card .rater{font-weight:700; font-size:13px;}
   .rating-card .metrics{color:var(--ink-soft); font-family:'JetBrains Mono',monospace; margin:3px 0;}
   .rating-card .notes{color:var(--ink-soft); font-style:italic;}
+  .annotations-list{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+  .annotation-card{border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:13px;}
+  .annotation-card blockquote{margin:0 0 8px; padding:8px 10px; background:var(--accent-soft); border-left:3px solid var(--accent); border-radius:4px; font-size:12.5px; white-space:pre-wrap;}
+  .annotation-card .ann-rater{font-weight:700; font-size:12.5px; margin-bottom:3px;}
+  .annotation-card .ann-comment{margin-bottom:8px;}
+  .annotation-reply{background:var(--paper); border-radius:8px; padding:8px 10px; font-size:12.5px;}
+  .annotation-reply .reply-label{font-weight:700; color:var(--ink-soft); font-size:11px; text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px;}
+  .reply-form{display:flex; gap:6px; margin-top:4px;}
+  .reply-form textarea{min-height:36px; margin-top:0;}
+  .reply-form button{margin-top:0; padding:0 16px; white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -124,7 +134,7 @@ async function loadList(){
       </div>
       <div class="score">
         ${scoreText(r.objective_score)}
-        <span class="human">${ratingsSummary(r.human_ratings)}</span>
+        <span class="human">${ratingsSummary(r.human_ratings)}${(r.annotations || []).length ? `, ${r.annotations.length} flag${r.annotations.length > 1 ? 's' : ''}` : ''}</span>
       </div>
     </div>
   `).join('');
@@ -164,6 +174,39 @@ async function openConversation(id){
     ${Object.keys(sr).length ? `<details><summary>Self-report (simulated persona)</summary><pre class="prompt">${escapeHtml(JSON.stringify(sr, null, 2))}</pre></details>` : ''}
 
     <details open><summary>Transcript</summary>${transcriptHtml}</details>
+
+    <div class="rate-box">
+      <h3>Flag specific text (${(r.annotations || []).length})</h3>
+      ${(r.annotations || []).length ? `
+        <div class="annotations-list">
+          ${r.annotations.map(ann => `
+            <div class="annotation-card">
+              <div class="ann-rater">${escapeHtml(ann.rater)}</div>
+              <blockquote>${escapeHtml(ann.quote)}</blockquote>
+              <div class="ann-comment">${escapeHtml(ann.comment)}</div>
+              ${ann.reply ? `
+                <div class="annotation-reply">
+                  <div class="reply-label">Reply</div>
+                  ${escapeHtml(ann.reply)}
+                </div>
+              ` : `
+                <div class="reply-form">
+                  <textarea id="reply-${ann.id}" placeholder="Reply to this..."></textarea>
+                  <button class="primary" onclick="submitReply('${r.id}', '${ann.id}')">Reply</button>
+                </div>
+              `}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      <h4 style="font-size:13px; margin:4px 0 8px;">Flag something</h4>
+      <input id="ann-name" class="name-input" type="text" placeholder="Your name">
+      <textarea id="ann-quote" placeholder="Paste the exact text you're flagging"></textarea>
+      <textarea id="ann-comment" placeholder="What's wrong (or right) about it" style="margin-top:8px;"></textarea>
+      <button class="primary" onclick="submitAnnotation('${r.id}')">Add flag</button>
+      <div class="saved-note" id="ann-saved-note"></div>
+    </div>
 
     <div class="rate-box">
       ${(r.human_ratings || []).length ? `
@@ -231,6 +274,41 @@ async function submitRating(id){
     openConversation(id);
   } else {
     document.getElementById('saved-note').textContent = 'Failed to save.';
+  }
+}
+
+async function submitAnnotation(id){
+  const rater = document.getElementById('ann-name').value.trim();
+  const quote = document.getElementById('ann-quote').value.trim();
+  const comment = document.getElementById('ann-comment').value.trim();
+  if (!rater || !quote || !comment){
+    document.getElementById('ann-saved-note').textContent = 'Name, the pasted text, and a comment are all required.';
+    return;
+  }
+  const res = await fetch(BASE_PATH + '/api/test-conversations/' + id + '/annotate', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({rater, quote, comment}),
+  });
+  if (res.ok){
+    document.getElementById('ann-saved-note').textContent = 'Saved.';
+    loadList();
+    openConversation(id);
+  } else {
+    document.getElementById('ann-saved-note').textContent = 'Failed to save.';
+  }
+}
+
+async function submitReply(id, annotationId){
+  const reply = document.getElementById('reply-' + annotationId).value.trim();
+  if (!reply) return;
+  const res = await fetch(BASE_PATH + '/api/test-conversations/' + id + '/annotate/' + annotationId + '/reply', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({reply}),
+  });
+  if (res.ok){
+    openConversation(id);
   }
 }
 

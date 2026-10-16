@@ -44,6 +44,7 @@ def log_conversation(
         "self_report": self_report,
         "turns": turns,
         "human_ratings": [],
+        "annotations": [],
     }
     with LOG_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
@@ -83,6 +84,50 @@ def add_human_rating(conv_id, rater, scores, notes=None):
                 "notes": notes,
             })
             found = True
+    if not found:
+        return False
+    with LOG_FILE.open("w") as f:
+        for record in records:
+            f.write(json.dumps(record) + "\n")
+    return True
+
+
+def add_annotation(conv_id, rater, quote, comment):
+    """Flag a specific pasted snippet of a transcript, with a comment on it.
+    Pasting the exact text instead of selecting a range -- much simpler than
+    real text-selection UI, and still pins feedback to a specific spot."""
+    records = load_conversations()
+    found = False
+    for record in records:
+        if record["id"] == conv_id:
+            record.setdefault("annotations", []).append({
+                "id": uuid.uuid4().hex[:12],
+                "rater": rater,
+                "ts": time.time(),
+                "quote": quote,
+                "comment": comment,
+                "reply": None,
+                "reply_ts": None,
+            })
+            found = True
+    if not found:
+        return False
+    with LOG_FILE.open("w") as f:
+        for record in records:
+            f.write(json.dumps(record) + "\n")
+    return True
+
+
+def reply_to_annotation(conv_id, annotation_id, reply):
+    records = load_conversations()
+    found = False
+    for record in records:
+        if record["id"] == conv_id:
+            for ann in record.get("annotations", []):
+                if ann["id"] == annotation_id:
+                    ann["reply"] = reply
+                    ann["reply_ts"] = time.time()
+                    found = True
     if not found:
         return False
     with LOG_FILE.open("w") as f:

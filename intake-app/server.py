@@ -49,7 +49,7 @@ from usage_log import log_usage
 # wired into the real /api/* session endpoints below -- those stay true to
 # the "nothing is recorded" principle for actual users.
 sys.path.insert(0, str(ROOT / "tests"))
-from conversation_log import load_conversations, add_human_rating, RATING_METRICS
+from conversation_log import load_conversations, add_human_rating, RATING_METRICS, add_annotation, reply_to_annotation
 from conversation_log import get_conversation as get_logged_conversation
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-intake-system-prompt.md"
 # Override with CLAUDE_MODEL=claude-haiku-4-5-20251001 for cheap local test
@@ -1561,6 +1561,36 @@ async def rate_test_conversation(conv_id: str, request: Request):
     # Multiple people can each rate the same conversation -- this appends a
     # new rating, it never overwrites someone else's.
     ok = add_human_rating(conv_id, rater, scores, notes)
+    if not ok:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return {"ok": True}
+
+
+@app.post("/api/test-conversations/{conv_id}/annotate")
+async def annotate_test_conversation(conv_id: str, request: Request):
+    data = await request.json()
+    rater = str(data.get("rater") or "").strip()[:80]
+    quote = str(data.get("quote") or "").strip()[:4000]
+    comment = str(data.get("comment") or "").strip()[:2000]
+    if not rater:
+        return JSONResponse({"error": "rater (your name) is required"}, status_code=400)
+    if not quote:
+        return JSONResponse({"error": "quote (the pasted text being flagged) is required"}, status_code=400)
+    if not comment:
+        return JSONResponse({"error": "comment is required"}, status_code=400)
+    ok = add_annotation(conv_id, rater, quote, comment)
+    if not ok:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return {"ok": True}
+
+
+@app.post("/api/test-conversations/{conv_id}/annotate/{annotation_id}/reply")
+async def reply_test_annotation(conv_id: str, annotation_id: str, request: Request):
+    data = await request.json()
+    reply = str(data.get("reply") or "").strip()[:2000]
+    if not reply:
+        return JSONResponse({"error": "reply is required"}, status_code=400)
+    ok = reply_to_annotation(conv_id, annotation_id, reply)
     if not ok:
         return JSONResponse({"error": "not found"}, status_code=404)
     return {"ok": True}
