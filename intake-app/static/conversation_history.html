@@ -67,7 +67,7 @@
   .annotation-card .ann-rater{font-weight:700; font-size:12.5px; margin-bottom:3px;}
   .annotation-card .ann-comment{margin-bottom:8px;}
   .annotation-reply{background:var(--paper); border-radius:8px; padding:8px 10px; font-size:12.5px;}
-  .annotation-reply .reply-label{font-weight:700; color:var(--ink-soft); font-size:11px; text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px;}
+  .reply-label{font-weight:700; color:var(--ink-soft); font-size:11px; text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px;}
   .reply-form{display:flex; gap:6px; margin-top:4px;}
   .reply-form textarea{min-height:36px; margin-top:0;}
   .reply-form button{margin-top:0; padding:0 16px; white-space:nowrap;}
@@ -182,7 +182,9 @@ async function openConversation(id){
           ${r.annotations.map(ann => `
             <div class="annotation-card">
               <div class="ann-rater">${escapeHtml(ann.rater)}</div>
+              <div class="reply-label">Flagged text</div>
               <blockquote>${escapeHtml(ann.quote)}</blockquote>
+              <div class="reply-label">Comment</div>
               <div class="ann-comment">${escapeHtml(ann.comment)}</div>
               ${ann.reply ? `
                 <div class="annotation-reply">
