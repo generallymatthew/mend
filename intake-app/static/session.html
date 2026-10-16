@@ -186,6 +186,14 @@
   .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
+  /* Thinking-state "brain orbit": 3 translucent dots (pink/mint/blue,
+     mix-blend-mode:multiply over the honey body) orbiting tightly in the
+     upper half, JS-driven every frame while thinking only (see
+     updateThimbleMotion's thinkingState branch) -- size/position set in JS,
+     scaled to inst.size, same way .thimble-mouth's own dimensions are.
+     Hidden (not just invisible) outside thinking so they never intercept
+     a stale position/size from a differently-sized instance. */
+  .thimble-brain-dot{position:absolute; left:0; top:0; border-radius:50%; mix-blend-mode:multiply; opacity:.5; pointer-events:none;}
   @keyframes thimble-blob{0%,100%{border-radius:50%; transform:scale(.95);} 25%{border-radius:62% 38% 56% 44%/44% 60% 40% 56%; transform:scale(.92) rotate(-3deg);} 50%{border-radius:40% 60% 42% 58%/58% 40% 60% 42%; transform:scale(.95);} 75%{border-radius:56% 44% 62% 38%/40% 56% 44% 60%; transform:scale(.92) rotate(3deg);}}
   /* Gentle idle bounce -- idle/waiting have no real mic/TTS input to react
      to, so instead of sitting perfectly still (read as frozen/stuck) they
@@ -986,6 +994,9 @@
                   <div class="thimble-ring" id="thimbleRing">
                     <div class="thimble-body" id="thimbleBody">
                       <div class="thimble-blend" id="thimbleBlend"></div>
+                      <div class="thimble-brain-dot" id="thimbleDotA" style="background:#F3829A;" hidden></div>
+                      <div class="thimble-brain-dot" id="thimbleDotB" style="background:#b0ded1;" hidden></div>
+                      <div class="thimble-brain-dot" id="thimbleDotC" style="background:#A3CFE0;" hidden></div>
                       <div class="thimble-mouth" id="thimbleMouth"></div>
                     </div>
                   </div>
@@ -2461,6 +2472,16 @@ function thimbleHexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
   return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
 }
+// Thinking-state brain-orbit dots: tight radius relative to their own size
+// (so they overlap) and a brisk angular speed, tuned live in a side-by-side
+// design review before porting here -- see updateThimbleMotion's
+// thinkingState branch for how these get applied. r is in the same 118px
+// reference box the ratios below (inst.size * r/118) were tuned against.
+const BRAIN_DOTS_TIGHT = [
+  {base:'dotA', r:7,  speed:4.6,  phase:0},
+  {base:'dotB', r:5,  speed:-3.6, phase:2.1},
+  {base:'dotC', r:8,  speed:3.1,  phase:4.2},
+];
 // Two instances share one avatarState: the big call-stage avatar (voice
 // view) and a 48px mini copy in the text/chat header -- same per-frame
 // motion, just scaled, so switching Voice/Text never looks like a
@@ -2476,6 +2497,9 @@ function thimbleInstance(prefix, size) {
     blend: document.getElementById(prefix + 'Blend'),
     mouth: document.getElementById(prefix + 'Mouth'),
     rippleA: document.getElementById(prefix + 'RippleA'),
+    dotA: document.getElementById(prefix + 'DotA'),
+    dotB: document.getElementById(prefix + 'DotB'),
+    dotC: document.getElementById(prefix + 'DotC'),
     renderedState: null, mouthLevel: 0, geo: 0, lvl: 0,
     wobblePhase: 0, breathePhase: 0, lastT: null,
   };
@@ -2734,6 +2758,17 @@ function applyThimbleState(inst, state) {
   }
   const talking = state === 'talking';
   inst.rippleA.hidden = !talking;
+  // Brain-orbit dots: only visible while thinking (see updateThimbleMotion's
+  // thinkingState branch for the per-frame orbit itself). Diameter is a
+  // fraction of inst.size (same convention THIMBLE_SHAPES' mouthW/mouthH
+  // use), set here rather than per-frame since it only ever needs updating
+  // on a state change, not every tick.
+  const thinkingNow = state === 'thinking';
+  const dotSize = inst.size * 0.065;
+  [inst.dotA, inst.dotB, inst.dotC].forEach(d => {
+    d.hidden = !thinkingNow;
+    d.style.width = d.style.height = dotSize + 'px';
+  });
   // .thimble-mouth's CSS transition (width/height/border-radius, .35s) is
   // for smooth shape changes BETWEEN states (e.g. thinking's small oval
   // morphing into talking's bigger one) -- reported live as the talking
@@ -2819,6 +2854,27 @@ function updateThimbleMotion(inst, now, level, listening) {
     // had no JS-driven motion here at all, just a canned CSS blob keyframe
     // on the body, so this tilt is new.
     const wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
+    // Brain-orbit dots: 3 translucent dots circling tightly (small radius
+    // relative to their own size, so they overlap) in the upper "brain"
+    // area while thinking, each at its own speed/radius/phase so they weave
+    // around each other rather than moving in lockstep -- tuned live
+    // (sped up twice, re-centered once) to read as thinking hard, not idly
+    // drifting. Mouth is deliberately left untouched here, same position it
+    // always has. Center/radius are fractions of inst.size, same convention
+    // as the mouth's own mouthTop/mouthW -- 59/118 and 36/118 are this
+    // orbit's own center in the 118px mockup it was tuned against.
+    if (thinkingState) {
+      const ts = now / 1000;
+      const cx = inst.size * (59 / 118), cy = inst.size * (36 / 118);
+      BRAIN_DOTS_TIGHT.forEach(d => {
+        const ang = ts * d.speed + d.phase;
+        const r = inst.size * (d.r / 118);
+        const half = (inst.size * 0.065) / 2;
+        const x = cx + Math.cos(ang) * r - half;
+        const y = cy + Math.sin(ang) * r * 0.8 - half;
+        inst[d.base].style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+      });
+    }
     // Breathing scale on top -- always running so the avatar never sits
     // perfectly still even in silence. 3s period while listening or
     // thinking, 2.2s while talking, 4.5s while idle, per the handoff's own
