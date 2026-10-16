@@ -272,9 +272,8 @@ async function submitRating(id){
   if (res.ok){
     saveName(rater);
     for (const k of Object.keys(PENDING)) delete PENDING[k];
-    document.getElementById('saved-note').textContent = 'Saved.';
     loadList();
-    openConversation(id);
+    closePanel();
   } else {
     document.getElementById('saved-note').textContent = 'Failed to save.';
   }
