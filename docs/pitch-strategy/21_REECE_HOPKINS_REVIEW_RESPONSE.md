@@ -1,0 +1,75 @@
+# Response Plan: Reece Hopkins Prototype & Spec Review (2026-10-15)
+
+Source: external review covering `/testers`, `/story.html`, `/about.html`, `/launchpad.html`, `/product-spec.html`, and live session/survey flows. This doc triages every point into an action, assigns rough priority, and flags anything we should push back on or decide before building.
+
+Legend: **DO NOW** (ship this week) / **ROADMAP** (real work, needs its own slot) / **DECISION** (needs the user's call before anyone builds anything) / **PUSHBACK** (partial or full disagreement, with reasoning).
+
+---
+
+## 1. Brand, Metaphor & Visual Design
+
+- **Thimble metaphor inversion** — PUSHBACK, resolved. User's own framing: a thimble protects the vulnerable parts of you from sharp things while you work, which is exactly what Thimble does in-session. Keeping the name as-is, no copy change needed.
+- **Logo/wordmark harmony** — agree. **ROADMAP**, small design pass.
+- **Trademark crowdedness ("Mend", vs. Mend.io etc.)** — agree, real risk if this goes commercial. **DECISION**: user needs to decide whether to commission a formal trademark clearance search now or defer until a pilot is signed. Not something to resolve in code.
+- **Typography/visual hierarchy chaos across pages** — agree, visibly true. **ROADMAP**: pick one type scale (weights/sizes) and apply across `story.html`, `about.html`, `product-spec.html`, intake/joint-session UI. Worth doing as a single pass, not page-by-page.
+- **Theme toggle praised** — no action, keep as-is.
+
+## 2. Copywriting, Tone & Information Architecture
+
+- **"Claude-speak" / AI-tell copy** — agree, this is the single highest-leverage fix in the whole review. **ROADMAP**, but start soon: rewrite `story.html`, `about.html`, and the facilitator's own conversational tone for warmth over academic hedging. Also covered by the existing [no-aphorism-headlines] memory rule — extend that same "say it plainly" standard to the whole body copy, not just headlines.
+- **Internal jargon bleeding into user copy ("Section 7 stated as an image")** — checked: that exact line only exists inside `product-spec.html` itself, a numbered spec document where section cross-refs are expected. It doesn't bleed into `story.html`/`about.html`'s narrative copy. No action needed beyond the de-AI-ify pass already planned for section copy (see above).
+- **Tester-page CTA placement** — agree, concrete and cheap. **DONE**: removed the top "View the Mend Story" link from `/testers`, kept the bottom one.
+- **Exposed internal links in footers** (`product-spec.html`, `launchpad.html`) — agree. **DONE**: removed the `product-spec.html`/`launchpad.html`/`about.html` cross-links from `about.html`'s and `story.html`'s footers. Both now just carry the "internal draft, pre-legal review" notice with no links out.
+- **Employee vs. HR buyer audience split on the same pages** — agree, and this is the most structurally important point in the whole doc. Mixing "come vent privately" with "here's the ROI pitch for your boss" on one page actively damages the trust the product depends on. **ROADMAP**, biggest item here: split into two genuinely separate surfaces (e.g. an employee-facing path with zero buyer language, and a separate `/for-hr` or `/for-leadership` pitch path), not just two sections of one page.
+
+## 3. Session UX: Mobile vs. Desktop & Voice Ergonomics
+
+- **No in-app first-run onboarding before the live session** — agree. **ROADMAP**: a short grounding step (what this is, how long, what happens to the conversation) before the mic/chat goes live.
+- **Mic permission priming** — agree, and this is a real conversion-killer, not a nice-to-have. One reflexive "Deny" and the session is dead with no recovery. **ROADMAP**, moderately high priority: default to text first, add a pre-permission interstitial that explains value before the OS prompt fires, same pattern as any serious consumer app asking for mic/camera.
+- **Press-and-hold walkie-talkie friction on desktop/trackpad** — agree. **ROADMAP**: move to tap-to-toggle or a hotkey latch; full-duplex live mode is the better long-term target but bigger lift (ties into Phase 1's audio merge already on `ROADMAP.md`).
+- **Listening blob dominates viewport / unclear listening-vs-processing-vs-waiting state** — agree. **ROADMAP**: needs explicit state affordances on the avatar (listening/thinking/speaking), not just animation for its own sake.
+- **Fixed 3-row input, doesn't auto-expand** — agree, clear bug. **DONE**: `intake-app/static/session.html`'s `#chatInput` now auto-grows with content (capped at 160px, then scrolls), including after a voice-dictated transcript is appended, not just manual typing.
+- **Oversized "thinking" bubble causing layout shift** — checked `intake-app/static/session.html`'s `.chat-typing` element: it's three small 7px dots in a compact 14px-padded bubble, not an oversized one, and a past fix already handles its scroll-into-view timing. Couldn't reproduce the "giant bubble" behavior from the markup/CSS as it stands now — flagging as **needs a live repro** rather than guessing at a fix blind; if it's reproducible on a specific device/viewport, worth a follow-up with exact repro steps.
+- **Post-session survey too long** — agree, and the fallback-logging note in `STATUS.md` already flags the Sheet isn't even wired yet. **DONE**: `intake-app/static/survey.html` cut from 11 structured questions + 3 free-text boxes down to 3 (overall rating, felt safe, would reuse) plus the technical-issue checklist and one combined "anything else" box. Backend (`server.py`) already treated every one of these fields as optional, so no schema change was needed — dropped fields just submit as null/empty, same as several fields it already over-provisions today.
+
+## 4. Product Philosophy & Spec Holes (`product-spec.html`)
+
+This section is the most consequential. Treat each "hole" as a spec decision, not a copy fix.
+
+- **Thimble's declared point of view/bias** — agree this is undefined and shouldn't be. **DECISION**: user needs to pick a stance (neutral facilitator vs. something else) before the spec can claim consistency; everything else in Section 6-9 depends on this answer.
+- **Hole #1 — employer-defined trigger ceiling undermines confidentiality** — agree, this is a real trust trap as specified. **DECIDED, done**: dropped the company-configurable ceiling entirely. `product-spec.html` Section 6 now describes a single fixed floor only, nothing a company can add on top; the old "Configurable ceiling — company-defined" tier is gone, replaced by a "Considered and rejected" callout explaining why (confidentiality collapse + NLRA exposure, see Hole #6). The one previously-open risk item that depended on the ceiling existing (whether generic bullying belongs there) is now moot — it falls to the existing below-the-floor private-coaching tier instead.
+- **Hole #2 — auto-routing to HR vs. consented self-report** — agree, and this is the review's strongest point. Already partially addressed: `ROADMAP.md` Phase 3 shows the prompt was updated 2026-10-10 to disclose the floor and ask consent before sending, and the backend send path isn't built yet. **ROADMAP** (Phase 3, already tracked) — this response should reinforce: build it as consent-gated self-report, not silent auto-routing, except for the existing imminent-physical-violence carve-out. No new decision needed, just confirms the direction already chosen.
+- **Hole #3 — third-party LLM sub-processors / discovery risk** — agree, factually correct, and a real enterprise-legal blocker. **DECISION**: needs real answers before any pilot: which providers get Zero-Data-Retention agreements, and how "we don't store transcripts" survives a subpoena when the inference call itself transits a third party. This belongs with the legal counsel engagement already on `ROADMAP.md` Phase 3 (`10_LEGAL_COUNSEL_OUTREACH.md`) — flag it as a required discussion topic, don't try to answer it in the spec unilaterally.
+- **Hole #4 — manager-mandated Resolved/Not-Resolved binary pressures the lower-power party** — agree, real design flaw. **ROADMAP**: needs a third outcome state (e.g. "needs more time" / "escalate privately") so declining isn't forced into a visible "failed" signal back to a manager.
+- **Hole #5 — advocating for the lower-power employee without org-chart data** — agree, and the review correctly notes the tension (tilt too hard, the other party bails). **ROADMAP**, harder problem: likely means self-reported power-dynamic context only, with the facilitator staying visibly neutral in tone even if it weights fairness internally. Needs product thinking, not just an engineering fix.
+- **Hole #6 — NLRA Section 7 protected concerted activity** — agree, and this is a legal-exposure item, not a UX one. Directly reinforced Hole #1 and is now cited as one of the two reasons the configurable ceiling was dropped (see Hole #1). The floor categories themselves (harassment/discrimination, threats, illegal activity, safety risk) still need real counsel review before launch — that part stays a **DECISION**, routed to `10_LEGAL_COUNSEL_OUTREACH.md`.
+- **Hole #7 — ROI story relies on stale 2008-era studies** — agree. **ROADMAP**: aligns with Phase 4 (`02_COMMERCIAL_PRICING_STRATEGY.md`) — the review's specific suggestion (k-anonymous aggregated friction-category insights after a session-count floor, e.g. 25+) is a concrete, buildable differentiator and should get added to that doc as a named feature, not just cited as "future work."
+
+## 5. Deployment, Security & Reverse-Engineering Exposure
+
+All six items here are straightforward bugs/gaps, not judgment calls. **DO NOW** on all of them:
+
+- Hardcoded `localhost:8080` CTAs on `story.html`/`about.html` — **DONE**. Both pages' "Start a Private Session"/"Start the Conversation" buttons now use a relative `/intake/session` href instead of a hardcoded absolute URL, and the brittle `isLive` hostname-sniffing JS that used to swap `href` at runtime is gone — confirmed via `Caddyfile` that `about.html`/`story.html` and `/intake/*` are already served from the same origin both locally (port 8080) and live, so a relative path resolves correctly either way with no JS needed.
+- `launchpad.html` publicly linked from `about.html` footer, exposing internal routes/docs/QA harnesses — **DONE** (see footer-exposure fix above). `launchpad.html` itself still exists as an internal bookmark page (its own footer already says "not meant for distribution"), it's just no longer one click from the public employee-facing pages.
+- Predictable joint-room codes (`?code=launchpad&role=a`) — checked `render.yaml`: only `demo-app` + `intake-app` are actually deployed to `mend-mvp.onrender.com` (confirmed by `launchpad.html`'s own comment: "joint/post-session apps aren't part of the Render deploy"). `joint-session-app` only runs locally, started by hand, per `ROADMAP.md` Phase 1 ("two independently-run prototypes an operator starts by hand"). So the guessable-code risk isn't live on the public internet yet — nothing to exploit until that app actually ships. **ROADMAP**, moved out of DO NOW: fix the room-code scheme as part of Phase 1's audio/session merge, before `joint-session-app` is ever deployed publicly, not before.
+- Unauthenticated AI/voice endpoints (wallet-drain risk) — **DONE** (gate), rate limiting already existed. `intake-app/server.py` already had a per-IP fixed-window rate limiter (`RATE_LIMIT_MAX`/`RATE_LIMIT_WINDOW`, 20 req/60s by default) on `/api/*` — the review's second ask was already covered. What was actually missing: nothing stood between the public pages and the paid LLM/voice calls at all, since `story.html`/`about.html` link straight to `/intake/session`, bypassing `demo-app`'s existing `ORG_ACCESS_CODE` signup gate entirely. Added a `TESTER_ACCESS_CODE` env var (unset by default, zero setup cost for local dev) gating every page and `/api/*` call behind a one-time passcode cookie, same trust model as `demo-app`'s existing `ORG_ACCESS_CODE`. New `/gate` page + `/api/access` endpoint, documented in `intake-app/README.md`. **Known gap**: this covers HTTP only — WebSocket endpoints (`/ws/voice` etc.) aren't wrapped by FastAPI's `@app.middleware("http")` and bypass it, same pre-existing limitation the rate limiter already has. Worth a real look before relying on this against a determined scraper, fine as the "lightweight" gate the review asked for against casual bots/crawlers.
+- Public spec/manifesto/state-harness making the whole prototype easy to clone — partially addressed by the footer fix above (no longer discoverable from the public funnel), but the files themselves (`launchpad.html`, `STATUS.md`, `ROADMAP.md`, QA harnesses) are still reachable by anyone with the direct URL, since nothing serves this repo with real access control yet. Needs a decision on basic-auth gating vs. just keeping them out of whatever gets deployed publicly.
+
+---
+
+## Status as of this pass
+
+**Done:** tester-page CTA reorder, footer link exposure fix (`about.html`/`story.html`), localhost→relative-path CTA fix + dead-code removal, chat-input auto-grow, survey trim (11 questions → 3 + checklist + 1 free-text), tester passcode gate (`TESTER_ACCESS_CODE`) on `intake-app`, employer-configurable trigger ceiling dropped from `product-spec.html` (user decision), Thimble metaphor kept as-is (user decision, no change needed).
+
+**Checked, no action needed:** the specific "Section 7" jargon-bleed example (only exists inside the spec itself, where it's expected), the "oversized thinking bubble" (couldn't reproduce from current markup/CSS — needs a live repro before guessing at a fix), room-code randomization (not yet live on the public deploy, moved to Phase 1 roadmap work instead of an urgent fix).
+
+**Still open:**
+1. **Needs your call before building (DECISION bucket):** Thimble's declared stance/bias, trademark clearance timing, third-party sub-processor/Zero-Data-Retention story, floor-category legal review (routes to counsel).
+2. **Real roadmap work (ROADMAP bucket):** copy rewrite pass (de-AI-ify tone), employee/HR audience split into separate surfaces, mic-permission priming + text-first default, avatar state affordances, Resolved/Not-Resolved third state, lower-power advocacy design, aggregated-insights ROI feature, joint-session room-code randomization (before that app goes public), logo/wordmark harmony, typography pass. Each of these should get its own entry in `ROADMAP.md` or the relevant `docs/pitch-strategy/` file rather than living only here.
+
+## Where this plugs into existing tracking
+
+- Hole #2's consented self-report direction is already the chosen path in `ROADMAP.md` Phase 3 — no conflict, just reinforcement.
+- Hole #3 and Hole #6 both route to `10_LEGAL_COUNSEL_OUTREACH.md` as required discussion topics, not spec decisions to make solo.
+- Hole #7's aggregated-insights feature should be added to `02_COMMERCIAL_PRICING_STRATEGY.md`.
+- The security items in section 5 should block "send live URL to real testers" (currently the top of `STATUS.md`'s next-steps) until the passcode gate and room-code fix land.

@@ -76,8 +76,9 @@
   .icon-list .txt{padding-top:2px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
   .icon-list .txt b{color:var(--ink); display:block; font-size:14.5px; margin-bottom:2px;}
 
-  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:4px;}
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:4px;}
   @media (max-width:420px){ .stat-grid{grid-template-columns:1fr;} }
+  .stat-tile:nth-child(3){border-top-color:var(--accent);}
   .stat-row{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:center; margin-top:4px;}
   .stat-row .stat-tile{height:100%; display:flex; flex-direction:column; justify-content:center; padding:16px 16px 14px;}
   .stat-row .stat-num{font-size:1.5rem;}
@@ -91,7 +92,43 @@
   .stat-lead{font-size:14.5px; font-weight:700; color:var(--ink-soft); margin:0 0 2px;}
   .stat-tail{font-size:14.5px; color:var(--ink-soft);}
   .stat-info{position:relative; appearance:none; border:none; background:none; padding:0; margin:0 0 2px; cursor:help; font-family:inherit; line-height:1;}
-  .stat-info .mark{font-size:0.95rem; font-weight:700; color:var(--muted);}
+  .stat-info .mark{display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-size:0.7rem; font-weight:800; vertical-align:super;}
+  .sources-panel{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:clamp(20px,4vw,30px) clamp(20px,4vw,32px); margin-top:18px; box-shadow:0 2px 10px rgba(23,55,46,0.06);}
+  .sources-panel-head{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .sources-panel-head .dot{width:9px; height:9px; border-radius:50%; background:var(--pink);}
+  .sources-panel-title{font-size:13px; letter-spacing:0.09em; text-transform:uppercase; font-weight:800; color:var(--ink);}
+  .sources-panel-sub{font-size:13px; color:var(--muted); margin:2px 0 18px;}
+  .sources-list{list-style:none; margin:0; padding:0; display:grid; gap:16px;}
+  .sources-list li{display:flex; gap:14px; align-items:flex-start;}
+  .sources-list .num{flex:none; width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; font-size:12.5px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:2px;}
+  .sources-list .body{font-size:15px; line-height:1.6; color:var(--ink-soft);}
+  .sources-list .body b{color:var(--ink); font-weight:800;}
+  .sources-list .tag{display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; padding:2px 8px; border-radius:999px; margin-left:8px; vertical-align:middle;}
+  .sources-list .tag.primary{background:var(--accent-soft); color:var(--accent);}
+  .sources-list .tag.secondary{background:var(--honey-soft); color:#8a6315;}
+  @media (max-width:480px){ .sources-list .body{font-size:14px;} }
+
+  .evidence-block{background:var(--ink); border-radius:22px; padding:clamp(32px,5vw,52px) clamp(24px,5vw,48px); margin-top:8px;}
+  .evidence-head{max-width:640px; margin-bottom:clamp(24px,4vw,36px);}
+  .evidence-eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.09em; text-transform:uppercase; color:var(--honey); margin-bottom:10px;}
+  .evidence-title{font-size:clamp(22px,3vw,30px); line-height:1.2; color:#fff; margin:0 0 10px; font-weight:800;}
+  .evidence-sub{font-size:14.5px; line-height:1.55; color:rgba(255,255,255,0.68); margin:0;}
+  .evidence-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;}
+  .evidence-card{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; gap:10px;}
+  .evidence-card.lead{background:var(--honey); border-color:var(--honey);}
+  .evidence-tag{align-self:flex-start; font-size:10.5px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; padding:4px 10px; border-radius:999px;}
+  .evidence-tag.primary{background:rgba(23,55,46,0.85); color:#fff;}
+  .evidence-tag.independent{background:rgba(255,255,255,0.14); color:#fff;}
+  .evidence-tag.secondary{background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.7);}
+  .evidence-card.lead .evidence-tag{background:var(--ink); color:#fff;}
+  .evidence-org{font-size:20px; font-weight:800; color:#fff;}
+  .evidence-card.lead .evidence-org{color:var(--ink);}
+  .evidence-finding{font-size:15px; line-height:1.5; color:rgba(255,255,255,0.92); font-weight:600;}
+  .evidence-card.lead .evidence-finding{color:var(--ink);}
+  .evidence-meta{font-size:12.5px; line-height:1.5; color:rgba(255,255,255,0.55);}
+  .evidence-card.lead .evidence-meta{color:rgba(23,55,46,0.72);}
+  .evidence-card.secondary{opacity:0.82;}
+  @media (max-width:600px){ .evidence-org{font-size:18px;} .evidence-finding{font-size:14px;} }
   .stat-info .tooltip{position:absolute; left:50%; top:100%; margin-top:8px; width:200px; max-width:calc(100vw - 24px); background:var(--ink); color:#fff; font-size:11px; font-weight:500; line-height:1.5; padding:10px 12px; border-radius:10px; box-shadow:0 8px 20px rgba(23,55,46,0.25); opacity:0; visibility:hidden; transform:translateX(-50%) translateY(-4px); transition:opacity .15s ease, transform .15s ease; z-index:5;}
   .stat-info:hover .tooltip, .stat-info:focus .tooltip, .stat-info:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateX(-50%) translateY(0);}
   .stat-info .tooltip.shift{transform:translateX(calc(-50% + var(--tip-shift,0px))) translateY(-4px);}
@@ -183,9 +220,11 @@
       <div class="mark"></div>
       <div class="wordmark">Mend</div>
     </div>
+    <!-- Ko-fi link hidden for now, keep markup ready to re-enable
     <a href="https://ko-fi.com/mendconflict" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:#72a4f2;color:#fff;border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:700;text-decoration:none">
       <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="" style="height:13px;width:20px;vertical-align:middle">Support me on Ko-fi
     </a>
+    -->
   </div>
 
   <div class="hero">
@@ -194,7 +233,7 @@
       <h1>After a Conflict, You're Angry, Confused, and Unsure.</h1>
       <p class="lede">You keep replaying it: what happened, whether you're overreacting, what to do next. There's no one unbiased to ask, and conflict like this can cost you your job. Mend is where you think it through and figure out your next move before you're in the room.</p>
       <div class="cta-row">
-        <a class="btn-top start-link" href="http://localhost:8080/intake/session" data-local="http://localhost:8080/intake/session" data-live="https://mend-mvp.onrender.com/intake/session">Start a Private Session &rarr;</a>
+        <a class="btn-top" href="/intake/session">Start a Private Session &rarr;</a>
         <a class="hr-link" href="#for-hr">How Mend Can Help HR &rarr;</a>
       </div>
     </div>
@@ -238,32 +277,64 @@
     </ul>
   </section>
 
-  <section class="block">
-    <h3 class="section-headline">The cost of unresolved conflict</h3>
-    <div class="stat-grid">
-      <div class="stat-tile">
-        <div class="stat-lead">Employees spend</div>
-        <div class="stat-num">2.8 hrs/week<button type="button" class="stat-info" aria-describedby="statSrc1"><span class="mark">*</span><span class="tooltip" id="statSrc1">Average employee time lost to managing conflict, their own or someone else's: about 7% of a work week. Source: CPP Inc., &ldquo;Workplace Conflict and How Businesses Can Harness It to Thrive&rdquo; (2008). ~5,000 employees, nine countries.</span></button></div>
-        <div class="stat-tail">on work conflicts</div>
+  <section class="block evidence-block">
+    <div class="evidence-head">
+      <span class="evidence-eyebrow">The research behind these numbers</span>
+      <h3 class="evidence-title">What unresolved conflict actually costs</h3>
+      <p class="evidence-sub">Six datasets, current and historical, all pointing the same direction: the cost of letting conflict sit, and the upside of resolving it.</p>
+    </div>
+    <div class="evidence-grid">
+      <div class="evidence-card lead">
+        <span class="evidence-tag primary">Primary &middot; current</span>
+        <div class="evidence-org">SHRM</div>
+        <div class="evidence-finding">$2.6B lost per day to workplace incivility in the US (Q2 2026), up from $2B/day in 2024.</div>
+        <div class="evidence-meta">Society for Human Resource Management, Civility Index &middot; independent HR professional body.</div>
       </div>
-      <div class="stat-tile">
-        <div class="stat-lead">Managers spend</div>
-        <div class="stat-num">4.3 hrs/week<button type="button" class="stat-info" aria-describedby="statSrc2"><span class="mark">*</span><span class="tooltip" id="statSrc2">Average manager time lost to conflict, roughly double the 2008 figure. Source: The Myers-Briggs Company (CPP Inc., rebranded), &ldquo;Conflict at Work&rdquo; (2022).</span></button></div>
-        <div class="stat-tail">on work conflicts</div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Independent corroboration</span>
+        <div class="evidence-org">CIPD / Warwick</div>
+        <div class="evidence-finding">&pound;28.5bn a year lost to workplace conflict in the UK alone, about &pound;1,000 per employee. 9.7M employees affected annually.</div>
+        <div class="evidence-meta">&ldquo;The Cost of Conflict at Work and Its Impact on Productivity&rdquo; &middot; CIPD-funded, Warwick Institute for Employment Research, using Acas analysis.</div>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Health &amp; wellness</span>
+        <div class="evidence-org">Peer-reviewed / IJERPH</div>
+        <div class="evidence-finding">Burdensome conflict with a superior predicts a 22% increase in physician-certified sick days.</div>
+        <div class="evidence-meta">&ldquo;The Relationship between Workplace Conflicts and Subsequent Physician-Certified Sick Leave,&rdquo; prospective population study, <i>Int. J. Environ. Res. Public Health</i> (2022). Physician-certified leave, not self-reported. Also backed by a CDC/NIOSH-archived meta-analysis of 79 studies linking interpersonal conflict to measurable physical strain.</div>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Engagement cost</span>
+        <div class="evidence-org">Gallup</div>
+        <div class="evidence-finding">Each actively disengaged employee costs $3,400&ndash;$10,000 a year: 18% less productive, 37% more absenteeism.</div>
+        <div class="evidence-meta">State of the Global Workplace &middot; $450&ndash;550B lost annually in the US, $8.8T globally.</div>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Engagement upside</span>
+        <div class="evidence-org">Gallup</div>
+        <div class="evidence-finding">Top-quartile-engagement teams are 23% more profitable, 18% more productive, 78% less absenteeism.</div>
+        <div class="evidence-meta">Q12 meta-analysis, thousands of business units &middot; the flip side of what unresolved conflict drags down.</div>
+      </div>
+      <div class="evidence-card secondary">
+        <span class="evidence-tag secondary">Historical reference</span>
+        <div class="evidence-org">CPP Inc. (2008)</div>
+        <div class="evidence-finding">2.8 hrs/week per employee, ~50% cite personality clashes as the leading cause. ~5,000 employees, nine countries.</div>
+        <div class="evidence-meta">The most widely cited figure in this field. Newer, independent research above lands on the same scale of cost.</div>
       </div>
     </div>
   </section>
 
+  <!-- "Why it looks like ego but usually isn't" hidden for now, doesn't fit the flow here, keep markup ready to re-enable or relocate
   <section class="block">
     <h3 class="section-headline">Why it looks like ego but usually isn't</h3>
     <div class="stat-row">
       <div class="stat-tile">
-        <div class="stat-num">~50%<button type="button" class="stat-info" aria-describedby="statSrc3"><span class="mark">*</span><span class="tooltip" id="statSrc3">CPP Inc., &ldquo;Workplace Conflict and How Businesses Can Harness It to Thrive&rdquo; (2008). Estimates in this range are commonly cited; directionally representative, not a single confirmed figure.</span></button></div>
+        <div class="stat-num">~50%<button type="button" class="stat-info" aria-describedby="statSrc3"><span class="mark">1</span><span class="tooltip" id="statSrc3">CPP Inc. (now The Myers-Briggs Company), &ldquo;Workplace Conflict and How Businesses Can Harness It to Thrive&rdquo; (2008). Estimates in this range are commonly cited; directionally representative, not a single confirmed figure. A CDC/NIOSH-archived meta-analysis of 79 studies independently links interpersonal conflict at work to measurable strain, outside the personality-testing industry.</span></button></div>
         <div class="stat-label">of employees name personality clashes and warring egos as the leading cause of conflict at work.</div>
       </div>
       <p>That's what it feels like walking in. People walk out of a <i>resolved</i> dispute holding a review channel, a turnaround time, a handoff boundary, not a personality change. Mend goes after that driver instead of refereeing the ego story.</p>
     </div>
   </section>
+  -->
 
   <section class="block">
     <h3 class="section-headline">Why Mend was built</h3>
@@ -364,7 +435,7 @@
   <div class="cta">
     <h3 class="section-headline">Ready to Clear the Air?</h3>
     <p>Pick a practice scenario or simply type what's happening in your own words. Off the record, zero judgment, and completely confidential.</p>
-    <a class="btn start-link" href="http://localhost:8080/intake/session" data-local="http://localhost:8080/intake/session" data-live="https://mend-mvp.onrender.com/intake/session">Start the Conversation &rarr;</a>
+    <a class="btn" href="/intake/session">Start the Conversation &rarr;</a>
   </div>
 
   <section class="block">
@@ -375,7 +446,7 @@
   </section>
 
   <footer>
-    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. Full details: <a href="product-spec.html">product spec</a> &middot; <a href="about.html">about</a>.</div>
+    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product.</div>
   </footer>
 </div>
 
@@ -426,16 +497,6 @@
   document.querySelectorAll('.stat-info').forEach(function(btn){
     btn.addEventListener('mouseenter', function(){ position(btn); });
     btn.addEventListener('focus', function(){ position(btn); });
-  });
-})();
-</script>
-<script>
-(function(){
-  var isLive = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:';
-  if (!isLive) return;
-  document.querySelectorAll('.start-link').forEach(function(a){
-    var live = a.getAttribute('data-live');
-    if (live) a.href = live;
   });
 })();
 </script>

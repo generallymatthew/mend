@@ -493,7 +493,7 @@
     <div class="summary-item"><span class="num">03</span><p><strong>Employee-initiated flow</strong> — private processing, optional joint session, pre-screen, side conversation, a digital-only session that never ends in live agreement, nothing saved, then a private follow-up where resolution actually happens.</p></div>
     <div class="summary-item"><span class="num">04</span><p><strong>The initial side conversation</strong> — the facilitator meets each person alone before they meet each other: hears their side, checks real willingness, screens for the floor before anyone's connected.</p></div>
     <div class="summary-item"><span class="num">05</span><p><strong>Manager-initiated flow</strong> — a manager can require a session and sees only resolved or not resolved, never content, and only for sessions they themselves required, never wider.</p></div>
-    <div class="summary-item"><span class="num">06</span><p><strong>The trigger system</strong> — a fixed legal floor no company can weaken, plus a company-defined ceiling on top, with three real-time tiers from a caring pause to a broadcast-delay-style cut for active threats.</p></div>
+    <div class="summary-item"><span class="num">06</span><p><strong>The trigger system</strong> — a single fixed legal floor, no company-configurable additions on top, with three real-time tiers from a caring pause to a broadcast-delay-style cut for active threats.</p></div>
     <div class="summary-item"><span class="num">07</span><p><strong>Data &amp; privacy architecture</strong> — nothing is ever recorded, not recorded then deleted; trigger records are tamper-evident; proof comes in tiers from a SOC 2 audit up to confidential computing.</p></div>
     <div class="summary-item"><span class="num">08</span><p><strong>Post-session</strong> — resolution and real agreement happen privately, one person at a time, after the room, never live.</p></div>
     <div class="summary-item"><span class="num">09</span><p><strong>Power-imbalance safeguards</strong> — the bot advocates for both employees, not the company, and specifically for whoever has less power in the relationship.</p></div>
@@ -726,7 +726,7 @@ flowchart TD
 
   <section id="triggers">
     <div class="num-heading"><span class="num">06</span><h2>The trigger system</h2></div>
-    <p>Two tiers, deliberately asymmetric: a floor the company can't lower, and a ceiling it can raise.</p>
+    <p>One tier, not configurable by the buying company in either direction: a fixed floor it can't lower, and nothing it can add on top of it either.</p>
 
     <div class="tier floor">
       <span class="tier-label">Mandatory floor — not configurable</span>
@@ -738,14 +738,14 @@ flowchart TD
         <span class="tag">immediate safety risk</span>
       </div>
     </div>
-    <div class="tier ceiling">
-      <span class="tier-label">Configurable ceiling — company-defined</span>
-      <p>A company may add categories on top of the floor, e.g. specific policy or financial-conduct concerns, but cannot remove or weaken anything in the floor tier.</p>
-    </div>
 
     <div class="callout">
       <span class="label">Considered and rejected</span>
-      <p>Letting the buying company fully define what triggers HR notification, no fixed floor, entirely their own configuration. Rejected: a company could configure it to almost never fire, and that doesn't reduce their liability, it can increase it. "We built a tool capable of catching this and configured it not to" reads as willful blindness, arguably worse than not having the tool at all. The floor/ceiling split above exists specifically because of this.</p>
+      <p>A company-configurable ceiling on top of the floor, letting a buyer add its own categories (policy violations, financial-conduct concerns) for HR notification. Rejected: the moment an employer can add escalation categories it didn't disclose in full, an employee can never be sure what they say won't silently route to HR, and that uncertainty collapses the confidentiality promise the entire product depends on, even though the floor itself stays fixed and small. It also creates real legal exposure of its own: a configurable category covering pay, working conditions, or management fairness can sweep in discussion that's federally protected concerted activity, something a company has no business flagging at all. A fixed, fully-disclosed floor and nothing else is the only version of this that keeps the confidentiality promise intact.</p>
+    </div>
+    <div class="callout">
+      <span class="label">Considered and rejected</span>
+      <p>Letting the buying company fully define what triggers HR notification, no fixed floor, entirely their own configuration. Rejected: a company could configure it to almost never fire, and that doesn't reduce their liability, it can increase it. "We built a tool capable of catching this and configured it not to" reads as willful blindness, arguably worse than not having the tool at all. The fixed floor above exists specifically because of this.</p>
     </div>
 
     <div class="callout">
@@ -941,7 +941,7 @@ flowchart LR
     </div>
     <div class="tier ceiling">
       <span class="tier-label">Real, but genuinely uncertain</span>
-      <p>Software and business-method patents got harder to obtain post-<em>Alice v. CLS Bank</em>, an abstract idea on a generic computer usually isn't patentable alone. The parts of this spec with the most concrete technical mechanism, the real-time streaming classification combined with the broadcast-delay interception buffer (Section 6), and the tamper-evident, cryptographically-signed trigger record (Section 7), are the more plausible candidates. The more process-flavored pieces, the floor/ceiling split, the side-conversation flow, never-agree-live, are likely harder to patent and better protected as trade secret. Needs a real patent attorney to assess claim by claim, not product intuition, same caution as the legal trigger definitions elsewhere in this spec.</p>
+      <p>Software and business-method patents got harder to obtain post-<em>Alice v. CLS Bank</em>, an abstract idea on a generic computer usually isn't patentable alone. The parts of this spec with the most concrete technical mechanism, the real-time streaming classification combined with the broadcast-delay interception buffer (Section 6), and the tamper-evident, cryptographically-signed trigger record (Section 7), are the more plausible candidates. The more process-flavored pieces, the fixed-floor-only trigger design, the side-conversation flow, never-agree-live, are likely harder to patent and better protected as trade secret. Needs a real patent attorney to assess claim by claim, not product intuition, same caution as the legal trigger definitions elsewhere in this spec.</p>
     </div>
     <div class="tier floor">
       <span class="tier-label">Probably the strongest moat, and it isn't legal IP</span>
@@ -959,7 +959,6 @@ flowchart LR
       <div class="risk-item"><span class="mark">＋</span><p>Going digital-only solves the separation problem, but it's untested whether employees trust a facilitator that's never in person for something this sensitive, worth validating rather than assuming.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>Enterprise buyers often expect more analytics and visibility than this product can honestly offer, the privacy promise is the pitch and also the sales friction.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>Proving the product works, without any content to show, is a genuine go-to-market problem, not just a legal one.</p></div>
-      <div class="risk-item"><span class="mark">＋</span><p>Whether generic hostile bullying, with no protected-characteristic basis, belongs on the configurable ceiling (Section 6) as its own category isn't decided. It doesn't meet the floor's legal-duty bar, most jurisdictions don't treat equal-opportunity rudeness as unlawful, but it's squarely the kind of conflict the product exists to catch, and it's exactly the sort of thing a buyer will ask about. Needs a real answer before it comes up in a sales conversation.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>The shared access code behind anonymous invites and the coaching debrief (Section 3) is a trust model, not a cryptographic guarantee, anyone holding it can sign up. Needs a real rotation and revocation policy before this ships, not just the "same as a Slack invite link" comparison in the spec.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>Both anonymous invites and the coaching debrief (Section 3) depend on reaching someone through an in-app notification or a personal contact they opted into, not their work email. An employee who never opts in personal contact info, or doesn't have the app open, may just never see the invite or nudge in time. Worth real testing, this could quietly cap adoption in exchange for the anonymity guarantee.</p></div>
       <div class="risk-item"><span class="mark">＋</span><p>Peer-suggested invites (Section 3) name the suggester, unlike an earlier draft of this feature, so a genuine nudge is at least attributable, not anonymous the way a bad-faith one could otherwise hide behind. That's a real deterrent, not a guarantee, an identified sender can still be a passive-aggressive one, and there's no real user testing yet on whether the framing actually lands or just reads as "someone's talking about you."</p></div>

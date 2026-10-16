@@ -184,7 +184,7 @@
     <div class="hero-text">
       <h1>Fix Coworker Friction Before It Becomes an HR File.</h1>
       <p class="lede">Work through coworker friction without the company getting involved. Unpack what went wrong, practice tough conversations solo, and clear your head before stepping back into the room. Nothing is recorded, nothing reaches HR, and your manager never knows you used it.</p>
-      <a class="btn-top start-link" href="http://localhost:8080/intake/session" data-local="http://localhost:8080/intake/session" data-live="https://mend-mvp.onrender.com/intake/session">Start a Private Session &rarr;</a>
+      <a class="btn-top" href="/intake/session">Start a Private Session &rarr;</a>
     </div>
     <div class="hero-visual">
       <div class="hero-avatar">
@@ -283,12 +283,12 @@
     <div class="cta-avatar" id="ctaAvatar"></div>
     <h3 class="section-headline">Ready to Clear the Air?</h3>
     <p>Pick a practice scenario or simply type what's happening in your own words. Off the record, zero judgment, and completely confidential.</p>
-    <a class="btn start-link" href="http://localhost:8080/intake/session" data-local="http://localhost:8080/intake/session" data-live="https://mend-mvp.onrender.com/intake/session">Start the Conversation &rarr;</a>
+    <a class="btn" href="/intake/session">Start the Conversation &rarr;</a>
     <div class="trust-line">Testing Prototype: we want your honest take, on the pitch above as much as the session itself. Does the problem above match something you've experienced? Does "nothing is recorded, ever" read as credible? Was there a reason you hesitated before clicking Start?</div>
   </div>
 
   <footer>
-    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. Full details: <a href="product-spec.html">product spec</a> &middot; <a href="launchpad.html">launchpad</a>.</div>
+    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product.</div>
   </footer>
 </div>
 
@@ -434,20 +434,6 @@
   }
   var ctaHost = document.getElementById('ctaAvatar');
   if (ctaHost) new ThimbleAvatarV2(ctaHost, { size: 52 });
-})();
-</script>
-<script>
-(function(){
-  // Same local/live link-swap pattern as launchpad.html -- this page gets
-  // opened both from a local dev server and from the live Render deploy,
-  // and every start-link button needs to point at whichever one the
-  // tester is actually looking at, not always localhost.
-  var isLive = location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:';
-  if (!isLive) return;
-  document.querySelectorAll('.start-link').forEach(function(a){
-    var live = a.getAttribute('data-live');
-    if (live) a.href = live;
-  });
 })();
 </script>
 </body>

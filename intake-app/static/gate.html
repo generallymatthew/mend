@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; access code</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --pink:#F3829A;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:32px 28px; max-width:360px; width:100%; margin:20px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  h1{font-size:1.3rem; margin:0 0 8px;}
+  p{color:var(--ink-soft); font-size:14px; margin:0 0 18px; line-height:1.5;}
+  input{width:100%; border:1.5px solid var(--border); border-radius:10px; padding:11px 14px; font:inherit; font-size:15px; margin-bottom:12px;}
+  button{width:100%; background:var(--pink); color:#fff; border:none; border-radius:999px; padding:12px 0; font:inherit; font-weight:700; font-size:14.5px; cursor:pointer;}
+  button:disabled{opacity:.6; cursor:default;}
+  .error{color:#8C3B2E; font-size:13px; margin-top:10px; display:none;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Enter your access code</h1>
+    <p>This is a private prototype. Use the code you were given to continue.</p>
+    <input id="code" type="text" placeholder="Access code" autocomplete="off" autocapitalize="off">
+    <button id="submitBtn">Continue</button>
+    <div class="error" id="errorMsg">Wrong code &mdash; try again.</div>
+  </div>
+  <script>
+    const next = new URLSearchParams(location.search).get('next') || '/';
+    const codeInput = document.getElementById('code');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    async function submit() {
+      const code = codeInput.value.trim();
+      if (!code) return;
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch('/api/access', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({code}),
+        });
+        if (!res.ok) throw new Error('wrong code');
+        location.href = next;
+      } catch (e) {
+        errorMsg.style.display = 'block';
+        submitBtn.disabled = false;
+      }
+    }
+    submitBtn.addEventListener('click', submit);
+    codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  </script>
+</body>
+</html>

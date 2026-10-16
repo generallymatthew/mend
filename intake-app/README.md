@@ -27,6 +27,10 @@ Open http://localhost:8420 in a browser. Voice memo recording needs microphone p
 
 Running this as part of the full walkthrough instead of standalone? Use `../run_all.sh` and open http://localhost:8080/intake/ instead — the "continue to joint session" banner link only resolves correctly when browsed that way (see the repo root `README.md`).
 
+## Optional: tester access gate
+
+Unset by default (local dev needs no setup). Set `TESTER_ACCESS_CODE` in `.env` (and on Render, before sending the live URL to anyone) to require a shared passcode before any page or `/api/*` call is served — a lightweight wall against random crawlers/scrapers hitting the paid LLM/voice endpoints, not real per-user auth. A tester without the cookie gets redirected to `/gate` (or a 401 on API calls), enters the code once, and it's remembered via a cookie for 30 days.
+
 ## Layout
 
 A call, not a chat app: the avatar, captions, and controls are the main event in the center pane, sized and centered like a video call tile. The message-by-message transcript is reference material, docked in a scrollable column on the right rather than inline in the main flow. Narrow windows (under 760px) stack the transcript below instead of beside.

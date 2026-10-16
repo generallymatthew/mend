@@ -417,7 +417,7 @@
   .chat-typing span:nth-child(3){animation-delay:.4s;}
   .chat-composer{padding:12px 16px 16px; border-top:1px solid #17372E14;}
   .chat-input-row{max-width:720px; margin:0 auto; display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--border); border-radius:18px; padding:8px 8px 8px 16px;}
-  .chat-input-row textarea{flex:1; min-width:0; border:none; outline:none; resize:none; font:inherit; font-size:15px; line-height:1.5; color:var(--ink); background:transparent; padding:6px 0;}
+  .chat-input-row textarea{flex:1; min-width:0; border:none; outline:none; resize:none; overflow-y:auto; max-height:160px; font:inherit; font-size:15px; line-height:1.5; color:var(--ink); background:transparent; padding:6px 0;}
   .chat-input-row .send-btn{height:44px; padding:0 20px; border-radius:12px; flex-shrink:0;}
   .chat-hint{max-width:720px; margin:8px auto 0; font-size:12px; opacity:.55; text-align:center;}
   @media (max-width: 760px){
@@ -1244,6 +1244,11 @@ const chatThreadInner = document.getElementById('chatThreadInner');
 const chatTyping = document.getElementById('chatTyping');
 const chatStatusEl = document.getElementById('chatStatus');
 const chatInput = document.getElementById('chatInput');
+function autoGrowChatInput() {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = chatInput.scrollHeight + 'px';
+}
+chatInput.addEventListener('input', autoGrowChatInput);
 const chatSendBtn = document.getElementById('chatSendBtn');
 const chatResetBtn = document.getElementById('chatResetBtn');
 const liveTimerEl = document.getElementById('liveTimer');
@@ -3544,6 +3549,7 @@ async function sendText() {
   const text = chatInput.value.trim();
   if (!text) return;
   chatInput.value = '';
+  autoGrowChatInput();
   addMessage(text, 'employee');
   logEvent('turn', {mode: 'text', turn: ++analyticsTurnCount});
   setBusy(true);
@@ -4210,6 +4216,7 @@ async function startComposerRecording() {
         // already typed should keep it, not silently overwrite it.
         const existing = chatInput.value.trim();
         chatInput.value = existing ? existing + ' ' + voiceData.transcript : voiceData.transcript;
+        autoGrowChatInput();
         chatInput.placeholder = restPlaceholder;
         chatInput.focus();
         chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);

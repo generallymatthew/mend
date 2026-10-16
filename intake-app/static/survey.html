@@ -55,7 +55,7 @@
 
   <div id="form-view">
     <h1>How did that go?</h1>
-    <p class="sub">Ten minutes, anonymous. It goes straight to the people building this, not to your employer.</p>
+    <p class="sub">Two minutes, anonymous. It goes straight to the people building this, not to your employer.</p>
 
     <div class="card">
       <div class="q-label">Overall, how was your experience?</div>
@@ -69,8 +69,6 @@
       <div class="scale-labels"><span>Not good</span><span>Excellent</span></div>
     </div>
 
-    <div class="section-label">Trust &amp; safety</div>
-
     <div class="card">
       <div class="q-label">Did you feel safe being completely honest with Thimble?</div>
       <div class="choice-row" data-radio="felt_safe">
@@ -81,119 +79,12 @@
     </div>
 
     <div class="card">
-      <div class="q-label">Did you trust that this conversation was actually private?</div>
-      <div class="choice-row" data-radio="trusted_privacy">
-        <label class="choice"><input type="radio" name="trusted_privacy" value="yes"> Yes</label>
-        <label class="choice"><input type="radio" name="trusted_privacy" value="somewhat"> Somewhat</label>
-        <label class="choice"><input type="radio" name="trusted_privacy" value="no"> No</label>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="q-label">Did Thimble ever feel like it was taking sides?</div>
-      <div class="choice-row" data-radio="sided">
-        <label class="choice"><input type="radio" name="sided" value="neutral"> No, it felt neutral</label>
-        <label class="choice"><input type="radio" name="sided" value="me"> Somewhat, it leaned toward me</label>
-        <label class="choice"><input type="radio" name="sided" value="other"> Somewhat, it leaned toward the other person</label>
-        <label class="choice"><input type="radio" name="sided" value="clear"> Yes, it clearly sided with someone</label>
-      </div>
-    </div>
-
-    <div class="section-label">Did it actually work</div>
-
-    <div class="card">
-      <div class="q-label">Did Thimble understand your situation accurately?</div>
-      <div class="choice-row" data-radio="understood_situation">
-        <label class="choice"><input type="radio" name="understood_situation" value="well"> Understood it well</label>
-        <label class="choice"><input type="radio" name="understood_situation" value="mostly"> Mostly, needed some corrections</label>
-        <label class="choice"><input type="radio" name="understood_situation" value="poorly"> I had to correct it a lot</label>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="q-label">Did this conversation change how you're planning to approach the situation?</div>
-      <div class="choice-row" data-radio="changed_approach">
-        <label class="choice"><input type="radio" name="changed_approach" value="clarified"> Yes, it clarified my thinking</label>
-        <label class="choice"><input type="radio" name="changed_approach" value="changed_mind"> Yes, it changed my mind</label>
-        <label class="choice"><input type="radio" name="changed_approach" value="no_difference"> No real difference</label>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="q-label">Do you feel more ready for the hard conversation than before?</div>
-      <div class="choice-row" data-radio="readiness">
-        <label class="choice"><input type="radio" name="readiness" value="more"> More ready</label>
-        <label class="choice"><input type="radio" name="readiness" value="same"> About the same</label>
-        <label class="choice"><input type="radio" name="readiness" value="less"> Less ready</label>
-      </div>
-    </div>
-
-    <div class="section-label">Compared to the alternative</div>
-
-    <div class="card">
-      <div class="q-label">Compared to talking to an HR rep, a manager, or a friend about this, was this...</div>
-      <div class="choice-row" data-radio="comparison">
-        <label class="choice"><input type="radio" name="comparison" value="better"> Better</label>
-        <label class="choice"><input type="radio" name="comparison" value="same"> About the same</label>
-        <label class="choice"><input type="radio" name="comparison" value="worse"> Worse</label>
-        <label class="choice"><input type="radio" name="comparison" value="na"> I wouldn't have talked to anyone about this</label>
-      </div>
-    </div>
-
-    <div class="card">
       <div class="q-label">Would you use this again for a similar situation?</div>
       <div class="choice-row" data-radio="would_reuse">
         <label class="choice"><input type="radio" name="would_reuse" value="yes"> Yes</label>
         <label class="choice"><input type="radio" name="would_reuse" value="maybe"> Maybe</label>
         <label class="choice"><input type="radio" name="would_reuse" value="no"> No</label>
       </div>
-    </div>
-
-    <div class="section-label">How you're feeling now</div>
-
-    <div class="card">
-      <div class="q-label">How are you feeling right now compared to before this conversation?</div>
-      <div class="choice-row" data-radio="emotional_shift">
-        <label class="choice"><input type="radio" name="emotional_shift" value="calmer"> Calmer or clearer</label>
-        <label class="choice"><input type="radio" name="emotional_shift" value="same"> About the same</label>
-        <label class="choice"><input type="radio" name="emotional_shift" value="worse"> Worse</label>
-      </div>
-    </div>
-
-    <div class="section-label">You and Thimble</div>
-
-    <div class="card">
-      <div class="q-label">How did interacting with Thimble feel?</div>
-      <div class="choice-row" data-radio="thimble_relation">
-        <label class="choice"><input type="radio" name="thimble_relation" value="tool"> Mostly like using a tool or app</label>
-        <label class="choice"><input type="radio" name="thimble_relation" value="presence"> Like there was a presence there, but not comforting</label>
-        <label class="choice"><input type="radio" name="thimble_relation" value="comforting_presence"> Like there was a presence there, and it was comforting</label>
-        <label class="choice"><input type="radio" name="thimble_relation" value="person"> At times, somewhat like talking to a person</label>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="q-label">Setting Thimble aside, how comfortable are you in general talking to an AI about something personal or emotionally loaded?</div>
-      <div class="scale" id="q-ai-comfort">
-        <button type="button" data-val="1">1</button>
-        <button type="button" data-val="2">2</button>
-        <button type="button" data-val="3">3</button>
-        <button type="button" data-val="4">4</button>
-        <button type="button" data-val="5">5</button>
-      </div>
-      <div class="scale-labels"><span>Very uncomfortable</span><span>Very comfortable</span></div>
-    </div>
-
-    <div class="section-label">In your own words</div>
-
-    <div class="card">
-      <div class="q-label">What's one moment in this conversation that stood out, good or bad?</div>
-      <textarea id="standout_moment" placeholder="Optional"></textarea>
-    </div>
-
-    <div class="card">
-      <div class="q-label">What would have made you trust this more?</div>
-      <textarea id="trust_improvement" placeholder="Optional"></textarea>
     </div>
 
     <div class="card">
@@ -245,7 +136,6 @@ function wireScale(id) {
   return () => val;
 }
 const getOverall = wireScale('q-overall');
-const getAiComfort = wireScale('q-ai-comfort');
 
 // Every single-choice question block shares the same radio + highlight
 // pattern -- wire them all generically off data-radio instead of repeating
@@ -290,18 +180,7 @@ submitBtn.addEventListener('click', async () => {
   const payload = {
     overall_rating: overallRating,
     felt_safe: getRadio('felt_safe'),
-    trusted_privacy: getRadio('trusted_privacy'),
-    sided: getRadio('sided'),
-    understood_situation: getRadio('understood_situation'),
-    changed_approach: getRadio('changed_approach'),
-    readiness: getRadio('readiness'),
-    comparison: getRadio('comparison'),
     would_reuse: getRadio('would_reuse'),
-    emotional_shift: getRadio('emotional_shift'),
-    thimble_relation: getRadio('thimble_relation'),
-    ai_comfort_general: getAiComfort(),
-    standout_moment: document.getElementById('standout_moment').value.trim(),
-    trust_improvement: document.getElementById('trust_improvement').value.trim(),
     issues,
     comments: document.getElementById('comments').value.trim(),
   };

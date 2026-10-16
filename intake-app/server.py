@@ -31,7 +31,7 @@ from anthropic import Anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from google.oauth2.service_account import Credentials as GoogleCredentials
 import gspread
@@ -109,6 +109,53 @@ VIDEO_ENABLED = bool(TAVUS_API_KEY and TAVUS_PAL_ID and LLM_SHIM_SECRET)
 
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
+
+# --- Tester access gate ----------------------------------------------------
+# The live deploy had no wall at all in front of these paid LLM/voice
+# endpoints -- anyone with the URL could run up the API bill, scraped or
+# not. A real per-customer login is out of scope for a blind-tester
+# prototype; one shared passcode, same trust level as demo-app's
+# ORG_ACCESS_CODE, is enough to keep this off random crawlers/bots while
+# staying a one-time step for an invited tester. Unset by default so local
+# dev keeps working with zero setup.
+TESTER_ACCESS_CODE = os.environ.get("TESTER_ACCESS_CODE", "")
+ACCESS_COOKIE = "mend_access"
+# The gate page and its own submit endpoint must stay reachable with no
+# cookie yet, or nobody could ever pass the gate in the first place.
+ACCESS_EXEMPT_PATHS = {"/gate", "/api/access"}
+
+
+@app.middleware("http")
+async def tester_gate(request: Request, call_next):
+    if not TESTER_ACCESS_CODE:
+        return await call_next(request)
+    path = request.url.path
+    if path in ACCESS_EXEMPT_PATHS or path.startswith("/static/"):
+        return await call_next(request)
+    if request.cookies.get(ACCESS_COOKIE) == TESTER_ACCESS_CODE:
+        return await call_next(request)
+    if path.startswith("/api/"):
+        return JSONResponse({"error": "access code required"}, status_code=401)
+    return RedirectResponse(url=f"/gate?next={path}")
+
+
+@app.get("/gate")
+async def gate_page():
+    return FileResponse(ROOT / "static" / "gate.html")
+
+
+@app.post("/api/access")
+async def submit_access(request: Request):
+    data = await request.json()
+    code = str(data.get("code") or "")
+    if not TESTER_ACCESS_CODE or code != TESTER_ACCESS_CODE:
+        return JSONResponse({"error": "wrong code"}, status_code=403)
+    resp = JSONResponse({"ok": True})
+    # httponly: the page never needs to read this back itself, only send it
+    # along automatically on the next request, same as any session cookie.
+    resp.set_cookie(ACCESS_COOKIE, TESTER_ACCESS_CODE, max_age=60 * 60 * 24 * 30, httponly=True, samesite="lax")
+    return resp
+
 
 # --- Rate limiting --------------------------------------------------------
 # A free/public pilot with no request limit on endpoints that call a paid
