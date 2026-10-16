@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mend — Group Session (Zoom panel)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap">
+<script src="https://appssdk.zoom.us/sdk.js"></script>
+<style>
+  :root{
+    --bg:#F6F4EF; --ink:#1F1D1A; --muted:#8A837A; --line:#E4DFD4; --line-2:#D8D2C6;
+    --card:#fff; --accent:#2F6B5E; --accent-ink:#fff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+  .label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .btn{border:1px solid var(--line-2);background:#fff;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .btn:hover{background:#FBF9F4}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn-primary:hover{background:#275a4f}
+  .btn[disabled]{opacity:.45;cursor:default}
+  input[type=text]{font-family:inherit;font-size:13px;border:1px solid var(--line-2);border-radius:8px;padding:9px 12px;background:#fff;color:var(--ink);width:100%}
+  input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+  #status{padding:8px 14px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--line);background:#fff}
+  #status.err{color:#C14E3A}
+
+  #join{flex-grow:1;display:flex;align-items:center;justify-content:center;padding:20px}
+  #join .card{display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px}
+  #join h1{font-family:'Fraunces',serif;font-size:18px;margin:0}
+  #join p{font-size:13px;color:var(--muted);margin:0}
+
+  #onboarding{display:none;flex-grow:1;overflow-y:auto;padding:20px}
+  #onboarding .card{display:flex;flex-direction:column;gap:14px}
+  #onboarding .thimble-badge{display:flex;align-items:center;gap:8px}
+  #onboarding .thimble-dot{width:26px;height:26px;border-radius:50%;background:#1F3B35;color:#7FB8A6;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:11px;font-weight:600}
+  #onboarding .thimble-badge span{font-size:13px;font-weight:700}
+  #onboarding h1{font-family:'Fraunces',serif;font-size:18px;margin:0}
+  #onboarding p{font-size:13px;line-height:1.5;color:#4A463F;margin:0}
+  #onboarding ul{margin:0;padding-left:16px;font-size:13px;line-height:1.55;color:#4A463F}
+
+  #room{display:none;flex-grow:1;min-height:0;flex-direction:column}
+  header{padding:10px 14px;border-bottom:1px solid var(--line);background:#fff;flex-shrink:0}
+  header .issue span:last-child{font-size:13px;font-weight:600;display:block;margin-top:2px}
+
+  #tabs{display:flex;border-bottom:1px solid var(--line);flex-shrink:0}
+  #tabs button{flex:1;text-align:center;padding:10px;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:inherit}
+  #tabs button.active{font-weight:700;color:var(--ink);border-bottom-color:var(--accent)}
+  #panels{flex-grow:1;min-height:0;display:flex;flex-direction:column}
+  .panel{flex-grow:1;display:none;flex-direction:column;min-height:0}
+  .panel.active{display:flex}
+
+  #votebar{background:#fff;border-bottom:1px solid var(--line);padding:10px 14px;flex-shrink:0}
+  #votebar .text{font-size:13px;font-weight:600;margin-bottom:8px}
+  #votebar .votebtns{display:flex;gap:6px}
+  #votebar .votebtns button{flex:1;padding:6px;font-size:12px}
+  #novote{color:var(--muted);font-size:12px}
+
+  #chatlog{flex-grow:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px;font-size:13px}
+  #chatlog .from-thimble{background:#F0F7F4;border:1px solid #CFE4DB;border-radius:8px;padding:7px 9px}
+  #askthimblerow{padding:8px 14px 0}
+  #askthimblerow button{width:100%}
+  #chatform{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:8px;flex-shrink:0}
+  #chatform input{flex-grow:1}
+
+  #proplist{flex-grow:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .proposal-card{border:1px solid var(--line);border-radius:10px;padding:10px}
+  .proposal-card .ptext{font-size:13px;font-weight:600;margin-bottom:7px}
+  .bar-track{height:7px;background:#EDE9DF;border-radius:4px;overflow:hidden}
+  .bar-fill{height:100%;background:var(--accent)}
+  .proposal-card .counts{font-size:11px;color:var(--muted);margin-top:4px}
+  .proposal-card .votebtns{display:flex;gap:6px;margin-top:7px}
+  .proposal-card .votebtns button{flex:1;padding:6px;font-size:12px}
+  #propform{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:8px;flex-shrink:0}
+  #propform input{flex-grow:1}
+</style>
+</head>
+<body>
+
+<div id="status">Connecting to Zoom…</div>
+
+<div id="join">
+  <form class="card" id="joinform">
+    <h1>Join the session</h1>
+    <p>oss-repo#482 — Deprecate legacy config loader</p>
+    <input type="text" id="namefield" placeholder="Your name" autocomplete="off" required>
+    <button type="submit" class="btn btn-primary">Continue</button>
+  </form>
+</div>
+
+<div id="onboarding">
+  <form class="card" id="onboardingform">
+    <div class="thimble-badge"><div class="thimble-dot">TH</div><span>Thimble</span></div>
+    <h1>Before we start, <span id="greetname"></span></h1>
+    <p>I'm Thimble, an AI facilitator. Video and audio run through Zoom itself — I only run this panel: chat, proposals, and voting. I don't take sides and I don't get a vote.</p>
+    <div>
+      <p style="font-weight:700;margin-bottom:6px">What this session is for</p>
+      <ul>
+        <li>Reach a decision on <strong>oss-repo#482 — Deprecate legacy config loader</strong>, not to decide who's right as people.</li>
+        <li>Anyone can propose an option here. Everyone votes yes, no, or abstain.</li>
+        <li>Ask me to weigh in any time if the discussion is stuck or circling.</li>
+      </ul>
+    </div>
+    <button type="submit" class="btn btn-primary">Enter session</button>
+  </form>
+</div>
+
+<div id="room">
+  <header>
+    <div class="issue">
+      <span class="label">Pinned issue</span>
+      <span id="issuetitle"></span>
+    </div>
+  </header>
+  <div id="votebar"></div>
+  <div id="tabs">
+    <button data-tab="chat" class="active">Chat</button>
+    <button data-tab="proposals">Proposals</button>
+  </div>
+  <div id="panels">
+    <div class="panel active" id="panel-chat">
+      <div id="chatlog"></div>
+      <div id="askthimblerow">
+        <button type="button" class="btn" id="askthimblebtn">Ask Thimble to weigh in</button>
+      </div>
+      <form id="chatform">
+        <input type="text" id="chatinput" placeholder="Type a message…" autocomplete="off">
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+    </div>
+    <div class="panel" id="panel-proposals">
+      <div id="proplist"></div>
+      <form id="propform">
+        <input type="text" id="propinput" placeholder="Propose an option…" autocomplete="off">
+        <button type="submit" class="btn btn-primary">Add</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Companion panel for a real Zoom meeting: Zoom owns video/audio entirely
+// (this page never requests a camera/mic), this panel owns chat, proposals,
+// and voting, rendered inside Zoom's own in-meeting side-panel iframe via
+// the Zoom Apps SDK (https://appssdk.zoom.us/sdk.js, loaded above).
+//
+// Falls back to a plain name-entry form when zoomSdk.config() fails or the
+// page isn't actually running inside Zoom (e.g. opened directly in a
+// browser during development) -- same /api/* backend as static/index.html,
+// this is just a different front end for the same room.
+const THIMBLE_ID = 'thimble';
+let myId = null;
+let state = null;
+let inZoom = false;
+
+function initials(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+}
+
+async function initZoom() {
+  const statusEl = document.getElementById('status');
+  if (typeof zoomSdk === 'undefined') {
+    statusEl.textContent = 'Not running inside Zoom -- join with a name below (dev/testing mode).';
+    return;
+  }
+  try {
+    const configResponse = await zoomSdk.config({
+      capabilities: ['getRunningContext', 'getUserContext', 'getMeetingContext'],
+    });
+    const runningContext = configResponse.runningContext;
+    if (runningContext !== 'inMeeting') {
+      statusEl.textContent = 'Open this panel from inside a Zoom meeting to auto-join as yourself.';
+      return;
+    }
+    inZoom = true;
+    const userContext = await zoomSdk.getUserContext();
+    statusEl.textContent = `Connected to Zoom as ${userContext.screenName}.`;
+    document.getElementById('namefield').value = userContext.screenName || '';
+    // Zoom participants land straight on the onboarding step -- no need to
+    // ask for a name Zoom already gave us.
+    beginOnboarding(userContext.screenName || 'there');
+  } catch (e) {
+    statusEl.textContent = 'Could not connect to Zoom (' + e.message + ') -- join with a name below.';
+  }
+}
+
+function beginOnboarding(name) {
+  pendingName = name;
+  document.getElementById('greetname').textContent = name;
+  document.getElementById('join').style.display = 'none';
+  document.getElementById('onboarding').style.display = 'flex';
+}
+
+let pendingName = null;
+
+document.getElementById('joinform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('namefield').value.trim();
+  if (!name) return;
+  beginOnboarding(name);
+});
+
+document.getElementById('onboardingform').addEventListener('submit', (e) => {
+  e.preventDefault();
+  join(pendingName);
+});
+
+async function join(name) {
+  const res = await fetch('/api/join', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    // Video is Zoom's job in this panel -- preferred_method only controls
+    // this backend's own getUserMedia-driven video grid, which this page
+    // never renders, so the value is cosmetic here.
+    body: JSON.stringify({name, preferred_method: 'text'})
+  });
+  const data = await res.json();
+  myId = data.participant_id;
+  render(data.state);
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('room').style.display = 'flex';
+  connectSocket();
+}
+
+function connectSocket() {
+  const ws = new WebSocket(`ws://${location.host}/ws/${myId}`);
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.type === 'state') render(msg.state);
+  };
+  ws.onclose = () => setTimeout(connectSocket, 1000);
+}
+
+function render(newState) {
+  state = newState;
+  document.getElementById('issuetitle').textContent = state.issue_title;
+
+  const openProposal = state.proposals.find(p => p.open);
+  const votebar = document.getElementById('votebar');
+  if (openProposal) {
+    const t = openProposal.tally;
+    const myVote = openProposal.votes[myId];
+    votebar.innerHTML = `
+      <div class="text">${escapeHtml(openProposal.text)}</div>
+      <div class="votebtns">
+        <button class="btn ${myVote === 'abstain' ? 'btn-primary' : ''}" data-vote="abstain" data-pid="${openProposal.id}">Abstain</button>
+        <button class="btn ${myVote === 'no' ? 'btn-primary' : ''}" data-vote="no" data-pid="${openProposal.id}">No · ${t.no}</button>
+        <button class="btn ${myVote === 'yes' ? 'btn-primary' : ''}" data-vote="yes" data-pid="${openProposal.id}">Yes · ${t.yes}</button>
+      </div>
+    `;
+  } else {
+    votebar.innerHTML = `<span id="novote">No open proposal yet — add one under Proposals.</span>`;
+  }
+
+  const askbtn = document.getElementById('askthimblebtn');
+  askbtn.disabled = !!state.thimble_busy;
+  askbtn.textContent = state.thimble_busy ? 'Thimble is thinking…' : 'Ask Thimble to weigh in';
+
+  const chatlog = document.getElementById('chatlog');
+  const wasAtBottom = chatlog.scrollTop + chatlog.clientHeight >= chatlog.scrollHeight - 20;
+  chatlog.innerHTML = state.messages.map(m =>
+    `<div class="${m.author_id === THIMBLE_ID ? 'from-thimble' : ''}"><strong>${escapeHtml(m.author_name)}</strong> ${escapeHtml(m.text)}</div>`
+  ).join('');
+  if (wasAtBottom) chatlog.scrollTop = chatlog.scrollHeight;
+
+  document.getElementById('proplist').innerHTML = state.proposals.map(pr => {
+    const t = pr.tally;
+    const total = t.yes + t.no + t.abstain || 1;
+    const myVote = pr.votes[myId];
+    return `
+      <div class="proposal-card">
+        <div class="ptext">${escapeHtml(pr.text)}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(t.yes / total) * 100}%"></div></div>
+        <div class="counts">${t.yes} yes · ${t.no} no · ${t.abstain} abstain</div>
+        <div class="votebtns">
+          <button class="btn ${myVote === 'yes' ? 'btn-primary' : ''}" data-vote="yes" data-pid="${pr.id}">Yes</button>
+          <button class="btn ${myVote === 'no' ? 'btn-primary' : ''}" data-vote="no" data-pid="${pr.id}">No</button>
+          <button class="btn ${myVote === 'abstain' ? 'btn-primary' : ''}" data-vote="abstain" data-pid="${pr.id}">Abstain</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('chatform').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('chatinput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await fetch('/api/message', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, text})
+  });
+});
+
+document.getElementById('propform').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('propinput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await fetch('/api/proposal', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, text})
+  });
+});
+
+document.getElementById('panels').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-vote]');
+  if (!btn) return;
+  await fetch('/api/vote', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, proposal_id: btn.dataset.pid, choice: btn.dataset.vote})
+  });
+});
+document.getElementById('votebar').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-vote]');
+  if (!btn) return;
+  await fetch('/api/vote', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId, proposal_id: btn.dataset.pid, choice: btn.dataset.vote})
+  });
+});
+
+document.getElementById('askthimblebtn').addEventListener('click', async () => {
+  await fetch('/api/ask-thimble', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({participant_id: myId})
+  });
+});
+
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${btn.dataset.tab}`));
+});
+
+initZoom();
+</script>
+</body>
+</html>
