@@ -54,6 +54,14 @@
      name/pill/description hidden, stage and avatar sized up (see the JS
      that bumps inst.size to match). */
   .ripple-preview{width:260px; flex-shrink:0;}
+  /* One avatar whose avatarState cycles on a timer (see the JS near
+     cardcreation below) -- shows the color lerp, lean easing, and shape
+     morph all happening together in one box, the way a real state change
+     actually looks, instead of comparing separate static cards. */
+  .transition-demo{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px 20px; margin-bottom:24px; display:flex; flex-direction:column; align-items:center; gap:10px; width:280px;}
+  .transition-demo-stage{position:relative; height:280px; width:100%; display:flex; align-items:center; justify-content:center;}
+  .transition-demo #cycleAvatar{width:180px; height:180px;}
+  .transition-demo-label{font-family:'JetBrains Mono',monospace; font-size:13px; background:var(--accent-soft); color:var(--ink); padding:4px 12px; border-radius:999px;}
   .ripple-preview .card{gap:0;}
   .ripple-preview .card-name, .ripple-preview .card-pill, .ripple-preview .card-desc{display:none;}
   .ripple-preview .card-stage{height:320px;}
@@ -149,6 +157,25 @@
       <button type="button" id="rippleTriggerBtn">Fire ripple now</button>
     </div>
     <div class="ripple-preview" id="ripplePreview"></div>
+  </div>
+  <div class="transition-demo">
+    <div class="ripple-panel-title">State transitions -- one avatar, auto-cycling every 2.6s</div>
+    <div class="transition-demo-stage">
+      <div class="thimble-avatar" id="cycleAvatar">
+        <div class="thimble-shadow" id="cycleAvatarShadow"></div>
+        <div class="thimble-core" id="cycleAvatarCore">
+          <div class="thimble-ripple" id="cycleAvatarRippleA" hidden></div>
+          <div class="thimble-ripple b" id="cycleAvatarRippleB" hidden></div>
+          <div class="thimble-ring" id="cycleAvatarRing">
+            <div class="thimble-body" id="cycleAvatarBody">
+              <div class="thimble-blend" id="cycleAvatarBlend"></div>
+              <div class="thimble-mouth" id="cycleAvatarMouth"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="transition-demo-label" id="transitionDemoLabel">idle</div>
   </div>
   <div class="grid" id="grid"></div>
 </div>
@@ -655,6 +682,29 @@ document.getElementById('rippleTriggerBtn').addEventListener('click', () => {
   listeningCard.inst.renderedState = null;
 }
 
+// State-transitions demo: one avatar instance, built by hand the same
+// way the STATES.map loop above builds each card's inst, just not tied
+// to a fixed state -- cycleStates[cycleIndex] changes on a timer in
+// tick() below instead.
+const cycleStates = ['idle', 'ready', 'listening', 'thinking', 'talking', 'paused'];
+const cycleInst = {
+  size: 180,
+  el: document.getElementById('cycleAvatar'),
+  core: document.getElementById('cycleAvatarCore'),
+  shadow: document.getElementById('cycleAvatarShadow'),
+  ring: document.getElementById('cycleAvatarRing'),
+  body: document.getElementById('cycleAvatarBody'),
+  blend: document.getElementById('cycleAvatarBlend'),
+  mouth: document.getElementById('cycleAvatarMouth'),
+  rippleA: document.getElementById('cycleAvatarRippleA'),
+  rippleB: document.getElementById('cycleAvatarRippleB'),
+  renderedState: null, mouthLevel: 0, geo: 0, lvl: 0,
+  wobblePhase: 0, breathePhase: 0, lastT: null,
+};
+let cycleIndex = -1;
+let cycleSwitchAt = 0;
+const cycleLabelEl = document.getElementById('transitionDemoLabel');
+
 function tick(now) {
   cards.forEach(c => {
     if (c.def.hasLevel && c.auto) {
@@ -686,6 +736,15 @@ function tick(now) {
       }
     }
   });
+  // Advance the state-transitions demo on its own timer, independent of
+  // any card -- a constant 0.6 level so listening/talking's wobble has
+  // something to react to without wiring up Auto/muted controls for it.
+  if (now >= cycleSwitchAt) {
+    cycleIndex = (cycleIndex + 1) % cycleStates.length;
+    cycleSwitchAt = now + 2600;
+    cycleLabelEl.textContent = cycleStates[cycleIndex];
+  }
+  updateCardMotion(cycleInst, now, cycleStates[cycleIndex], 0.6, false);
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
