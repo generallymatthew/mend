@@ -378,6 +378,32 @@ copy exists in the shipped apps yet.
 
 ---
 
+## Team retro / project post-mortem tool
+
+### Pattern-only project retro — anonymized interviews, no individual call-outs
+A separate, standalone tool (not the existing conflict-mediation flow):
+after a project/sprint wraps, interview each person on the team separately
+and let them be fully honest about what happened ("John didn't review my
+PRs in time," "the UX design decisions were late and caused the delay").
+The system distills answers across the group into recurring **patterns**
+(structural/process causes) and never surfaces individual
+names/call-outs in the output. Rationale: naming names in a shared report
+makes people vulnerable to blame, which suppresses honesty; stripping
+identity out and reporting only patterns is what lets people actually
+tell the truth.
+- Where it could plug in: new standalone app/prototype, separate from the
+  peer-conflict apps (`intake-app`/`joint-session-app`/`manager-app`) —
+  this is retro/post-mortem shaped, not conflict-mediation shaped. Could
+  reuse the existing LLM-facilitator interview pattern and the
+  "anonymized aggregate, never per-person" principle already captured in
+  the org-level usage dashboard idea above.
+- Why not active: brand new, unscoped concept — no interview flow, no
+  distillation/pattern-extraction logic, and no decision yet on how many
+  participants are needed before "patterns" stop being traceable back to
+  an individual by elimination (a 2-person team can't actually anonymize).
+
+---
+
 ## Open design questions
 
 ### Disclose safety-floor screening upfront, or only reactively?
