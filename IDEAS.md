@@ -588,6 +588,19 @@ one-shot LLM benchmark output quality, which undersells this (see the
 `19_PERSONAL_AI_BENCHMARK_AUDIT.md` single-turn result and its known
 limitation, written up in the "Multi-turn rerun" entry above).
 
+**Family note, not a merge**: Suture and Splice both sit in the same
+category — Mend facilitating a live, real-time session that drives toward
+a deliverable, rather than solo prep (Darn/Seam) or async distillation
+(Loom). They are NOT the same engine at different headcounts (see the
+Splice entry above for why — opposite trust model, confirmed deliberate
+and already partially built that way). The real split within the family is
+trust model and output shape: Suture is private, two-party, and resolves
+into an action plan; Splice is public, group-scale, and resolves into a
+visible group decision/vote. Swatch is a third variant in this same live-
+facilitation family, with yet another trust model (warmth/encouragement
+between two people building a working relationship, not conflict
+resolution and not neutral group voting).
+
 1. **Seam** — real buyer with budget (manager/L&D training spend), no
    invite-friction problem (solo, manager-initiated for their own benefit),
    solid moat from the same outcome-tuning as Darn/Suture.
