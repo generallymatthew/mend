@@ -216,7 +216,7 @@ def insert_plan_step(conn: sqlite3.Connection, case_id: str, text: str, added_by
     conn.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (now, case_id))
 
 
-def add_loom_plan_steps(conn: sqlite3.Connection, case_id: str, texts: list[str] | None) -> None:
+def add_seam_plan_steps(conn: sqlite3.Connection, case_id: str, texts: list[str] | None) -> None:
     """Lets the facilitator itself contribute plan steps (see the signal's
     `plan_steps_to_add`), not just the manager typing into the "+ add a
     step" row. De-duplicated by exact trimmed/lowercased text against what's
@@ -232,7 +232,7 @@ def add_loom_plan_steps(conn: sqlite3.Connection, case_id: str, texts: list[str]
         text = (text or "").strip()
         if not text or text.lower() in existing:
             continue
-        insert_plan_step(conn, case_id, text, added_by="loom")
+        insert_plan_step(conn, case_id, text, added_by="seam")
         existing.add(text.lower())
 
 
@@ -395,7 +395,7 @@ def facilitator_reply(case_id: str, conn: sqlite3.Connection) -> dict:
         else:
             conn.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (time.time(), case_id))
         merge_names(case_id, signal.get("names"))
-        add_loom_plan_steps(conn, case_id, signal.get("plan_steps_to_add"))
+        add_seam_plan_steps(conn, case_id, signal.get("plan_steps_to_add"))
     # Defense in depth: the prompt already tells the model never to use a
     # real name in its own reply text, but redact here too in case a name
     # slips through (as it occasionally does) -- same safety net applied to

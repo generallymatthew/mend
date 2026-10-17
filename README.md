@@ -9,10 +9,9 @@ A confidential, AI-facilitated conflict resolution tool for workplace teams. See
 - **`design_handoffs/`** — design-reference implementations handed off for porting into the real apps (Thimble avatar motion, the Mend Sessions UI pass + brand kit, an earlier agent-presence exploration). See that folder's own `README.md`.
 - **`archive/`** — `pitch-legacy/` (old pitch exports, superseded) and `needs-review/` (a couple of zips and scratch files not yet reviewed for deletion).
 - **`IDEAS.md`** — a dumping ground for ideas worth capturing but not worth working on yet (positioning angles, adjacent markets, feature concepts), each tagged with where it could plug in and why it's not active.
-- **`intake-app/`, `joint-session-app/`, `post-session-app/`, `demo-app/`** — local FastAPI prototypes of the actual facilitator conversations, each backed by its matching `facilitator-*-system-prompt.md`. `demo-app/` is the entry point: a sign-up/invite screen plus links through the other three in order. See [Local prototypes](#local-prototypes) below.
-- **`manager-coaching-app/`** — a local FastAPI prototype for the manager side: a private coaching space for a manager preparing for, or rehearsing, a hard conversation with a direct report, backed by `facilitator-manager-coaching-system-prompt.md`. Built as a close sibling of `intake-app/` (same avatar UI, Talk/Practice split, voice-memo + TTS mechanics), not chained into the `demo-app/` walkthrough since it's a separate entry point for managers rather than the employee-initiated flow. See [Local prototypes](#local-prototypes) below.
+- **`intake-app/`, `joint-session-app/`, `post-session-app/`, `demo-app/`** — local FastAPI prototypes of the actual facilitator conversations, each backed by its matching `facilitator-*-system-prompt.md`. `demo-app/` is the entry point: a sign-up/invite screen plus links through the other three in order. The manager-coaching path (a manager preparing for or rehearsing a hard conversation with a direct report) is folded into `intake-app/`'s own system prompt now, detected from the conversation itself rather than a separate app — the standalone `manager-coaching-app/` prototype that used to carry this was removed as redundant. See [Local prototypes](#local-prototypes) below.
 - **`joint-session-audio/`** — standalone proof of the real audio delay buffer from `joint-session-architecture.md` (LiveKit + streaming STT gating a per-participant buffer via the real hard-cut classifier). Not yet integrated with `joint-session-app/`'s conversational logic — see its own `README.md`.
-- **`run_all.sh` + `Caddyfile`** — runs all five apps behind one local address instead of five separate ports. See [Local prototypes](#local-prototypes).
+- **`run_all.sh` + `Caddyfile`** — runs all four apps behind one local address instead of four separate ports. See [Local prototypes](#local-prototypes).
 
 ## Live version
 
@@ -21,20 +20,19 @@ https://claude.ai/artifact/PRQ4kwizN721tXCAf6ACpt
 
 ## Local prototypes
 
-Five local FastAPI apps, each its own venv and `.env` (see each `README.md`), no persistence beyond the running process:
+Four local FastAPI apps, each its own venv and `.env` (see each `README.md`), no persistence beyond the running process:
 
 | App | Port | What it tests |
 |---|---|---|
 | `demo-app/` | 8423 | Sign-up + anonymous-invite UX, links through the three below in order |
-| `intake-app/` | 8420 | Private processing conversation, text + voice memo |
+| `intake-app/` | 8420 | Private processing conversation, text + voice memo (both the employee-conflict and manager-coaching paths) |
 | `joint-session-app/` | 8421 | The joint session, two real participants (each connects with their own role link) |
 | `post-session-app/` | 8422 | Post-session follow-up, with a scenario picker since it doesn't chain from a real joint session |
 | `joint-session-audio/` | 8424 | Standalone proof of the real audio delay buffer (LiveKit + streaming STT + the real hard-cut classifier) — not yet integrated with `joint-session-app/`'s conversational logic. Needs `brew install livekit` and its own `agent.py` worker in addition to uvicorn; see its `README.md`. |
-| `manager-coaching-app/` | 8425 | Manager-side coaching conversation, text + voice memo — a separate entry point, not chained from `demo-app/` |
 
-**Run everything at once:** `./run_all.sh` from the repo root starts all five (each in its own venv) plus a local Caddy reverse proxy, and puts the whole walkthrough behind one address: **http://localhost:8080/**. Requires `caddy` (`brew install caddy`) and each app's own venv/dependencies already set up per its `README.md`. Ctrl-C stops everything together.
+**Run everything at once:** `./run_all.sh` from the repo root starts all four (each in its own venv) plus a local Caddy reverse proxy, and puts the whole walkthrough behind one address: **http://localhost:8080/**. Requires `caddy` (`brew install caddy`) and each app's own venv/dependencies already set up per its `README.md`. Ctrl-C stops everything together.
 
-Prefer running one app in isolation to debug it (e.g. while iterating on its system prompt)? Each app still works standalone on its own port from the table above — just note that cross-app links (demo-app's buttons, the "continue" banners) point at the proxy's paths (`/intake/`, `/joint/`, `/post/`, `/coach/`) and only resolve correctly when browsing through `run_all.sh`'s `:8080`, not when an app is opened directly on its own port.
+Prefer running one app in isolation to debug it (e.g. while iterating on its system prompt)? Each app still works standalone on its own port from the table above — just note that cross-app links (demo-app's buttons, the "continue" banners) point at the proxy's paths (`/intake/`, `/joint/`, `/post/`) and only resolve correctly when browsing through `run_all.sh`'s `:8080`, not when an app is opened directly on its own port.
 
 `intake-app` and `joint-session-app` each show a "continue" banner once the facilitator's own signal says the next step is ready — you don't have to guess when to move on. None of these run in GitHub Pages; they need a local server and your own Anthropic API key.
 

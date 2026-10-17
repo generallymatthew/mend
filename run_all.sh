@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Runs the whole product locally behind one entry point:
 # http://localhost:8080/ -- demo-app at the root, intake/joint-session/
-# post-session/manager-coaching under /intake/, /joint/, /post/, /coach/
-# (see Caddyfile).
+# post-session under /intake/, /joint/, /post/ (see Caddyfile).
 #
-# Starts all five apps' own uvicorn (each in its own .venv, unmodified) in
+# Starts all four apps' own uvicorn (each in its own .venv, unmodified) in
 # the background, then Caddy in the foreground. Ctrl-C stops Caddy and
 # everything else together -- no orphaned processes left holding ports.
 #
@@ -45,7 +44,6 @@ start_app demo-app        demo-app          8423
 start_app intake-app      intake-app        8420
 start_app joint-session   joint-session-app 8421
 start_app post-session    post-session-app  8422
-start_app manager-coaching manager-coaching-app 8425
 
 # joint-session-audio needs livekit-server (`brew install livekit`) and its
 # own agent.py worker in addition to its uvicorn app -- see that app's

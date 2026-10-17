@@ -1,10 +1,10 @@
 # Local reverse proxy: one entry point (http://localhost:8080/) in front of
-# the five independent app processes, so browsing the whole product doesn't
-# mean juggling five ports by hand. Each app is unaware it's proxied --
+# the independent app processes, so browsing the whole product doesn't
+# mean juggling ports by hand. Each app is unaware it's proxied --
 # `handle_path` strips the matched prefix before forwarding, so every app
 # still sees requests at its own root, exactly as when run standalone.
 #
-# Run all five apps (see ../run_all.sh), then:
+# Run all the apps (see ../run_all.sh), then:
 #   caddy run
 # and open http://localhost:8080/
 #
@@ -28,10 +28,6 @@
 
 	handle_path /joint-audio/* {
 		reverse_proxy 127.0.0.1:8424
-	}
-
-	handle_path /coach/* {
-		reverse_proxy 127.0.0.1:8425
 	}
 
 	handle {
