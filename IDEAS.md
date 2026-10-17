@@ -9,6 +9,30 @@ Every entry also names its source file so the original writeup can be found.
 
 ---
 
+## App codenames
+
+Working names for the apps discussed in this doc and in the shipped codebase,
+so future conversations can refer to them by name instead of description.
+
+- **Darn** — the solo conflict-resolution app overall (intake → joint
+  session), the main focus so far. Maps to `intake-app` +
+  `joint-session-app`/`joint-session-audio`.
+- **Suture** — the two-person facilitated conversation itself, inside Darn
+  (the live joint session specifically, not the intake step before it).
+- **Seam** — the manager app: a manager getting help resolving conflict with
+  a member of their team. Maps to `manager-app`/`manager-coaching-app`.
+- **Swatch** — new idea: a UX collaboration/critique tool. Not yet written
+  up as its own entry below.
+- **Loom** — new idea: the async sprint-retro tool. See "Pattern-only
+  project retro" below, which is this idea.
+- **Splice** — new idea: a consensus-builder for loose groups struggling to
+  agree on something, as a Zoom plugin.
+- **Hem** — new idea: a cross-platform desktop writing assistant that helps
+  you respond to/send messages and make your point without causing conflict,
+  regardless of which app you're in.
+
+---
+
 ## Narrative / positioning
 
 ### Reframe "professionalism" as human maturity, not human erasure
@@ -380,7 +404,7 @@ copy exists in the shipped apps yet.
 
 ## Team retro / project post-mortem tool
 
-### Pattern-only project retro — anonymized interviews, no individual call-outs
+### Pattern-only project retro — anonymized interviews, no individual call-outs (codename: Loom)
 A separate, standalone tool (not the existing conflict-mediation flow):
 after a project/sprint wraps, interview each person on the team separately
 and let them be fully honest about what happened ("John didn't review my
@@ -401,6 +425,93 @@ tell the truth.
   distillation/pattern-extraction logic, and no decision yet on how many
   participants are needed before "patterns" stop being traceable back to
   an individual by elimination (a 2-person team can't actually anonymize).
+
+---
+
+## New adjacent tool concepts (2026-10-17)
+
+### Swatch — UX collaboration/critique tool
+A tool for teams to give and receive critique on design work without it
+landing as a personal attack — basted together before final commitment,
+same spirit as Mend's "structural, not personal" framing applied to design
+review instead of interpersonal conflict.
+- Where it could plug in: standalone app/prototype, separate from the
+  conflict-mediation apps; could reuse the facilitator-LLM pattern for
+  framing feedback constructively.
+- Why not active: brand new, unscoped — no interview/critique flow or UI
+  designed yet.
+
+### Splice — consensus-builder for loose groups, as a Zoom plugin
+Small/loose groups of strangers (reference case: open-source maintainers
+stuck on one GitHub issue) stuck at an impasse, meeting live, with nothing
+confidential between them — the opposite trust model from the two-person
+conflict-mediation apps, where privacy between the two parties is the whole
+point. Splice's job is driving a group to an explicit, visible group
+decision (a vote), not protecting anyone's privacy from anyone else in the
+room. This is a meaningfully different product shape from Darn/Suture, not
+just a group-sized version of it: no safety floor, no side-conversation
+firewall, no confidential intake — those are Darn/Suture-specific and
+deliberately left out of Splice's facilitator prompt.
+
+First build pass is done, as `group-session-app/` (prototype, in-memory
+only, no persistence):
+- A shared room: participants, group chat, proposals, and per-proposal
+  voting (yes/no/abstain), broadcast live over WebSocket to everyone in
+  the room.
+- Thimble sits visibly inside the group as a named participant, not a
+  silent backend process — asks the next useful question, names implicit
+  proposals out loud, nudges toward a vote when discussion stalls, stays
+  neutral on substance (never argues for one proposal over another), and
+  never declares a vote "decided" — only reports where the count stands.
+  System prompt: `facilitator-group-session-system-prompt.md`.
+- Onboarding: Thimble states the session's goal (the pinned issue) and
+  asks the participant's preferred way of taking part — video+mic or
+  text-only — before they enter the room.
+- Self-serve controls: mute mic, turn off video, leave the session.
+  Explicitly not a facilitator-removes-others feature — each person only
+  controls themselves.
+- Architecture decision, after initially misreading the ask as "build a
+  video-call app": Splice does NOT build or own video/audio at all. Zoom
+  is the entire transport layer; Splice is a companion panel that runs
+  alongside a real Zoom meeting (via the Zoom Apps SDK) and only owns
+  chat, proposals, voting, and Thimble. Two front ends exist today for
+  this reason: `static/index.html` (a standalone video-first mockup, used
+  to validate the UI before the Zoom-panel pivot) and
+  `static/zoom-panel.html` (the real target shape — no video grid, no
+  media controls, calls `zoomSdk.getUserContext()` to auto-join a real
+  Zoom participant by name).
+- Verified live (browser-pane testing): join → onboarding → room → chat →
+  proposal → vote → mute/camera/leave all work end to end on
+  `index.html`. `zoom-panel.html`'s non-Zoom fallback path (manual name
+  entry, used when the SDK isn't present) also renders correctly through
+  onboarding and into the room.
+- Known open bug: in `zoom-panel.html`'s own tab, `POST /api/message`
+  succeeds server-side but the message never renders back locally — the
+  browser console shows a WebSocket reconnect loop. Not yet root-caused;
+  not yet confirmed whether it's a real bug in that page's
+  `connectSocket()` or a browser-pane sandbox artifact. See `STATUS.md`
+  2026-10-16 entry.
+- Blocked on the user, not yet attempted: testing the actual in-Zoom path
+  needs a Zoom Marketplace developer account and a registered Zoom App
+  (Client ID) to get a Client ID, plus HTTPS hosting (Zoom Apps refuse
+  plain-HTTP localhost) — likely via a tunnel (ngrok or similar) until
+  real hosting exists.
+- Where it could plug in: standalone Zoom app/plugin, `group-session-app/`
+  in the shipped codebase.
+- Why partially active: core group room + Thimble + voting is built and
+  browser-verified; the Zoom-native integration itself (the actual point
+  of "as a Zoom plugin") is unverified beyond the local fallback path,
+  gated on developer-account setup only the user can do.
+
+### Hem — cross-platform writing assistant for calm communication
+A desktop app you can invoke from any other app (highlight text, bring it
+in) that helps you write or rewrite a message so it makes your point without
+causing conflict, regardless of the platform you're sending it from.
+- Where it could plug in: standalone desktop utility (OS-level hotkey/
+  highlight capture), separate from the conflict-mediation apps; could reuse
+  facilitator tone/framing logic from the existing system prompts.
+- Why not active: brand new, unscoped — no OS-level text-capture mechanism
+  built, and open question on which platforms/OS to target first.
 
 ---
 
