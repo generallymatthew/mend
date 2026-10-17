@@ -21,8 +21,8 @@ so future conversations can refer to them by name instead of description.
   (the live joint session specifically, not the intake step before it).
 - **Seam** — the manager app: a manager getting help resolving conflict with
   a member of their team. Maps to `manager-app`/`manager-coaching-app`.
-- **Swatch** — new idea: a UX collaboration/critique tool. Not yet written
-  up as its own entry below.
+- **Swatch** — a UX collaboration tool for designers who don't know each
+  other well. See full writeup below.
 - **Loom** — new idea: the async sprint-retro tool. See "Pattern-only
   project retro" below, which is this idea.
 - **Splice** — new idea: a consensus-builder for loose groups struggling to
@@ -430,16 +430,78 @@ tell the truth.
 
 ## New adjacent tool concepts (2026-10-17)
 
-### Swatch — UX collaboration/critique tool
-A tool for teams to give and receive critique on design work without it
-landing as a personal attack — basted together before final commitment,
-same spirit as Mend's "structural, not personal" framing applied to design
-review instead of interpersonal conflict.
+### Swatch — preflight collaboration for designers who don't know each other
+Not conflict resolution — preflight. Two (or more) designers who haven't
+worked together before get paired on a shared design problem, and Thimble
+runs a structured process with two equal goals: (1) the two people's
+working relationship gets better, (2) the design objective actually gets
+finished. Same "structural, not personal" spirit as the rest of Mend,
+applied before friction exists instead of after.
+
+The workflow (named "The Workflow" in the design artifact), six steps,
+built to also scale past two people:
+
+1. **Warm-up** (~2 min). Talk through the shared goal together, then a
+   couple of questions: how do you like to receive feedback, how do you
+   work collaboratively in general.
+2. **Heads-down solo work**. Each designer works alone. Time box scales
+   with how big the problem is, not a fixed default.
+3. **Thimble-facilitated presenting**. Each designer presents their work
+   to the others. Thimble assigns the presenting order up front instead of
+   implicit back-and-forth. While someone's presenting, others can flag "I
+   have a question" without interrupting — the queue holds order (who's
+   first, second), not just presence, and Thimble calls on them in that
+   order. At group scale, Thimble still manages one ordered queue across
+   everyone, not a free-for-all.
+4. **Thimble keeps the presenter talking**. Not a goal in itself — if the
+   question queue from step 3 is empty when the presenter finishes,
+   Thimble asks problem-relevant questions so the designer keeps thinking
+   out loud instead of the round ending on silence. Hard constraint:
+   Thimble only ever asks the presenter, never calls on a specific
+   listener by name — forcing someone to produce a question is
+   overstepping, and at group scale silence from 4 people isn't the same
+   signal as silence from 1.
+5. **Consensus**. Voting, or each person marking what they liked across
+   the presented work — a reaction signal, not necessarily a single
+   winner. At group scale this is aggregation (which element got the most
+   marks), not just a side-by-side list of two opinions.
+6. **Repeat**, building on what step 5 produced (loops back to step 2).
+   Next round's solo work starts from the converged direction, not a blank
+   goal — each pass refines the last one instead of re-litigating it. Loop
+   ends when either the goal is achieved, or the group runs out of time
+   and the session pauses to continue later at the same point, not from
+   scratch.
+
+Open questions, still unresolved: does step 5's "liked" output a ranked
+winner, a merged direction, or just a heatmap of reactions for humans to
+decide from; and who calls "goal achieved" — the group by vote, or does it
+need to clear some threshold on its own.
+
+Platform decision: the whole workflow runs over a real video call
+(Zoom/Teams/Slack-style) that already owns screen share — Swatch doesn't
+build its own video or screen-share UI, same architecture call already
+made for Splice below. Zoom was picked first because of its Apps SDK;
+Teams needs heavier Azure AD auth, Slack has no in-call panel SDK so it
+only fits async pieces. Decided direction: single-driver v0, not full
+realtime multiplayer sync, as the first build target.
+
+Mockups exist as a Claude Artifact, not yet built: a canvas comparing this
+shape against two rejected alternatives (a plain parallel-sprint flow, a
+continuous-check-in flow), a zoomed-in mock of Thimble's solo-brainstorm
+prompts, and four app-screen UI mockups (warm-up, solo work, presenting,
+consensus). One correction still pending in that artifact: the presenting
+screen currently mocks up its own fake screen-share panel, which is wrong
+now that the real call already handles screen share — needs to become a
+companion-overlay layout (order list + question queue only).
 - Where it could plug in: standalone app/prototype, separate from the
-  conflict-mediation apps; could reuse the facilitator-LLM pattern for
-  framing feedback constructively.
-- Why not active: brand new, unscoped — no interview/critique flow or UI
-  designed yet.
+  conflict-mediation apps. Likely shares infrastructure with Splice below
+  (`group-session-app/`'s room/WebSocket backend, Zoom Apps SDK companion
+  panel pattern) rather than a from-scratch build, since both are
+  companion-panel-over-a-real-call shapes — though Swatch's trust model is
+  the opposite of Splice's: two people building a working relationship
+  needs encouragement/warmth framing, not neutral group-vote mechanics.
+- Why not active: workflow spec and UI mockups exist only in a private
+  design artifact, not yet exported into this repo; no code written.
 
 ### Splice — consensus-builder for loose groups, as a Zoom plugin
 Small/loose groups of strangers (reference case: open-source maintainers
@@ -512,6 +574,53 @@ causing conflict, regardless of the platform you're sending it from.
   facilitator tone/framing logic from the existing system prompts.
 - Why not active: brand new, unscoped — no OS-level text-capture mechanism
   built, and open question on which platforms/OS to target first.
+
+---
+
+## App concept strength ranking (2026-10-17)
+
+Ranked the seven app codenames (see "App codenames" above) by concept
+strength, in this priority order: market pull (real buyer + budget) first,
+then defensibility/moat, then mechanism novelty, then build feasibility.
+Moat is judged on fit to the actual target outcome (emotional de-escalation
++ walking away equipped with a strategy, plus the safety floor) — not on
+one-shot LLM benchmark output quality, which undersells this (see the
+`19_PERSONAL_AI_BENCHMARK_AUDIT.md` single-turn result and its known
+limitation, written up in the "Multi-turn rerun" entry above).
+
+1. **Seam** — real buyer with budget (manager/L&D training spend), no
+   invite-friction problem (solo, manager-initiated for their own benefit),
+   solid moat from the same outcome-tuning as Darn/Suture.
+2. **Darn** — soft buyer economics (individual employee, no budget line),
+   but decent moat (tuned for the regulate-then-equip arc + safety floor,
+   not raw output quality), already built and tester-validated, feeds
+   everything downstream.
+3. **Suture** — weakest pull of the core three: needs a manager to nominate
+   the pair, or two peers to opt in together, which most people won't do
+   unprompted. But by far the strongest moat and most novel mechanism — live,
+   bidirectional, two-safety-floors-at-once facilitation is a much harder
+   problem than solo intake and the hardest for a generic assistant to
+   replicate on the fly.
+4. **Loom** — real recurring pull (every team does retros; "retros surface
+   complaints but never fix the structural cause" is a known failure mode),
+   good differentiated mechanism (private interviews distilled into
+   structural patterns, e.g. "team's overworked, that's why PRs slip" — not
+   anonymization of blame, root-cause diagnosis). Furthest from built
+   (brand new interview/distillation flow) and lower-stakes pain than the
+   top three.
+5. **Swatch** — facilitated design critique/collaboration session (not
+   passive Figma-style comments). Narrower, lower-stakes buyer (design
+   leads, not broad org pain), moat is borrowed from Suture's facilitation
+   tuning but unproven in this domain, real platform risk (Figma could ship
+   this natively).
+6. **Splice** — Zoom-plugin consensus-builder for loose groups. No clear
+   named/budgeted buyer, thin moat, competes directly with where Zoom/Otter/
+   Read AI are already investing their own live-meeting AI features.
+7. **Hem** — cross-platform "don't sound like an ass" writing assistant.
+   Broadest surface appeal but essentially no defensible position: every
+   major platform (Grammarly, Gmail, Slack) already ships tone/rewrite AI
+   natively, and the OS-level text-capture engineering lift is unrelated to
+   anything already in this repo.
 
 ---
 
