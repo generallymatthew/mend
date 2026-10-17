@@ -1,7 +1,7 @@
 # Render deploy image for demo-app + intake-app behind Caddy. Build context
 # is the repo root (see render.yaml's dockerContext), since intake-app
-# reads ../facilitator-intake-system-prompt.md and ../product-spec.html at
-# runtime -- the whole repo ships, not just the two app folders.
+# reads ../facilitator-intake-system-prompt.md and ../../product-spec.html
+# at runtime -- the whole repo ships, not just the two app folders.
 #
 # Caddy is fetched as a plain release binary, not via apt or copied from
 # the official Caddy image. apt: Cloudsmith's Debian repo for Caddy has an
@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 WORKDIR /app
 COPY . .
 
-RUN pip install --no-cache-dir -r demo-app/requirements.txt -r intake-app/requirements.txt
+RUN pip install --no-cache-dir -r apps/demo-app/requirements.txt -r apps/intake-app/requirements.txt
 
 # Pre-download the Whisper model at build time, not on a tester's first
 # request -- avoids a slow, surprising first-reply latency in prod.

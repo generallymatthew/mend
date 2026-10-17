@@ -2,15 +2,23 @@
 
 Structural, phase-level view — what needs to be true before the next phase starts. For the rolling "what happened recently" log, see `STATUS.md` instead; this file changes rarely, that one changes often. Check a box when the item is actually done and verified, not just attempted. For raw, not-yet-committed ideas (not phase-level work), see `IDEAS.md` instead.
 
+## Positioning principles
+
+Not phase-bound; apply to every phase's feature and pricing decisions.
+
+- **Trust moat over tech moat.** A corporate/HR-suite incumbent (Microsoft, Workday, Slack, Google) cannot credibly build this: their business model runs on compliance/eDiscovery and employer-controlled tenant keys, so employees would rationally assume surveillance. Mend's neutrality (zero-trace, ephemeral memory, no durable transcripts) is an architectural requirement, not branding. Never add a feature that creates a durable, attributable dispute record a manager or IT admin could read (e.g. a PM-tool ticket titled after the dispute) — see Phase 3's HR-escalation design for the pattern (anonymized payload only, no transcript either way).
+- **Price below the enterprise sales floor, on purpose.** Target an accessible flat tier (e.g. $7k-9k/year per ~100-person org, or ~$10-15 per episodic session) — small enough that a legacy enterprise sales force won't bother chasing it, while still high-margin (near-zero storage cost, fractions of a cent per model turn). Anchor price against the cost of friction (hours lost to conflict, cost of a resignation), not the cost of building the software. Don't propose enterprise-tier pricing or large-deal-size features.
+- **"No paper trail" is the feature, not a limitation.** Market the intentional forgetting as the differentiator in a world where every Slack DM and Jira comment is kept forever.
+
 ## Phase 0 — Local prototypes (mostly done)
 
 - [x] Intake → joint session → post-session flow, working end-to-end locally
-- [x] Real hard-cut classifier (`classifier/`), wired into `joint-session-app`
+- [x] Real hard-cut classifier (`apps/classifier/`), wired into `joint-session-app`
 - [x] Real signup/invite backend (`demo-app`), direct and peer-suggested
 - [x] Unified local proxy (`run_all.sh` + `Caddyfile`)
 - [x] Brand identity applied everywhere (logo, Pink/Evergreen/Honey/Oat, Manrope)
 - [x] `manager-coaching-app` — fifth prototype, manager-side hard-conversation coaching
-- [ ] `manager-coaching-app` real conversation-quality test with a live API key (server verified, persona/floor-logic not yet tried against a real model reply)
+- [x] (obsolete, 2026-10-17) The standalone `manager-coaching-app` was removed — its path was folded into `intake-app`'s own system prompt (detected from the conversation itself, see `facilitator-intake-system-prompt.md`), so this app no longer exists to test separately. The conversation-quality question now applies to `intake-app`'s manager-coaching path instead, not tracked as its own item.
 - [x] `manager-app` — sketched, mocked (`App.dc.html`/`canvas.json`), and the underlying philosophy/workflow/facilitator mindset written up (`PHILOSOPHY.md`/`WORKFLOW.md`/`THIMBLE_MINDSET.md`)
 - [x] `manager-app` real backend, wiring `THIMBLE_MINDSET.md` into an actual system prompt the way the other apps' `facilitator-*-system-prompt.md` files do
 - [x] `manager-app`: "managing up" translator and the decoupled hand-off into a peer-to-peer session, wired as real actions (not just prompt text telling Thimble to offer them)
@@ -33,7 +41,7 @@ Structural, phase-level view — what needs to be true before the next phase sta
 
 - [x] Per-class loss weighting tried (found: fixes recall, hurts precision — wrong lever for `v4`'s actual regression)
 - [ ] Gentler weighting curve, or weight only the one starved class (`immediate_safety_risk`) instead of all five
-- [ ] Human review of batches 4/5/6 (378 examples queued in `classifier/data/review_page.html`, not yet judged)
+- [ ] Human review of batches 4/5/6 (378 examples queued in `apps/classifier/data/review_page.html`, not yet judged)
 - [ ] Bias audit (no protected-characteristic skew check has been done on any checkpoint yet)
 - [ ] Real threshold tuning against an actual precision/recall curve (still the 0.9 default guess)
 

@@ -55,7 +55,7 @@ load_dotenv(ROOT / ".env")
 
 # Shared local cost/usage logger, same cross-app import convention every
 # other -app/server.py here uses (no shared package layout in this repo).
-sys.path.insert(0, str(ROOT.parent))
+sys.path.insert(0, str(ROOT.parent.parent))
 from usage_log import log_usage
 
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-group-session-system-prompt.md"

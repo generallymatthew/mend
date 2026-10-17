@@ -1,6 +1,6 @@
 # Mend intake prototype (local, text + voice memo)
 
-A local-only prototype of the employee-initiated intake conversation (private processing → decision point → pre-session screen → initial side conversation), driven by `../facilitator-intake-system-prompt.md`. Text and voice-memo input, text replies. Single-user, in-memory conversation, nothing persisted to disk or a database, consistent with the "nothing recorded" principle in `../product-spec.html`.
+A local-only prototype of the employee-initiated intake conversation (private processing → decision point → pre-session screen → initial side conversation), driven by `../facilitator-intake-system-prompt.md`. Text and voice-memo input, text replies. Single-user, in-memory conversation, nothing persisted to disk or a database, consistent with the "nothing recorded" principle in `../../product-spec.html`.
 
 ## Setup
 
@@ -25,7 +25,7 @@ uvicorn server:app --reload --port 8420
 
 Open http://localhost:8420 in a browser. Voice memo recording needs microphone permission and works over `localhost` or HTTPS (browsers block mic access on plain HTTP for any other host).
 
-Running this as part of the full walkthrough instead of standalone? Use `../run_all.sh` and open http://localhost:8080/intake/ instead — the "continue to joint session" banner link only resolves correctly when browsed that way (see the repo root `README.md`).
+Running this as part of the full walkthrough instead of standalone? Use `../../run_all.sh` and open http://localhost:8080/intake/ instead — the "continue to joint session" banner link only resolves correctly when browsed that way (see the repo root `README.md`).
 
 ## Optional: tester access gate
 

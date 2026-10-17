@@ -7,7 +7,7 @@ Single-user, in-memory conversation state -- this is a prototype to test the
 persona and flow, not a deployable multi-tenant service. No audio or text is
 persisted to disk; conversation history lives only in this process's memory
 and is lost on restart, consistent with the "nothing recorded" principle in
-../product-spec.html.
+../../product-spec.html.
 
 Run:
     pip install -r requirements.txt
@@ -42,7 +42,7 @@ load_dotenv(ROOT / ".env")
 # Shared local cost/usage logger (../usage_log.py) -- same sys.path trick
 # joint-session-app already uses to reach ../classifier, since this repo has
 # no shared package layout, just per-app venvs.
-sys.path.insert(0, str(ROOT.parent))
+sys.path.insert(0, str(ROOT.parent.parent))
 from usage_log import log_usage
 
 # Test-only conversation log (benchmark/comparison harness runs), never

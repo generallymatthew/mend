@@ -8,7 +8,7 @@ Every testable URL in one place, split by **Local** (needs something running on 
 ./run_all.sh
 ```
 
-Run from the repo root (needs `caddy` — see the root `README.md`). Puts demo-app, intake-app, joint-session-app, post-session-app, and manager-coaching-app behind one port, `:8080`, with the same path prefixes Render uses live (`/intake/`, `/joint/`, `/post/`) — so a local URL and its live equivalent below differ only in the host, nothing else. `joint-session-audio` is opt-in (needs `livekit-server` and its own agent worker — see that app's own README) and is skipped automatically if that setup hasn't been done.
+Run from the repo root (needs `caddy` — see the root `README.md`). Puts demo-app, intake-app, joint-session-app, and post-session-app (all under `apps/`) behind one port, `:8080`, with the same path prefixes Render uses live (`/intake/`, `/joint/`, `/post/`) — so a local URL and its live equivalent below differ only in the host, nothing else. `joint-session-audio` is opt-in (needs `livekit-server` and its own agent worker — see that app's own README) and is skipped automatically if that setup hasn't been done. `manager-app` (Seam) and `group-session-app` (Splice) aren't wired into this proxy yet — run them standalone.
 
 Docs and standalone HTML files (Roadmap, Status, product spec, pitch page, design handoffs) need a plain file server instead, from the repo root:
 
@@ -25,7 +25,6 @@ python3 -m http.server 8000
 | Joint session · Employee A | [localhost:8080/joint/?code=links&role=a](http://localhost:8080/joint/?code=links&role=a) | — not deployed |
 | Joint session · Employee B | [localhost:8080/joint/?code=links&role=b](http://localhost:8080/joint/?code=links&role=b) | — not deployed |
 | Post-session check-in | [localhost:8080/post/](http://localhost:8080/post/) | — not deployed |
-| Manager coaching | [localhost:8080/coach/](http://localhost:8080/coach/) | — not deployed |
 | Joint session · audio (opt-in, needs LiveKit) | [localhost:8080/joint-audio/](http://localhost:8080/joint-audio/) | — not deployed |
 | About (why this matters) | [localhost:8080/about](http://localhost:8080/about) or [localhost:8000/about.html](http://localhost:8000/about.html) | [mend-mvp.onrender.com/about](https://mend-mvp.onrender.com/about) |
 
@@ -37,7 +36,7 @@ Only demo-app + intake-app are in the live Render deploy (`render.yaml`/`deploy/
 |---|---|---|
 | Thimble states (every avatar state, side by side) | [localhost:8080/intake/static/thimble-states.html](http://localhost:8080/intake/static/thimble-states.html) | [mend-mvp.onrender.com/intake/static/thimble-states.html](https://mend-mvp.onrender.com/intake/static/thimble-states.html) |
 | Launchpad (this same link list, as a page) | [localhost:8080/launchpad](http://localhost:8080/launchpad) or [localhost:8000/launchpad.html](http://localhost:8000/launchpad.html) | [mend-mvp.onrender.com/launchpad](https://mend-mvp.onrender.com/launchpad) |
-| Phrase review (classifier training-data labeling tool) | [localhost:8000/classifier/data/review_page.html](<http://localhost:8000/classifier/data/review_page.html>) | — local only |
+| Phrase review (classifier training-data labeling tool) | [localhost:8000/apps/classifier/data/review_page.html](<http://localhost:8000/apps/classifier/data/review_page.html>) | — local only |
 
 ## Documents
 
@@ -55,9 +54,9 @@ Static `.dc.html` mockups for engineering/design handoff — same templated form
 
 | Page | Local |
 |---|---|
-| Mend Intake | [localhost:8000/design_handoffs/mend_sessions/Mend Intake.dc.html](<http://localhost:8000/design_handoffs/mend_sessions/Mend Intake.dc.html>) |
-| Mend Joint Session | [localhost:8000/design_handoffs/mend_sessions/Mend Joint Session.dc.html](<http://localhost:8000/design_handoffs/mend_sessions/Mend Joint Session.dc.html>) |
-| Simple Agent Presence (circle + mouth) | [localhost:8000/design_handoffs/simple_agent_presence/Simple Agent.dc.html](<http://localhost:8000/design_handoffs/simple_agent_presence/Simple Agent.dc.html>) |
+| Mend Intake | [localhost:8000/pitch/design_handoffs/mend_sessions/Mend Intake.dc.html](<http://localhost:8000/pitch/design_handoffs/mend_sessions/Mend Intake.dc.html>) |
+| Mend Joint Session | [localhost:8000/pitch/design_handoffs/mend_sessions/Mend Joint Session.dc.html](<http://localhost:8000/pitch/design_handoffs/mend_sessions/Mend Joint Session.dc.html>) |
+| Simple Agent Presence (circle + mouth) | [localhost:8000/pitch/design_handoffs/simple_agent_presence/Simple Agent.dc.html](<http://localhost:8000/pitch/design_handoffs/simple_agent_presence/Simple Agent.dc.html>) |
 
 ## Hosted elsewhere (claude.ai, always up, no server needed)
 

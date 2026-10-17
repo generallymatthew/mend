@@ -79,7 +79,15 @@
   .talk-mic-btn:disabled{opacity:.4; cursor:default;}
   .talk-mic-btn.recording{background:#F3829A; border-color:#F3829A; color:var(--ink); animation:talk-mic-pulse 1.4s ease-in-out infinite;}
   @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(243,130,154,.45);} 50%{box-shadow:0 0 0 8px rgba(243,130,154,0);}}
-  .talk-transcript-box{align-self:center; max-width:420px; min-height:22px; padding:10px 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:13.5px; color:var(--ink); text-align:center;}
+  /* position:absolute + left/right (not width) so its own height can still
+     grow with longer transcripts -- vertical centering against the record
+     button is done in JS (positionTalkTranscriptBox), which needs that
+     height to land translateY(-50%) correctly. right:150px clears the
+     104px hold button + its 28px offset + a buffer, so text never runs
+     under it. */
+  .talk-transcript-box{position:absolute; left:24px; right:150px; max-width:420px; min-height:22px; padding:10px 16px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:13.5px; color:var(--ink); text-align:center;
+    display:none; /* Explicit ask: this live CC of the user's own speech is redundant with the transcript panel, which always shows it too. Hidden, not removed -- real JS/positioning left intact in case this comes back. */
+  }
   .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-bottom:16px;}
   .msg{max-width:80%; padding:12px 14px; border-radius:12px; line-height:1.5; font-size:15px; white-space:pre-wrap;}
   .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:flex-start;}
@@ -834,9 +842,9 @@
   .pill-mute-btn.inactive:hover{background:#7a3226;}
 
   /* Hold-to-talk dock: bottom-right of the voice pane (not the control
-     bar). holdRingProgress's stroke-dashoffset is driven by real mic
-     level while recording (see updateHoldRing in the script below) --
-     an honest "it's hearing you" indicator, not a decorative fake timer. */
+     bar). holdRingProgress's stroke-dashoffset sweeps a full lap over the
+     60s single-memo cap while recording (see updateHoldRing in the script
+     below) -- a countdown to the cap, not a mic-level meter. */
   .hold-dock{position:absolute; right:28px; bottom:28px; z-index:3;}
   .hold-wrap{position:relative; width:104px; height:104px;}
   .hold-ring{position:absolute; inset:0; pointer-events:none;}
@@ -1071,9 +1079,10 @@
         </div>
         <!-- Hold-to-talk dock: bottom-right of the voice pane, not in the
              control bar -- the one real action this page's whole left side
-             exists for. holdRing is a real progress ring, driven off the
-             actual mic level while recording (see animateAvatar's own
-             call into updateHoldRing below), not a decorative fake timer. -->
+             exists for. holdRing is a real progress ring driven off elapsed
+             hold time against the 60s single-memo cap (see animateAvatar's
+             own call into updateHoldRing below), not a decorative fake
+             timer and not a mic-level meter. -->
         <div class="hold-dock">
           <div class="hold-wrap">
             <svg class="hold-ring" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
@@ -1512,6 +1521,8 @@ muteBtn.addEventListener('click', () => {
   muteBtn.querySelector('.slash').style.display = micMuted ? '' : 'none';
   youMuteIcon.hidden = !micMuted;
   if (micMuted) { employeeTile.classList.remove('lit'); micIndicatorDot.classList.remove('lit'); }
+  lastStateWord = null; // force updateStatePill to re-render the pill word for the mute-state override below
+  updateStatePill();
 });
 
 // Push-to-talk: an alternative to hands-free live listening, added per
@@ -1531,6 +1542,16 @@ let holdControlled = false;
 // comment. Lets updateStatePill show the recording look immediately
 // instead of waiting out mic-setup latency.
 let tapStarting = false;
+// Set once the hold-to-talk recording actually starts (talkMicBtn's own
+// pointerdown handler, after startRecordingTurn resolves -- NOT at the raw
+// press, which can bail out before ever recording), read by updateHoldRing
+// to sweep the hold-dock ring around over HOLD_RING_MAX_MS -- elapsed time,
+// not mic level, so it reads as "time left before the memo caps out" rather
+// than a volume meter. Always reset to null on release/stop -- a stale
+// non-null value here reads as "60s already elapsed" to the NEXT recording
+// (even the composer's unrelated hold-to-dictate), auto-stopping it
+// instantly.
+let holdStartedAt = null;
 
 // Composer's own hold-to-dictate mic button: press, hold, release fills
 // the text input with the transcript for review -- NOT auto-sent, per
@@ -2812,7 +2833,7 @@ function updateThimbleMotion(inst, now, level, listening) {
   // unconditionally, including paused/idle, so a color change is never
   // left stranded mid-fade if the state stops animating right after.
   if (inst.colorRGB) {
-    const colorRate = 1 - Math.pow(0.02, dt); // ~.6s to settle, matches the old CSS transition's own duration
+    const colorRate = 1 - Math.pow(0.000001, dt); // ~.2s to settle -- explicit ask for a much quicker state-color transition than the old ~.6s
     inst.colorRGB.r += (inst.colorTargetRGB.r - inst.colorRGB.r) * colorRate;
     inst.colorRGB.g += (inst.colorTargetRGB.g - inst.colorRGB.g) * colorRate;
     inst.colorRGB.b += (inst.colorTargetRGB.b - inst.colorRGB.b) * colorRate;
@@ -3024,11 +3045,14 @@ const callMainEl = document.querySelector('.call-main');
 // not inside .stage, so it can be placed at the real vertical midpoint
 // between the state pill and the control bar below -- two reference points
 // in different boxes that plain CSS centering can't span on its own.
+// Extra breathing room below the state pill -- testers read the caption
+// as glued to "Thimble: {state}" when it sat exactly at the midpoint.
+const CAPTION_PILL_GAP_BIAS = 20;
 function positionCaptionStack() {
   const pillRect = statePillRowEl.getBoundingClientRect();
   const controlsRect = controlBarEl.getBoundingClientRect();
   const mainRect = callMainEl.getBoundingClientRect();
-  const midY = (pillRect.bottom + controlsRect.top) / 2 - mainRect.top;
+  const midY = (pillRect.bottom + controlsRect.top) / 2 - mainRect.top + CAPTION_PILL_GAP_BIAS;
   captionStackEl.style.top = midY + 'px';
   captionStackEl.style.transform = 'translateY(-50%)';
 }
@@ -3101,7 +3125,12 @@ function updateStatePill() {
   talkMicBtn.textContent = tapRecording ? 'Recording… release to send' : 'Hold to talk';
   talkMicBtn.classList.toggle('recording', tapRecording);
   talkTranscriptBox.hidden = !tapRecording;
-  const word = STATE_WORDS[avatarState] || 'Listening…';
+  // Muted overrides the listening/waiting words specifically -- those are
+  // exactly the two states testers confused with "muted" (nothing visibly
+  // changes between them and an actual mute). Thinking/talking/paused stay
+  // as-is since Thimble itself keeps working regardless of mic mute.
+  const mutedOverride = micMuted && (avatarState === 'idle' || avatarState === 'listening' || avatarState === 'ready');
+  const word = mutedOverride ? 'Muted' : (STATE_WORDS[avatarState] || 'Listening…');
   if (word === lastStateWord) return;
   lastStateWord = word;
   stateWordEl.textContent = word;
@@ -3136,10 +3165,27 @@ function checkSurveyRedirect() {
   surveyRedirectTimer = setTimeout(() => { location.href = apiPath('survey'); }, 2500);
 }
 
+const holdWrapEl = document.querySelector('.hold-wrap');
+const callBottomRowEl = document.querySelector('.call-bottom-row');
+// The live transcript while recording a voice memo should read as attached
+// to the record button, not floating above the control row -- vertical
+// center matched to the hold button's own circle, same cross-box
+// getBoundingClientRect() technique positionCaptionStack already uses
+// above for the Thimble caption vs. the pill/controls gap.
+function positionTalkTranscriptBox() {
+  if (talkTranscriptBox.hidden) return;
+  const btnRect = holdWrapEl.getBoundingClientRect();
+  const rowRect = callBottomRowEl.getBoundingClientRect();
+  const midY = (btnRect.top + btnRect.bottom) / 2 - rowRect.top;
+  talkTranscriptBox.style.top = midY + 'px';
+  talkTranscriptBox.style.transform = 'translateY(-50%)';
+}
+
 function updateCaption() {
   updateStatePill();
   checkSurveyRedirect();
   positionCaptionStack();
+  positionTalkTranscriptBox();
   if (!captionsOn || avatarState !== 'talking' || !captionChunks.length) {
     captionEl.textContent = '';
     return;
@@ -3183,22 +3229,30 @@ function animateAvatar(now) {
       }
     }
     if (!micMuted && !sessionPaused && !deepgramEnabled) maybeSendPartial(t);
+    // Hard cap on a single hold-to-talk memo -- matches the hold-dock
+    // ring's own HOLD_RING_MAX_MS, so the ring completing its lap and the
+    // recording actually ending happen at the same moment, not the ring
+    // lying about a cutoff that never comes.
+    if (holdControlled && holdStartedAt != null && t - holdStartedAt >= HOLD_RING_MAX_MS) {
+      mediaRecorder.stop();
+    }
   }
-  updateHoldRing(recording, rawLevel);
+  updateHoldRing(recording, t);
   updateCaption();
 }
 
-// Hold-to-talk's progress ring: real mic level while actually recording,
-// not a decorative fixed-duration fill -- an honest "it's hearing you"
-// indicator instead of a fake countdown. Smoothed (holdRingLvl eases
-// toward rawLevel each frame) so it reads as a breathing meter, not a
-// jittery needle.
+// Hold-to-talk's progress ring: sweeps a full lap over HOLD_RING_MAX_MS of
+// actual elapsed hold time, not mic level -- a countdown to the one-minute
+// cap on a single memo (e.g. 15s held = 25% of the way around), not a
+// volume meter. Only ticks for the real hold-to-talk gesture
+// (holdControlled); the hands-free/VAD recording path never shows this
+// button so it doesn't matter there.
 const HOLD_RING_LEN = 301.59; // 2 * PI * 48, matches holdRingProgress's own radius
-let holdRingLvl = 0;
-function updateHoldRing(recording, rawLevel) {
-  const target = recording ? Math.min(1, rawLevel * 3.2) : 0;
-  holdRingLvl += (target - holdRingLvl) * (recording ? 0.35 : 0.2);
-  holdRingProgress.style.strokeDashoffset = String(HOLD_RING_LEN * (1 - holdRingLvl));
+const HOLD_RING_MAX_MS = 60000;
+function updateHoldRing(recording, now) {
+  const active = recording && holdControlled && holdStartedAt != null;
+  const frac = active ? Math.min(1, (now - holdStartedAt) / HOLD_RING_MAX_MS) : 0;
+  holdRingProgress.style.strokeDashoffset = String(HOLD_RING_LEN * (1 - frac));
 }
 
 audioEl.addEventListener('play', () => { avatarState = 'talking'; revealApp(); });
@@ -4315,6 +4369,7 @@ async function startComposerRecording() {
   mediaRecorder = new MediaRecorder(stream);
   const myChunks = chunks = [];
   holdControlled = true;
+  holdStartedAt = null; // this recording has no ring/cap of its own (that's talkMicBtn-only) -- defensive reset so a leftover value from a prior tap-to-talk press can't misfire the 60s auto-stop here
   // Captured once, right after this cycle's own socket opens below, so
   // onstop's drain always targets the socket THIS recording actually used --
   // not whatever dgSocket happens to point at by the time onstop runs (see
@@ -4523,6 +4578,12 @@ talkMicBtn.addEventListener('pointerdown', async (e) => {
   const alreadyWarm = !!(warmMicStream && warmMicStream.active);
   try {
     await startRecordingTurn(true);
+    // Set only once recording has actually started (not at raw press,
+    // which can bail out above -- avatarState not ready, or getUserMedia
+    // still fails below -- leaving a stale timestamp for the NEXT
+    // recording, tap or composer, to immediately misread as "60s already
+    // elapsed" and auto-stop on its first frame. Real bug, found live.
+    holdStartedAt = performance.now();
     // Diagnostic only (console, not sent anywhere): press-to-actually-
     // recording latency, and whether the stream was already warm at press
     // time -- tells us whether a given turn paid cold-start cost or not.
@@ -4536,6 +4597,7 @@ talkMicBtn.addEventListener('pointerdown', async (e) => {
 function talkMicRelease() {
   if (!talkHolding) return;
   talkHolding = false;
+  holdStartedAt = null;
   hideMicTip(); // released -- whatever it had to say, the gesture it describes is already done
   if (mediaRecorder && mediaRecorder.state === 'recording' && holdControlled) {
     console.log(`[mic-timing] release -- dgText at release: ${JSON.stringify(dgSocket ? (dgSocket.finalText + ' ' + dgSocket.interimText).trim() : '(no dgSocket)')}`);

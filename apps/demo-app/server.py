@@ -4,7 +4,7 @@ Local demo hub: sign-up / anonymous-invite screen plus a walkthrough of the
 full journey across ../intake-app, ../joint-session-app, ../post-session-app.
 
 Runs the real access-code signup and one-time invite flow from Section 3 of
-../product-spec.html -- not a client-side simulation. In-memory only (no
+../../product-spec.html -- not a client-side simulation. In-memory only (no
 database), same convention as every other app here: state is lost on
 restart. What's real:
 
@@ -56,7 +56,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).parent
-PITCH_DIR = ROOT.parent / "Mend Pitch"
+PITCH_DIR = ROOT.parent.parent / "Mend Pitch"
 load_dotenv(ROOT / ".env")
 
 ORG_ACCESS_CODE = os.environ.get("ORG_ACCESS_CODE", "")
@@ -298,7 +298,7 @@ async def links_index():
 @app.get("/launchpad")
 @app.get("/launchpad/")
 async def launchpad_index():
-    return FileResponse(ROOT.parent / "launchpad.html")
+    return FileResponse(ROOT.parent.parent / "launchpad.html")
 
 
 # about.html lives at the repo root too, same reasoning as launchpad.html
@@ -306,7 +306,7 @@ async def launchpad_index():
 @app.get("/about")
 @app.get("/about/")
 async def about_index():
-    return FileResponse(ROOT.parent / "about.html")
+    return FileResponse(ROOT.parent.parent / "about.html")
 
 
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")

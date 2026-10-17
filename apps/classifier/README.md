@@ -1,6 +1,6 @@
 # Mend Conflict Classifier
 
-Fine-tunes [`unitary/toxic-bert`](https://huggingface.co/unitary/toxic-bert) (the model behind Detoxify) on workplace-conflict examples, for the real-time hard-cut tier of the joint session (see `../joint-session-architecture.md` and Section 6 of `../product-spec.html`).
+Fine-tunes [`unitary/toxic-bert`](https://huggingface.co/unitary/toxic-bert) (the model behind Detoxify) on workplace-conflict examples, for the real-time hard-cut tier of the joint session (see `../joint-session-architecture.md` and Section 6 of `../../product-spec.html`).
 
 ## Label schema
 

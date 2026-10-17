@@ -30,8 +30,8 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-start_app demo-app   demo-app   8423
-start_app intake-app intake-app 8420
+start_app demo-app   apps/demo-app   8423
+start_app intake-app apps/intake-app 8420
 
 sleep 1
 echo "Starting Caddy on :${PORT:-8080}"

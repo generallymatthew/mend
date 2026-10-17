@@ -40,34 +40,34 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-start_app demo-app        demo-app          8423
-start_app intake-app      intake-app        8420
-start_app joint-session   joint-session-app 8421
-start_app post-session    post-session-app  8422
+start_app demo-app        apps/demo-app          8423
+start_app intake-app      apps/intake-app        8420
+start_app joint-session   apps/joint-session-app 8421
+start_app post-session    apps/post-session-app  8422
 
 # joint-session-audio needs livekit-server (`brew install livekit`) and its
 # own agent.py worker in addition to its uvicorn app -- see that app's
 # README.md. Opt-in only: skip it if that setup hasn't been done yet, same
 # spirit as start_app's own missing-venv check.
-if [ -x joint-session-audio/.venv/bin/uvicorn ] && command -v livekit-server >/dev/null 2>&1; then
-  ( cd joint-session-audio && exec livekit-server --dev ) \
+if [ -x apps/joint-session-audio/.venv/bin/uvicorn ] && command -v livekit-server >/dev/null 2>&1; then
+  ( cd apps/joint-session-audio && exec livekit-server --dev ) \
     >"$LOG_DIR/joint-session-audio-livekit.log" 2>&1 &
   PIDS+=("$!")
   echo "-> joint-session-audio livekit-server --dev (log: $LOG_DIR/joint-session-audio-livekit.log)"
 
-  ( cd joint-session-audio && exec .venv/bin/python agent.py dev ) \
+  ( cd apps/joint-session-audio && exec .venv/bin/python agent.py dev ) \
     >"$LOG_DIR/joint-session-audio-agent.log" 2>&1 &
   PIDS+=("$!")
   echo "-> joint-session-audio agent.py (log: $LOG_DIR/joint-session-audio-agent.log)"
 
-  start_app joint-session-audio joint-session-audio 8424
+  start_app joint-session-audio apps/joint-session-audio 8424
 else
   echo "-- skipping joint-session-audio (needs .venv + 'brew install livekit' -- see its README.md)"
 fi
 
 sleep 1
 echo
-echo "All five apps starting -- logs in $LOG_DIR/"
+echo "All four apps starting -- logs in $LOG_DIR/"
 echo "Opening the proxy on http://localhost:8080/ (Ctrl-C to stop everything)"
 echo
 

@@ -61,7 +61,7 @@ SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-joint-session-system-prompt.md"
 
 # Shared local cost/usage logger (../usage_log.py) -- same sys.path trick as
 # the classifier import just below.
-sys.path.insert(0, str(ROOT.parent))
+sys.path.insert(0, str(ROOT.parent.parent))
 from usage_log import log_usage
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")

@@ -80,7 +80,7 @@ Open http://localhost:8421 — it generates a session code and shows you two lin
 
 Send the Employee B link to whoever's testing that role (a second person, or your own second tab/profile). The facilitator won't open the session until both roles are connected — the first person to join sees a "waiting for the other participant" state. Each side only ever sees its own composer and whatever the facilitator/other participant sends it; the facilitator responds after every turn, same as before.
 
-Running this as part of the full walkthrough instead of standalone? Use `../run_all.sh` and swap `localhost:8421` for `localhost:8080/joint` in the two role links above — the post-session banner link only resolves correctly when browsed that way (see the repo root `README.md`).
+Running this as part of the full walkthrough instead of standalone? Use `../../run_all.sh` and swap `localhost:8421` for `localhost:8080/joint` in the two role links above — the post-session banner link only resolves correctly when browsed that way (see the repo root `README.md`).
 
 ## Voice
 

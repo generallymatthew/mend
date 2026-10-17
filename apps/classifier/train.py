@@ -7,7 +7,7 @@ examples, for the Mend joint-session hard-cut classifier (see
 This is a multi-label classifier over 5 binary labels:
   harassment_discrimination, threats_violence, illegal_activity,
   immediate_safety_risk  -- the four mandatory-floor categories (Section 6
-  of ../product-spec.html)
+  of ../../product-spec.html)
   in_progress -- whether the utterance describes something happening/
   escalating right now, vs. something already-disclosed/past
 

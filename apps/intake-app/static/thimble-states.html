@@ -460,9 +460,9 @@ function updateCardMotion(inst, now, state, level, muted) {
   // drift from the real engine.
   const dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
   inst.lastT = now;
-  // Color lerp, mirrored from static/index.html's updateThimbleMotion.
+  // Color lerp, mirrored from static/session.html's updateThimbleMotion.
   if (inst.colorRGB) {
-    const colorRate = 1 - Math.pow(0.02, dt);
+    const colorRate = 1 - Math.pow(0.000001, dt); // ~.2s to settle -- explicit ask for a much quicker state-color transition
     inst.colorRGB.r += (inst.colorTargetRGB.r - inst.colorRGB.r) * colorRate;
     inst.colorRGB.g += (inst.colorTargetRGB.g - inst.colorRGB.g) * colorRate;
     inst.colorRGB.b += (inst.colorTargetRGB.b - inst.colorRGB.b) * colorRate;

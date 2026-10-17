@@ -1,6 +1,6 @@
 # manager-app (product name: Seam)
 
-The product-facing name for this app is **Seam**, from joining two people's working relationship back together rather than just mediating a one-off dispute. The directory and file names stay `manager-app` throughout the codebase; only the UI (page title, sidebar brand lockup, help copy) shows "Seam." (Note: an earlier version of this README used "Loom" for this app; that name is reserved elsewhere in `../IDEAS.md` for a separate, unbuilt async sprint-retro tool, so this app was renamed to Seam to match.)
+The product-facing name for this app is **Seam**, from joining two people's working relationship back together rather than just mediating a one-off dispute. The directory and file names stay `manager-app` throughout the codebase; only the UI (page title, sidebar brand lockup, help copy) shows "Seam." (Note: an earlier version of this README used "Loom" for this app; that name is reserved elsewhere in `../../IDEAS.md` for a separate, unbuilt async sprint-retro tool, so this app was renamed to Seam to match.)
 
 A conflict-case manager for people managers, not employees. A manager opens a case about a direct report in conflict (with a peer, with someone on another team, or with another direct report), talks it through with Thimble as one continuous chat, and keeps a running plan of agreed next steps. See `STATUS.md`'s "New product idea sketched and mocked: `manager-app`" entry for the original design writeup, and the docs below for the fuller reasoning:
 

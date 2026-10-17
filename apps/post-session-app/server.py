@@ -35,7 +35,7 @@ ROOT = Path(__file__).parent
 
 # Shared local cost/usage logger (../usage_log.py) -- same sys.path trick as
 # intake-app/server.py and joint-session-app/server.py.
-sys.path.insert(0, str(ROOT.parent))
+sys.path.insert(0, str(ROOT.parent.parent))
 from usage_log import log_usage
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-post-session-system-prompt.md"
 MODEL = "claude-sonnet-5"

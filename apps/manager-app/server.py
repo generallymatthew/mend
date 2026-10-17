@@ -3,7 +3,8 @@
 Local prototype of the Mend manager-app conversation: a manager thinking
 through a specific conflict case involving their direct report(s), driven by
 ../facilitator-case-plan-system-prompt.md ("Thimble"). Text only, no voice --
-see ../manager-coaching-app for that pattern if voice gets added here later.
+see ../intake-app for the voice-memo + TTS pattern if voice gets added here
+later.
 
 Persistence is deliberately narrow, per manager-app/WORKFLOW.md: a case's
 role-anonymized state anchor (tension_summary / last_action / next_action)
