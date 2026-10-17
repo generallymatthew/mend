@@ -19,8 +19,14 @@ so future conversations can refer to them by name instead of description.
   `joint-session-app`/`joint-session-audio`.
 - **Suture** — the two-person facilitated conversation itself, inside Darn
   (the live joint session specifically, not the intake step before it).
-- **Seam** — the manager app: a manager getting help resolving conflict with
-  a member of their team. Maps to `manager-app`/`manager-coaching-app`.
+- **Seam** — the manager app: solo coaching/practice for a manager preparing
+  for or rehearsing a hard conversation with a direct report, or a
+  case-management space for a manager working through conflict between two
+  members of their team. Maps to `manager-app` (product-facing name also
+  "Seam" as of 2026-10-17). The standalone `manager-coaching-app` prototype
+  that used to cover the rehearsal half of this was removed as redundant —
+  that path is folded into `intake-app`/Darn's own system prompt instead
+  (see `facilitator-intake-system-prompt.md`).
 - **Swatch** — a UX collaboration tool for designers who don't know each
   other well. See full writeup below.
 - **Loom** — new idea: the async sprint-retro tool. See "Pattern-only
@@ -110,8 +116,9 @@ person's words buys 10-15 seconds and signals engagement), the covert
 physiological sigh (double inhale through nose, slow exhale through mouth),
 and countering sharp comments with operational questions ("walk me through
 the dependency you're worried about") instead of defensiveness.
-- Where it could plug in: coaching tips surfaced in `manager-coaching-app` or
-  `manager-app`, or as in-session nudges during a live facilitated conversation.
+- Where it could plug in: coaching tips surfaced in `intake-app`'s
+  manager-coaching path or `manager-app`, or as in-session nudges during a
+  live facilitated conversation.
 - Why not active: would need UX design for when/how to surface a tip without
   being annoying or patronizing mid-conversation.
 
@@ -189,8 +196,9 @@ plus 1-2 word micro-pacing cues ("Pause." "Acknowledge."). Deliberately not a
 live teleprompter/script-reader — that was considered and rejected as unsafe
 and awkward.
 - Source: `docs/pitch-strategy/00_LIVE_MEETING_AI_COACH.md`
-- Where it could plug in: `manager-coaching-app` or the practice/rehearsal
-  flow, as a UI overlay during a live or simulated session.
+- Where it could plug in: `intake-app`'s manager-coaching path or the
+  practice/rehearsal flow, as a UI overlay during a live or simulated
+  session.
 - Why not active: needs its own UI design pass; depends on real-time signal
   inputs (talk-time, tone) that would need to be wired up live, not just
   post-hoc.
@@ -221,7 +229,7 @@ each real check-in. Has its own safety-floor carve-outs (no legal advice, no
 ingestion of proprietary documents).
 - Source: `docs/pitch-strategy/08_PIP_NAVIGATOR_FEATURE.md`
 - Where it could plug in: a new standalone app/prototype, similar in shape
-  to `manager-coaching-app` but employee-side.
+  to `intake-app`'s solo rehearsal mechanics but employee-side.
 - Why not active: entire feature, unbuilt; would need its own system prompt,
   UI, and legal-carve-out review (PIP navigation brushes against employment
   law) before touching real users.
