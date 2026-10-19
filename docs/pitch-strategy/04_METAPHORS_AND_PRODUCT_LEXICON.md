@@ -37,3 +37,66 @@ Sewing, tailoring, and textile metaphors give Mend a cohesive, craft-grounded vo
 > - The Basting Stitch — test your framing in a low-stakes practice run before entering the room.
 > - The Tension Gauge — real-time Watcher guardrails that keep dialogue grounded, fair, and safe.
 > - The Dissolving Suture — ephemeral, zero-trace resolution that lets your team re-knit without management oversight or scar tissue.
+
+## Naming decision: app renamed Darn -> Thimble (2026-10-19)
+
+Considered renaming the Thimble persona to Darn instead. Rejected: Darn
+works as a character/companion name ("I talked it through with Thimble")
+and keeps the protective-guard meaning (a thimble keeps the needle from
+pricking your finger, i.e. psychological safety), while Darn describes the
+repair work itself, not an identity.
+
+Settled the brand-architecture question instead by collapsing app and
+persona into one name, so there's no 3-tier hierarchy (Mend -> app ->
+persona) to confuse cold testers reading the About page. The app previously
+codenamed **Darn** (solo conflict-resolution: intake -> joint session) is
+now **Thimble** — same name as the facilitator persona, zero translation
+layer: you open Thimble and you talk to Thimble. Darn itself stays reserved
+for an action/mode name (e.g. "run a quick darn on this draft"), not a
+product or persona identity. See `IDEAS.md`'s "App codenames" section for
+the updated app-name list.
+
+## Garment metaphor: mending the clothes, not the body
+
+Core framing: Mend repairs the work persona (the "clothing" you put on for
+work), not the person underneath. This maps to several existing frameworks
+worth keeping in the back pocket for copy and positioning work:
+
+- **Goffman's dramaturgy (front stage / back stage)** — the professional self
+  is a performance for an audience; Mend is the back stage where you drop
+  the act without being watched.
+- **Jung's persona** — literally "actor's mask"; a functional social
+  interface, not a lie. Friction snags the mask, not the core self.
+- **Hochschild's emotional labor / surface acting** — corporate "fake it"
+  performance is gear worn for a shift, not who you are; this protects the
+  boundary between self-worth and the job.
+- **Workwear / PPE** — the professional persona is social protective
+  equipment; a bad interaction scuffs the gear, not the soul.
+- **Tailored fit** — generic one-size-fits-all workplace norms chafe;
+  mending/tailoring means adjusting the fit, not the body.
+- **Visible mending (sashiko/boro)** — repaired fabric doesn't hide the
+  tear, it reinforces the stress point with a visible stitch; a repaired
+  working relationship doesn't pretend nothing happened, it makes the new
+  boundary explicit and durable.
+
+Copy frame this unlocks: deficit/medical language ("fix your personal
+flaws") becomes craft/tailoring language ("reinforce the suit you wear to
+work"). Treats the user as intact, not broken.
+
+### De-stigmatizing vocabulary swaps
+
+Use garment/craft terms instead of clinical or HR language:
+
+| Stigmatized | Garment framing |
+|---|---|
+| Conflict resolution / dispute mediation | Calibrating working protocols / seam alignment |
+| Airing grievances / calling someone out | Tracing where expectations and handoffs diverged |
+| Forced apologies or handshakes | Co-authoring mutual SLAs and review rules |
+| A damaged relationship | A temporary tear in the team dynamic |
+
+Related principles already consistent with Mend's existing positioning:
+repair doesn't require forced apologies or forced closeness — a cool,
+functional working agreement (e.g. async-only, 24h response SLA) counts as
+fully repaired. See the Dissolving Suture and Decoupled Knotting entries
+above for the "no permanent record, no forced reconciliation" posture this
+reinforces.

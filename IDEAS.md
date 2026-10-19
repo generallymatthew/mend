@@ -14,10 +14,10 @@ Every entry also names its source file so the original writeup can be found.
 Working names for the apps discussed in this doc and in the shipped codebase,
 so future conversations can refer to them by name instead of description.
 
-- **Darn** — the solo conflict-resolution app overall (intake → joint
+- **Thimble** — the solo conflict-resolution app overall (intake → joint
   session), the main focus so far. Maps to `intake-app` +
   `joint-session-app`/`joint-session-audio`.
-- **Suture** — the two-person facilitated conversation itself, inside Darn
+- **Suture** — the two-person facilitated conversation itself, inside Thimble
   (the live joint session specifically, not the intake step before it).
 - **Seam** — the manager app: solo coaching/practice for a manager preparing
   for or rehearsing a hard conversation with a direct report, or a
@@ -25,7 +25,7 @@ so future conversations can refer to them by name instead of description.
   members of their team. Maps to `manager-app` (product-facing name also
   "Seam" as of 2026-10-17). The standalone `manager-coaching-app` prototype
   that used to cover the rehearsal half of this was removed as redundant —
-  that path is folded into `intake-app`/Darn's own system prompt instead
+  that path is folded into `intake-app`/Thimble's own system prompt instead
   (see `facilitator-intake-system-prompt.md`).
 - **Swatch** — a UX collaboration tool for designers who don't know each
   other well. See full writeup below.
@@ -518,9 +518,9 @@ confidential between them — the opposite trust model from the two-person
 conflict-mediation apps, where privacy between the two parties is the whole
 point. Splice's job is driving a group to an explicit, visible group
 decision (a vote), not protecting anyone's privacy from anyone else in the
-room. This is a meaningfully different product shape from Darn/Suture, not
+room. This is a meaningfully different product shape from Thimble/Suture, not
 just a group-sized version of it: no safety floor, no side-conversation
-firewall, no confidential intake — those are Darn/Suture-specific and
+firewall, no confidential intake — those are Thimble/Suture-specific and
 deliberately left out of Splice's facilitator prompt.
 
 First build pass is done, as `group-session-app/` (prototype, in-memory
@@ -598,7 +598,7 @@ limitation, written up in the "Multi-turn rerun" entry above).
 
 **Family note, not a merge**: Suture and Splice both sit in the same
 category — Mend facilitating a live, real-time session that drives toward
-a deliverable, rather than solo prep (Darn/Seam) or async distillation
+a deliverable, rather than solo prep (Thimble/Seam) or async distillation
 (Loom). They are NOT the same engine at different headcounts (see the
 Splice entry above for why — opposite trust model, confirmed deliberate
 and already partially built that way). The real split within the family is
@@ -611,8 +611,8 @@ resolution and not neutral group voting).
 
 1. **Seam** — real buyer with budget (manager/L&D training spend), no
    invite-friction problem (solo, manager-initiated for their own benefit),
-   solid moat from the same outcome-tuning as Darn/Suture.
-2. **Darn** — soft buyer economics (individual employee, no budget line),
+   solid moat from the same outcome-tuning as Thimble/Suture.
+2. **Thimble** — soft buyer economics (individual employee, no budget line),
    but decent moat (tuned for the regulate-then-equip arc + safety floor,
    not raw output quality), already built and tester-validated, feeds
    everything downstream.
