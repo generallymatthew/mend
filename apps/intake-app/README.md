@@ -27,6 +27,21 @@ Open http://localhost:8420 in a browser. Voice memo recording needs microphone p
 
 Running this as part of the full walkthrough instead of standalone? Use `../../run_all.sh` and open http://localhost:8080/intake/ instead — the "continue to joint session" banner link only resolves correctly when browsed that way (see the repo root `README.md`).
 
+## Optional: consent-gated HR notification
+
+Unset by default. Without `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS`/`HR_NOTIFY_EMAIL` set, a consent-gated HR send (see `facilitator-intake-system-prompt.md`'s mandatory-floor section) still logs locally to `hr_notify_log.jsonl`, just doesn't send a real email, so this is fully testable with no mail server. To actually send, set in `.env`:
+
+```
+HR_NOTIFY_EMAIL=hr@example.com
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=...
+SMTP_PASS=...
+MAIL_FROM=...   # optional, defaults to SMTP_USER
+```
+
+This only ever fires for the consent-gated floor tier (harassment/discrimination, retaliation, illegal activity), only after the employee actually says yes. The auto-notify tier (threats/violence, immediate safety risk) is intentionally not wired to any send yet.
+
 ## Optional: tester access gate
 
 Unset by default (local dev needs no setup). Set `TESTER_ACCESS_CODE` in `.env` (and on Render, before sending the live URL to anyone) to require a shared passcode before any page or `/api/*` call is served — a lightweight wall against random crawlers/scrapers hitting the paid LLM/voice endpoints, not real per-user auth. A tester without the cookie gets redirected to `/gate` (or a 401 on API calls), enters the code once, and it's remembered via a cookie for 30 days.

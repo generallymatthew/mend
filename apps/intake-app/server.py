@@ -18,11 +18,13 @@ import asyncio
 import json
 import os
 import re
+import smtplib
 import subprocess
 import sys
 import tempfile
 import time
 import uuid
+from email.message import EmailMessage
 from pathlib import Path
 
 import httpx
@@ -106,6 +108,21 @@ TAVUS_API_KEY = os.environ.get("TAVUS_API_KEY")
 TAVUS_PAL_ID = os.environ.get("TAVUS_PAL_ID")
 LLM_SHIM_SECRET = os.environ.get("LLM_SHIM_SECRET")
 VIDEO_ENABLED = bool(TAVUS_API_KEY and TAVUS_PAL_ID and LLM_SHIM_SECRET)
+
+# --- Consent-gated HR notification (testing only, not the auto-notify tier) -
+# Sends the anonymized summary the facilitator already composed in
+# hr_notify_summary, only once the employee has actually consented
+# (hr_notify_choice == "send"), for the consent-gated floor categories only
+# (harassment_discrimination, discrimination_retaliation, illegal_activity --
+# see facilitator-intake-system-prompt.md's mandatory-floor section). The
+# auto-notify tier (threats_violence, immediate_safety_risk) is deliberately
+# NOT wired to any send here yet -- not needed for current testing.
+HR_NOTIFY_EMAIL = os.environ.get("HR_NOTIFY_EMAIL", "")
+SMTP_HOST = os.environ.get("SMTP_HOST", "")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASS = os.environ.get("SMTP_PASS", "")
+MAIL_FROM = os.environ.get("MAIL_FROM", SMTP_USER)
 
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
@@ -642,12 +659,65 @@ def log_screen_signal(session_id: str, turn: int, signal: dict, raw_signal: str 
         "phase": signal.get("phase"),
         "screen_result": signal.get("screen_result"),
         "floor_triggered": signal.get("floor_triggered"),
+        "closing_check_result": signal.get("closing_check_result"),
+        "closing_check_want": signal.get("closing_check_want"),
         "block_present": bool(raw_signal),
         "parse_failed": bool(raw_signal) and not signal,
         "note": note,
     }
     with SCREEN_LOG_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
+
+
+HR_NOTIFY_LOG_FILE = ROOT / "hr_notify_log.jsonl"
+# Sessions already sent in this process's lifetime -- prevents a duplicate
+# send if the model re-emits the same hr_notify_choice/hr_notify_summary on
+# a later turn (the prompt says not to, but this is the actual backstop).
+_hr_notified_sessions: set[str] = set()
+
+
+def maybe_send_hr_notification(session_id: str, signal: dict) -> None:
+    """Fires only for the consent-gated floor tier, only once the employee
+    has actually said yes (hr_notify_choice == "send"), and only once per
+    session. Always logs locally; only sends a real email if SMTP is
+    configured, same graceful-no-setup-required pattern as
+    ANTHROPIC_API_KEY/VIDEO_ENABLED elsewhere in this file -- so this is
+    fully testable without any mail server."""
+    if signal.get("hr_notify_choice") != "send" or session_id in _hr_notified_sessions:
+        return
+    summary = signal.get("hr_notify_summary")
+    if not summary:
+        return
+    _hr_notified_sessions.add(session_id)
+    record = {
+        "ts": time.time(),
+        "session_id": session_id,
+        "floor_triggered": signal.get("floor_triggered"),
+        "summary": summary,
+    }
+    with HR_NOTIFY_LOG_FILE.open("a") as f:
+        f.write(json.dumps(record) + "\n")
+    if not (HR_NOTIFY_EMAIL and SMTP_HOST and SMTP_USER and SMTP_PASS):
+        print(f"[hr_notify] no SMTP configured, logged only: {record}", flush=True)
+        return
+    try:
+        msg = EmailMessage()
+        msg["Subject"] = "Mend: anonymized conflict disclosure"
+        msg["From"] = MAIL_FROM
+        msg["To"] = HR_NOTIFY_EMAIL
+        msg.set_content(
+            "An employee using Mend consented to send HR this anonymized summary. "
+            "No name, session identifier, or verbatim quotes are included.\n\n"
+            f"Category: {signal.get('floor_triggered')}\n"
+            f"Summary: {summary}\n"
+        )
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
+            s.starttls()
+            s.login(SMTP_USER, SMTP_PASS)
+            s.send_message(msg)
+        print(f"[hr_notify] sent for session {session_id}", flush=True)
+    except Exception as e:
+        print(f"[hr_notify] send failed, already logged locally: {e!r}", flush=True)
 
 
 def vote_flags(signal: dict) -> bool:
@@ -992,6 +1062,7 @@ async def post_message(payload: dict):
     final = await maybe_override_via_voting(conversation, snapshot, result)
     if final is not result:
         log_screen_signal(session_id, turn, parse_mend_signal(final.get("signal")), final.get("signal"), note="overridden_by_vote")
+    maybe_send_hr_notification(session_id, parse_mend_signal(final.get("signal")))
     return final
 
 
@@ -1084,6 +1155,7 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
     conversation.append({"role": "assistant", "content": full_text})
     signal_dict = parse_mend_signal(signal)
     log_screen_signal(session_id, turn, signal_dict, signal)
+    maybe_send_hr_notification(session_id, signal_dict)
     yield _sse({"done": True, "signal": signal})
 
 
