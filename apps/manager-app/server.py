@@ -296,6 +296,17 @@ async def index():
     return FileResponse(ROOT / "static" / "index.html")
 
 
+@app.get("/sw.js")
+async def service_worker():
+    # Served at root, not /static/sw.js, so its default scope covers the
+    # whole app -- a service worker's scope is its own path by default.
+    return FileResponse(
+        ROOT / "static" / "sw.js",
+        media_type="application/javascript",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 
 

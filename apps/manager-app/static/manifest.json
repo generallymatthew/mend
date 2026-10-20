@@ -1,11 +1,12 @@
 {
-  "name": "Seam",
+  "name": "Seam, by Mend",
   "short_name": "Seam",
+  "description": "Private conflict-case prep, tone-check, and meeting strategy for managers.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
-  "theme_color": "#2F5233",
+  "theme_color": "#17372E",
   "icons": [
     { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }

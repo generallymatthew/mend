@@ -63,6 +63,13 @@
   }
   .privacy-chip svg { flex-shrink: 0; color: var(--ink); }
   .top-nav-actions { display: flex; align-items: center; gap: 8px; }
+  #install-btn {
+    display: none; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: var(--ink);
+    background: var(--accent-pink-bg); border: none; border-radius: 999px;
+    padding: 7px 14px; cursor: pointer; white-space: nowrap;
+  }
+  #install-btn:hover { background: #F9DFE5; }
   #help-btn {
     width: 28px; height: 28px; border-radius: 999px;
     background: var(--panel-bg); color: var(--muted);
@@ -503,6 +510,7 @@
     </span>
   </div>
   <div class="top-nav-actions">
+    <button id="install-btn" title="Install Seam as an app">Install app</button>
     <button id="help-btn" title="How this works">?</button>
   </div>
 </div>
@@ -1468,7 +1476,34 @@ scrimEl.onclick = () => {
   meetingPlanPanelEl.classList.remove("open");
   updateScrim();
 };
+if (isMobile()) sidebarEl.classList.add("closed");
 updateScrim();
+
+// ---------------------------------------------------------------------
+// PWA install: register the service worker (required by Chrome before it
+// will consider the app installable) and surface the browser's deferred
+// install prompt as a real button instead of waiting on the omnibox icon.
+// ---------------------------------------------------------------------
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js");
+}
+const installBtn = document.getElementById("install-btn");
+let deferredInstallPrompt = null;
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  installBtn.style.display = "flex";
+});
+installBtn.onclick = async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  installBtn.style.display = "none";
+};
+window.addEventListener("appinstalled", () => {
+  installBtn.style.display = "none";
+});
 
 loadCases();
 </script>
