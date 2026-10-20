@@ -55,11 +55,94 @@ a reason to already be open before the conflict happens. See
 `../../docs/pitch-strategy/00_LIVE_MEETING_AI_COACH.md`'s "Awkwardness
 Barrier" and "On-Cycle Touchpoints" sections for the full writeup.
 
-- [ ] Bi-weekly 1-on-1 prep and agenda de-biasing
+- [ ] Bi-weekly 1-on-1 prep and agenda de-biasing — **superseded 2026-10-20
+      by "Meeting Strategy" below, scoped wider than just 1-on-1s**
 - [ ] Pre-sprint cross-functional handoff and dependency mapping
-- [ ] Async tone-check for high-stakes Slack announcements or emails
+- [ ] Async tone-check for high-stakes Slack announcements or emails —
+      **scoped 2026-10-20, see below**
 - [ ] Calibration- and promotion-cycle narrative framing
 - [ ] Quarterly blameless retro and post-mortem ingestion
+
+### 2026-10-20 MVP cut: four features scoped for the current build
+
+Out of the Phase 1/2 lists plus the bundle ideas in
+`../../docs/pitch-strategy/24_SEAM_PRODUCT_PITCH_AND_ADOPTION_STRATEGY.md`,
+four features were picked as the MVP to actually build next, each scoped
+through a Q&A pass with the user. This section is the build spec; a
+parallel chat is doing UI/visual design against this same spec, so keep it
+current as scope changes rather than letting the two drift.
+
+**1. Meeting Strategy** (renamed from "1-on-1 prep and agenda de-biasing")
+- Explicitly **not** a task list or productivity tool. Works at the level
+  of meeting strategy, not meeting tactics: a manager names a goal for a
+  meeting (team cohesion, delivering hard news, a pep talk, addressing a
+  known team issue, planning a team-building exercise, or anything else),
+  and Thimble helps them figure out how to actually achieve it.
+- Scope: **any meeting a manager runs**, not just 1-on-1s (team meetings,
+  all-hands, whatever has a goal) — deliberately wider than the original
+  Phase 1 item.
+- Interaction: fully open-ended chat, no preset goal picklist — the
+  manager describes the meeting and goal in their own words, Thimble asks
+  questions to build the approach (same three-beat-adjacent facilitation
+  style as the case-plan flow, but tuned for forward-looking strategy
+  rather than conflict diagnosis).
+- Output: a written strategy / talking points artifact the manager can
+  glance at before or during the meeting — not just the chat transcript.
+- Output **persists** so the manager can reopen and re-read past
+  strategies (unlike the raw chat, which stays ephemeral, same treatment
+  as case conversations).
+- Standalone entry point: **not** nested inside the existing case system
+  (no conflict case required to use this).
+- No enforced recurrence/reminders in this version — manager opens it
+  whenever they want; bi-weekly scheduling/notifications explicitly out of
+  scope for now.
+- Build shape (mirrors the existing case-plan pattern in `server.py`):
+  - New system prompt file, `../facilitator-meeting-strategy-system-prompt.md`
+    (sibling to `facilitator-case-plan-system-prompt.md`), tuned for
+    strategy coaching rather than conflict mediation.
+  - New table `meeting_sessions` (id, title, goal_summary, strategy_text,
+    created_at, updated_at) in `cases.db` — same persistence pattern as
+    `cases`, but without conflict-specific fields (no tension_summary,
+    floor_triggered, handoff).
+  - New routes: `POST /api/meeting-sessions`, `POST
+    /api/meeting-sessions/{id}/messages`, `GET
+    /api/meeting-sessions/{id}` — same shape as the existing case routes.
+  - The back-and-forth chat itself stays in-memory only (same
+    `CONVERSATIONS` pattern already used for cases); only the final
+    strategy text gets written to the DB.
+
+**2. Action-item-only persistence (conflict-case continuity)** — already
+built, no new work needed. `plan_steps` already persists server-side,
+plaintext, survives a restart; the raw conversation (`CONVERSATIONS`)
+stays in-memory only and is lost on restart. That's already the "never
+retain the conversation, only the resulting action item" split from
+`../../docs/pitch-strategy/24_SEAM_PRODUCT_PITCH_AND_ADOPTION_STRATEGY.md`
+§7-8 — confirmed as the intended MVP design (server DB, plaintext, defer
+enclave encryption to later). Not tied to Meeting Strategy's action items;
+this is specifically about conflict-case plan steps.
+
+**3. Suture handoff — real two-person test** — no known code gap, the
+`/api/cases/{case_id}/handoff` route already exists. Needs a real dry run
+(two browsers, two roles) to find what actually breaks before trusting it
+for a pilot. Not scheduled yet; the user will run this themselves once
+ready, not before.
+
+**4. Tone-check** — in progress as of 2026-10-20.
+- Deliberately **not** deficit-flagging ("this sounds harsh"). Instead
+  checks whether a draft message reads as coming from someone emotionally
+  regulated, secure, and competent — positive-signal framing, not a list
+  of flaws.
+- Input: manager pastes a draft (email/Slack message/etc.) into Seam.
+  Photo/screenshot input considered and explicitly rejected for MVP (extra
+  OCR/vision build cost for little gain over paste, since drafts already
+  exist as text before sending) — revisit only if real usage shows paste
+  friction.
+- Output: feedback **and** a suggested rewrite (not feedback-only).
+- Stateless: no persistence, no case/session tie-in, one-shot request/response.
+- Build shape:
+  - New system prompt file, `../facilitator-tone-check-system-prompt.md`.
+  - New route `POST /api/tone-check`, takes raw draft text, returns
+    `{feedback, rewrite}`. No DB write at all.
 
 ## Phase 2 — Calendar-aware pre/post-meeting workflow (not yet built, needs scope check)
 
