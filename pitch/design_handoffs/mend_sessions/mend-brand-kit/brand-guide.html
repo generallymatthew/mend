@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mend Brand Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #F6F1E7; color: #17372E; font-family: 'Manrope', system-ui, sans-serif; }
+  a { color: #8c0d28; }
+  a:hover { color: #660a1d; }
+  .mg-section { width: 100%; max-width: 1040px; margin: 0 auto; padding: 56px 32px; border-bottom: 1px solid rgba(23,55,46,0.12); }
+  .mg-section:last-child { border-bottom: none; }
+  .mg-kicker { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #8c0d28; margin: 0 0 8px; }
+  .mg-h2 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 24px; }
+  .mg-swatch-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; }
+  @media (max-width: 720px) { .mg-swatch-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  .mg-swatch { border-radius: 16px; overflow: hidden; border: 1px solid rgba(23,55,46,0.12); background: #fff; }
+  .mg-swatch-fill { height: 96px; }
+  .mg-swatch-body { padding: 14px 16px; }
+  .mg-swatch-name { font-weight: 800; font-size: 14px; margin: 0 0 2px; }
+  .mg-swatch-hex { font-size: 12px; font-family: ui-monospace, 'SF Mono', monospace; opacity: 0.65; margin: 0 0 6px; }
+  .mg-swatch-role { font-size: 12px; opacity: 0.75; margin: 0; line-height: 1.4; }
+  .mg-note { font-size: 13px; line-height: 1.6; padding: 14px 16px; border-radius: 12px; background: #eee7db; margin-top: 16px; }
+  .mg-row { display: flex; flex-wrap: wrap; gap: 24px; }
+  .mg-col { flex: 1 1 260px; min-width: 0; }
+  .mg-sample-pill { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; border-radius: 999px; padding: 10px 22px; }
+  .mg-mini-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.55; margin: 0 0 10px; }
+  .mg-logo-tile { border-radius: 16px; padding: 28px; display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .mg-radius-box { border: 2px solid #17372E; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .mg-tag { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 999px; background: #eef7f4; color: #214f42; }
+</style>
+</head>
+<body>
+<div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+
+  <!-- Header -->
+  <div style="width: 100%; max-width: 1040px; margin: 0 auto; padding: 64px 32px 40px; display: flex; align-items: center; gap: 16px;">
+    <svg width="46" height="33" viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#F3829A"></path></svg>
+    <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.05em;">mend</div>
+    <div style="margin-left: auto; font-size: 13px; opacity: 0.6; font-weight: 600;">Brand quick reference</div>
+  </div>
+
+  <!-- Colors -->
+  <div class="mg-section">
+    <p class="mg-kicker">Colors</p>
+    <h2 class="mg-h2">Palette</h2>
+    <div class="mg-swatch-grid">
+      <div class="mg-swatch">
+        <div class="mg-swatch-fill" style="background: #F3829A;"></div>
+        <div class="mg-swatch-body">
+          <p class="mg-swatch-name">Mend Pink</p>
+          <p class="mg-swatch-hex">#F3829A</p>
+          <p class="mg-swatch-role">Primary. Logo, fills, icons. Never body text on light bg.</p>
+        </div>
+      </div>
+      <div class="mg-swatch">
+        <div class="mg-swatch-fill" style="background: #17372E;"></div>
+        <div class="mg-swatch-body">
+          <p class="mg-swatch-name">Evergreen</p>
+          <p class="mg-swatch-hex">#17372E</p>
+          <p class="mg-swatch-role">Ink. Text, dark backgrounds, primary buttons.</p>
+        </div>
+      </div>
+      <div class="mg-swatch">
+        <div class="mg-swatch-fill" style="background: #E9B949;"></div>
+        <div class="mg-swatch-body">
+          <p class="mg-swatch-name">Honey</p>
+          <p class="mg-swatch-hex">#E9B949</p>
+          <p class="mg-swatch-role">Accent. Highlights, "resolved" states. Fills only, never text.</p>
+        </div>
+      </div>
+      <div class="mg-swatch">
+        <div class="mg-swatch-fill" style="background: #F6F1E7; border-bottom: 1px solid rgba(23,55,46,0.12);"></div>
+        <div class="mg-swatch-body">
+          <p class="mg-swatch-name">Oat</p>
+          <p class="mg-swatch-hex">#F6F1E7</p>
+          <p class="mg-swatch-role">Surface. Page background.</p>
+        </div>
+      </div>
+    </div>
+    <div class="mg-note">
+      <strong>Approved pairings:</strong> Pink mark + Evergreen text on Oat &middot; Pink mark + Oat text on Evergreen &middot; Evergreen mark + Evergreen text on Pink.<br>
+      <strong>Don't:</strong> Pink or Honey as body text on light backgrounds (2.2:1 / 1.6:1 contrast — fails WCAG AA). For pink-toned links or text, use the darker pink-700 step (#8c0d28, 8.5:1) instead of raw Pink.
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <div class="mg-section">
+    <p class="mg-kicker">Typography</p>
+    <h2 class="mg-h2">Manrope</h2>
+    <p class="mg-mini-label">Wordmark &amp; headlines — weight 800, tight tracking</p>
+    <div style="font-size: 44px; font-weight: 800; letter-spacing: -0.015em; margin: 0 0 24px;">Resolve the real issue</div>
+    <p class="mg-mini-label">UI &amp; body — weight 500–700</p>
+    <p style="font-size: 16px; font-weight: 500; line-height: 1.55; max-width: 640px; margin: 0 0 24px;">Mend helps teams resolve disagreements with structure instead of guesswork — weight 500 for body copy, 600–700 for labels and emphasis.</p>
+    <div class="mg-row">
+      <div class="mg-col">
+        <p class="mg-mini-label">Type scale</p>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-size: 42px; font-weight: 800; line-height: 1.1;">H1 — 42</div>
+          <div style="font-size: 32px; font-weight: 800; line-height: 1.1;">H2 — 32</div>
+          <div style="font-size: 25px; font-weight: 800; line-height: 1.1;">H3 — 25</div>
+          <div style="font-size: 20px; font-weight: 800; line-height: 1.1;">H4 — 20</div>
+          <div style="font-size: 16px; font-weight: 800; line-height: 1.1;">H5 — 16</div>
+          <div style="font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.1;">H6 — 13 caps</div>
+        </div>
+      </div>
+      <div class="mg-col">
+        <p class="mg-mini-label">Wordmark spacing rule</p>
+        <p style="font-size: 13px; line-height: 1.6; opacity: 0.8;">"mend", all lowercase, ExtraBold 800, letter-spacing -0.05em. Mark sits to the left, vertically centered, gap ≈ 1/6 of the mark's width.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logo -->
+  <div class="mg-section">
+    <p class="mg-kicker">Logo</p>
+    <h2 class="mg-h2">Mark</h2>
+    <p style="font-size: 13px; line-height: 1.6; opacity: 0.8; max-width: 640px; margin: 0 0 20px;">Two overlapping circles forming a lowercase "m", with a knot where the two sides meet.</p>
+    <div class="mg-row">
+      <div class="mg-col" style="flex-basis: 220px;">
+        <div class="mg-logo-tile" style="background: #F6F1E7; border: 1px solid rgba(23,55,46,0.12);">
+          <svg width="56" height="40" viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#F3829A"></path></svg>
+        </div>
+        <p class="mg-mini-label" style="margin-top: 8px; text-align: center;">Pink on Oat</p>
+      </div>
+      <div class="mg-col" style="flex-basis: 220px;">
+        <div class="mg-logo-tile" style="background: #17372E;">
+          <svg width="56" height="40" viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#F3829A"></path></svg>
+        </div>
+        <p class="mg-mini-label" style="margin-top: 8px; text-align: center;">Pink on Evergreen</p>
+      </div>
+      <div class="mg-col" style="flex-basis: 220px;">
+        <div class="mg-logo-tile" style="background: #F3829A;">
+          <svg width="56" height="40" viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#17372E"></path></svg>
+        </div>
+        <p class="mg-mini-label" style="margin-top: 8px; text-align: center;">Evergreen on Pink</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thimble -->
+  <div class="mg-section">
+    <p class="mg-kicker">Mascot</p>
+    <h2 class="mg-h2">Thimble</h2>
+    <p style="font-size: 13px; line-height: 1.6; opacity: 0.8; max-width: 640px; margin: 0 0 24px;">The AI facilitator's on-screen presence: a soft pink blob, not a face or a character. Idle shape is a near-circle with a slight organic wobble, a single soft highlight for dimension, a pill mouth, and a faint shadow pooled on the floor beneath it &mdash; it reads as sitting ON the surface, not pasted on top.</p>
+    <div class="mg-row">
+      <div class="mg-col" style="flex-basis: 200px; flex-grow: 0;">
+        <div style="width: 180px; height: 180px; position: relative; margin: 0 auto;">
+          <div style="position: absolute; left: 50%; top: calc(100% - 14px); width: 64%; height: 16px; transform: translateX(-50%); background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,0.34) 0%, rgba(23,55,46,0.2) 50%, rgba(23,55,46,0.07) 78%, rgba(23,55,46,0) 100%); border-radius: 50%;"></div>
+          <div style="position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%; background: radial-gradient(circle at 30% 24%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3;">
+            <div style="position: absolute; left: 50%; top: 60%; width: 20px; height: 5px; transform: translate(-50%, -50%); background: #F6F1E7; border-radius: 999px;"></div>
+          </div>
+        </div>
+        <p class="mg-mini-label" style="margin-top: 14px; text-align: center;">Idle</p>
+      </div>
+      <div class="mg-col">
+        <p class="mg-mini-label">Build notes</p>
+        <ul style="font-size: 13px; line-height: 1.7; opacity: 0.85; margin: 0; padding-left: 18px;">
+          <li>Fill #FF8CA3 (the production on-screen shade; brand kit's flat Mend Pink #F3829A for all static/print use).</li>
+          <li>One highlight only &mdash; <code style="font-size: 12px;">radial-gradient(circle at 30% 24%, rgba(255,255,255,.5), rgba(255,255,255,0) 55%)</code> &mdash; never a second specular dot.</li>
+          <li>Mouth is Oat (#F6F1E7), a pill at rest; it only goes fully round while thinking or talking.</li>
+          <li>Floor shadow: a flattened dark-ink ellipse directly under the body, soft-edged, never a hard drop shadow.</li>
+          <li>Outline is a near-circle, never a perfect one &mdash; asymmetric corner radii keep it feeling alive even at rest.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Design elements -->
+  <div class="mg-section">
+    <p class="mg-kicker">Design elements</p>
+    <h2 class="mg-h2">Shape, radius &amp; elevation</h2>
+    <div class="mg-row">
+      <div class="mg-col">
+        <p class="mg-mini-label">Corner radius</p>
+        <div style="display: flex; gap: 14px; align-items: flex-end;">
+          <div class="mg-radius-box" style="border-radius: 8px;">sm 8</div>
+          <div class="mg-radius-box" style="border-radius: 16px;">md 16</div>
+          <div class="mg-radius-box" style="border-radius: 28px;">lg 28</div>
+          <div class="mg-radius-box" style="border-radius: 999px; width: 72px;">pill</div>
+        </div>
+        <p style="font-size: 12px; opacity: 0.65; margin-top: 10px;">Rounded-frame mode: cards and dialogs go even softer (lg &times; 1.15); buttons, tags, inputs go full pill.</p>
+      </div>
+      <div class="mg-col">
+        <p class="mg-mini-label">Elevation — soft, ink-tinted</p>
+        <div style="display: flex; gap: 16px;">
+          <div style="width: 64px; height: 64px; border-radius: 16px; background: #fff; box-shadow: 0 1px 2px rgba(46,43,37,0.14);"></div>
+          <div style="width: 64px; height: 64px; border-radius: 16px; background: #fff; box-shadow: 0 3px 10px rgba(46,43,37,0.16);"></div>
+          <div style="width: 64px; height: 64px; border-radius: 16px; background: #fff; box-shadow: 0 12px 32px rgba(46,43,37,0.22);"></div>
+        </div>
+        <p style="font-size: 12px; opacity: 0.65; margin-top: 10px;">Shadows tint from the darkest neutral, never pure black.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons / tags -->
+  <div class="mg-section">
+    <p class="mg-kicker">Design elements</p>
+    <h2 class="mg-h2">Buttons &amp; tags</h2>
+    <div class="mg-row" style="align-items: center;">
+      <span class="mg-sample-pill" style="background: #F3829A; color: #17372E;">Primary</span>
+      <span class="mg-sample-pill" style="background: transparent; border: 1px solid rgba(23,55,46,0.2); color: #17372E;">Secondary</span>
+      <span class="mg-sample-pill" style="background: transparent; color: #8c0d28; padding: 10px 10px;">Ghost</span>
+      <span class="mg-tag">Resolved</span>
+      <span class="mg-tag" style="background: #fbe9ed; color: #660a1d;">Pink tag</span>
+    </div>
+    <p style="font-size: 12px; opacity: 0.65; margin-top: 14px;">Buttons &amp; headings use Manrope 800. Pink fill always pairs with Evergreen text, never Oat (fails contrast).</p>
+  </div>
+
+  <!-- Brand themes -->
+  <div class="mg-section">
+    <p class="mg-kicker">Voice</p>
+    <h2 class="mg-h2">Brand themes</h2>
+    <div class="mg-row">
+      <span class="mg-tag" style="background: #eee7db; color: #17372E;">Resolution</span>
+      <span class="mg-tag" style="background: #eee7db; color: #17372E;">Impartiality</span>
+      <span class="mg-tag" style="background: #eee7db; color: #17372E;">Privacy &amp; anonymity</span>
+      <span class="mg-tag" style="background: #eee7db; color: #17372E;">People &amp; collaboration</span>
+    </div>
+    <p style="font-size: 12px; opacity: 0.6; margin-top: 20px;">No aphorism headlines ("X is the symptom, Y is the cause"). State what the thing does, plainly.</p>
+  </div>
+
+</div>
+</body>
+</html>
