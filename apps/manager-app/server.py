@@ -27,13 +27,15 @@ import os
 import re
 import secrets
 import sqlite3
+import tempfile
 import time
 import uuid
 from pathlib import Path
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -48,6 +50,34 @@ MODEL = "claude-sonnet-5"
 JOINT_SESSION_BASE_URL = os.environ.get("JOINT_SESSION_BASE_URL", "http://localhost:8421")
 
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
+
+# Push-to-talk dictation for text entries -- local Whisper only, one-shot
+# (record, release, transcribe, drop text into the field; never auto-sent).
+# Deliberately not the full live-conversation pipeline apps/intake-app
+# built (VAD, partial/streaming transcripts, Deepgram): this just needs to
+# turn one short clip into text. See intake-app/server.py's own
+# get_whisper/transcribe_file for the pattern this mirrors.
+WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "tiny.en")
+WHISPER_CPU_THREADS = int(os.environ.get("WHISPER_CPU_THREADS", str(os.cpu_count() or 4)))
+_whisper_model = None
+
+
+def get_whisper():
+    global _whisper_model
+    if _whisper_model is None:
+        from faster_whisper import WhisperModel
+        _whisper_model = WhisperModel(
+            WHISPER_MODEL_NAME, device="cpu", compute_type="int8", cpu_threads=WHISPER_CPU_THREADS,
+        )
+    return _whisper_model
+
+
+def transcribe_file(path: str) -> str:
+    """Synchronous, CPU-bound -- always call via run_in_threadpool from a
+    route handler, never directly."""
+    model = get_whisper()
+    segments, _info = model.transcribe(path, beam_size=1)
+    return " ".join(seg.text.strip() for seg in segments).strip()
 
 
 def load_system_prompt(path: Path) -> str:
@@ -604,6 +634,25 @@ async def tone_check(body: ToneCheckRequest):
     if result is None or "feedback" not in result or "rewrite" not in result:
         return JSONResponse({"error": "couldn't parse a tone-check response, try again"}, status_code=502)
     return {"feedback": result["feedback"], "rewrite": result["rewrite"]}
+
+
+@app.post("/api/voice")
+async def post_voice(file: UploadFile):
+    """Transcription only, no persistence: the clip is written to a temp
+    file for the length of this request and discarded after. Returns the
+    transcript text for the frontend to drop into whichever text field the
+    manager was dictating into; never calls the facilitator itself."""
+    with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:
+        body = await file.read()
+        tmp.write(body)
+        tmp.flush()
+        try:
+            transcript = await run_in_threadpool(transcribe_file, tmp.name)
+        except Exception:
+            transcript = ""
+    if not transcript:
+        return JSONResponse({"error": "couldn't transcribe audio"}, status_code=400)
+    return {"transcript": transcript}
 
 
 # --- Meeting Strategy --------------------------------------------------
