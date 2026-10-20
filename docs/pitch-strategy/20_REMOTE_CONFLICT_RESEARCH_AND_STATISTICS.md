@@ -99,10 +99,62 @@ mediated root causes turn out to be structural task/process misalignments:
   call feels litigious and aggressive, so small friction festers until it
   triggers a sprint failure or turnover.
 
+## 5. How many people actually go to HR vs. backchannel instead
+
+**Source-verified** (fetched and read directly, 2026-10-19 — unlike
+Sections 1-4 above, treat these as solid):
+
+- **HR Acuity, *2023 Workplace Harassment and Misconduct Insights***
+  (n=1,980 employees, demographically diverse, ±2.2 pts at 95% confidence):
+  of people who experienced or witnessed inappropriate, illegal, or
+  unethical behavior at work, only **58% reported it** in 2023 — down from
+  **64% in 2019**. The reporting rate is falling, not rising.
+- **Talk to Spot / Dr. Julia Shaw white paper**, *Witnessing Workplace
+  Harassment and Discrimination* (survey of 1,000+ participants): among
+  witnesses (not even the target, just people who saw it happen) —
+  **77% never reported the incident to HR**. But **67% told someone
+  outside of work about it**, mostly family and friends, and **46% told
+  other people at work** (i.e., backchanneled to coworkers instead of
+  escalating). Top reasons given for not going to HR: worried about
+  consequences (34%), didn't want to interfere (29%), didn't know
+  witnesses could report (22%), didn't want to be seen as a "snitch"
+  (18%), didn't know how to report (16%).
+- **CIPD (UK)**, *Getting Under the Skin of Workplace Conflict*: roughly a
+  quarter of UK employees report experiencing workplace conflict in the
+  past year; separately, up to two-thirds of full-time workers report
+  having experienced *significant* workplace conflict with a colleague at
+  some point.
+- **General pattern across the secondary-sourced stats** (Zippia/Gitnux
+  roll-ups citing CPP and related surveys — not yet traced to primary
+  source, verify before external use): the most common response to
+  workplace conflict is to **just let it go (~47%)**; only **~29% escalate
+  to a manager or HR**. Separately, the CPP Global Human Capital Report
+  (2008, n=5,000 across 9 countries — dated, but still the most-cited
+  baseline) found 85% of employees experience some workplace conflict, and
+  employees spend ~2.8 hrs/week on it (~$359B/yr in the US in paid time).
+
+**The pattern across every source**: a large majority of people who
+experience or witness workplace conflict do *something* about it — they
+just do it sideways. They vent to a coworker, tell a friend or partner
+outside work, avoid the person, or quietly disengage. Only a minority ever
+escalates to the one channel (HR/management) that's designed to resolve
+it. That gap — high prevalence, high informal-backchannel rate, low
+formal-channel rate, and a formal-reporting rate that's *declining*
+(64%→58% in four years per HR Acuity) — is the structural opening: people
+are already doing the work of processing workplace conflict somewhere,
+just not anywhere built to help them do it well.
+
 ## Where this could plug in
 
 Backs the remote-specific slice of the pitch's cost-of-inaction case
 (adjacent to `07_CULTURAL_POSITIONING_AND_ADOPTION.md`) and the structural-
 not-personal framing already used for the OSS maintainer angle in
 `IDEAS.md`. The Jehn 49-55%-vs-80% gap and the Fundamental Attribution
-Error framing are the two strongest reusable hooks here.
+Error framing are the two strongest reusable hooks here. Section 5's
+HR-Acuity/Talk-to-Spot numbers are the strongest *sourced* evidence in
+this doc for the "people backchannel instead of using the official
+channel" claim — pairs directly with `23_CHATBOT_SOCIAL_DYNAMICS_USAGE_EVIDENCE.md`,
+which makes the same point about chatbots: people are already going
+somewhere (a friend, a coworker, now increasingly a chatbot) instead of
+the formal/purpose-built channel, with worse results than a tool designed
+for the job would give.

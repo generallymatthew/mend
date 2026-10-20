@@ -3,14 +3,14 @@
   "configurations": [
     {
       "name": "intake-app",
-      "runtimeExecutable": "intake-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8420", "--app-dir", "intake-app"],
+      "runtimeExecutable": "apps/intake-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8420", "--app-dir", "apps/intake-app"],
       "port": 8420
     },
     {
       "name": "group-session-app",
-      "runtimeExecutable": "group-session-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8440", "--app-dir", "group-session-app"],
+      "runtimeExecutable": "apps/group-session-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8440", "--app-dir", "apps/group-session-app"],
       "port": 8440
     }
   ]

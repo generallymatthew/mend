@@ -147,3 +147,50 @@ a handshake, or a profession of renewed liking is patronizing, costs people
 their dignity, and is exactly the kind of performative truce this reframing
 is meant to avoid. Professional alignment is the deliverable; personal
 reconciliation, if it happens, is a bonus, not the bar.
+
+## The self-actualization essence (and the scope discipline it demands)
+
+Captured 2026-10-19, correcting a drift where the product description had
+started to read as "a tool that watches for ways emotions hurt efficiency."
+That framing is wrong — it's an engagement-metrics lens, not what Mend is
+actually for. Boiled down: **Mend is a private sanctuary that decodes the
+invisible social architecture of work, helping people untangle systemic
+stress so they can stay human, protect their peace of mind, and operate
+with personal sovereignty.** Every feature decision should trace back to
+one of these:
+
+- **Restores agency from helplessness** — shifts someone out of passive
+  victimhood ("the company/coworker is toxic") and into active ownership
+  over their own boundaries and choices.
+- **Separates identity from organizational chaos** — friction is not a
+  personal failure; this frees a person's self-worth from the dysfunction
+  of the systems around them (the garment metaphor in
+  `../../docs/pitch-strategy/04_METAPHORS_AND_PRODUCT_LEXICON.md` makes the
+  same point: Mend repairs the work persona, not the person underneath).
+- **Reclaims cognitive and creative bandwidth** — clears the obsessive
+  mental replay, anxiety, and dread that otherwise drains the energy needed
+  for real craft and mastery.
+- **Replaces performative armor with composure** — lets people drop the
+  corporate persona, process messy emotions in private, and show up in
+  public grounded and authentic.
+- **Builds relational self-efficacy** — gives people the direct, lived
+  experience of navigating a hard interpersonal impasse on their own,
+  turning chronic interpersonal fear into tested confidence.
+
+### What Mend is not
+
+A standing checklist against scope creep, to reread whenever a new feature
+idea (live meeting HUD, calendar integration, manager coaching track, etc.)
+starts to feel like it's pulling the product somewhere else:
+
+- Not a note-taker or meeting summarizer.
+- Not a corporate efficiency or productivity tracker.
+- Not a tone-policing nanny or emotional suppressor.
+- Not an administrative copilot for managers.
+
+Anything that would turn Mend into a record of what happened in a meeting,
+or a metric on how "efficient" someone's emotions were, is off the essence
+above, however useful it sounds in isolation. See
+`../../docs/pitch-strategy/00_LIVE_MEETING_AI_COACH.md`'s calendar-aware
+workflow section for a live example of a feature that needs to be checked
+against this boundary rather than assumed to be in scope.

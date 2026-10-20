@@ -41,3 +41,12 @@ Considered and rejected: a $5 Starbucks card (or similar) for using Mend.
 - **Undermines the maturity framing.** Paying someone $5 to talk to a peer implies resolving friction is a chore, not standard professional maintenance (see [07_CULTURAL_POSITIONING_AND_ADOPTION.md](07_CULTURAL_POSITIONING_AND_ADOPTION.md)).
 
 The real incentive is intrinsic: reputation protection, immediate psychological relief, and reclaimed time — not a payout. (Note: stipends are normal for an external user-testing/research panel, as in [05_USER_TESTING_AND_COHORT_STRATEGY.md](05_USER_TESTING_AND_COHORT_STRATEGY.md); this is specifically about in-production enterprise usage.)
+
+## Individual-Manager Buyer Economics
+
+Separate from the company-wide ACV above: would an individual manager ever
+pay for a manager-facing track (Thimble/Look) out of their own pocket? See
+[00_LIVE_MEETING_AI_COACH.md](00_LIVE_MEETING_AI_COACH.md#buyer-framing-would-a-manager-pay-for-this-themselves)
+for the full breakdown — short version: unlikely as a personal
+out-of-pocket subscription, but a strong fit for an existing corporate L&D
+or coaching stipend ($200-500/yr) or a discretionary team-software card.

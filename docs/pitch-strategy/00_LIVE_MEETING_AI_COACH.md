@@ -61,3 +61,101 @@ That framing — a neutral process both people opted into — is the core thesis
 3. **Preserve authentic presence** — managers respond to someone who can look them in the eye and state their needs calmly, not to someone visibly consulting a third-party scaffold.
 
 See [09_PRACTICE_SESSION_MEMORY_SCHEMA.md](09_PRACTICE_SESSION_MEMORY_SCHEMA.md) for how repeated practice sessions before the real call can stay lightweight without full transcripts.
+
+## The Awkwardness Barrier: Why This Doesn't Stay Top-of-Mind
+
+Real conflict is not a daily, weekly, or even monthly occurrence for most
+managers. If the only time a manager touches a tool like this is during an
+acute dispute, they forget it exists between incidents — there's no reason
+to open it, and no habit loop to bring them back when they actually need it.
+To be reached for in a real conflict, Mend has to already be part of the
+manager's routine for something they need on a recurring cadence, not
+sitting unused waiting for a crisis.
+
+### On-Cycle Touchpoints (staying front-of-mind)
+
+- Bi-weekly 1-on-1 prep and agenda de-biasing.
+- Pre-sprint cross-functional handoff and dependency mapping.
+- Async tone-check for high-stakes Slack announcements or emails.
+- Calibration- and promotion-cycle narrative framing.
+- Quarterly blameless retro and post-mortem ingestion.
+
+These are not conflict mediation; they're routine manager maintenance. The
+dispute-handling capability (Thimble's case-plan flow, see
+`../../apps/manager-app/THIMBLE_MINDSET.md`) rides along as the same tool
+the manager already has open for these lower-stakes, higher-frequency tasks.
+
+### Lowering the Awkwardness Barrier Further
+
+- Frame every session as **meeting facilitation**, never as dispute
+  mediation — see the dynamic-framing table in `THIMBLE_MINDSET.md`.
+- **Solo-first**: zero requirement to invite anyone else before getting
+  value.
+- **Double opt-in neutral avatars**, defaulting to voice (see
+  `11_PRODUCT_ARCHITECTURE_AND_STRATEGY_BLUEPRINT.md` §2, "Double Opt-In
+  Shielding").
+- Turn-taking timeboxes and blind prioritization during live or async
+  planning.
+- Automated export of agreed items to Jira or Linear (the Seam, made
+  concrete as tickets).
+
+## Calendar-Aware Pre- and Post-Meeting Workflow
+
+A concrete shape for the "on-cycle" idea above: let the AI (Thimble) sit
+across the whole arc of a meeting instead of only the live middle, which is
+the part most fraught with the wiretap and divided-attention problems
+described above.
+
+**Before the meeting:**
+- **Calendar scanning** — reads upcoming 1-on-1s and cross-team syncs to
+  identify meeting type and attendee roles.
+- **Pre-meeting intent calibration** — prompts the manager shortly before
+  the meeting to name desired outcomes, non-negotiable boundaries, and any
+  decision that actually needs to be made.
+- **Stakeholder constraint injection** — surfaces the attendee's known role
+  metrics and likely friction points (e.g. reminding the manager of a
+  platform's uptime target before a sprint review with that team).
+- **Opening rail generation** — 2-3 short framing phrases to anchor the
+  session's scope and head off rabbit-holing, handed to the manager before
+  the call starts, not read to them live.
+
+**During the meeting:** the ambient HUD described above (tempo, talk-time,
+agenda pings, deflection alerts) — pre-baked, not live-generated text.
+
+**After the meeting:**
+- **Edge audio processing** — analyzed locally/in-enclave, in volatile
+  memory, never as a cloud recording bot.
+- **Action-item and SLA extraction** — converts verbal commitments into
+  concrete operational items (e.g. "Design submits specs 48 hours prior").
+- **Role-anonymized case logging** — updates the manager's own case-state
+  anchor (see `THIMBLE_MINDSET.md`'s "case-state anchor" section) with
+  progress and next actions; no raw audio or transcript is ever stored.
+- **Follow-up communication staging** — pre-drafts a de-biased, neutral
+  summary for Slack or email confirming agreed next steps, without
+  defensive language.
+
+**Open tension worth tracking:** this calendar-aware, note-taking-adjacent
+shape needs to be reconciled against the scope boundary in
+`../../apps/manager-app/PHILOSOPHY.md` ("What Mend Is Not" — not a
+note-taker or meeting summarizer). The distinction to hold onto: Mend never
+produces a record *of the meeting* for later review; everything it
+surfaces is either ephemeral in-the-moment pacing help, or a forward-looking
+operational commitment (the Seam), never a transcript or minutes.
+
+## Buyer Framing: Would a Manager Pay for This Themselves?
+
+- **Out-of-pocket personal subscription** ($0-15/mo): unlikely — managers
+  treat this as an employer responsibility, not something to fund out of
+  their own pocket to solve a company problem.
+- **Corporate L&D / coaching stipend** ($200-500/yr): high fit — managers
+  routinely expense "executive coaching," "leadership development," or
+  "productivity" budgets on exactly this kind of private career tool.
+- **Discretionary team software card** (departmental expense): moderate-to-
+  high fit — managers already expense tactical team utilities that remove
+  daily friction.
+
+The moments that actually drive a manager to reach for this tool: acute
+dread before an imminent performance conversation or firing; sharp friction
+with a peer manager blocking a deliverable; pressure to push back upward
+without risking their own standing; and personal composure under pressure,
+framed as professional tooling, never as remedial counseling.

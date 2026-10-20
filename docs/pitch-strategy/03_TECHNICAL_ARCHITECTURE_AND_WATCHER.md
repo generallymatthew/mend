@@ -55,6 +55,59 @@ Categories 2-5 are handled by the self-correction loop: the Facilitator regenera
 - Each party is separately told that the conversation was escalated to HR for potential harassment — not what was said, just that it happened.
 - Mend keeps no data and takes no further role. HR runs its own independent investigation from there — Mend is a notifier, not an investigator.
 
+## Moat vs. Generic LLM Tools (ChatGPT, Copilot, Slack/Teams AI)
+
+Captured 2026-10-19. The question worth returning to whenever scoping a new
+feature: what does Mend do that a generic chatbot or an in-app enterprise AI
+assistant structurally cannot, not just "do it with better prompts"?
+
+1. **The enterprise panopticon problem.** Copilot, Slack AI, Teams AI, and
+   Google Duet are built for enterprise indexing and executive discovery:
+   every query, draft, and prompt is stored, searchable, and
+   subpoena-ready. Employees will never type a raw, unvarnished grievance
+   into Microsoft Copilot, because doing so creates a corporate paper trail
+   HR can audit. Mend's hardware-enforced ephemerality (the TEE / Loom
+   architecture above) is a structural guarantee those tools cannot offer
+   without abandoning their own business model (enterprise search and
+   retention).
+2. **Decoupled Watcher vs. sycophancy loop.** Consumer LLMs are RLHF-tuned
+   to be agreeable; venting about an unfair coworker tends to get validated
+   back ("that does sound toxic"), fueling righteous indignation and
+   escalatory draft messages. Mend's Facilitator/Watcher split (see the
+   runtime loop above) exists specifically to intercept and regenerate a
+   draft that validates a character attack instead of pointing at the
+   structural pressure underneath — this is `BIAS_ASYMMETRY` and
+   `UNFILTERED_TOXICITY` in the audit rubric, not a prompt-level
+   instruction a generic assistant could just copy, since nothing audits
+   the generic assistant's own output before it's shown.
+3. **The structural attribution engine vs. pop psychology.** A generic
+   assistant will readily hand back amateur diagnostic labels ("sounds like
+   narcissism," "that's gaslighting") because it pattern-matches to
+   internet pop psychology. Mend is anchored in Jehn's conflict taxonomy and
+   the fundamental attribution error (see `PHILOSOPHY.md` in
+   `../../apps/manager-app/`) and is built to systematically translate
+   personal-character framing into its operational primitives: colliding
+   KPIs, broken handoffs, bandwidth panic, undefined SLAs. `OUT_OF_SCOPE_ADVICE`
+   in the Watcher rubric is what blocks the diagnostic-label failure mode.
+4. **Asymmetric pacing (the Spool) vs. immediate prescriptions.** A generic
+   assistant, handed a messy situation, tends to jump straight to a 5-step
+   checklist or a ready-to-send email, before the user has finished
+   processing what happened. Mend's pacing protocol (raw vent, then a
+   pressure-gauge check for whether there's more, only then incentive
+   inquiry and a plan) is a deliberate concession to the fact that a
+   flooded nervous system can't evaluate trade-offs yet — see the triadic
+   threat response discussion above in `PHILOSOPHY.md`.
+5. **Realistic pushback (the Basting Stitch) vs. compliant roleplay.** A
+   generic assistant playing the "other side" in a rehearsal tends to
+   concede too easily, giving false confidence. The rehearsal sandbox is
+   calibrated to push back using the counterpart's actual role constraints
+   until the user's ask is framed in objective operational terms.
+6. **Decoupled asynchronous consent (the Seam) vs. live concession.** A
+   generic assistant mediating a live three-way chat has no mechanism for
+   letting each side accept terms privately; Mend's handoff pattern
+   collects each party's agreement independently, so neither side is
+   forced into a face-losing concession in front of an audience.
+
 ## Unit Economics & Cost Analysis (100 conflict pairs / 10,000 turns)
 
 - Intake side conversation (40 turns) + joint session (20 turns) + decoupled agreement (40 turns) = 100 turns per pair.

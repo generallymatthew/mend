@@ -79,6 +79,15 @@
   .talk-mic-btn:disabled{opacity:.4; cursor:default;}
   .talk-mic-btn.recording{background:#F3829A; border-color:#F3829A; color:var(--ink); animation:talk-mic-pulse 1.4s ease-in-out infinite;}
   @keyframes talk-mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(243,130,154,.45);} 50%{box-shadow:0 0 0 8px rgba(243,130,154,0);}}
+  /* Pressed, but getUserMedia/MediaRecorder hasn't actually opened the mic
+     yet (can take a real, noticeable fraction of a second -- see
+     tapStarting's own comment). Deliberately NOT the pink recording look --
+     that claimed "recording" before any audio was actually being captured,
+     reported live as people starting to talk into what was still a closed
+     mic. A calmer same-color opacity pulse instead of a color change, so it
+     reads as "working on it" rather than a second, different button state. */
+  .talk-mic-btn.starting{animation:talk-mic-starting-pulse 1s ease-in-out infinite;}
+  @keyframes talk-mic-starting-pulse{0%,100%{opacity:1;} 50%{opacity:.55;}}
   /* position:absolute + left/right (not width) so its own height can still
      grow with longer transcripts -- vertical centering against the record
      button is done in JS (positionTalkTranscriptBox), which needs that
@@ -117,11 +126,7 @@
   .mic-error-banner button{font:inherit; font-weight:700; font-size:13px; padding:8px 16px; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:var(--paper); cursor:pointer;}
   .video-area{flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;}
   .video-area iframe{flex:1; width:100%; border:1px solid var(--border); border-radius:12px; background:#000;}
-  /* margin-bottom reserves floor space for .thimble-shadow (positioned
-     40px below the avatar's own box) so it has room to render before
-     .state-pill-row starts, instead of the pill sitting right on top of
-     it. */
-  .avatar-row{display:flex; align-items:center; justify-content:center; width:200px; height:200px; margin-bottom:24px;}
+  .avatar-row{display:flex; align-items:center; justify-content:center; width:200px; height:200px;}
   @media (min-width:1024px){
     .avatar-row{width:260px; height:260px;}
     .thimble-avatar:not(.mini){width:260px; height:260px;}
@@ -233,32 +238,14 @@
      top-left live timer is for), so it reads better anchored to the thing
      it's describing. */
   .avatar-stack{display:flex; flex-direction:column; align-items:center;}
-  /* position:relative + z-index, not a layout move -- reported live as
-     the radiating ripple circles painting on top of the pill. The ripples
-     are position:absolute (.thimble-ripple); any positioned element
-     paints above plain static siblings in the same stacking context
-     regardless of DOM order, so the pill (previously static) lost
-     despite coming later in the markup. Doesn't move the pill's actual
-     position in the page at all, just its paint order. */
-  .state-pill-row{position:relative; z-index:3; display:flex; justify-content:center; margin-top:14px;}
-  /* White/paper background with Evergreen ink text, not pink text -- Pink
-     (#F3829A, the Thimble avatar's own fill) on white measures ~2.2:1
-     contrast (same value already documented above for pink-as-fill with
-     light text -- contrast ratio is symmetric regardless of which side is
-     foreground/background), well under WCAG AA's 4.5:1 floor for text
-     this small. Ties to Thimble's own color via a small pink dot instead
-     of the text itself, so the pill reads as "Thimble" while staying
-     readable -- ink text is the same accessible color already used
-     everywhere else in the app. */
-  /* Fixed width (not just padding) so the pill doesn't resize/jump as
-     STATE_WORDS's own entries change length turn to turn ("Listening…" vs
-     "Empathizing…") -- sized for the longest real entry
-     ("Thimble: Empathizing…" + the mute icon) plus a little breathing
-     room, per explicit ask. state-word gets the leftover space and is
-     left-aligned within it, so shorter words don't center-shift the mic
-     icon around. */
-  .state-pill{display:inline-flex; align-items:center; gap:7px; width:190px; padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--border); color:var(--ink); font-size:13px; white-space:nowrap; box-shadow:0 2px 8px rgba(23,55,46,.08);}
-  .state-pill .state-word{flex:1; overflow:hidden; text-overflow:ellipsis;}
+  /* Lives in .call-header now (position:relative, see its own rule), not
+     floating over the stage -- explicit ask: no pill background/border,
+     just the dot + text + mute centered in the header, same way
+     .roleplay-badge centers in its own relative parent. No fixed width
+     here anymore either -- that's what was truncating "Waiting…" down to
+     "Waitin…"; centered absolutely, the pill is free to size to its own
+     content instead of needing a fixed box to not jump around. */
+  .state-pill{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:inline-flex; align-items:center; gap:7px; padding:0; background:transparent; border:none; box-shadow:none; color:var(--ink); font-size:13px; white-space:nowrap;}
   .state-pill::before{content:''; width:8px; height:8px; border-radius:50%; background:#F3829A; flex-shrink:0;}
   .state-pill b{font-weight:700;}
   .state-pill .state-word{opacity:.72; font-weight:500;}
@@ -354,7 +341,15 @@
      where .call-controls' normal-flow content ends too, so bottom:0 on
      the tile lines up with the control-bar's own bottom with no extra
      math needed. */
-  .call-bottom-row{position:relative; display:flex; justify-content:center; padding:14px 24px 20px;}
+  /* position:absolute (not an in-flow flex sibling of .stage anymore) --
+     same reasoning as .call-header above: its own padding was reserving
+     real flow height even though almost everything inside it is hidden on
+     this page (control-bar, mic-indicator, talk-transcript-box all
+     hidden/display:none -- see their own rules), which was pulling
+     .stage's centered content up off true full-modal center by about
+     half that reserved height. Floating it at the bottom instead means
+     .stage is the only in-flow child and spans the real full height. */
+  .call-bottom-row{position:absolute; left:0; right:0; bottom:0; display:flex; justify-content:center; padding:14px 24px 20px;}
   .call-controls{width:100%; max-width:720px; display:flex; flex-direction:column; gap:8px;}
   .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); display:flex; flex-direction:column; background:var(--card);}
   .transcript-header{padding:14px 16px; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); border-bottom:1px solid var(--border); flex-shrink:0; display:flex; justify-content:space-between; align-items:center;}
@@ -460,7 +455,15 @@
      mode has the same name+lock on the left and toggle+overflow on the
      right -- without this, there was no way back to Text once the old
      always-on top header (with the Voice/Text toggle) was removed. */
-  .call-header{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid #17372E14; flex-shrink:0; position:relative; z-index:3;}
+  /* position:absolute (not an in-flow flex child of .call-main anymore) --
+     explicit ask: Thimble should center in the FULL modal/call window, not
+     in the space left over after the header's own height is subtracted
+     from it. Floating the header on top (transparent background, same as
+     before -- it already showed .call-main's own stage-bg through it, no
+     visible change) lets .stage become the only in-flow child and stretch
+     to the whole height, so its centering math is against the real full
+     box. */
+  .call-header{position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid #17372E14; z-index:3;}
   /* On this page .call-header's left-hand content moved into the top nav,
      leaving .chat-header-right as the header's only child -- space-between
      has nothing to space a lone child between, so it was collapsing to the
@@ -696,24 +699,21 @@
        voice modal's own overflow menu (Start over) isn't needed in this
        small a card either, per explicit ask. */
     #hideVoiceBtn, #hideTranscriptBtn, .nav-sep, #voicePanel .overflow-wrap{display:none;}
-    /* Captions were hidden at this width (see the plain .caption-stack
-       rule above, written for index.html's old full-bleed mobile layout)
-       because a long wrapped clause could grow tall enough to climb up
-       into the state pill sitting right above it. The modal card is
-       shorter, which only made that worse -- so per explicit ask, move
-       the avatar+pill group (.stage, normally vertically centered) up to
-       the top of the card instead of fighting for the vertical center,
-       which leaves real room underneath for captions to grow into without
-       reaching the pill. Selector beats the plain .caption-stack rule on
-       specificity regardless of source order (3 classes vs. 1). */
-    .live-split .call-layout .caption-stack{display:flex;}
-    .live-split .call-layout .stage{align-items:flex-start; padding-top:36px;}
+    /* Used to pin .stage to the top of the card here (align-items:flex-start)
+       to leave room for the old on-stage captions to grow into without
+       climbing up into the state pill -- those captions are gone now (the
+       transcript lives in the right-hand column instead, see
+       activeSpeechBubble), so that reason is gone too. Explicit ask:
+       Thimble should be vertically centered on mobile same as desktop, not
+       pinned high with empty space below. */
     /* Hold-to-talk dropped from its usual 28px-from-bottom-corner spot
        down near the card's actual bottom edge, per explicit ask -- with
        the pill now sitting near the top (above), this widens the real
        vertical gap positionCaptionStack() has to place a multi-line
-       caption into instead of the two staying close together. */
-    .live-split .call-layout .hold-dock{bottom:10px;}
+       caption into instead of the two staying close together. right
+       matches bottom here too, same corner-inset principle as the base
+       .hold-dock rule, just at this breakpoint's own 10px value. */
+    .live-split .call-layout .hold-dock{bottom:10px; right:10px;}
   }
 
   /* talkMicBtn: was a small text pill ("Tap to talk"), now the page's main
@@ -844,7 +844,9 @@
   /* Hold-to-talk dock: bottom-right of the voice pane (not the control
      bar). holdRingProgress's stroke-dashoffset sweeps a full lap over the
      60s single-memo cap while recording (see updateHoldRing in the script
-     below) -- a countdown to the cap, not a mic-level meter. */
+     below) -- a countdown to the cap, not a mic-level meter. right and
+     bottom explicitly equal -- a corner inset, not independently tuned
+     values that happened to drift apart. */
   .hold-dock{position:absolute; right:28px; bottom:28px; z-index:3;}
   .hold-wrap{position:relative; width:104px; height:104px;}
   .hold-ring{position:absolute; inset:0; pointer-events:none;}
@@ -960,6 +962,16 @@
     <div class="call-layout" id="voicePanel">
       <div class="call-main">
         <div class="call-header">
+          <!-- Moved out of the stage (was floating over the avatar as a
+               pilled badge, see .state-pill's own history) -- explicit ask:
+               live in the header instead, centered, no pill background,
+               same content (dot + "Thimble: {state}" + mute). .call-header
+               is already position:relative, so this centers independent of
+               .chat-header-right's own right-aligned button group. -->
+          <div class="state-pill" id="statePill">
+            <b>Thimble:</b> <span class="state-word" id="stateWord">Listening&hellip;</span>
+            <button id="muteBtn" class="pill-mute-btn" title="Mute"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
+          </div>
           <div class="chat-header-right">
             <!-- Mobile-only: the voice modal's own way back to Text,
                  mirroring the FAB that opened it. Hidden above 640px,
@@ -1009,16 +1021,6 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div class="state-pill-row">
-              <div class="state-pill" id="statePill">
-                <b>Thimble:</b> <span class="state-word" id="stateWord">Listening&hellip;</span>
-                <!-- Real #muteBtn, relocated here per explicit ask (was
-                     anchored to the avatar's own corner before that) --
-                     same real mute toggle, no script change, just where
-                     it visually lives now. -->
-                <button id="muteBtn" class="pill-mute-btn" title="Mute"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
               </div>
             </div>
           </div>
@@ -3030,6 +3032,12 @@ function updateThimbleMotion(inst, now, level, listening) {
 // split further on clause breaks so no one chunk sits on screen too long.
 const captionEl = document.getElementById('caption');
 const captionStackEl = document.querySelector('.caption-stack');
+// Retired: Thimble's spoken captions (and the employee's own) now live in
+// the right-hand transcript column instead, synced to real speech via
+// activeSpeechBubble/updateCaption() -- see their own comments. Hidden via
+// inline style (not removed) so nothing else that still touches captionEl/
+// employeeCaption needs to change -- it's just writing into an invisible node.
+captionStackEl.style.display = 'none';
 const statePillRowEl = document.querySelector('.state-pill-row');
 // talkMicBtn, not .control-bar -- the tap-to-talk button now sits ABOVE
 // .control-bar (see its own markup comment), so .control-bar's own top
@@ -3081,13 +3089,39 @@ function splitCaptionParts(text) {
   return parts.length ? parts : [text];
 }
 
+// The right-hand transcript bubble currently being spoken, filled word by
+// word in updateCaption() below as the real audio plays -- replaces the old
+// left-side floating caption-stack, which showed the same thing over
+// Thimble's body instead of in the transcript column (explicit ask: "the cc
+// to be transcribed in the transcription column... remove the cc in the
+// voice section on the left"). Set once a reply's full text is known (not
+// guessed from a streaming LLM partial) and cleared once that reply cycle
+// leaves 'talking' for good.
+let activeSpeechBubble = null;
+
+// Already-finished sentences (full text) plus however much of the
+// currently-playing sentence has actually been heard so far (same
+// chunk/fraction math the old captionEl used) -- this is "what's been said
+// out loud up to this exact instant", not "what Thimble's full reply is".
+function currentSpokenCumulativeText() {
+  if (!speechItems.length) return '';
+  const played = speechItems.slice(0, speechPlayIndex).map(i => i.text);
+  let cur = '';
+  if (captionChunks.length) {
+    const frac = getPlaybackFraction();
+    const idx = Math.min(captionChunks.length - 1, Math.max(0, Math.floor(frac * captionChunks.length)));
+    cur = captionChunks.slice(0, idx + 1).join(' ');
+  }
+  return played.concat(cur ? [cur] : []).join(' ').trim();
+}
+
 // ready's own word is a status ("what Thimble is doing" -- waiting on the
 // person to respond), not an instruction -- "Tap to talk" belongs on the
 // button itself (see talkMicBtn's own text logic in updateStatePill),
 // which already says that; the pill saying the same thing read as an
 // instruction coming from Thimble, not a status, and was reported live
 // as wrong for exactly that reason.
-const STATE_WORDS = {idle: 'Listening…', listening: 'Listening…', ready: 'Waiting…', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…'};
+const STATE_WORDS = {idle: 'Waiting…', listening: 'Listening…', ready: 'Waiting…', paused: 'Paused', thinking: 'Thinking…', talking: 'Talking…'};
 const CHAT_STATUS = {idle: 'Your resolution facilitator', listening: 'Your resolution facilitator', ready: 'Waiting for you…', paused: 'Paused.', thinking: 'Thinking…', talking: 'Replying…'};
 const stateWordEl = document.getElementById('stateWord');
 let lastStateWord = null;
@@ -3101,10 +3135,21 @@ function updateStatePill() {
   // composer's own hold-to-dictate sets it too, on Text tab. Gating on
   // ui === 'voice' keeps this button/box from ever flashing on while
   // someone's dictating into the text composer instead.
+  // micLive: the mic is actually open and MediaRecorder is actually
+  // capturing -- only true once startRecordingTurn's own getUserMedia/
+  // MediaRecorder.start() has really happened.
   // tapStarting (set synchronously by talkMicBtn's own click handler,
-  // before getUserMedia resolves) counts as recording for every visual
-  // purpose below -- see that handler's own comment on why.
-  const tapRecording = tapStarting || (ui === 'voice' && liveMode && holdControlled && mediaRecorder && mediaRecorder.state === 'recording');
+  // before getUserMedia resolves) covers the gap between the press and
+  // that actually finishing -- cold mic hardware/echoCancellation setup
+  // can take a real, noticeable fraction of a second. Explicit ask: this
+  // used to count as "recording" for every visual purpose below too, which
+  // claimed the mic was live before it actually was -- reported live as
+  // people starting to talk into what was still a closed mic. micStarting
+  // keeps that press feeling instant (see .starting's own CSS comment)
+  // without claiming audio is already being captured.
+  const micLive = ui === 'voice' && liveMode && holdControlled && mediaRecorder && mediaRecorder.state === 'recording';
+  const micStarting = tapStarting && !micLive;
+  const tapRecording = micLive || micStarting;
   // Persists (never hidden) for the whole time liveMode is on -- it used
   // to hide/show across avatarState changes, which shifted the caption's
   // own vertical midpoint (positionCaptionStack) underneath it every time
@@ -3122,9 +3167,10 @@ function updateStatePill() {
   // Wording matches this page's real gesture (hold/release, wired in
   // talkMicBtn's own pointerdown/pointerup listeners below) rather than
   // the dormant app's tap-to-toggle text.
-  talkMicBtn.textContent = tapRecording ? 'Recording… release to send' : 'Hold to talk';
-  talkMicBtn.classList.toggle('recording', tapRecording);
-  talkTranscriptBox.hidden = !tapRecording;
+  talkMicBtn.textContent = micLive ? 'Recording… release to send' : micStarting ? 'Starting…' : 'Hold to talk';
+  talkMicBtn.classList.toggle('recording', micLive);
+  talkMicBtn.classList.toggle('starting', micStarting);
+  talkTranscriptBox.hidden = !micLive;
   // Muted overrides the listening/waiting words specifically -- those are
   // exactly the two states testers confused with "muted" (nothing visibly
   // changes between them and an actual mute). Thinking/talking/paused stay
@@ -3184,16 +3230,28 @@ function positionTalkTranscriptBox() {
 function updateCaption() {
   updateStatePill();
   checkSurveyRedirect();
-  positionCaptionStack();
   positionTalkTranscriptBox();
-  if (!captionsOn || avatarState !== 'talking' || !captionChunks.length) {
-    captionEl.textContent = '';
-    return;
+  if (!activeSpeechBubble) return;
+  if (avatarState === 'talking') {
+    const shown = currentSpokenCumulativeText();
+    if (shown) {
+      activeSpeechBubble.textContent = shown;
+      if (activeSpeechBubble.chatBubble) activeSpeechBubble.chatBubble.textContent = shown;
+      thread.scrollTop = thread.scrollHeight;
+      chatThread.scrollTop = chatThread.scrollHeight;
+    }
+  } else if (avatarState !== 'thinking') {
+    // This reply cycle is over (idle/ready/paused) -- make sure the bubble
+    // ends on the real, complete text (not wherever the last audio frame
+    // happened to land, e.g. a sentence TTS failed on partway through) and
+    // release it so the next reply's bubble isn't fought over by this logic.
+    const full = activeSpeechBubble.fullText;
+    if (full != null) {
+      activeSpeechBubble.textContent = full;
+      if (activeSpeechBubble.chatBubble) activeSpeechBubble.chatBubble.textContent = full;
+    }
+    activeSpeechBubble = null;
   }
-  if (captionChunks.length === 1) { captionEl.textContent = captionChunks[0] || ''; return; }
-  const frac = getPlaybackFraction();
-  const idx = Math.min(captionChunks.length - 1, Math.floor(frac * captionChunks.length));
-  captionEl.textContent = captionChunks[idx];
 }
 
 function animateAvatar(now) {
@@ -3637,10 +3695,26 @@ function formatGreeting(text) {
 // every message gets mirrored into both -- `div.chatBubble` stashes the
 // mirror so call sites correcting a pending bubble in place (live partial
 // transcript, final transcript) can update both without duplicating that logic.
-function addMessage(text, cls) {
+// animate: reveal word by word instead of landing whole. Only for canned
+// text that isn't already streamed from the LLM (the opening greeting, the
+// hands-free nudge) -- a real reply already fills in as tokens actually
+// arrive (see streamFacilitatorReply's partial callback above), so it never
+// needs this. Explicit ask: a canned message popping in complete the
+// instant it's added read as "a full message already waiting for you",
+// not something being said -- this makes it read as live instead, the
+// same rhythm a streamed reply already has.
+// syncToSpeech: the bubble starts empty, same as animate, but nothing here
+// reveals it -- updateCaption()'s activeSpeechBubble handling fills it word
+// by word in step with the real TTS audio (see currentSpokenCumulativeText),
+// instead of this function's own word/sec timer. Used whenever the reply is
+// actually going to be spoken, so the transcript lands in time with Thimble
+// talking rather than racing ahead of it. div.fullText is the finalize
+// target either way -- the complete value to snap to once the speech (or,
+// for a non-syncToSpeech caller, the reveal timer) is done.
+function addMessage(text, cls, animate, onDone, syncToSpeech) {
   const div = document.createElement('div');
   div.className = 'msg ' + cls;
-  div.textContent = text;
+  div.textContent = (animate || syncToSpeech) ? '' : text;
   thread.appendChild(div);
   thread.scrollTop = thread.scrollHeight;
 
@@ -3653,13 +3727,46 @@ function addMessage(text, cls) {
   wrap.appendChild(who);
   const bubble = document.createElement('div');
   bubble.className = 'chat-bubble ' + (mine ? 'mine' : 'theirs');
-  bubble.textContent = text;
+  bubble.textContent = (animate || syncToSpeech) ? '' : text;
   wrap.appendChild(bubble);
   chatThreadInner.insertBefore(wrap, chatTyping);
   chatThread.scrollTop = chatThread.scrollHeight;
   div.chatWrap = wrap;
   div.chatBubble = bubble;
+  div.fullText = text;
+  if (syncToSpeech) { /* filled externally by updateCaption() */ }
+  else if (animate) revealMessageText(div, text, onDone);
+  else if (onDone) onDone();
   return div;
+}
+
+// Word-by-word reveal for addMessage()'s animate flag -- see its own
+// comment for why. Whitespace tokens (including the blank line between
+// paragraphs) land immediately so only real words pace the reveal.
+// Respects prefers-reduced-motion by just landing the text whole.
+const REVEAL_WORDS_PER_SEC = 11;
+function revealMessageText(msgObj, fullText, onDone) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    msgObj.textContent = fullText;
+    if (msgObj.chatBubble) msgObj.chatBubble.textContent = fullText;
+    if (onDone) onDone();
+    return;
+  }
+  const tokens = fullText.split(/(\s+)/);
+  let i = 0;
+  let shown = '';
+  function step() {
+    shown += tokens[i];
+    msgObj.textContent = shown;
+    if (msgObj.chatBubble) msgObj.chatBubble.textContent = shown;
+    thread.scrollTop = thread.scrollHeight;
+    chatThread.scrollTop = chatThread.scrollHeight;
+    i++;
+    if (i >= tokens.length) { if (onDone) onDone(); return; }
+    const isWhitespace = /^\s+$/.test(tokens[i - 1]);
+    setTimeout(step, isWhitespace ? 0 : 1000 / REVEAL_WORDS_PER_SEC);
+  }
+  step();
 }
 
 // Text-only onboarding nudge, not a real conversation turn -- unlike
@@ -3675,10 +3782,10 @@ function addHandsFreeHintMessage() {
   wrap.appendChild(who);
   const bubble = document.createElement('div');
   bubble.className = 'chat-bubble theirs';
-  bubble.appendChild(document.createTextNode('So what’s going on? You can type here, or hold the mic button to leave a voice memo.'));
   wrap.appendChild(bubble);
   chatThreadInner.insertBefore(wrap, chatTyping);
   chatThread.scrollTop = chatThread.scrollHeight;
+  revealMessageText({chatBubble: bubble, textContent: ''}, 'So what’s going on? You can type here, or hold the mic button to leave a voice memo.');
 }
 
 const banner = document.getElementById('banner');
@@ -3776,19 +3883,29 @@ async function sendText() {
   resetSpeechQueue(myGen);
   replyAbortController = new AbortController();
   let replyBubble = null;
+  // Computed once, up front: if this reply is going to be spoken, the
+  // bubble stays empty through 'thinking' (no partial-LLM-text preview --
+  // see activeSpeechBubble's own comment) and updateCaption() fills it in
+  // time with the real audio instead. Muted/captions-off replies keep the
+  // original behavior, filling live as the LLM streams tokens in.
+  const willSpeak = !ttsMuted && captionsOn;
   try {
     const {reply, signal} = await streamFacilitatorReply(text, (partial) => {
       // First delta creates the bubble (same addMessage() every other
       // reply uses); later ones just update its text in place, same
       // pattern the live voice-transcript bubble already uses.
-      if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator'); return; }
-      replyBubble.textContent = partial;
-      if (replyBubble.chatBubble) replyBubble.chatBubble.textContent = partial;
-      thread.scrollTop = thread.scrollHeight;
-      chatThread.scrollTop = chatThread.scrollHeight;
+      if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator', false, null, willSpeak); return; }
+      replyBubble.fullText = partial;
+      if (!willSpeak) {
+        replyBubble.textContent = partial;
+        if (replyBubble.chatBubble) replyBubble.chatBubble.textContent = partial;
+        thread.scrollTop = thread.scrollHeight;
+        chatThread.scrollTop = chatThread.scrollHeight;
+      }
       feedSpeechText(partial, false);
     }, replyAbortController.signal);
     handleSignal(signal);
+    if (replyBubble) { replyBubble.fullText = reply; if (willSpeak) activeSpeechBubble = replyBubble; }
     feedSpeechText(reply, true);
   } catch (e) {
     if (myGen !== replyGen) return; // cut off by a barge-in interrupt; already handled there
@@ -4326,15 +4443,23 @@ async function startRecordingTurn(tapMode) {
       resetSpeechQueue(myGen);
       replyAbortController = new AbortController();
       let replyBubble = null;
+      // See sendText()'s own comment on willSpeak/activeSpeechBubble -- same
+      // "don't preview the full reply before Thimble's actually said it"
+      // fix applied here for voice turns.
+      const willSpeak = !ttsMuted && captionsOn;
       console.log(`[timing] voice pre-LLM: drain=${(tDrained - tStop).toFixed(0)}ms transcribe=${(tTranscribed - tDrained).toFixed(0)}ms total_before_reply_call=${(tTranscribed - tStop).toFixed(0)}ms`);
       const {reply, signal} = await streamFacilitatorReply(transcript, (partial) => {
-        if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator'); return; }
-        replyBubble.textContent = partial;
-        if (replyBubble.chatBubble) replyBubble.chatBubble.textContent = partial;
-        thread.scrollTop = thread.scrollHeight;
+        if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator', false, null, willSpeak); return; }
+        replyBubble.fullText = partial;
+        if (!willSpeak) {
+          replyBubble.textContent = partial;
+          if (replyBubble.chatBubble) replyBubble.chatBubble.textContent = partial;
+          thread.scrollTop = thread.scrollHeight;
+        }
         feedSpeechText(partial, false);
       }, replyAbortController.signal);
       handleSignal(signal);
+      if (replyBubble) { replyBubble.fullText = reply; if (willSpeak) activeSpeechBubble = replyBubble; }
       feedSpeechText(reply, true);
     } catch (e) {
       if (myGen !== null && myGen !== replyGen) return; // cut off by a barge-in interrupt; already handled there
@@ -4780,19 +4905,63 @@ async function start() {
         // before the hands-free nudge so it reads as a second thought,
         // not one long paragraph.
         setTimeout(() => {
-          addMessage(formatGreeting(data.reply), 'facilitator');
           handleSignal(data.signal);
-          feedSpeechText(data.reply, true); // original text, not the display-formatted one -- no-op in Text, but still closes out this reply cycle -- see feedSpeechText
+          // Set BEFORE feedSpeechText, not after -- feedSpeechText can
+          // itself decide there's nothing to speak (ttsMuted) and
+          // correctly set avatarState='idle' + endReplyCycle() as part of
+          // bailing out early; setting 'thinking' afterward unconditionally
+          // clobbered that correction right back to 'thinking' with
+          // nothing left to ever move it off again (no audio ever starts,
+          // since none was queued -- the 8s safety net below was the only
+          // thing ever rescuing it). Confirmed live: ttsMuted persists
+          // across reloads via localStorage, so once on, every future
+          // session start hit this exact clobber.
           avatarState = 'thinking'; // brief "typing" pulse before the second message, same as a real reply would show
-          setTimeout(() => {
-            addHandsFreeHintMessage();
-            avatarState = 'idle';
-          }, 2000);
+          feedSpeechText(data.reply, true); // original text, not the display-formatted one -- no-op in Text, but still closes out this reply cycle -- see feedSpeechText
+          // animate: true -- see addMessage's own comment. The 2s pause
+          // before the hands-free nudge now starts once the greeting
+          // actually finishes revealing (onDone), not a fixed delay from
+          // when it started -- otherwise the nudge could land mid-reveal,
+          // on top of a sentence that hasn't finished appearing yet.
+          addMessage(formatGreeting(data.reply), 'facilitator', true, () => {
+            setTimeout(() => {
+              addHandsFreeHintMessage();
+              avatarState = 'idle';
+            }, 2000);
+          });
         }, 500);
       } else {
-        addMessage(formatGreeting(data.reply), 'facilitator');
+        // willSpeak mirrors feedSpeechText's own ttsMuted/captionsOn gate --
+        // when the greeting will actually be heard, the bubble starts empty
+        // and activeSpeechBubble (see updateCaption) fills it in time with
+        // the real audio instead of racing ahead of it on a fixed timer.
+        const willSpeak = !ttsMuted && captionsOn;
+        const greetBubble = addMessage(formatGreeting(data.reply), 'facilitator', !willSpeak, null, willSpeak);
+        if (willSpeak) activeSpeechBubble = greetBubble;
         handleSignal(data.signal);
+        // Set BEFORE feedSpeechText -- see the 'text' branch's own comment
+        // above for why (same clobbering bug, same fix, here too).
+        // 'thinking' replaces the unset default ('idle', which shares the
+        // exact "Listening…" pill label as the real 'listening' state --
+        // reported live as "Thimble is in listening state" while the
+        // greeting was still typing in). feedSpeechText's own early-return
+        // (ttsMuted) can still correct this to 'idle' properly since it
+        // now runs second, not first.
+        avatarState = 'thinking';
         feedSpeechText(data.reply, true);
+        // Safety net: if TTS audio never actually starts (blocked,
+        // errored, or this environment just doesn't play it), nothing
+        // else here ever moves avatarState off 'thinking' -- the
+        // audioEl 'play' listener and playViaWebAudioFallback both set
+        // 'talking', but only once real playback actually begins.
+        // Reported live as "stuck starting in thinking mode" with no
+        // recovery. 8s is generous past the greeting's own real synth
+        // time (~1-3s per the server's own timing logs) without cutting
+        // off a legitimately-still-thinking case too eagerly.
+        const stuckCheckGen = replyGen;
+        setTimeout(() => {
+          if (avatarState === 'thinking' && replyGen === stuckCheckGen) avatarState = 'ready';
+        }, 8000);
       }
     } else {
       // /api/start is a no-op once `conversation` is already non-empty
