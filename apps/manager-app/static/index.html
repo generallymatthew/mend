@@ -7,26 +7,37 @@
 <link rel="manifest" href="/static/manifest.json">
 <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/static/icon.svg">
-<meta name="theme-color" content="#2F5233">
+<meta name="theme-color" content="#17372E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* Palette and type from design-mockups/*.dc.html (2026-10-20 design
+     pass). Deliberately NOT reused from the mockups: the fake macOS
+     traffic-light window chrome and the floating-card-on-gray-desktop
+     framing -- those represent a desktop app window for presentation
+     purposes; this is a real page in a real browser tab, which already
+     has its own window chrome, so that layer would just be confusing
+     skeuomorphism here. Everything else (rail, colors, bubbles, avatar,
+     panels) is reused as directly as practical. */
   :root {
-    --ink: #1D2E22;
-    --bg: #FFFFFF;
-    --panel-bg: #EAF0EC;
-    --border: #D7E6DC;
-    --muted: #74897C;
-    --faint: #9FB0A4;
-    --accent: #2F5233;
-    --bubble: #DCEAE0;
+    --ink: #17372E;
+    --bg: #FAFBFA;
+    --app-bg: #FFFFFF;
+    --panel-bg: #F1F4F1;
+    --border: #E7EBE8;
+    --rail-border: #D7DED9;
+    --muted: #6B7A73;
+    --faint: #9AA6A0;
+    --accent-pink: #F3829A;
+    --accent-pink-bg: #FCEEF0;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: var(--ink);
-    background: var(--bg);
+    background: var(--app-bg);
     height: 100vh;
     overflow: hidden;
     display: flex;
@@ -34,74 +45,102 @@
   }
   #app { display: flex; flex: 1; min-height: 0; }
 
-  /* One persistent top nav bar spanning the whole app, same pattern as
-     ../intake-app/static/session.html's .top-nav: brand
-     lockup + a privacy chip on the left, global actions on the right --
-     rather than the brand/New case/Help controls living inside the
-     sidebar's own header. */
   .top-nav {
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: space-between;
     gap: 16px; padding: 12px 20px;
     border-bottom: 1px solid var(--border);
-    background: var(--bg);
+    background: var(--app-bg);
   }
   .top-bar-brand { display: flex; align-items: center; gap: 9px; }
   .top-bar-brand .mend-mark { display: block; flex-shrink: 0; }
-  .top-bar-brand .brand-name { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+  .top-bar-brand .brand-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .top-bar-brand .by-mend { font-size: 10px; color: var(--faint); letter-spacing: .03em; margin-left: -3px; }
   .privacy-chip {
     display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12px; letter-spacing: 0.02em; color: var(--accent);
-    background: #2F523314; border-radius: 999px; padding: 8px 14px 8px 10px;
+    font-size: 12px; letter-spacing: 0.02em; color: var(--ink);
+    background: #17372E14; border-radius: 999px; padding: 8px 14px 8px 10px;
   }
-  .privacy-chip svg { flex-shrink: 0; color: var(--accent); }
+  .privacy-chip svg { flex-shrink: 0; color: var(--ink); }
   .top-nav-actions { display: flex; align-items: center; gap: 8px; }
-  #new-case-btn, #help-btn {
+  #help-btn {
     width: 28px; height: 28px; border-radius: 999px;
-    background: var(--panel-bg); color: #33453A;
+    background: var(--panel-bg); color: var(--muted);
     display: flex; align-items: center; justify-content: center;
-    font-size: 16px; cursor: pointer; border: none;
+    font-size: 13px; font-weight: 600; cursor: pointer; border: none;
   }
-  #help-btn { font-size: 13px; font-weight: 600; color: var(--muted); }
   #sidebar-toggle {
     width: 28px; height: 28px; border-radius: 999px; flex-shrink: 0;
-    background: var(--panel-bg); color: #33453A;
+    background: var(--panel-bg); color: var(--ink);
     display: none; align-items: center; justify-content: center;
     font-size: 15px; cursor: pointer; border: none;
   }
-  #plan-toggle {
+  #plan-toggle, #meeting-plan-toggle {
     display: none;
-    font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--rail-border);
     border-radius: 999px; padding: 6px 14px; cursor: pointer;
     white-space: nowrap; flex-shrink: 0;
   }
-  #plan-toggle:hover { background: var(--panel-bg); }
+  #plan-toggle:hover, #meeting-plan-toggle:hover { background: var(--panel-bg); }
   .panel-scrim { display: none; }
 
-  /* Conversations list */
+  /* Icon rail: switches between the three top-level sections (Conflict /
+     Written / Sync, per the 2026-10-20 IA decision -- labeled here as
+     Conflicts / Written / Meetings to match the mockups' wording). */
+  .rail {
+    width: 84px; flex: 0 0 auto; display: flex; flex-direction: column;
+    align-items: center; gap: 10px; padding: 20px 0;
+    border-right: 2px dashed var(--rail-border); background: var(--bg);
+  }
+  .rail-item {
+    width: 52px; height: 52px; border-radius: 16px; border: none; background: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; cursor: pointer; color: var(--faint);
+  }
+  .rail-item span { font-size: 9px; color: inherit; }
+  .rail-item.rail-conflicts.active { background: #E8F0E9; color: #5F8569; }
+  .rail-item.rail-conflicts.active span { font-weight: 700; }
+  .rail-item.rail-written.active { background: #E7EFEF; color: #3E6B6B; }
+  .rail-item.rail-written.active span { font-weight: 700; }
+  .rail-item.rail-meetings.active { background: #FBF3E2; color: #9C6B23; }
+  .rail-item.rail-meetings.active span { font-weight: 700; }
+  .rail-item:not(.active):hover { background: var(--panel-bg); }
+  .mobile-rail { display: none; }
+
+  /* Sidebar: one shared column, section-specific content swapped inside */
   #sidebar {
-    width: 300px;
-    min-width: 220px;
-    border-right: 1px solid var(--border);
+    width: 240px;
+    min-width: 200px;
+    border-right: 2px dashed var(--rail-border);
     background: var(--bg);
     display: flex;
     flex-direction: column;
   }
-  #sidebar-subheader {
-    padding: 16px 20px 12px 20px; font-size: 12px; font-weight: 600;
-    color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
+  .sidebar-section { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .sidebar-section.active { display: flex; }
+  .sidebar-subheader {
+    padding: 16px 14px 10px 14px; display: flex; align-items: center; justify-content: space-between;
   }
+  .sidebar-subheader .label {
+    font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .sidebar-new-btn {
+    width: 22px; height: 22px; border-radius: 8px; border: none; font-size: 14px; line-height: 1;
+    cursor: pointer;
+  }
+  .sidebar-new-btn.conflicts { background: #E8F0E9; color: #5F8569; }
+  .sidebar-new-btn.meetings { background: #FBF3E2; color: #9C6B23; }
 
   /* Help modal */
   #help-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(43, 42, 39, 0.35);
+    display: none; position: fixed; inset: 0; background: rgba(23, 55, 46, 0.35);
     align-items: center; justify-content: center; z-index: 10;
   }
   #help-overlay.open { display: flex; }
   #help-modal {
     width: 420px; max-width: calc(100vw - 48px); max-height: calc(100vh - 48px);
-    overflow: auto; background: #fff; border-radius: 14px; padding: 28px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    overflow: auto; background: var(--bg); border-radius: 14px; padding: 28px;
+    box-shadow: 0 12px 40px rgba(23,55,46,0.18);
   }
   #help-modal .brand { display: flex; align-items: center; gap: 7px; margin: 0 0 10px 0; }
   #help-modal .mend-mark { display: block; flex-shrink: 0; }
@@ -111,72 +150,123 @@
     float: right; border: none; background: none; color: var(--faint);
     font-size: 18px; cursor: pointer; line-height: 1; margin-left: 12px;
   }
-  #case-list { flex: 1; overflow: auto; }
-  .case-row {
-    padding: 14px 20px;
+  #case-list, #meeting-list { flex: 1; overflow: auto; }
+  .item-row {
+    padding: 10px 12px; margin: 0 8px 2px 8px;
     display: flex; flex-direction: column; gap: 3px;
-    border-bottom: 1px solid #E3EDE6;
-    cursor: pointer;
+    border-radius: 12px; cursor: pointer;
   }
-  .case-row.active { background: #DCEAE0; border-left: 3px solid var(--accent); }
-  .case-row .top { display: flex; justify-content: space-between; gap: 8px; }
-  .case-row .name { font-size: 14px; font-weight: 600; }
-  .case-row .time { font-size: 12px; color: var(--muted); white-space: nowrap; }
-  .case-row .preview {
-    font-size: 13px; color: var(--muted);
+  .item-row.active { background: var(--accent-pink-bg); }
+  .item-row .top { display: flex; justify-content: space-between; gap: 8px; }
+  .item-row .name { font-size: 13px; font-weight: 600; }
+  .item-row .time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .item-row .preview {
+    font-size: 12px; color: var(--muted);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .case-row.closed { opacity: 0.55; }
-  #sidebar-footer {
-    margin-top: auto; padding: 16px 20px; font-size: 12px;
-    color: var(--faint); border-top: 1px solid #E3EDE6;
+  .item-row.closed { opacity: 0.55; }
+  .sidebar-footer {
+    margin-top: auto; padding: 14px 20px; font-size: 11.5px;
+    color: var(--faint); border-top: 1px solid var(--border);
+  }
+  .written-static-row { padding: 10px 12px; margin: 0 8px; border-radius: 12px; display: flex; flex-direction: column; gap: 3px; }
+  .written-static-row.active { background: #E7EFEF; }
+  .written-static-row.active .name { color: #17372E; }
+  .written-static-row .name { font-size: 13px; font-weight: 600; }
+  .written-static-row .desc { font-size: 11px; color: #3E6B6B; }
+  .written-static-row.soon { opacity: .55; cursor: default; }
+  .written-static-row .soon-badge {
+    display: inline-flex; align-self: flex-start; font-size: 9.5px; color: var(--muted);
+    background: #EEF1EE; padding: 2px 7px; border-radius: 999px; margin-top: 2px;
   }
 
-  /* Thread */
-  #thread-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #F5F8F6; }
-  #thread-header {
-    padding: 20px 32px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
+  /* Section views: only the active one is shown */
+  .section-view { display: none; flex: 1; min-width: 0; }
+  .section-view.active { display: flex; }
+
+  /* Thread (shared look for conflicts + meetings) */
+  .thread-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+  .thread-header {
+    padding: 18px 28px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
-  #thread-header .name { font-size: 16px; font-weight: 600; min-width: 0; }
+  .thread-header .name { font-size: 15px; font-weight: 700; min-width: 0; }
+  .thread-header .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
   #close-case-btn {
-    font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--rail-border);
     border-radius: 999px; padding: 6px 14px; cursor: pointer;
     white-space: nowrap; flex-shrink: 0;
   }
   #close-case-btn:hover { background: var(--panel-bg); }
-  #thread-header .actions { display: flex; gap: 8px; flex-shrink: 0; }
-  #handoff-banner {
-    margin: 0 32px; margin-top: 16px; padding: 14px 16px; border-radius: 10px;
-    background: #DCEAE0; border: 1px solid #CFE3D6; font-size: 13px; display: none;
+  .thread-header .actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+
+  /* Suture handoff: a modal, matching design-mockups/SutureHandoff.dc.html,
+     triggered from a small persistent chip in the thread header once
+     handoff_ready is true (rather than auto-popping every time the case
+     reopens). */
+  #handoff-chip {
+    display: none; align-items: center; gap: 6px; background: var(--accent-pink-bg); color: #8c0d28;
+    border: none; border-radius: 999px; padding: 6px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer;
   }
-  #handoff-banner .title { font-weight: 600; margin-bottom: 6px; }
-  #handoff-banner .desc { color: var(--muted); margin-bottom: 10px; }
-  #handoff-banner .links { display: flex; flex-direction: column; gap: 6px; }
-  #handoff-banner .link-row { display: flex; align-items: center; gap: 8px; }
-  #handoff-banner .link-row label { width: 90px; color: var(--muted); flex-shrink: 0; }
-  #handoff-banner .link-row input {
-    flex: 1; border: 1px solid #D7E6DC; border-radius: 6px; padding: 5px 8px;
-    font-size: 12px; font-family: inherit; background: #fff;
+  #handoff-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(23,55,46,0.3);
+    align-items: center; justify-content: center; z-index: 20;
   }
-  #handoff-banner .link-row button {
-    border: 1px solid #CFE3D6; background: #fff; border-radius: 6px; padding: 5px 10px;
-    font-size: 12px; cursor: pointer;
+  #handoff-overlay.open { display: flex; }
+  #handoff-modal {
+    width: 440px; max-width: calc(100vw - 48px); background: var(--bg); border-radius: 24px;
+    padding: 32px 28px; display: flex; flex-direction: column; gap: 18px;
+    box-shadow: 0 24px 60px rgba(23,55,46,0.2);
   }
+  #handoff-modal .lede-row { display: flex; gap: 12px; align-items: flex-start; }
+  #handoff-modal .title { font-size: 16px; font-weight: 700; line-height: 1.3; }
+  #handoff-modal .desc { font-size: 13px; color: var(--muted); line-height: 1.55; margin-top: 5px; }
+  .handoff-links { display: flex; flex-direction: column; }
+  .handoff-link-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--panel-bg); border-radius: 14px; padding: 11px 14px;
+  }
+  .handoff-link-row .label { font-size: 13px; }
+  .handoff-link-row button {
+    background: #5F8569; color: #fff; border: none; border-radius: 999px;
+    padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .handoff-divider { display: flex; justify-content: center; align-items: center; height: 16px; }
   #start-handoff-btn {
-    font-size: 13px; color: #fff; background: var(--accent); border: none;
-    border-radius: 6px; padding: 6px 12px; cursor: pointer;
+    font-size: 13px; color: #fff; background: var(--ink); border: none;
+    border-radius: 999px; padding: 9px 16px; cursor: pointer; align-self: flex-start;
   }
-  #messages {
-    flex: 1; overflow: auto; padding: 24px 32px;
+  #handoff-dismiss {
+    align-self: center; background: none; border: none; color: var(--muted);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  .messages {
+    flex: 1; overflow: auto; padding: 22px 28px;
     display: flex; flex-direction: column; gap: 14px;
   }
-  .bubble {
-    max-width: 560px; border-radius: 14px; padding: 12px 16px;
-    font-size: 14px; line-height: 1.5; white-space: pre-wrap;
+  .msg-row { display: flex; gap: 11px; align-items: flex-end; }
+  .msg-row.user { justify-content: flex-end; }
+  .avatar { position: relative; width: 28px; height: 28px; flex: 0 0 auto; }
+  .avatar .shadow {
+    position: absolute; left: 50%; top: 92%; width: 70%; height: 7px; transform: translateX(-50%);
+    background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,0.3) 0%, rgba(23,55,46,0.15) 55%, rgba(23,55,46,0) 100%);
+    border-radius: 50%;
   }
-  .bubble.assistant { align-self: flex-start; background: var(--bubble); }
-  .bubble.user { align-self: flex-end; background: var(--accent); color: #fff; }
+  .avatar .blob {
+    position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%;
+    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), var(--accent-pink);
+  }
+  .avatar .mouth {
+    position: absolute; left: 50%; top: 58%; width: 9px; height: 3px; transform: translate(-50%,-50%);
+    background: var(--bg); border-radius: 999px;
+  }
+  .bubble {
+    max-width: 480px; border-radius: 20px; padding: 12px 16px;
+    font-size: 14.5px; line-height: 1.55; white-space: pre-wrap;
+  }
+  .bubble.assistant { background: var(--accent-pink-bg); border-radius: 20px 20px 20px 5px; }
+  .bubble.user { background: var(--ink); color: #fff; border-radius: 20px 20px 5px 20px; }
   .bubble.pending { opacity: 0.5; }
   .employee-tag {
     display: inline-block; background: #211F1C; color: #fff; border-radius: 4px;
@@ -194,23 +284,23 @@
     padding: 7px 11px; border-radius: 7px; max-width: 220px; line-height: 1.4;
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   }
-  #empty-state {
+  .empty-state {
     flex: 1; display: flex; align-items: center; justify-content: center;
     padding: 40px; overflow: auto;
   }
-  #empty-state .wrap { max-width: 440px; text-align: center; }
-  #empty-state .mark {
-    width: 44px; height: 44px; border-radius: 999px; background: var(--accent);
+  .empty-state .wrap { max-width: 440px; text-align: center; }
+  .empty-state .mark {
+    width: 44px; height: 44px; border-radius: 999px; background: var(--ink);
     margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center;
     color: #fff;
   }
-  #empty-state .mark svg { width: 20px; height: 14px; }
-  #empty-state h1 { font-size: 18px; font-weight: 600; margin: 0 0 8px 0; }
-  #empty-state p.lede { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0 0 28px 0; }
+  .empty-state .mark svg { width: 20px; height: 14px; }
+  .empty-state h1 { font-size: 18px; font-weight: 700; margin: 0 0 8px 0; }
+  .empty-state p.lede { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0 0 28px 0; }
   .flow-steps {
     display: flex; flex-direction: column; gap: 12px; text-align: left;
     margin: 0 0 28px 0; padding: 18px 20px; background: var(--panel-bg);
-    border: 1px solid var(--border); border-radius: 12px;
+    border-radius: 12px;
   }
   .flow-step-item { display: flex; gap: 12px; align-items: baseline; }
   .flow-step-item .n {
@@ -223,68 +313,76 @@
   .privacy-note {
     font-size: 12px; color: var(--faint); line-height: 1.5; margin: 0 0 24px 0;
   }
-  #empty-state-cta {
-    font-size: 14px; font-weight: 600; color: #fff; background: var(--accent);
-    border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer;
+  .empty-state-cta {
+    font-size: 14px; font-weight: 700; color: #17372E; background: var(--accent-pink);
+    border: none; border-radius: 999px; padding: 10px 22px; cursor: pointer;
   }
-  #empty-state.returning .flow-steps, #empty-state.returning .privacy-note { display: none; }
-  #empty-state.returning h1 { font-size: 15px; font-weight: 600; color: var(--muted); }
-  #empty-state.returning .mark { display: none; }
-  #empty-state.returning p.lede { display: none; }
-  #composer-row {
-    padding: 16px 32px 24px 32px; border-top: 1px solid var(--border);
-    display: flex; gap: 10px;
+  .empty-state.returning .flow-steps, .empty-state.returning .privacy-note { display: none; }
+  .empty-state.returning h1 { font-size: 15px; font-weight: 600; color: var(--muted); }
+  .empty-state.returning .mark { display: none; }
+  .empty-state.returning p.lede { display: none; }
+
+  .composer-row {
+    padding: 16px 28px 24px 28px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg);
   }
-  #composer {
-    flex: 1; border: 1px solid #D7E6DC; border-radius: 20px; background: var(--panel-bg);
-    padding: 11px 16px; font-size: 14px; resize: none; font-family: inherit;
-    max-height: 120px;
+  .composer-pill {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: #FFFFFF; border-radius: 999px; padding: 7px 7px 7px 18px;
+    box-shadow: 0 10px 24px rgba(23,55,46,0.08);
   }
-  #mic-btn {
-    width: 40px; height: 40px; border-radius: 999px; background: var(--panel-bg);
-    border: 1px solid #D7E6DC; color: var(--muted); display: flex; align-items: center;
-    justify-content: center; cursor: pointer; flex-shrink: 0;
+  .composer-pill textarea {
+    flex: 1; border: none; background: transparent; outline: none;
+    padding: 6px 0; font-size: 14px; color: var(--ink); resize: none;
+    font-family: inherit; max-height: 120px;
   }
-  #mic-btn.recording {
-    background: #E85D4A; border-color: #E85D4A; color: #fff;
+  .mic-btn {
+    width: 36px; height: 36px; border-radius: 999px; border: none; color: var(--muted);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+    background: var(--panel-bg);
   }
-  #send-btn {
-    width: 40px; height: 40px; border-radius: 999px; background: var(--accent);
+  .mic-btn.recording { background: #E85D4A !important; color: #fff !important; }
+  .mic-btn.conflicts-mic { background: #E8F0E9; color: #5F8569; }
+  .mic-btn.meetings-mic { background: #FBEFDC; color: #9C6B23; }
+  .mic-btn.written-mic { background: #E7EFEF; color: #3E6B6B; }
+  .send-btn {
+    width: 36px; height: 36px; border-radius: 999px; background: var(--accent-pink);
     border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
     flex-shrink: 0;
   }
-  #send-btn:disabled { opacity: 0.5; cursor: default; }
+  .send-btn:disabled { opacity: 0.5; cursor: default; }
 
-  /* Plan panel */
-  #plan-panel {
-    width: 260px; min-width: 220px; border-left: 1px solid var(--border);
-    background: var(--panel-bg); display: flex; flex-direction: column;
+  /* Side panel: plan (conflicts) / strategy points (meetings) */
+  .side-panel {
+    width: 250px; min-width: 210px; border-left: 2px dashed var(--rail-border);
+    background: var(--bg); display: flex; flex-direction: column; padding: 18px 16px;
   }
-  #plan-header {
-    padding: 20px 20px 14px 20px; display: flex; align-items: center; justify-content: space-between;
+  .side-panel-inner {
+    flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px;
+    background: var(--panel-bg); border-radius: 22px; padding: 20px 18px; overflow: auto;
   }
-  #plan-header .title { font-size: 13px; font-weight: 600; color: #44584B; }
-  #incident-section {
-    padding: 18px 20px; border-bottom: 1px solid var(--border);
-  }
-  #incident-section .title { font-size: 13px; font-weight: 600; color: #44584B; margin-bottom: 6px; }
-  #incident-text { font-size: 13px; line-height: 1.45; color: var(--ink); }
-  #incident-text.placeholder { color: var(--faint); font-style: italic; }
-  #plan-steps { padding: 0 20px; display: flex; flex-direction: column; gap: 16px; overflow: auto; flex: 1; }
+  .side-panel-title { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .side-panel-sub { font-size: 12px; color: var(--muted); margin-top: -8px; }
+  #incident-section, #meeting-goal-section { padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  #incident-section .title, #meeting-goal-section .title { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  #incident-text, #meeting-goal-text { font-size: 13px; line-height: 1.5; color: var(--ink); }
+  #incident-text.placeholder, #meeting-goal-text.placeholder { color: var(--faint); font-style: italic; }
+  .plan-steps-list { display: flex; flex-direction: column; gap: 14px; overflow: auto; flex: 1; }
   .step { display: flex; flex-direction: column; gap: 6px; }
   .step-label {
     font-size: 10px; font-weight: 700; color: var(--faint); text-transform: uppercase;
     letter-spacing: 0.04em;
   }
   .step-added-by {
-    margin-left: 6px; font-weight: 600; color: #8FA88A; text-transform: none;
+    margin-left: 6px; font-weight: 600; color: #5F8569; text-transform: none;
   }
   .step .row { display: flex; gap: 10px; align-items: flex-start; }
   .step .check {
     margin-top: 2px; width: 16px; height: 16px; border-radius: 999px; flex-shrink: 0; cursor: pointer;
     border: 1.5px solid #C1D6C8; display: flex; align-items: center; justify-content: center;
   }
-  .step.done .check { background: var(--accent); border-color: var(--accent); }
+  .step.done .check { background: #5F8569; border-color: #5F8569; }
   .step.done .check svg { display: block; }
   .step:not(.done) .check svg { display: none; }
   .step-text {
@@ -298,42 +396,90 @@
     font-style: italic; outline: none; min-height: 14px;
   }
   .step-note:empty::before { content: attr(data-placeholder); color: var(--faint); font-style: normal; }
-  #add-step-row { display: flex; gap: 8px; align-items: center; padding: 14px 20px 20px 20px; }
-  #add-step-row input {
-    flex: 1; border: 1px solid #D7E6DC; border-radius: 6px; padding: 7px 10px;
-    font-size: 13px; font-family: inherit;
+  .add-step-row { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+  .add-step-row input {
+    flex: 1; border: 1px solid var(--rail-border); border-radius: 6px; padding: 7px 10px;
+    font-size: 13px; font-family: inherit; background: #fff;
   }
-  #add-step-row button {
+  .add-step-row button {
     border: none; background: none; color: var(--faint); font-size: 16px; cursor: pointer;
   }
+  .side-panel-footnote {
+    margin-top: auto; font-size: 11.5px; color: var(--muted); line-height: 1.55; padding-top: 14px;
+    border-top: 2px dashed #DCE3DD;
+  }
+  .strategy-points { display: flex; flex-direction: column; gap: 13px; }
+  .strategy-point { display: flex; gap: 10px; align-items: baseline; }
+  .strategy-point .dot { width: 7px; height: 7px; border-radius: 50%; background: #C9922E; flex: 0 0 auto; margin-top: 2px; }
+  .strategy-point .t { font-size: 13.5px; line-height: 1.55; }
+  .strategy-placeholder { font-size: 13px; color: var(--faint); font-style: italic; }
 
-  /* Mobile: cases and plan become off-canvas drawers either side of the
-     thread, instead of three columns squeezed into one screen. Cases
-     opens by default on load; plan opens via a toggle in the thread
-     header. */
+  /* Written section (tone-check): no list-driven thread, just a draft box
+     and a result card below it -- matches design-mockups/ToneCheck.dc.html,
+     minus the "read it back to me" audio framing (no TTS is scoped/built
+     for this; relabeled to describe what actually happens). */
+  #written-view { flex-direction: column; padding: 26px 32px 30px; gap: 16px; max-width: 640px; overflow: auto; }
+  .written-hint { font-size: 12.5px; color: var(--muted); }
+  .draft-card {
+    background: #fff; border-radius: 18px; box-shadow: 0 8px 20px rgba(23,55,46,0.06); padding: 16px; position: relative;
+  }
+  .draft-card label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 8px; }
+  #tonecheck-draft {
+    width: 100%; box-sizing: border-box; resize: vertical; min-height: 70px; border: none; background: transparent;
+    padding: 0 40px 0 0; font-size: 15px; line-height: 1.55; color: var(--ink); font-family: inherit; outline: none;
+  }
+  .draft-card .mic-btn { position: absolute; right: 14px; bottom: 14px; width: 30px; height: 30px; }
+  #tonecheck-btn {
+    align-self: flex-start; background: var(--accent-pink); color: #17372E; border: none; border-radius: 999px;
+    padding: 10px 20px; font-size: 13.5px; font-weight: 700; cursor: pointer;
+  }
+  #tonecheck-btn:disabled { opacity: 0.6; cursor: default; }
+  .tonecheck-result { display: flex; gap: 11px; align-items: flex-start; }
+  .tonecheck-card {
+    background: #E7EFEF; border-radius: 6px 20px 20px 20px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 14px; max-width: 460px;
+  }
+  .tonecheck-card .label { font-size: 11px; font-weight: 700; color: #3E6B6B; letter-spacing: .03em; margin-bottom: 4px; }
+  .tonecheck-card .body { font-size: 14.5px; line-height: 1.55; }
+  .tonecheck-card .rewrite-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .tonecheck-card .copy-rewrite {
+    flex-shrink: 0; background: #fff; border: 1px solid #CFE3E3; color: #3E6B6B; border-radius: 999px;
+    padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .tonecheck-error { font-size: 13px; color: #8c0d28; }
+
+  /* Mobile: rail + section list become one off-canvas drawer; the
+     relevant side panel (plan / strategy) becomes the other. */
   @media (max-width: 860px) {
     #app { position: relative; overflow: hidden; }
+    .rail { display: none; }
+    .mobile-rail {
+      display: flex; gap: 8px; padding: 12px 14px 4px 14px; border-bottom: 1px solid var(--border);
+    }
+    .mobile-rail .rail-item { width: 40px; height: 40px; border-radius: 12px; }
+    .mobile-rail .rail-item span { display: none; }
 
     #sidebar {
       position: absolute; top: 0; bottom: 0; left: 0;
       width: 85%; max-width: 320px; z-index: 30;
-      box-shadow: 2px 0 16px rgba(29,46,34,0.16);
+      box-shadow: 2px 0 16px rgba(23,55,46,0.16);
       transform: translateX(0); transition: transform .25s ease;
     }
     #sidebar.closed { transform: translateX(-100%); }
 
-    #plan-panel {
+    .side-panel {
       position: absolute; top: 0; bottom: 0; right: 0;
       width: 85%; max-width: 340px; z-index: 30;
-      box-shadow: -2px 0 16px rgba(29,46,34,0.16);
+      box-shadow: -2px 0 16px rgba(23,55,46,0.16);
       transform: translateX(100%); transition: transform .25s ease;
     }
-    #plan-panel.open { transform: translateX(0); }
+    .side-panel.open { transform: translateX(0); }
 
-    #thread-col { width: 100%; }
+    .thread-col { width: 100%; }
+    #written-view { max-width: none; }
 
     #sidebar-toggle { display: flex; }
-    #plan-toggle { display: inline-block; }
+    #plan-toggle, #meeting-plan-toggle { display: inline-block; }
 
     .panel-scrim.show {
       display: block; position: absolute; inset: 0;
@@ -343,17 +489,14 @@
 </style>
 </head>
 <body>
-<!-- One persistent top nav bar spanning the whole app, same consolidation
-     pattern as ../intake-app/static/session.html's .top-nav:
-     brand lockup + a privacy chip on the left, instead of the brand and
-     New case/Help controls living inside the sidebar's own header. -->
 <div class="top-nav">
   <div class="top-bar-brand">
-    <button id="sidebar-toggle" title="Cases">
+    <button id="sidebar-toggle" title="Menu">
       <svg width="15" height="11" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="0" y1="1" x2="24" y2="1"/><line x1="0" y1="9" x2="24" y2="9"/><line x1="0" y1="17" x2="24" y2="17"/></svg>
     </button>
-    <svg class="mend-mark" width="29" height="21" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+    <svg class="mend-mark" width="24" height="17" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
     <span class="brand-name">Seam</span>
+    <span class="by-mend">by mend</span>
     <span class="privacy-chip">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
       Anonymity enforced
@@ -361,58 +504,168 @@
   </div>
   <div class="top-nav-actions">
     <button id="help-btn" title="How this works">?</button>
-    <button id="new-case-btn" title="New case">+</button>
   </div>
 </div>
 <div id="app">
+  <div class="rail">
+    <button class="rail-item rail-conflicts" data-section="conflicts" aria-label="Conflicts">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+      <span>Conflicts</span>
+    </button>
+    <button class="rail-item rail-written" data-section="written" aria-label="Written communication">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      <span>Written</span>
+    </button>
+    <button class="rail-item rail-meetings" data-section="meetings" aria-label="Meetings">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+      <span>Meetings</span>
+    </button>
+  </div>
+
   <div id="sidebar">
-    <div id="sidebar-subheader">Cases</div>
-    <div id="case-list"></div>
-    <div id="sidebar-footer">Names stay out of this by default.</div>
+    <div class="mobile-rail">
+      <button class="rail-item rail-conflicts" data-section="conflicts" aria-label="Conflicts">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+      </button>
+      <button class="rail-item rail-written" data-section="written" aria-label="Written communication">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      </button>
+      <button class="rail-item rail-meetings" data-section="meetings" aria-label="Meetings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+      </button>
+    </div>
+
+    <div class="sidebar-section active" id="sidebar-conflicts">
+      <div class="sidebar-subheader">
+        <span class="label">Conflicts</span>
+        <button class="sidebar-new-btn conflicts" id="new-case-btn" title="New case">+</button>
+      </div>
+      <div id="case-list"></div>
+      <div class="sidebar-footer">Names stay out of this by default.</div>
+    </div>
+
+    <div class="sidebar-section" id="sidebar-meetings">
+      <div class="sidebar-subheader">
+        <span class="label">Meetings</span>
+        <button class="sidebar-new-btn meetings" id="new-meeting-btn" title="New meeting">+</button>
+      </div>
+      <div id="meeting-list"></div>
+      <div class="sidebar-footer">The strategy stays. The conversation that built it doesn't.</div>
+    </div>
+
+    <div class="sidebar-section" id="sidebar-written">
+      <div class="sidebar-subheader"><span class="label">Written</span></div>
+      <div class="written-static-row active" id="written-nav-row">
+        <span class="name">Written</span>
+        <span class="desc">Draft something, see how it reads</span>
+      </div>
+      <div class="written-static-row soon">
+        <span class="name">Slack announcement</span>
+        <span class="soon-badge">soon</span>
+      </div>
+      <div class="written-static-row soon">
+        <span class="name">Calibration write-up</span>
+        <span class="soon-badge">soon</span>
+      </div>
+    </div>
   </div>
 
   <div class="panel-scrim" id="panel-scrim"></div>
 
-  <div id="thread-col">
-    <div id="thread-header" style="display:none">
-      <div class="name" id="thread-title"></div>
-      <div class="actions">
-        <button id="plan-toggle">Plan</button>
-        <button id="close-case-btn">Close case</button>
+  <!-- Conflicts -->
+  <div class="section-view active" id="conflicts-view">
+    <div class="thread-col">
+      <div class="thread-header" id="thread-header" style="display:none">
+        <div class="name" id="thread-title"></div>
+        <div class="actions">
+          <button id="handoff-chip" title="Peer session">Peer session ready</button>
+          <button id="plan-toggle">Plan</button>
+          <button id="close-case-btn">Close case</button>
+        </div>
+      </div>
+      <div class="messages" id="messages" style="display:none"></div>
+      <div class="empty-state" id="empty-state"></div>
+      <div class="composer-row" id="composer-row" style="display:none">
+        <div class="composer-pill">
+          <textarea id="composer" rows="1" placeholder="Message"></textarea>
+          <button class="mic-btn conflicts-mic" id="mic-btn" title="Hold to dictate">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <button class="send-btn" id="send-btn" title="Send">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </button>
+        </div>
       </div>
     </div>
-    <div id="handoff-banner">
-      <div class="title">Both sides seem to agree on the blocker</div>
-      <div class="desc">Thimble thinks this is ready to hand off to a private peer session between the two people involved. The manager loses visibility once it starts.</div>
-      <button id="start-handoff-btn">Start peer session</button>
-      <div class="links" id="handoff-links" style="display:none"></div>
-    </div>
-    <div id="messages" style="display:none"></div>
-    <div id="empty-state"></div>
-    <div id="composer-row" style="display:none">
-      <textarea id="composer" rows="1" placeholder="Message"></textarea>
-      <button id="mic-btn" title="Hold to dictate">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
-      <button id="send-btn" title="Send">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 11L21 3L13 21L11 13L3 11Z" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
-      </button>
+
+    <div class="side-panel" id="plan-panel" style="display:none">
+      <div class="side-panel-inner">
+        <div class="side-panel-title">What's next</div>
+        <div id="incident-section">
+          <div class="title">Inciting incident</div>
+          <div id="incident-text"></div>
+        </div>
+        <div class="plan-steps-list" id="plan-steps"></div>
+        <div class="add-step-row">
+          <input id="add-step-input" placeholder="add a step">
+          <button id="add-step-btn">+</button>
+        </div>
+        <div class="side-panel-footnote">Only these few lines stay. The conversation that led here is never kept.</div>
+      </div>
     </div>
   </div>
 
-  <div id="plan-panel" style="display:none">
-    <div id="incident-section">
-      <div class="title">Inciting incident</div>
-      <div id="incident-text"></div>
+  <!-- Meetings -->
+  <div class="section-view" id="meetings-view">
+    <div class="thread-col">
+      <div class="thread-header" id="meeting-thread-header" style="display:none">
+        <div>
+          <div class="name" id="meeting-thread-title"></div>
+        </div>
+        <div class="actions">
+          <button id="meeting-plan-toggle">Strategy</button>
+        </div>
+      </div>
+      <div class="messages" id="meeting-messages" style="display:none"></div>
+      <div class="empty-state" id="meeting-empty-state"></div>
+      <div class="composer-row" id="meeting-composer-row" style="display:none">
+        <div class="composer-pill">
+          <textarea id="meeting-composer" rows="1" placeholder="Message"></textarea>
+          <button class="mic-btn meetings-mic" id="meeting-mic-btn" title="Hold to dictate">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <button class="send-btn" id="meeting-send-btn" title="Send">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </button>
+        </div>
+      </div>
     </div>
-    <div id="plan-header">
-      <div class="title">Plan so far</div>
+
+    <div class="side-panel" id="meeting-plan-panel" style="display:none">
+      <div class="side-panel-inner">
+        <div class="side-panel-title">Strategy</div>
+        <div id="meeting-goal-section">
+          <div class="title">Goal for this meeting</div>
+          <div id="meeting-goal-text"></div>
+        </div>
+        <div id="strategy-points-wrap" style="flex:1; min-height:0; overflow:auto;"></div>
+        <div class="side-panel-footnote">The strategy stays, so you can reopen it before the meeting. The chat that built it doesn't.</div>
+      </div>
     </div>
-    <div id="plan-steps"></div>
-    <div id="add-step-row">
-      <input id="add-step-input" placeholder="add a step">
-      <button id="add-step-btn">+</button>
+  </div>
+
+  <!-- Written (tone-check) -->
+  <div class="section-view" id="written-view">
+    <div class="written-hint">Paste it, or dictate it, before you send it. Nothing here is kept.</div>
+    <div class="draft-card">
+      <label for="tonecheck-draft">What you're about to send</label>
+      <textarea id="tonecheck-draft" rows="4" placeholder="Paste or type your draft..."></textarea>
+      <button class="mic-btn written-mic" id="tonecheck-mic-btn" title="Hold to dictate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </div>
+    <button id="tonecheck-btn">Check how this reads</button>
+    <div id="tonecheck-result"></div>
   </div>
 </div>
 
@@ -420,7 +673,7 @@
   <div id="help-modal">
     <button class="close-help" title="Close">&times;</button>
     <div class="brand">
-      <svg class="mend-mark" width="29" height="21" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+      <svg class="mend-mark" width="24" height="17" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
       <span class="brand-name">Seam</span>
     </div>
     <h1>How it works</h1>
@@ -428,10 +681,49 @@
   </div>
 </div>
 
+<div id="handoff-overlay">
+  <div id="handoff-modal">
+    <div class="lede-row">
+      <div class="avatar" style="width:30px;height:30px;"><div class="shadow"></div><div class="blob"></div><div class="mouth"></div></div>
+      <div>
+        <div class="title">Ready to bring them together?</div>
+        <div class="desc">They'll land somewhere new, just the two of them. No notes, no names, nothing carries over.</div>
+      </div>
+    </div>
+    <div class="handoff-links" id="handoff-links"></div>
+    <button id="handoff-dismiss">Not yet</button>
+  </div>
+</div>
+
 <script>
-let currentCaseId = null;
-let cases = [];
-let roster = {}; // "Employee A" -> descriptor, for the current case only
+// ---------------------------------------------------------------------
+// Section switching
+// ---------------------------------------------------------------------
+let currentSection = "conflicts";
+let meetingsLoaded = false;
+
+function showSection(name) {
+  currentSection = name;
+  document.querySelectorAll(".rail-item").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.section === name);
+  });
+  document.querySelectorAll(".sidebar-section").forEach((el) => {
+    el.classList.toggle("active", el.id === "sidebar-" + name);
+  });
+  document.querySelectorAll(".section-view").forEach((el) => {
+    el.classList.toggle("active", el.id === name + "-view");
+  });
+  closeSidebarOnMobile();
+  if (name === "meetings" && !meetingsLoaded) {
+    meetingsLoaded = true;
+    loadMeetings();
+  }
+}
+
+document.querySelectorAll(".rail-item").forEach((btn) => {
+  btn.addEventListener("click", () => showSection(btn.dataset.section));
+});
+document.getElementById("written-nav-row").addEventListener("click", () => showSection("written"));
 
 function escapeHtml(s) {
   const d = document.createElement("div");
@@ -447,15 +739,157 @@ function timeAgo(ts) {
   return Math.floor(diff / 86400) + "d";
 }
 
+function mendMarkSvg() {
+  return `<svg width="20" height="14" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>`;
+}
+
+function avatarSvg() {
+  return `<div class="avatar"><div class="shadow"></div><div class="blob"></div><div class="mouth"></div></div>`;
+}
+
+// ---------------------------------------------------------------------
+// Shared: a message thread (used by both Conflicts and Meetings)
+// ---------------------------------------------------------------------
+function appendBubble(messagesEl, role, text, pending) {
+  const row = document.createElement("div");
+  row.className = "msg-row " + role;
+  if (role === "assistant") row.innerHTML = avatarSvg();
+  const b = document.createElement("div");
+  b.className = "bubble " + role + (pending ? " pending" : "");
+  renderBubbleText(b, text);
+  row.appendChild(b);
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return b;
+}
+
+const EMPLOYEE_TAG_RE = /\bEmployee [A-Z]\b/g;
+
+function renderBubbleText(el, text) {
+  el.innerHTML = "";
+  let lastIndex = 0;
+  EMPLOYEE_TAG_RE.lastIndex = 0;
+  let match;
+  while ((match = EMPLOYEE_TAG_RE.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+    }
+    const label = match[0];
+    const tag = document.createElement("span");
+    tag.className = "employee-tag";
+    tag.textContent = label;
+    tag.tabIndex = 0;
+    tag.onclick = (e) => {
+      e.stopPropagation();
+      showEmployeeTooltip(tag, label);
+    };
+    el.appendChild(tag);
+    lastIndex = match.index + label.length;
+  }
+  if (lastIndex < text.length) {
+    el.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+}
+
+let activeEmployeeTooltip = null;
+let roster = {}; // "Employee A" -> descriptor, for the current case only
+
+function showEmployeeTooltip(anchorEl, label) {
+  closeEmployeeTooltip();
+  const tip = document.createElement("div");
+  tip.className = "employee-tooltip";
+  tip.textContent = roster[label] || "No descriptor yet";
+  document.body.appendChild(tip);
+  const rect = anchorEl.getBoundingClientRect();
+  tip.style.left = Math.min(rect.left, window.innerWidth - 236) + "px";
+  tip.style.top = rect.bottom + 6 + "px";
+  activeEmployeeTooltip = tip;
+  setTimeout(() => document.addEventListener("click", closeEmployeeTooltipOnOutsideClick, { once: true }), 0);
+}
+
+function closeEmployeeTooltip() {
+  if (activeEmployeeTooltip) {
+    activeEmployeeTooltip.remove();
+    activeEmployeeTooltip = null;
+  }
+}
+
+function closeEmployeeTooltipOnOutsideClick(e) {
+  if (activeEmployeeTooltip && !activeEmployeeTooltip.contains(e.target)) closeEmployeeTooltip();
+}
+
+// ---------------------------------------------------------------------
+// Push-to-talk dictation, reused across all three composers. Hold, speak,
+// release: transcribes via /api/voice and drops the text into the target
+// field, never auto-sends.
+// ---------------------------------------------------------------------
+function wirePushToTalk(btn, targetEl) {
+  let mediaRecorder = null;
+  let recordedChunks = [];
+
+  async function press() {
+    if (mediaRecorder) return;
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      alert("Couldn't access the microphone.");
+      return;
+    }
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      btn.classList.remove("recording");
+      const blob = new Blob(recordedChunks, { type: "audio/webm" });
+      mediaRecorder = null;
+      if (blob.size < 1000) return;
+      const form = new FormData();
+      form.append("file", blob, "clip.webm");
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/voice", { method: "POST", body: form });
+        const data = await res.json();
+        if (data.transcript) {
+          targetEl.value = (targetEl.value ? targetEl.value + " " : "") + data.transcript;
+          targetEl.dispatchEvent(new Event("input"));
+          targetEl.focus();
+        }
+      } catch (e) {
+        // silent: dictation failing shouldn't block typing instead
+      } finally {
+        btn.disabled = false;
+      }
+    };
+    mediaRecorder.start();
+    btn.classList.add("recording");
+  }
+
+  function release() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+  }
+
+  btn.addEventListener("mousedown", (e) => { e.preventDefault(); press(); });
+  btn.addEventListener("mouseup", release);
+  btn.addEventListener("mouseleave", release);
+  btn.addEventListener("touchstart", (e) => { e.preventDefault(); press(); }, { passive: false });
+  btn.addEventListener("touchend", (e) => { e.preventDefault(); release(); }, { passive: false });
+}
+
+// ---------------------------------------------------------------------
+// Conflicts (cases) -- unchanged behavior from the previous version
+// ---------------------------------------------------------------------
+let currentCaseId = null;
+let cases = [];
+
 async function loadCases() {
   const res = await fetch("/api/cases");
   cases = await res.json();
   renderCaseList();
   renderEmptyState();
-}
-
-function mendMarkSvg() {
-  return `<svg width="20" height="14" viewBox="0 0 871 616" fill="currentColor" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>`;
 }
 
 function flowStepsHtml() {
@@ -476,7 +910,7 @@ function privacyNoteHtml() {
 function renderEmptyState() {
   const el = document.getElementById("empty-state");
   const hasCases = cases.length > 0;
-  el.className = hasCases ? "returning" : "";
+  el.className = "empty-state" + (hasCases ? " returning" : "");
   el.innerHTML = `
     <div class="wrap">
       <div class="mark">${mendMarkSvg()}</div>
@@ -484,7 +918,7 @@ function renderEmptyState() {
       <p class="lede">Seam is a private space for you to work out what's going on with a direct report who's in conflict, with a peer or with someone on another team, and figure out what to actually do about it. Join the people back into a working relationship, not just paper over the friction.</p>
       ${flowStepsHtml()}
       ${privacyNoteHtml()}
-      <button id="empty-state-cta">${hasCases ? "Start a new case" : "Open your first case"}</button>
+      <button class="empty-state-cta" id="empty-state-cta">${hasCases ? "Start a new case" : "Open your first case"}</button>
     </div>
   `;
   document.getElementById("empty-state-cta").onclick = createCase;
@@ -509,7 +943,7 @@ function renderCaseList() {
   list.innerHTML = "";
   for (const c of cases) {
     const row = document.createElement("div");
-    row.className = "case-row" + (c.id === currentCaseId ? " active" : "") + (c.status === "closed" ? " closed" : "");
+    row.className = "item-row" + (c.id === currentCaseId ? " active" : "") + (c.status === "closed" ? " closed" : "");
     const name = c.title || "New case";
     const preview = c.next_action || c.last_action || c.tension_summary || "Just opened";
     row.innerHTML = `
@@ -545,11 +979,11 @@ async function openCase(caseId, isNew) {
 
   if (isNew || data.messages.length === 0) {
     const messagesEl = document.getElementById("messages");
-    const pending = appendBubble("assistant", "...", true);
+    const pending = appendBubble(messagesEl, "assistant", "...", true);
     const r = await fetch(`/api/cases/${caseId}/start`, { method: "POST" });
     const body = await r.json();
-    pending.remove();
-    appendBubble("assistant", body.reply);
+    pending.closest(".msg-row").remove();
+    appendBubble(messagesEl, "assistant", body.reply);
     updateCaseFromResult(body.case);
     if (body.plan) renderPlan(body.plan);
   }
@@ -561,10 +995,10 @@ function renderThread(data) {
   const messagesEl = document.getElementById("messages");
   messagesEl.innerHTML = "";
   for (const m of data.messages) {
-    appendBubble(m.role, m.content);
+    appendBubble(messagesEl, m.role, m.content);
   }
   renderPlan(data.plan);
-  renderHandoffBanner(data.case);
+  renderHandoffChip(data.case);
   renderIncident(data.case);
 }
 
@@ -579,104 +1013,29 @@ function renderIncident(caseObj) {
   }
 }
 
-async function renderHandoffBanner(caseObj) {
-  const banner = document.getElementById("handoff-banner");
-  banner.style.display = caseObj.handoff_ready ? "block" : "none";
-  const links = document.getElementById("handoff-links");
-  const startBtn = document.getElementById("start-handoff-btn");
-  if (caseObj.handoff_code) {
-    // Links aren't persisted on the case itself (only the room code is) --
-    // re-fetch them from the idempotent handoff endpoint to redisplay.
-    await startHandoff();
-  } else {
-    links.style.display = "none";
-    startBtn.style.display = "inline-block";
-  }
+function renderHandoffChip(caseObj) {
+  const chip = document.getElementById("handoff-chip");
+  chip.style.display = caseObj.handoff_ready ? "inline-flex" : "none";
 }
 
-function renderHandoffLinks(caseObj) {
+async function openHandoffModal() {
+  if (!currentCaseId) return;
+  const res = await fetch(`/api/cases/${currentCaseId}/handoff`, { method: "POST" });
+  const body = await res.json();
   const links = document.getElementById("handoff-links");
-  document.getElementById("start-handoff-btn").style.display = "none";
-  links.style.display = "flex";
   links.innerHTML = `
-    <div class="link-row"><label>Party A</label><input readonly value="${escapeHtml(caseObj.role_a_url)}"><button data-url="${escapeHtml(caseObj.role_a_url)}">Copy</button></div>
-    <div class="link-row"><label>Party B</label><input readonly value="${escapeHtml(caseObj.role_b_url)}"><button data-url="${escapeHtml(caseObj.role_b_url)}">Copy</button></div>
+    <div class="handoff-link-row"><span class="label">Room for the first person</span><button data-url="${escapeHtml(body.role_a_url)}">Copy</button></div>
+    <div class="handoff-divider"><svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><line x1="8" y1="0" x2="8" y2="18" stroke="#B9C2BB" stroke-width="1.6" stroke-dasharray="3 3"></line></svg></div>
+    <div class="handoff-link-row"><span class="label">Room for the second person</span><button data-url="${escapeHtml(body.role_b_url)}">Copy</button></div>
   `;
   for (const btn of links.querySelectorAll("button")) {
     btn.onclick = () => navigator.clipboard.writeText(btn.dataset.url);
   }
+  document.getElementById("handoff-overlay").classList.add("open");
 }
 
-async function startHandoff() {
-  if (!currentCaseId) return;
-  const res = await fetch(`/api/cases/${currentCaseId}/handoff`, { method: "POST" });
-  const body = await res.json();
-  renderHandoffLinks(body);
-}
-
-function appendBubble(role, text, pending) {
-  const messagesEl = document.getElementById("messages");
-  const b = document.createElement("div");
-  b.className = "bubble " + role + (pending ? " pending" : "");
-  renderBubbleText(b, text);
-  messagesEl.appendChild(b);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-  return b;
-}
-
-const EMPLOYEE_TAG_RE = /\bEmployee [A-Z]\b/g;
-
-function renderBubbleText(el, text) {
-  el.innerHTML = "";
-  let lastIndex = 0;
-  EMPLOYEE_TAG_RE.lastIndex = 0;
-  let match;
-  while ((match = EMPLOYEE_TAG_RE.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
-    }
-    const label = match[0];
-    const tag = document.createElement("span");
-    tag.className = "employee-tag";
-    tag.textContent = label;
-    tag.tabIndex = 0;
-    tag.onclick = (e) => {
-      e.stopPropagation();
-      showEmployeeTooltip(tag, label);
-    };
-    el.appendChild(tag);
-    lastIndex = match.index + label.length;
-  }
-  if (lastIndex < text.length) {
-    el.appendChild(document.createTextNode(text.slice(lastIndex)));
-  }
-}
-
-let activeEmployeeTooltip = null;
-
-function showEmployeeTooltip(anchorEl, label) {
-  closeEmployeeTooltip();
-  const tip = document.createElement("div");
-  tip.className = "employee-tooltip";
-  tip.textContent = roster[label] || "No descriptor yet";
-  document.body.appendChild(tip);
-  const rect = anchorEl.getBoundingClientRect();
-  tip.style.left = Math.min(rect.left, window.innerWidth - 236) + "px";
-  tip.style.top = rect.bottom + 6 + "px";
-  activeEmployeeTooltip = tip;
-  setTimeout(() => document.addEventListener("click", closeEmployeeTooltipOnOutsideClick, { once: true }), 0);
-}
-
-function closeEmployeeTooltip() {
-  if (activeEmployeeTooltip) {
-    activeEmployeeTooltip.remove();
-    activeEmployeeTooltip = null;
-  }
-}
-
-function closeEmployeeTooltipOnOutsideClick(e) {
-  if (activeEmployeeTooltip && !activeEmployeeTooltip.contains(e.target)) closeEmployeeTooltip();
-}
+document.getElementById("handoff-chip").onclick = openHandoffModal;
+document.getElementById("handoff-dismiss").onclick = () => document.getElementById("handoff-overlay").classList.remove("open");
 
 function updateCaseFromResult(updatedCase) {
   if (updatedCase.roster) roster = updatedCase.roster;
@@ -686,7 +1045,7 @@ function updateCaseFromResult(updatedCase) {
   cases.sort((a, b) => b.updated_at - a.updated_at);
   renderCaseList();
   document.getElementById("thread-title").textContent = updatedCase.title || "New case";
-  renderHandoffBanner(updatedCase);
+  renderHandoffChip(updatedCase);
   renderIncident(updatedCase);
 }
 
@@ -696,9 +1055,10 @@ async function sendMessage() {
   if (!text || !currentCaseId) return;
   composer.value = "";
   composer.style.height = "auto";
-  const userBubble = appendBubble("user", text);
+  const messagesEl = document.getElementById("messages");
+  const userBubble = appendBubble(messagesEl, "user", text);
   document.getElementById("send-btn").disabled = true;
-  const pending = appendBubble("assistant", "...", true);
+  const pending = appendBubble(messagesEl, "assistant", "...", true);
   try {
     const res = await fetch(`/api/cases/${currentCaseId}/messages`, {
       method: "POST",
@@ -706,8 +1066,8 @@ async function sendMessage() {
       body: JSON.stringify({ content: text }),
     });
     const body = await res.json();
-    pending.remove();
-    appendBubble("assistant", body.reply);
+    pending.closest(".msg-row").remove();
+    appendBubble(messagesEl, "assistant", body.reply);
     updateCaseFromResult(body.case);
     if (body.plan) renderPlan(body.plan);
     if (body.user_message_redacted && body.user_message_redacted !== text) {
@@ -731,8 +1091,6 @@ async function closeCase() {
   const updated = await res.json();
   updateCaseFromResult(updated);
 }
-
-// --- Plan panel ---
 
 function renderPlan(steps) {
   const container = document.getElementById("plan-steps");
@@ -823,13 +1181,7 @@ async function addStep() {
 }
 
 document.getElementById("new-case-btn").onclick = createCase;
-document.getElementById("help-btn").onclick = openHelp;
-document.querySelector("#help-modal .close-help").onclick = closeHelp;
-document.getElementById("help-overlay").addEventListener("click", (e) => {
-  if (e.target.id === "help-overlay") closeHelp();
-});
 document.getElementById("close-case-btn").onclick = closeCase;
-document.getElementById("start-handoff-btn").onclick = startHandoff;
 document.getElementById("send-btn").onclick = sendMessage;
 document.getElementById("add-step-btn").onclick = addStep;
 document.getElementById("add-step-input").addEventListener("keydown", (e) => {
@@ -846,85 +1198,253 @@ composerEl.addEventListener("input", () => {
   composerEl.style.height = "auto";
   composerEl.style.height = composerEl.scrollHeight + "px";
 });
+wirePushToTalk(document.getElementById("mic-btn"), composerEl);
 
-// Push-to-talk dictation: hold the mic button, speak, release. Transcribes
-// via /api/voice and appends the text into the composer -- never sends on
-// its own, the manager still hits send/Enter themselves.
-const micBtn = document.getElementById("mic-btn");
-let mediaRecorder = null;
-let recordedChunks = [];
+// ---------------------------------------------------------------------
+// Meetings (meeting strategy) -- mirrors Conflicts above, pointed at
+// /api/meeting-sessions instead of /api/cases. No plan_steps equivalent
+// exists for strategy_text (it's model-generated prose, split into lines
+// for display), so there's no "+add a point" affordance here.
+// ---------------------------------------------------------------------
+let currentMeetingId = null;
+let meetings = [];
 
-async function micPress() {
-  if (mediaRecorder) return;
-  let stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch (e) {
-    alert("Couldn't access the microphone.");
+async function loadMeetings() {
+  const res = await fetch("/api/meeting-sessions");
+  meetings = await res.json();
+  renderMeetingList();
+  renderMeetingEmptyState();
+}
+
+function renderMeetingEmptyState() {
+  const el = document.getElementById("meeting-empty-state");
+  const has = meetings.length > 0;
+  el.className = "empty-state" + (has ? " returning" : "");
+  el.innerHTML = `
+    <div class="wrap">
+      <div class="mark">${mendMarkSvg()}</div>
+      <h1>${has ? "Pick a meeting on the left, or start a new one" : "Figure out your approach before you walk in"}</h1>
+      <p class="lede">Name what you actually want this meeting to achieve -- team cohesion, delivering hard news, a pep talk, whatever it is -- and work out the strategy, not just the agenda.</p>
+      <button class="empty-state-cta" id="meeting-empty-cta">${has ? "Start a new meeting" : "Plan your first meeting"}</button>
+    </div>
+  `;
+  document.getElementById("meeting-empty-cta").onclick = createMeeting;
+}
+
+function renderMeetingList() {
+  const list = document.getElementById("meeting-list");
+  list.innerHTML = "";
+  for (const m of meetings) {
+    const row = document.createElement("div");
+    row.className = "item-row" + (m.id === currentMeetingId ? " active" : "");
+    const name = m.title || "New meeting";
+    const preview = m.goal_summary || "Just opened";
+    row.innerHTML = `
+      <div class="top"><div class="name">${escapeHtml(name)}</div><div class="time">${timeAgo(m.updated_at)}</div></div>
+      <div class="preview">${escapeHtml(preview)}</div>
+    `;
+    row.onclick = () => openMeeting(m.id);
+    list.appendChild(row);
+  }
+}
+
+async function createMeeting() {
+  const res = await fetch("/api/meeting-sessions", { method: "POST" });
+  const m = await res.json();
+  meetings.unshift(m);
+  renderMeetingList();
+  await openMeeting(m.id, true);
+}
+
+async function openMeeting(meetingId, isNew) {
+  currentMeetingId = meetingId;
+  renderMeetingList();
+  document.getElementById("meeting-empty-state").style.display = "none";
+  document.getElementById("meeting-thread-header").style.display = "flex";
+  document.getElementById("meeting-messages").style.display = "flex";
+  document.getElementById("meeting-composer-row").style.display = "flex";
+  document.getElementById("meeting-plan-panel").style.display = "flex";
+  closeSidebarOnMobile();
+
+  const res = await fetch(`/api/meeting-sessions/${meetingId}`);
+  const data = await res.json();
+  renderMeetingThread(data);
+
+  if (isNew) {
+    const messagesEl = document.getElementById("meeting-messages");
+    appendBubble(messagesEl, "assistant", "What's the meeting, and what do you actually want to walk away with?");
+  }
+}
+
+function renderMeetingThread(data) {
+  document.getElementById("meeting-thread-title").textContent = data.session.title || "New meeting";
+  const messagesEl = document.getElementById("meeting-messages");
+  messagesEl.innerHTML = "";
+  for (const m of data.messages) {
+    appendBubble(messagesEl, m.role, m.content);
+  }
+  updateMeetingFromResult(data.session);
+}
+
+function renderMeetingGoal(session) {
+  const el = document.getElementById("meeting-goal-text");
+  if (session.goal_summary) {
+    el.textContent = session.goal_summary;
+    el.classList.remove("placeholder");
+  } else {
+    el.textContent = "Will be added here once it's clear.";
+    el.classList.add("placeholder");
+  }
+}
+
+function renderStrategyPoints(session) {
+  const wrap = document.getElementById("strategy-points-wrap");
+  if (!session.strategy_text) {
+    wrap.innerHTML = `<div class="strategy-placeholder">Not ready yet -- keep talking it through, the final strategy lands here.</div>`;
     return;
   }
-  recordedChunks = [];
-  mediaRecorder = new MediaRecorder(stream);
-  mediaRecorder.ondataavailable = (e) => {
-    if (e.data.size > 0) recordedChunks.push(e.data);
-  };
-  mediaRecorder.onstop = async () => {
-    stream.getTracks().forEach((t) => t.stop());
-    micBtn.classList.remove("recording");
-    const blob = new Blob(recordedChunks, { type: "audio/webm" });
-    mediaRecorder = null;
-    if (blob.size < 1000) return; // too short to be real speech
-    const form = new FormData();
-    form.append("file", blob, "clip.webm");
-    micBtn.disabled = true;
-    try {
-      const res = await fetch("/api/voice", { method: "POST", body: form });
-      const data = await res.json();
-      if (data.transcript) {
-        composerEl.value = (composerEl.value ? composerEl.value + " " : "") + data.transcript;
-        composerEl.dispatchEvent(new Event("input"));
-        composerEl.focus();
-      }
-    } catch (e) {
-      // silent: dictation failing shouldn't block typing instead
-    } finally {
-      micBtn.disabled = false;
+  const lines = session.strategy_text.split("\n").map((l) => l.trim()).filter(Boolean);
+  wrap.innerHTML = `<div class="strategy-points">${lines.map((l) => `
+    <div class="strategy-point"><span class="dot"></span><span class="t">${escapeHtml(l)}</span></div>
+  `).join("")}</div>`;
+}
+
+function updateMeetingFromResult(updatedSession) {
+  const idx = meetings.findIndex((m) => m.id === updatedSession.id);
+  if (idx >= 0) meetings[idx] = updatedSession;
+  else meetings.unshift(updatedSession);
+  meetings.sort((a, b) => b.updated_at - a.updated_at);
+  renderMeetingList();
+  document.getElementById("meeting-thread-title").textContent = updatedSession.title || "New meeting";
+  renderMeetingGoal(updatedSession);
+  renderStrategyPoints(updatedSession);
+}
+
+async function sendMeetingMessage() {
+  const composer = document.getElementById("meeting-composer");
+  const text = composer.value.trim();
+  if (!text || !currentMeetingId) return;
+  composer.value = "";
+  composer.style.height = "auto";
+  const messagesEl = document.getElementById("meeting-messages");
+  appendBubble(messagesEl, "user", text);
+  document.getElementById("meeting-send-btn").disabled = true;
+  const pending = appendBubble(messagesEl, "assistant", "...", true);
+  try {
+    const res = await fetch(`/api/meeting-sessions/${currentMeetingId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: text }),
+    });
+    const body = await res.json();
+    pending.closest(".msg-row").remove();
+    appendBubble(messagesEl, "assistant", body.reply);
+    updateMeetingFromResult(body.session);
+  } finally {
+    document.getElementById("meeting-send-btn").disabled = false;
+  }
+}
+
+document.getElementById("new-meeting-btn").onclick = createMeeting;
+document.getElementById("meeting-send-btn").onclick = sendMeetingMessage;
+const meetingComposerEl = document.getElementById("meeting-composer");
+meetingComposerEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMeetingMessage();
+  }
+});
+meetingComposerEl.addEventListener("input", () => {
+  meetingComposerEl.style.height = "auto";
+  meetingComposerEl.style.height = meetingComposerEl.scrollHeight + "px";
+});
+wirePushToTalk(document.getElementById("meeting-mic-btn"), meetingComposerEl);
+
+// ---------------------------------------------------------------------
+// Written (tone-check): stateless, one draft at a time, no history.
+// ---------------------------------------------------------------------
+const tonecheckDraftEl = document.getElementById("tonecheck-draft");
+wirePushToTalk(document.getElementById("tonecheck-mic-btn"), tonecheckDraftEl);
+
+async function runToneCheck() {
+  const text = tonecheckDraftEl.value.trim();
+  const resultEl = document.getElementById("tonecheck-result");
+  if (!text) return;
+  const btn = document.getElementById("tonecheck-btn");
+  btn.disabled = true;
+  resultEl.innerHTML = "";
+  try {
+    const res = await fetch("/api/tone-check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: text }),
+    });
+    const body = await res.json();
+    if (body.error) {
+      resultEl.innerHTML = `<div class="tonecheck-error">${escapeHtml(body.error)}</div>`;
+      return;
     }
-  };
-  mediaRecorder.start();
-  micBtn.classList.add("recording");
+    resultEl.innerHTML = `
+      <div class="tonecheck-result">
+        ${avatarSvg()}
+        <div class="tonecheck-card">
+          <div>
+            <div class="label">HOW THIS READS</div>
+            <div class="body">${escapeHtml(body.feedback)}</div>
+          </div>
+          <div>
+            <div class="label">TRY THIS INSTEAD</div>
+            <div class="rewrite-row">
+              <div class="body" id="tonecheck-rewrite">${escapeHtml(body.rewrite)}</div>
+              <button class="copy-rewrite" id="tonecheck-copy">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById("tonecheck-copy").onclick = () => {
+      navigator.clipboard.writeText(body.rewrite);
+    };
+  } catch (e) {
+    resultEl.innerHTML = `<div class="tonecheck-error">Couldn't reach Seam, try again.</div>`;
+  } finally {
+    btn.disabled = false;
+  }
 }
 
-function micRelease() {
-  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
-}
+document.getElementById("tonecheck-btn").onclick = runToneCheck;
 
-micBtn.addEventListener("mousedown", (e) => { e.preventDefault(); micPress(); });
-micBtn.addEventListener("mouseup", micRelease);
-micBtn.addEventListener("mouseleave", micRelease);
-micBtn.addEventListener("touchstart", (e) => { e.preventDefault(); micPress(); }, { passive: false });
-micBtn.addEventListener("touchend", (e) => { e.preventDefault(); micRelease(); }, { passive: false });
+// ---------------------------------------------------------------------
+// Help modal, mobile drawers
+// ---------------------------------------------------------------------
+document.getElementById("help-btn").onclick = openHelp;
+document.querySelector("#help-modal .close-help").onclick = closeHelp;
+document.getElementById("help-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "help-overlay") closeHelp();
+});
 
-// Mobile: cases and plan are off-canvas drawers. Cases opens by default;
-// opening a case closes it so the thread is visible, and either drawer
-// can be reopened from the top nav / thread header.
 const MOBILE_QUERY = "(max-width: 860px)";
 const sidebarEl = document.getElementById("sidebar");
 const planPanelEl = document.getElementById("plan-panel");
+const meetingPlanPanelEl = document.getElementById("meeting-plan-panel");
 const scrimEl = document.getElementById("panel-scrim");
 
 function isMobile() {
   return window.matchMedia(MOBILE_QUERY).matches;
 }
 
+function activeSidePanel() {
+  return currentSection === "meetings" ? meetingPlanPanelEl : planPanelEl;
+}
+
 function updateScrim() {
-  const open = !sidebarEl.classList.contains("closed") || planPanelEl.classList.contains("open");
+  const open = !sidebarEl.classList.contains("closed") || activeSidePanel().classList.contains("open");
   scrimEl.classList.toggle("show", isMobile() && open);
 }
 
 function toggleSidebar() {
   sidebarEl.classList.toggle("closed");
-  if (!sidebarEl.classList.contains("closed")) planPanelEl.classList.remove("open");
+  if (!sidebarEl.classList.contains("closed")) activeSidePanel().classList.remove("open");
   updateScrim();
 }
 
@@ -933,17 +1453,19 @@ function closeSidebarOnMobile() {
   updateScrim();
 }
 
-function togglePlanPanel() {
-  planPanelEl.classList.toggle("open");
+function toggleSidePanel() {
+  activeSidePanel().classList.toggle("open");
   sidebarEl.classList.add("closed");
   updateScrim();
 }
 
 document.getElementById("sidebar-toggle").onclick = toggleSidebar;
-document.getElementById("plan-toggle").onclick = togglePlanPanel;
+document.getElementById("plan-toggle").onclick = toggleSidePanel;
+document.getElementById("meeting-plan-toggle").onclick = toggleSidePanel;
 scrimEl.onclick = () => {
   sidebarEl.classList.add("closed");
   planPanelEl.classList.remove("open");
+  meetingPlanPanelEl.classList.remove("open");
   updateScrim();
 };
 updateScrim();
