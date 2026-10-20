@@ -194,3 +194,6 @@ meeting-note-taker/summarizer, which is explicitly out of scope.
 - [ ] Pitch-test the moat-vs-ChatGPT/Copilot framing
       (`../../docs/pitch-strategy/03_TECHNICAL_ARCHITECTURE_AND_WATCHER.md`)
       with real managers, not just reasoned from first principles
+- [ ] Run the solo-manager tester/buyer outreach plan (not 05's pairs-based
+      plan — Seam's MVP surface is solo) — see
+      `../../docs/pitch-strategy/25_SEAM_SOLO_MANAGER_COHORT_AND_OUTREACH_STRATEGY.md`
