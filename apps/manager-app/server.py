@@ -34,7 +34,7 @@ from pathlib import Path
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -308,6 +308,19 @@ async def service_worker():
 
 
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
+
+
+# No explicit Cache-Control meant browsers could serve a stale cached copy
+# of index.html/static/* on an ordinary reload instead of revalidating with
+# the server -- this app changes multiple times a day right now (same bug,
+# same fix already shipped in ../intake-app/server.py), so no caching at
+# all is the right default during active development.
+@app.middleware("http")
+async def no_cache_static(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path == "/" or request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.get("/api/cases")
