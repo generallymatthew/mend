@@ -41,6 +41,7 @@ from pydantic import BaseModel
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-case-plan-system-prompt.md"
+TONE_CHECK_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-tone-check-system-prompt.md"
 DB_FILE = ROOT / "cases.db"
 MODEL = "claude-sonnet-5"
 JOINT_SESSION_BASE_URL = os.environ.get("JOINT_SESSION_BASE_URL", "http://localhost:8421")
@@ -48,15 +49,16 @@ JOINT_SESSION_BASE_URL = os.environ.get("JOINT_SESSION_BASE_URL", "http://localh
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 
 
-def load_system_prompt() -> str:
-    text = SYSTEM_PROMPT_FILE.read_text()
+def load_system_prompt(path: Path) -> str:
+    text = path.read_text()
     match = re.search(r"```\n(.*?)\n```", text, re.S)
     if not match:
-        raise RuntimeError(f"couldn't find fenced system prompt in {SYSTEM_PROMPT_FILE}")
+        raise RuntimeError(f"couldn't find fenced system prompt in {path}")
     return match.group(1)
 
 
-SYSTEM_PROMPT = load_system_prompt()
+SYSTEM_PROMPT = load_system_prompt(SYSTEM_PROMPT_FILE)
+TONE_CHECK_SYSTEM_PROMPT = load_system_prompt(TONE_CHECK_SYSTEM_PROMPT_FILE)
 
 # In-memory conversation text per case id -- a prototype, not a persistence
 # layer. See module docstring: only the anchor + plan (below, in SQLite)
@@ -546,3 +548,42 @@ async def delete_plan_step(case_id: str, step_id: str):
         conn.execute("DELETE FROM plan_steps WHERE id = ? AND case_id = ?", (step_id, case_id))
         conn.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (time.time(), case_id))
         return get_plan_steps(conn, case_id)
+
+
+class ToneCheckRequest(BaseModel):
+    content: str
+
+
+def strip_tone_check(reply_text: str) -> dict | None:
+    match = re.search(r"<tone_check>(.*?)</tone_check>", reply_text, re.S)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group(1).strip())
+    except json.JSONDecodeError:
+        return None
+
+
+@app.post("/api/tone-check")
+async def tone_check(body: ToneCheckRequest):
+    """Stateless, one-shot: no case, no persistence, nothing written to
+    cases.db. The manager pastes a draft, gets feedback plus a rewrite
+    back; neither the draft nor the response is stored anywhere."""
+    if not body.content.strip():
+        return JSONResponse({"error": "content is required"}, status_code=400)
+    if client is None:
+        return JSONResponse({"error": "ANTHROPIC_API_KEY is not set in this shell"}, status_code=500)
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=2048,
+            system=TONE_CHECK_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": body.content}],
+        )
+    except Exception as e:
+        return JSONResponse({"error": f"error calling Claude: {e}"}, status_code=502)
+    raw = "".join(block.text for block in response.content if block.type == "text")
+    result = strip_tone_check(raw)
+    if result is None or "feedback" not in result or "rewrite" not in result:
+        return JSONResponse({"error": "couldn't parse a tone-check response, try again"}, status_code=502)
+    return {"feedback": result["feedback"], "rewrite": result["rewrite"]}
