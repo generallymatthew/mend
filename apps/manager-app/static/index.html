@@ -204,11 +204,11 @@
   .thread-header .actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
 
   /* Suture handoff: a modal, matching design-mockups/SutureHandoff.dc.html,
-     triggered from a small persistent chip in the thread header once
-     handoff_ready is true (rather than auto-popping every time the case
-     reopens). */
+     triggered from a persistent chip in the thread header. Entirely the
+     manager's call -- always available on an open case, not gated on
+     anything Thimble has or hasn't said in the conversation. */
   #handoff-chip {
-    display: none; align-items: center; gap: 6px; background: var(--accent-pink-bg); color: #8c0d28;
+    display: inline-flex; align-items: center; gap: 6px; background: var(--accent-pink-bg); color: #8c0d28;
     border: none; border-radius: 999px; padding: 6px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer;
   }
   #handoff-overlay {
@@ -582,7 +582,7 @@
       <div class="thread-header" id="thread-header" style="display:none">
         <div class="name" id="thread-title"></div>
         <div class="actions">
-          <button id="handoff-chip" title="Peer session">Peer session ready</button>
+          <button id="handoff-chip" title="Peer session">Create peer session</button>
           <button id="plan-toggle">Plan</button>
           <button id="close-case-btn">Close case</button>
         </div>
@@ -1018,8 +1018,8 @@ function renderIncident(caseObj) {
 }
 
 function renderHandoffChip(caseObj) {
-  const chip = document.getElementById("handoff-chip");
-  chip.style.display = caseObj.handoff_ready ? "inline-flex" : "none";
+  // Always available once a case is open -- the manager's own call,
+  // not gated on anything Thimble has decided in the conversation.
 }
 
 async function openHandoffModal() {
