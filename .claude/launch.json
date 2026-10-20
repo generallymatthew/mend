@@ -18,6 +18,12 @@
       "runtimeExecutable": "apps/manager-app/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--port", "8460", "--app-dir", "apps/manager-app"],
       "port": 8460
+    },
+    {
+      "name": "joint-session-app",
+      "runtimeExecutable": "apps/joint-session-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8421", "--app-dir", "apps/joint-session-app"],
+      "port": 8421
     }
   ]
 }
