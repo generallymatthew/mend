@@ -42,6 +42,7 @@ ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-case-plan-system-prompt.md"
 TONE_CHECK_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-tone-check-system-prompt.md"
+MEETING_STRATEGY_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-meeting-strategy-system-prompt.md"
 DB_FILE = ROOT / "cases.db"
 MODEL = "claude-sonnet-5"
 JOINT_SESSION_BASE_URL = os.environ.get("JOINT_SESSION_BASE_URL", "http://localhost:8421")
@@ -59,11 +60,17 @@ def load_system_prompt(path: Path) -> str:
 
 SYSTEM_PROMPT = load_system_prompt(SYSTEM_PROMPT_FILE)
 TONE_CHECK_SYSTEM_PROMPT = load_system_prompt(TONE_CHECK_SYSTEM_PROMPT_FILE)
+MEETING_STRATEGY_SYSTEM_PROMPT = load_system_prompt(MEETING_STRATEGY_SYSTEM_PROMPT_FILE)
 
 # In-memory conversation text per case id -- a prototype, not a persistence
 # layer. See module docstring: only the anchor + plan (below, in SQLite)
 # survive a restart.
 CONVERSATIONS: dict[str, list[dict]] = {}
+
+# Same "chat text never persists" treatment, for meeting-strategy sessions.
+# Only the final strategy_text (meeting_sessions table) survives a restart;
+# the back-and-forth that produced it does not.
+MEETING_CONVERSATIONS: dict[str, list[dict]] = {}
 
 # In-memory per-case name roster (name.lower() -> {"name", "slot", "descriptor"}),
 # same "never touches disk" treatment as CONVERSATIONS -- a real name the
@@ -160,6 +167,16 @@ def init_db():
         existing_step_cols = {row["name"] for row in conn.execute("PRAGMA table_info(plan_steps)")}
         if "added_by" not in existing_step_cols:
             conn.execute("ALTER TABLE plan_steps ADD COLUMN added_by TEXT NOT NULL DEFAULT 'user'")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS meeting_sessions (
+                id TEXT PRIMARY KEY,
+                title TEXT,
+                goal_summary TEXT,
+                strategy_text TEXT,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            )
+        """)
 
 
 init_db()
@@ -587,3 +604,129 @@ async def tone_check(body: ToneCheckRequest):
     if result is None or "feedback" not in result or "rewrite" not in result:
         return JSONResponse({"error": "couldn't parse a tone-check response, try again"}, status_code=502)
     return {"feedback": result["feedback"], "rewrite": result["rewrite"]}
+
+
+# --- Meeting Strategy --------------------------------------------------
+
+def meeting_session_row_to_dict(row: sqlite3.Row) -> dict:
+    return {
+        "id": row["id"],
+        "title": row["title"],
+        "goal_summary": row["goal_summary"],
+        "strategy_text": row["strategy_text"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def get_meeting_session(conn: sqlite3.Connection, session_id: str) -> dict | None:
+    row = conn.execute("SELECT * FROM meeting_sessions WHERE id = ?", (session_id,)).fetchone()
+    return meeting_session_row_to_dict(row) if row else None
+
+
+def strip_meeting_signal(reply_text: str) -> tuple[str, dict | None]:
+    match = re.search(r"<meeting_strategy_signal>(.*?)</meeting_strategy_signal>", reply_text, re.S)
+    visible = re.sub(r"<meeting_strategy_signal>.*?</meeting_strategy_signal>", "", reply_text, flags=re.S).strip()
+    if not match:
+        return visible, None
+    try:
+        return visible, json.loads(match.group(1).strip())
+    except json.JSONDecodeError:
+        return visible, None
+
+
+@app.get("/api/meeting-sessions")
+async def list_meeting_sessions():
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM meeting_sessions ORDER BY updated_at DESC").fetchall()
+        return [meeting_session_row_to_dict(r) for r in rows]
+
+
+@app.post("/api/meeting-sessions")
+async def create_meeting_session():
+    now = time.time()
+    session_id = str(uuid.uuid4())
+    with db() as conn:
+        conn.execute(
+            "INSERT INTO meeting_sessions (id, title, goal_summary, strategy_text, created_at, updated_at) "
+            "VALUES (?, NULL, NULL, NULL, ?, ?)",
+            (session_id, now, now),
+        )
+        session = get_meeting_session(conn, session_id)
+    MEETING_CONVERSATIONS[session_id] = []
+    return session
+
+
+@app.get("/api/meeting-sessions/{session_id}")
+async def get_meeting_session_detail(session_id: str):
+    with db() as conn:
+        session = get_meeting_session(conn, session_id)
+        if session is None:
+            return JSONResponse({"error": "no such meeting session"}, status_code=404)
+    messages = [
+        {"role": m["role"], "content": m["content"]}
+        for m in MEETING_CONVERSATIONS.get(session_id, [])
+        if not m.get("hidden")
+    ]
+    return {"session": session, "messages": messages}
+
+
+def meeting_strategy_reply(session_id: str, conn: sqlite3.Connection) -> dict:
+    """Same shape as facilitator_reply, for the meeting-strategy prompt and
+    conversation store instead of the case-plan ones."""
+    conversation = MEETING_CONVERSATIONS[session_id]
+    if client is None:
+        conversation.pop()
+        return {"reply": "(server error: ANTHROPIC_API_KEY is not set in this shell)", "signal": None}
+    visible_history = [{"role": m["role"], "content": m["content"]} for m in conversation]
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=4096,
+            system=MEETING_STRATEGY_SYSTEM_PROMPT,
+            messages=visible_history,
+        )
+    except Exception as e:
+        conversation.pop()
+        return {"reply": f"(server error calling Claude: {e})", "signal": None}
+    raw = "".join(block.text for block in response.content if block.type == "text")
+    if not raw:
+        conversation.pop()
+        return {"reply": "(server error: empty response from Claude, try again)", "signal": None}
+    visible, signal = strip_meeting_signal(raw)
+    conversation.append({"role": "assistant", "content": raw, "hidden": False})
+    return {"reply": visible, "signal": signal}
+
+
+@app.post("/api/meeting-sessions/{session_id}/messages")
+async def post_meeting_message(session_id: str, body: Message):
+    with db() as conn:
+        session = get_meeting_session(conn, session_id)
+        if session is None:
+            return JSONResponse({"error": "no such meeting session"}, status_code=404)
+
+        if session_id not in MEETING_CONVERSATIONS:
+            MEETING_CONVERSATIONS[session_id] = []
+
+        MEETING_CONVERSATIONS[session_id].append({"role": "user", "content": body.content, "hidden": False})
+        result = meeting_strategy_reply(session_id, conn)
+
+        signal = result["signal"]
+        if signal:
+            fields = {}
+            if signal.get("title"):
+                fields["title"] = signal["title"]
+            if signal.get("goal_summary"):
+                fields["goal_summary"] = signal["goal_summary"]
+            if signal.get("strategy_ready") and signal.get("strategy_text"):
+                fields["strategy_text"] = signal["strategy_text"]
+            if fields:
+                set_clause = ", ".join(f"{k} = ?" for k in fields)
+                conn.execute(
+                    f"UPDATE meeting_sessions SET {set_clause}, updated_at = ? WHERE id = ?",
+                    (*fields.values(), time.time(), session_id),
+                )
+            else:
+                conn.execute("UPDATE meeting_sessions SET updated_at = ? WHERE id = ?", (time.time(), session_id))
+        session = get_meeting_session(conn, session_id)
+    return {"reply": result["reply"], "session": session}
