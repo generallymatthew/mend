@@ -12,6 +12,12 @@
       "runtimeExecutable": "apps/group-session-app/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--port", "8440", "--app-dir", "apps/group-session-app"],
       "port": 8440
+    },
+    {
+      "name": "manager-app",
+      "runtimeExecutable": "apps/manager-app/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8460", "--app-dir", "apps/manager-app"],
+      "port": 8460
     }
   ]
 }

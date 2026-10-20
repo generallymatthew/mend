@@ -1,0 +1,73 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "CasePlan.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "2. Case plan (existing)",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "MeetingStrategy.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "1. Meeting Strategy",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "MeetingVoice.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "1b. Meetings — voice mode",
+      "w": 1280,
+      "x": 5440,
+      "y": 0
+    },
+    "SutureHandoff.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "3. Suture handoff",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "ToneCheck.dc.html": {
+      "h": 860,
+      "is_interactive": true,
+      "title": "4. Tone-check",
+      "w": 1280,
+      "x": 4080,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-20T00:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t1": {
+      "kind": "title1",
+      "maxW": 4360,
+      "text": "Seam — 4 MVP features (2026-10-20 cut)",
+      "w": 240,
+      "x": 0,
+      "y": -170
+    }
+  },
+  "order": [
+    "MeetingStrategy.dc.html",
+    "CasePlan.dc.html",
+    "SutureHandoff.dc.html",
+    "ToneCheck.dc.html",
+    "MeetingVoice.dc.html"
+  ],
+  "pages": [],
+  "title": "Seam UI Mockups"
+}

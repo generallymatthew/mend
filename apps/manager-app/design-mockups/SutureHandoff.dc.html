@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Seam — Starting a peer session</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;font-family:'Manrope',-apple-system,"Segoe UI",system-ui,sans-serif}
+  a{color:#8c0d28;text-decoration:none}
+  a:hover{color:#660a1d}
+</style>
+</helmet>
+<div style="width:1280px;height:860px;box-sizing:border-box;position:relative;background:#E7EBE8;color:#17372E;overflow:hidden;display:flex;align-items:center;justify-content:center">
+
+  <div style="position:absolute;width:420px;height:420px;border-radius:50%;background:#F3829A;opacity:.14;filter:blur(80px);top:-140px;right:-100px"></div>
+  <div style="position:absolute;width:380px;height:380px;border-radius:50%;background:#17372E;opacity:.08;filter:blur(80px);bottom:-160px;left:-80px"></div>
+
+  <div style="position:relative;width:1180px;height:780px;background:#FAFBFA;border-radius:16px;box-shadow:0 30px 70px rgba(23,55,46,0.16);display:flex;flex-direction:column;overflow:hidden">
+
+    <div style="height:48px;flex:0 0 auto;display:flex;align-items:center;gap:16px;padding:0 18px;border-bottom:1px solid #E7EBE8;filter:blur(1.5px);opacity:.45">
+      <div style="display:flex;gap:8px">
+        <span style="width:12px;height:12px;border-radius:50%;background:#FF5F57"></span>
+        <span style="width:12px;height:12px;border-radius:50%;background:#FFBD2E"></span>
+        <span style="width:12px;height:12px;border-radius:50%;background:#28C840"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;margin-left:2px">
+        <svg width="18" height="13" viewBox="0 0 871 616" aria-hidden="true" style="flex:0 0 auto">
+          <path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#17372E"></path>
+        </svg>
+        <span style="font-weight:800;font-size:14.5px;letter-spacing:-0.02em;color:#17372E">Seam</span>
+        <span style="font-size:10px;color:#9AA6A0;letter-spacing:.03em">by mend</span>
+      </div>
+    </div>
+
+    <div style="flex:1 1 auto;display:flex;min-height:0;filter:blur(1.5px);opacity:.45">
+      <div style="width:84px;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 0;border-right:2px dashed #D7DED9">
+        <a href="CasePlan.dc.html" aria-label="Conflicts — direct report cases" style="width:52px;height:52px;border-radius:16px;background:#E8F0E9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#5F8569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          <span style="font-size:9px;color:#5F8569;font-weight:700">Conflicts</span>
+        </a>
+        <a href="ToneCheck.dc.html" aria-label="Written" style="width:52px;height:52px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9AA6A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span style="font-size:9px;color:#9AA6A0">Written</span>
+        </a>
+        <a href="MeetingStrategy.dc.html" aria-label="Meetings" style="width:52px;height:52px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#9AA6A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+          <span style="font-size:9px;color:#9AA6A0">Meetings</span>
+        </a>
+      </div>
+
+      <div style="width:208px;flex:0 0 auto;border-right:2px dashed #D7DED9;padding:22px 14px">
+        <span style="font-size:11px;font-weight:700;color:#6B7A73;letter-spacing:.05em;text-transform:uppercase">Conflicts</span>
+      </div>
+
+      <div style="flex:1 1 auto;padding:26px 28px">
+        <div style="display:flex;gap:11px;align-items:flex-end;max-width:460px">
+          <div style="position:relative;width:28px;height:28px;flex:0 0 auto">
+            <div style="position:absolute;left:50%;top:92%;width:70%;height:7px;transform:translateX(-50%);background:radial-gradient(ellipse closest-side at center, rgba(23,55,46,0.3) 0%, rgba(23,55,46,0.15) 55%, rgba(23,55,46,0) 100%);border-radius:50%"></div>
+            <div style="position:absolute;inset:0;border-radius:50% 50% 48% 52% / 58% 58% 42% 42%;background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #F3829A">
+              <div style="position:absolute;left:50%;top:58%;width:9px;height:3px;transform:translate(-50%,-50%);background:#FAFBFA;border-radius:999px"></div>
+            </div>
+          </div>
+          <div style="background:#FCEEF0;border-radius:22px 22px 22px 6px;padding:13px 16px;font-size:15px;line-height:1.55;max-width:400px">It sounds like they're ready to work this out directly. Want me to set up a room for the two of them?</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:absolute;inset:0;background:rgba(23,55,46,0.3);display:flex;align-items:center;justify-content:center">
+      <div style="width:460px;background:#FAFBFA;border-radius:24px;padding:36px 32px;display:flex;flex-direction:column;gap:20px;box-shadow:0 24px 60px rgba(23,55,46,0.2)">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="position:relative;width:30px;height:30px;flex:0 0 auto">
+            <div style="position:absolute;left:50%;top:92%;width:70%;height:7px;transform:translateX(-50%);background:radial-gradient(ellipse closest-side at center, rgba(23,55,46,0.3) 0%, rgba(23,55,46,0.15) 55%, rgba(23,55,46,0) 100%);border-radius:50%"></div>
+            <div style="position:absolute;inset:0;border-radius:52% 48% 50% 50% / 42% 58% 42% 58%;background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #F3829A">
+              <div style="position:absolute;left:50%;top:58%;width:9px;height:3px;transform:translate(-50%,-50%);background:#FAFBFA;border-radius:999px"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="font-size:17px;font-weight:700;line-height:1.3">Ready to bring them together?</div>
+            <div style="font-size:13px;color:#6B7A73;line-height:1.55">They'll land somewhere new, just the two of them. No notes, no names, nothing carries over.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#F1F4F1;border-radius:14px;padding:12px 14px">
+            <div style="font-size:13.5px;color:#17372E">Room for the first designer</div>
+            <button type="button" style="background:#5F8569;color:#FFFFFF;border:none;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer">Copy</button>
+          </div>
+          <div style="display:flex;justify-content:center;align-items:center;height:18px">
+            <svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true">
+              <line x1="8" y1="0" x2="8" y2="18" stroke="#B9C2BB" stroke-width="1.6" stroke-dasharray="3 3"></line>
+            </svg>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#F1F4F1;border-radius:14px;padding:12px 14px">
+            <div style="font-size:13.5px;color:#17372E">Room for the second designer</div>
+            <button type="button" style="background:#5F8569;color:#FFFFFF;border:none;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer">Copy</button>
+          </div>
+        </div>
+
+        <button type="button" style="align-self:center;background:none;border:none;color:#6B7A73;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:2px">Not yet</button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
