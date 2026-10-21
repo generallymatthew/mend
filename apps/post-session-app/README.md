@@ -2,7 +2,7 @@
 
 A local-only prototype of the post-session follow-up, driven by `../facilitator-post-session-system-prompt.md`. Single-user, in-memory conversation, nothing persisted.
 
-Since this conversation normally starts with context from a joint session that already happened, and this harness doesn't chain to a real run of `../joint-session-app/`, you configure a small scenario first: whether anything escalated (nobody's / this employee's own conduct / the other party's), which category, and optional free-text context. That gets folded into the kickoff message so the facilitator has something real to work from.
+Since this conversation normally starts with context from a joint session that already happened, and this harness doesn't chain to a real run of `../suture/`, you configure a small scenario first: whether anything escalated (nobody's / this employee's own conduct / the other party's), which category, and optional free-text context. That gets folded into the kickoff message so the facilitator has something real to work from.
 
 ## Setup
 
@@ -11,7 +11,7 @@ cd post-session-app
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp ../intake-app/.env .env   # reuse the same key, or create a fresh one
+cp ../thimble/.env .env   # reuse the same key, or create a fresh one
 ```
 
 ## Run

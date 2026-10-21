@@ -3,9 +3,9 @@
 A one-shot, stateless check on a draft message (email, Slack, any written
 communication) a manager is about to send. No conversation, no case, no
 persistence: the manager pastes a draft in, gets feedback and a rewrite
-back, done. This is `manager-app`'s facilitator ("Thimble") in a narrow,
-single-purpose mode; see `manager-app/PHILOSOPHY.md` and
-`manager-app/THIMBLE_MINDSET.md` for the broader mindset this inherits.
+back, done. This is `seam`'s facilitator ("Thimble") in a narrow,
+single-purpose mode; see `seam/PHILOSOPHY.md` and
+`seam/THIMBLE_MINDSET.md` for the broader mindset this inherits.
 
 **Deliberately not deficit-flagging.** This is not a tool that lists what's
 wrong with a message ("this sounds harsh," "this is passive-aggressive").

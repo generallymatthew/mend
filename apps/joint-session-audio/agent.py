@@ -84,12 +84,12 @@ logger = logging.getLogger("mend.joint_session_audio.agent")
 BUFFER_SECONDS = float(os.environ.get("BUFFER_SECONDS", DEFAULT_BUFFER_SECONDS))
 CUT_THRESHOLD = float(os.environ.get("CLASSIFIER_CUT_THRESHOLD", DEFAULT_CUT_THRESHOLD))
 
-# Real transport for prosody.py's flags -- see ../joint-session-app/server.py's
+# Real transport for prosody.py's flags -- see ../suture/server.py's
 # POST /api/room/{code}/prosody-signal and README.md's "Prosody / tone
 # signal" section for the full scope line. The two apps are still two
 # independently-run prototypes with no shared session-discovery layer, so
 # this only does anything useful when the operator has started a
-# joint-session-app session under the SAME code as this LiveKit room --
+# suture session under the SAME code as this LiveKit room --
 # otherwise it's a harmless best-effort POST that either 404s (app not
 # running) or lands in a session nobody's connected to yet.
 JOINT_SESSION_APP_URL = os.environ.get("JOINT_SESSION_APP_URL", "http://localhost:8421")
@@ -134,7 +134,7 @@ class ParticipantBridge:
         self.participant_identity = participant_identity
         self.other_identity = other_identity
         # server.py's token() mints room_name = f"joint-audio-{code}" -- the
-        # inverse, needed to address ../joint-session-app/server.py's
+        # inverse, needed to address ../suture/server.py's
         # identically-coded session (see JOINT_SESSION_APP_URL above).
         self.code = room.name.removeprefix("joint-audio-")
         self._out_source = rtc.AudioSource(SAMPLE_RATE, 1)
@@ -320,7 +320,7 @@ class ParticipantBridge:
 
     async def _send_prosody_signal(self, flags):
         # Best-effort only -- see JOINT_SESSION_APP_URL's module-level
-        # comment for why a failure here (joint-session-app not running,
+        # comment for why a failure here (suture not running,
         # or running under a different code) is expected, not exceptional,
         # and must never affect the audio bridge itself.
         try:
@@ -330,7 +330,7 @@ class ParticipantBridge:
             )
             resp.raise_for_status()
         except Exception as e:
-            logger.info("couldn't deliver prosody signal to joint-session-app (%s): %s", JOINT_SESSION_APP_URL, e)
+            logger.info("couldn't deliver prosody signal to suture (%s): %s", JOINT_SESSION_APP_URL, e)
 
     def _publish_release(self, audio_bytes: bytes):
         if self.paused:
@@ -346,7 +346,7 @@ class ParticipantBridge:
 
 def other_of(identity: str) -> str | None:
     # Room convention: exactly two employee identities, "employee_a" and
-    # "employee_b" -- matches ../joint-session-app/server.py's ROLE_SLUGS.
+    # "employee_b" -- matches ../suture/server.py's ROLE_SLUGS.
     if identity == "employee_a":
         return "employee_b"
     if identity == "employee_b":

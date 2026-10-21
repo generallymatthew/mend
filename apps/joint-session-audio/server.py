@@ -5,7 +5,7 @@ serves the mic-capture page. This process does not touch audio itself --
 that's agent.py (the LiveKit Agents worker) and the local `livekit-server
 --dev` process. All three run together; see README.md.
 
-Same `/?code=&role=` convention as ../joint-session-app, so a link like
+Same `/?code=&role=` convention as ../suture, so a link like
 
     http://localhost:8424/?code=test1&role=a
     http://localhost:8424/?code=test1&role=b

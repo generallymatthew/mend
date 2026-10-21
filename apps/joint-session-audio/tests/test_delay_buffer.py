@@ -30,7 +30,7 @@ ORDINARY_TEXT = "I think we should talk about the deadline next week"
 # in this test harness -- it's exactly the "threshold tuning against the
 # actual cost asymmetry" gap classifier/README.md's caveat #3 already flags.
 # This test uses a lower threshold, same convention documented in
-# ../joint-session-app/README.md's CLASSIFIER_CUT_THRESHOLD override, purely
+# ../suture/README.md's CLASSIFIER_CUT_THRESHOLD override, purely
 # to deterministically exercise the cut *path* (the buffer/timing/gate
 # mechanics), not to claim 0.75 is a validated production threshold.
 TEST_CUT_THRESHOLD = 0.75

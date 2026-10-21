@@ -4,13 +4,13 @@ Proves the one piece `../joint-session-architecture.md:82` calls the "core
 unbuilt piece" of the whole joint-session design: a real audio delay buffer,
 gated per rolling STT chunk by the same real classifier
 (`../classifier/inference.py`'s `ConflictClassifier`, `mend-conflict-classifier-v3`
-checkpoint) that `../joint-session-app/server.py` already runs against typed
+checkpoint) that `../suture/server.py` already runs against typed
 text. Two employees connect over LiveKit; neither can ever subscribe to the
 other's raw microphone track -- only a server-side "bridge" agent can, and it
 republishes each employee's audio to the other side only after it clears the
 delay buffer and the classifier both.
 
-**What this is not**: a rewrite of `../joint-session-app/`, which keeps
+**What this is not**: a rewrite of `../suture/`, which keeps
 working unmodified. This does not yet integrate with that app's facilitator
 LLM, turn-taking, or `<mend_signal>` state machine -- it proves the audio
 mechanism in isolation first. See the root plan for the follow-up milestone
@@ -92,7 +92,7 @@ opens for the target employee alone. `resume()` reverses all of it. This is
 **transport only** -- the private track is inert, no facilitator voice
 publishes into it, and nothing here decides *when* a check-in should
 happen. Giving this bridge a real facilitator voice, driven live by
-`../joint-session-app`'s existing text-only facilitator LLM (which already
+`../suture`'s existing text-only facilitator LLM (which already
 implements this exact `paused_checkin`/`checkin_target` state machine, just
 over WebSocket text, with zero relationship to this app today) is a
 separate, larger integration, deliberately out of scope here.
@@ -130,7 +130,7 @@ _log_prosody`.
 and `../classifier/inference.py` are unchanged -- flags never influence the
 hard-cut gate, only the facilitator LLM (see below).
 
-**Wired into `../joint-session-app`'s facilitator LLM, for real.** When
+**Wired into `../suture`'s facilitator LLM, for real.** When
 `_log_prosody` finds non-empty flags, `ParticipantBridge._send_prosody_signal`
 POSTs them to that app's `POST /api/room/{code}/prosody-signal` (URL
 configurable via `JOINT_SESSION_APP_URL`, default `http://localhost:8421`;
@@ -148,14 +148,14 @@ exact same words.
 
 **What "wired in" doesn't mean here**: the two apps still have no shared
 session-discovery layer (an operator starts both under the same code by
-hand), and `joint-session-app` is still text-only -- this moves tone
+hand), and `suture` is still text-only -- this moves tone
 *signal* between two independently-run prototypes, it doesn't merge them
 into one voice-driven session. Real STT-transcript-replaces-typed-messages
 integration, and facilitator TTS carrying replies back to both employees,
 remain a separate, larger project, same scope as the breakout room's
 facilitator-voice gap above.
 
-Before this was wired for real, `../joint-session-app/poc_prosody_in_prompt.py`
+Before this was wired for real, `../suture/poc_prosody_in_prompt.py`
 tested whether the idea had real value at all, without any live
 integration -- same finding, on hand-constructed annotations instead of the
 real wire above. Kept as a cheaper, more controlled way to test new
@@ -205,7 +205,7 @@ this sandboxed environment having no microphone.
 cd joint-session-audio
 python3.11 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt   # includes torch + transformers for the classifier -- same sizable download as ../joint-session-app
+pip install -r requirements.txt   # includes torch + transformers for the classifier -- same sizable download as ../suture
 cp .env.example .env
 brew install livekit   # gives you the livekit-server binary
 ```
@@ -342,7 +342,7 @@ rejected, the original target holds.
   deliberately out of scope, see the plan's "Scope boundaries".
 - The breakout room's private track is inert (no facilitator TTS), and
   nothing here decides when a check-in should happen -- that decision
-  lives entirely in `../joint-session-app`'s facilitator LLM today, over
+  lives entirely in `../suture`'s facilitator LLM today, over
   text/WebSocket, with no live connection to this app. Wiring the two
   together is a separate, larger integration, deliberately out of scope.
 - **Prosody (see "Prosody / tone signal" above) is validated against real
@@ -355,7 +355,7 @@ rejected, the original target holds.
   genuine deadpan/sarcastic delivery -- macOS TTS has no real "flat affect"
   mode to test that against. Needs real recorded human speech (this
   sandboxed environment has no microphone, same constraint as the video-
-  opt-in gap above). Now wired into `../joint-session-app`'s facilitator LLM
+  opt-in gap above). Now wired into `../suture`'s facilitator LLM
   for real (see "Prosody / tone signal" above) -- still not wired into the
   hard-cut decision, by design, and the two apps still have no shared
   session-discovery layer (an operator starts both under the same code by

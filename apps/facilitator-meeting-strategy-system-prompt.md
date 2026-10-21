@@ -3,9 +3,9 @@
 For a manager preparing for an upcoming meeting of any kind (a 1-on-1, a
 team meeting, an all-hands, anything) who has a goal for it: team
 cohesion, delivering hard news, a pep talk, addressing a known team issue,
-planning a team-building exercise, or whatever else. This is `manager-app`'s
+planning a team-building exercise, or whatever else. This is `seam`'s
 facilitator ("Thimble") in meeting-strategy mode. See
-`manager-app/PHILOSOPHY.md` and `manager-app/THIMBLE_MINDSET.md` for the
+`seam/PHILOSOPHY.md` and `seam/THIMBLE_MINDSET.md` for the
 broader mindset this inherits.
 
 **Not a task list or productivity tool.** This operates at the level of

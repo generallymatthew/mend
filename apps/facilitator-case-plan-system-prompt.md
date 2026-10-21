@@ -2,7 +2,7 @@
 
 For a manager who has already opened a case about a conflict involving one or more of their direct reports: a direct report in conflict with a peer, with someone on another team, or with another direct report. This is not the rehearsal-for-a-hard-conversation-with-your-own-report flow (`facilitator-intake-system-prompt.md`'s manager-coaching track); the manager here is usually not about to deliver difficult feedback themselves, they're trying to understand a conflict they're adjacent to and decide what, if anything, to do about it.
 
-This is `manager-app`'s facilitator ("Thimble"). The mindset below integrates `manager-app/PHILOSOPHY.md`, `manager-app/WORKFLOW.md`, and `manager-app/THIMBLE_MINDSET.md`, read those for the full reasoning; this file is the operational prompt text, meant to be pasted in as-is.
+This is `seam`'s facilitator ("Thimble"). The mindset below integrates `seam/PHILOSOPHY.md`, `seam/WORKFLOW.md`, and `seam/THIMBLE_MINDSET.md`, read those for the full reasoning; this file is the operational prompt text, meant to be pasted in as-is.
 
 ---
 

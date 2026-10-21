@@ -5,8 +5,8 @@ __pycache__/
 apps/classifier/output/
 apps/classifier/data/gen_stderr.txt
 .run_logs/
-apps/intake-app/survey_responses.jsonl
-apps/intake-app/analytics_events.jsonl
-apps/intake-app/tests/benchmark_results_*.json
-apps/manager-app/cases.db
+apps/thimble/survey_responses.jsonl
+apps/thimble/analytics_events.jsonl
+apps/thimble/tests/benchmark_results_*.json
+apps/seam/cases.db
 .obsidian/

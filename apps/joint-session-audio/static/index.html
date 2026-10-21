@@ -10,7 +10,7 @@
   :root{
     /* Mend brand kit: Evergreen ink, Oat paper. --a (you) = Evergreen,
        --b (other employee) = Honey -- same two-participant scheme as
-       ../joint-session-app/static/index.html, minus the Pink-reserved-for-
+       ../suture/static/index.html, minus the Pink-reserved-for-
        facilitator tile since this debug harness has no facilitator tile. */
     --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
     --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
@@ -29,10 +29,10 @@
   .cut { color: #f55; }
   #status { font-weight: bold; }
 
-  /* Same .tile/.avatar shapes as ../joint-session-app/static/index.html --
+  /* Same .tile/.avatar shapes as ../suture/static/index.html --
      small intentional duplication, the two apps don't share a static asset
      root. See the plan's "Client UI" section for why this, not
-     intake-app's animated facilitator-mood canvas avatar, is the right
+     thimble's animated facilitator-mood canvas avatar, is the right
      placeholder for "this employee's camera is off." */
   .stage{display:flex; gap:10px; margin:16px 0;}
   .tile{flex:1; min-width:0; background:var(--card); border:1px solid var(--border); border-radius:12px;
@@ -56,7 +56,7 @@
 <body>
 <h1>joint-session-audio debug harness</h1>
 <p>Not a real product UI -- proves the delay-buffer mechanism and the video-parity
-mechanism only. Real UX lives in <code>../joint-session-app/</code>'s design once
+mechanism only. Real UX lives in <code>../suture/</code>'s design once
 this is integrated.</p>
 
 <div id="consent">

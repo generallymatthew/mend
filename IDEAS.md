@@ -15,17 +15,17 @@ Working names for the apps discussed in this doc and in the shipped codebase,
 so future conversations can refer to them by name instead of description.
 
 - **Thimble** — the solo conflict-resolution app overall (intake → joint
-  session), the main focus so far. Maps to `intake-app` +
-  `joint-session-app`/`joint-session-audio`.
+  session), the main focus so far. Maps to `thimble` +
+  `suture`/`joint-session-audio`.
 - **Suture** — the two-person facilitated conversation itself, inside Thimble
   (the live joint session specifically, not the intake step before it).
 - **Seam** — the manager app: solo coaching/practice for a manager preparing
   for or rehearsing a hard conversation with a direct report, or a
   case-management space for a manager working through conflict between two
-  members of their team. Maps to `manager-app` (product-facing name also
+  members of their team. Maps to `seam` (product-facing name also
   "Seam" as of 2026-10-17). The standalone `manager-coaching-app` prototype
   that used to cover the rehearsal half of this was removed as redundant —
-  that path is folded into `intake-app`/Thimble's own system prompt instead
+  that path is folded into `thimble`/Thimble's own system prompt instead
   (see `facilitator-intake-system-prompt.md`).
 - **Swatch** — a UX collaboration tool for designers who don't know each
   other well. See full writeup below.
@@ -116,8 +116,8 @@ person's words buys 10-15 seconds and signals engagement), the covert
 physiological sigh (double inhale through nose, slow exhale through mouth),
 and countering sharp comments with operational questions ("walk me through
 the dependency you're worried about") instead of defensiveness.
-- Where it could plug in: coaching tips surfaced in `intake-app`'s
-  manager-coaching path or `manager-app`, or as in-session nudges during a
+- Where it could plug in: coaching tips surfaced in `thimble`'s
+  manager-coaching path or `seam`, or as in-session nudges during a
   live facilitated conversation.
 - Why not active: would need UX design for when/how to surface a tip without
   being annoying or patronizing mid-conversation.
@@ -160,7 +160,7 @@ hardware prep, not wellness/meditation, to land with skeptical knowledge
 workers. Deadpan prompting style: "Take 30 seconds to drop the physical
 static, or skip straight to the breakdown."
 - Where it could plug in: could start as a software-only on-screen widget
-  (no new hardware needed) inside `joint-session-app` or the facilitator UI,
+  (no new hardware needed) inside `suture` or the facilitator UI,
   before ever considering an actual physical object.
 - Why not active: biggest scope jump in this batch — real industrial-design
   and hardware questions if taken literally; the software-only version is a
@@ -196,7 +196,7 @@ plus 1-2 word micro-pacing cues ("Pause." "Acknowledge."). Deliberately not a
 live teleprompter/script-reader — that was considered and rejected as unsafe
 and awkward.
 - Source: `docs/pitch-strategy/00_LIVE_MEETING_AI_COACH.md`
-- Where it could plug in: `intake-app`'s manager-coaching path or the
+- Where it could plug in: `thimble`'s manager-coaching path or the
   practice/rehearsal flow, as a UI overlay during a live or simulated
   session.
 - Why not active: needs its own UI design pass; depends on real-time signal
@@ -229,7 +229,7 @@ each real check-in. Has its own safety-floor carve-outs (no legal advice, no
 ingestion of proprietary documents).
 - Source: `docs/pitch-strategy/08_PIP_NAVIGATOR_FEATURE.md`
 - Where it could plug in: a new standalone app/prototype, similar in shape
-  to `intake-app`'s solo rehearsal mechanics but employee-side.
+  to `thimble`'s solo rehearsal mechanics but employee-side.
 - Why not active: entire feature, unbuilt; would need its own system prompt,
   UI, and legal-carve-out review (PIP navigation brushes against employment
   law) before touching real users.
@@ -242,9 +242,9 @@ repeated "Rehearse" sessions can resume with targeted coaching ("Last time
 you dropped your boundary on X — want to re-run that moment?") without
 replaying full transcripts.
 - Source: `docs/pitch-strategy/09_PRACTICE_SESSION_MEMORY_SCHEMA.md`
-- Where it could plug in: any solo practice/rehearsal flow (intake-app's
+- Where it could plug in: any solo practice/rehearsal flow (thimble's
   voice practice mode, or a future PIP Navigator roleplay). Distinct from
-  `manager-app`'s already-built case-state anchor, which serves the
+  `seam`'s already-built case-state anchor, which serves the
   manager-coaching track, not solo rehearsal.
 - Why not active: no solo rehearsal flow currently needs cross-session
   memory; worth revisiting once/if repeated-practice usage shows up in
@@ -256,7 +256,7 @@ two framed doors: Door A ("Vent" — acute emotional agitation) vs. Door B
 ("Mend" — operational de-escalation/meeting prep). A softer, metaphor-driven
 front door rather than a feature picker.
 - Source: `docs/pitch-strategy/11_PRODUCT_ARCHITECTURE_AND_STRATEGY_BLUEPRINT.md`
-- Where it could plug in: `intake-app` and `manager-app` landing screens.
+- Where it could plug in: `thimble` and `seam` landing screens.
 - Why not active: a UX experiment, not a functional gap — current explicit
   buttons work; this would need A/B framing to justify the copy/design churn.
 
@@ -282,14 +282,14 @@ to voice+avatar together, with neutral non-blaming framing ("Session
 switched to Voice & Avatar mode"), and the facilitator is never told which
 transport mode is active.
 - Source: `docs/pitch-strategy/12_SYMMETRIC_VIDEO_PARITY_FEATURE.md`
-- Where it could plug in: `joint-session-app`/`joint-session-audio`, once
+- Where it could plug in: `suture`/`joint-session-audio`, once
   those are merged (ROADMAP Phase 1).
 - Why not active: explicitly flagged in its own source doc as a captured
   idea, not yet designed against the real LiveKit stack; blocked behind the
   Phase 1 audio/video merge anyway.
 
 ### Multi-turn rerun of the personal-AI benchmark audit
-`intake-app/tests/benchmark_audit.py` is built and has run clean (see
+`thimble/tests/benchmark_audit.py` is built and has run clean (see
 `STATUS.md`): single cold message in, scored by a blind judge. First real
 result was NOT what the pitch argument predicted -- raw Claude with no
 system prompt outscored both Mend and ChatGPT, because Mend's facilitator
@@ -300,7 +300,7 @@ how `conversation_pattern_sweep.py` already tests multi-turn behavior, to
 see whether the gap closes once Mend actually reaches its deliverable phase.
 - Source: strategy conversation reacting to designer tester feedback, then
   the actual live benchmark run on 2026-10-13.
-- Where it could plug in: extend `intake-app/tests/benchmark_audit.py`
+- Where it could plug in: extend `thimble/tests/benchmark_audit.py`
   directly -- feed each system's turn-1 reply back as a synthetic follow-up
   and score the final turn instead of turn 1.
 - Why not active yet: the single-turn result needs writing up honestly
@@ -424,7 +424,7 @@ makes people vulnerable to blame, which suppresses honesty; stripping
 identity out and reporting only patterns is what lets people actually
 tell the truth.
 - Where it could plug in: new standalone app/prototype, separate from the
-  peer-conflict apps (`intake-app`/`joint-session-app`/`manager-app`) —
+  peer-conflict apps (`thimble`/`suture`/`seam`) —
   this is retro/post-mortem shaped, not conflict-mediation shaped. Could
   reuse the existing LLM-facilitator interview pattern and the
   "anonymized aggregate, never per-person" principle already captured in
@@ -503,7 +503,7 @@ now that the real call already handles screen share — needs to become a
 companion-overlay layout (order list + question queue only).
 - Where it could plug in: standalone app/prototype, separate from the
   conflict-mediation apps. Likely shares infrastructure with Splice below
-  (`group-session-app/`'s room/WebSocket backend, Zoom Apps SDK companion
+  (`splice/`'s room/WebSocket backend, Zoom Apps SDK companion
   panel pattern) rather than a from-scratch build, since both are
   companion-panel-over-a-real-call shapes — though Swatch's trust model is
   the opposite of Splice's: two people building a working relationship
@@ -523,7 +523,7 @@ just a group-sized version of it: no safety floor, no side-conversation
 firewall, no confidential intake — those are Thimble/Suture-specific and
 deliberately left out of Splice's facilitator prompt.
 
-First build pass is done, as `group-session-app/` (prototype, in-memory
+First build pass is done, as `splice/` (prototype, in-memory
 only, no persistence):
 - A shared room: participants, group chat, proposals, and per-proposal
   voting (yes/no/abstain), broadcast live over WebSocket to everyone in
@@ -566,7 +566,7 @@ only, no persistence):
   (Client ID) to get a Client ID, plus HTTPS hosting (Zoom Apps refuse
   plain-HTTP localhost) — likely via a tunnel (ngrok or similar) until
   real hosting exists.
-- Where it could plug in: standalone Zoom app/plugin, `group-session-app/`
+- Where it could plug in: standalone Zoom app/plugin, `splice/`
   in the shipped codebase.
 - Why partially active: core group room + Thimble + voting is built and
   browser-verified; the Zoom-native integration itself (the actual point

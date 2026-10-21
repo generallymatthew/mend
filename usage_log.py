@@ -1,12 +1,12 @@
 """
 Shared local usage/cost logger for every app's own paid API calls
 (Anthropic, OpenAI TTS, Deepgram STT/TTS). Each app imports this the same
-way joint-session-app already reaches into ../classifier: sys.path.insert
+way suture already reaches into ../classifier: sys.path.insert
 then a plain import, no packaging.
 
 Appends one JSON line per billed call to usage_log.jsonl at the repo root
 (shared across apps, so a single file gives the whole product's spend, not
-just one app's) -- same append-only JSONL shape as intake-app/server.py's
+just one app's) -- same append-only JSONL shape as thimble/server.py's
 own SCREEN_LOG_FILE/log_screen_signal, for consistency with the one local
 logging convention that already exists in this codebase.
 

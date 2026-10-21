@@ -2,27 +2,27 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "intake-app",
-      "runtimeExecutable": "apps/intake-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8420", "--app-dir", "apps/intake-app"],
+      "name": "thimble",
+      "runtimeExecutable": "apps/thimble/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8420", "--app-dir", "apps/thimble"],
       "port": 8420
     },
     {
-      "name": "group-session-app",
-      "runtimeExecutable": "apps/group-session-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8440", "--app-dir", "apps/group-session-app"],
+      "name": "splice",
+      "runtimeExecutable": "apps/splice/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8440", "--app-dir", "apps/splice"],
       "port": 8440
     },
     {
-      "name": "manager-app",
-      "runtimeExecutable": "apps/manager-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8460", "--app-dir", "apps/manager-app"],
+      "name": "seam",
+      "runtimeExecutable": "apps/seam/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8460", "--app-dir", "apps/seam"],
       "port": 8460
     },
     {
-      "name": "joint-session-app",
-      "runtimeExecutable": "apps/joint-session-app/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8421", "--app-dir", "apps/joint-session-app"],
+      "name": "suture",
+      "runtimeExecutable": "apps/suture/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8421", "--app-dir", "apps/suture"],
       "port": 8421
     }
   ]

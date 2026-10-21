@@ -40,7 +40,13 @@ moment of install, before any value is delivered.
 Manager framing sidesteps both barriers because the install reason isn't
 "I need help with my relationships," it's "I need help doing my job" —
 and managing other people's conflict and communication genuinely is the
-job, not a personal admission.
+job, not a personal admission. Critically, this also means a manager isn't
+seen (by peers, by their own boss, or by themselves) as deficient for
+using it — the same way using a project-management tool or a scheduling
+app isn't a confession of incompetence, it's just the normal equipment of
+the job. That's a different, additional effect from the two barriers
+above: it's not just that the install reason doesn't trigger stigma, it's
+that ongoing, visible use of the tool doesn't accumulate stigma either.
 
 **Real anecdote behind this (2026-10-19 session)**: the person driving
 this pitch work described being firmly in both stigma camps themselves
@@ -52,8 +58,8 @@ a concrete task, and discover the deeper value as a side effect.** That's
 the mechanism Seam needs to replicate deliberately rather than relying on
 accidental discovery.
 
-**Three independent, non-overlapping manager incentives to actively
-recommend Seam/Thimble** — the core of why this converts into real
+**Five independent, non-overlapping reasons Seam/Thimble gets adopted and
+actively recommended** — the core of why this converts into real
 adoption, not just reduced friction:
 
 1. **Self-interest** — Seam helps the manager with their own hard
@@ -69,7 +75,15 @@ adoption, not just reduced friction:
    team, per `13_PITCHING_MEND_TO_ENTERPRISE_HR.md`) to a **three-tier
    cascade**: land with a skip-level/director → they push Seam to the
    managers under them → those managers push Thimble to their teams.
-   Each tier adopts for a different, self-interested reason.
+   Each tier adopts for a different, self-interested reason. HR itself
+   sits above this cascade with its own version of the same incentive:
+   HR wants managers to get better at handling people problems, but
+   doesn't want to be the one personally training each manager or
+   hand-holding them through every individual situation — that doesn't
+   scale past a handful of reports per HR person. A tool that gives
+   managers real-time, in-context coaching is HR getting the outcome they
+   want (more capable managers) without the labor they don't have the
+   headcount for.
 3. **Teach-to-fish** — a manager who personally mediates every low-stakes
    peer dispute is training their team to escalate instead of
    self-resolve, creating more work for themselves long-term. Recommending
@@ -80,13 +94,37 @@ adoption, not just reduced friction:
    suggest "try Seam/Thimble first" when a manager brings them a
    low-stakes problem**, functioning as a pre-triage layer — real value to
    HR (cleaner escalations, less queue noise), contingent on the safety
-   floor being bulletproof (see §5).
+   floor being bulletproof (see §5). HR's incentive here isn't just queue
+   noise: every matter that reaches them as a report is one they're on the
+   hook to act on, and for anything above the lowest stakes that means
+   opening a formal investigation — real cost, real time, real liability
+   exposure if it's handled wrong. A tool that resolves what's actually
+   low-stakes before it ever reaches HR's door means fewer things cross
+   the threshold into "this now has to become an investigation" in the
+   first place, not just a tidier intake queue.
+4. **Asking your own boss reads as weakness** — the obvious non-app
+   alternative to Seam is asking your manager for advice on a people
+   problem, and that has its own barrier Seam avoids. Social-dynamics
+   skill is widely treated as innate ("you either have people skills or
+   you don't"), unlike technical or process skills where asking for help
+   is normal and expected. Repeatedly going to your boss with "how do I
+   handle this person" reads as a gap in a trait, not a skill, which
+   makes it feel like a weakness to keep asking — one question might be
+   fine, a pattern of them is not. Seam gives a manager the same kind of
+   help without that cost: no trait-level admission required.
+5. **Disclosing conflict upward reflects on the manager** — separately
+   from how the question itself reads, admitting the conflict exists at
+   all carries risk. A manager telling their boss there's friction on
+   their team can reflect on *their own* management competence,
+   independent of whether the conflict is actually their fault. Seam
+   means no conflict gets disclosed upward until and unless the manager
+   chooses to escalate it themselves.
 
-None of these three require the manager to frame the recommendation as
-"you need help" — each is a legitimate, self-interested professional
-reason, which is what makes this adoption path survive the stigma
-problem in §1 three separate ways instead of needing one messaging trick
-to work perfectly.
+None of these five require the manager to frame the recommendation (or
+their own use of the tool) as "you need help" — each is a legitimate,
+self-interested professional reason, which is what makes this adoption
+path survive the stigma problem in §1 five separate ways instead of
+needing one messaging trick to work perfectly.
 
 ## 3. Proposed feature bundle: Seam absorbs Thimble, Suture, Loom, Hem
 

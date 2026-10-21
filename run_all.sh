@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs the whole product locally behind one entry point:
-# http://localhost:8080/ -- demo-app at the root, intake/joint-session/
+# http://localhost:8080/ -- demo-app at the root, Thimble/Suture/
 # post-session under /intake/, /joint/, /post/ (see Caddyfile).
 #
 # Starts all four apps' own uvicorn (each in its own .venv, unmodified) in
@@ -41,8 +41,8 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 start_app demo-app        apps/demo-app          8423
-start_app intake-app      apps/intake-app        8420
-start_app joint-session   apps/joint-session-app 8421
+start_app thimble         apps/thimble           8420
+start_app suture          apps/suture            8421
 start_app post-session    apps/post-session-app  8422
 
 # joint-session-audio needs livekit-server (`brew install livekit`) and its

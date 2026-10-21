@@ -62,12 +62,12 @@
 
   @media (max-width:600px){ .hero{flex-direction:column; align-items:flex-start; gap:22px;} .hero-visual{display:none;} }
 
-  /* Thimble avatar: ported from intake-app/static/index.html's current
+  /* Thimble avatar: ported from thimble/static/index.html's current
      "Soft Dome" body (dome-wobble clip-path, ring/body/blend/mouth parts),
      the same shape the live session actually uses -- replaces the older,
      separate thimble_avatar-new-mow handoff this page used to load. No mic
      or TTS input here, so the ear-ripple/employee-tile pieces of the
-     intake-app version are dropped; state cycling and levels are faked by
+     thimble version are dropped; state cycling and levels are faked by
      the hero/cta loop below instead. */
   .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
@@ -325,7 +325,7 @@
 <script>
 (function(){
   // ThimbleAvatarV2: a static-page port of the live avatar's own render
-  // loop (intake-app/static/index.html's THIMBLE_SHAPES, domeWobbleRadius,
+  // loop (thimble/static/index.html's THIMBLE_SHAPES, domeWobbleRadius,
   // applyThimbleState/renderThimbleMouth, updateThimbleMotion), trimmed to
   // what a mic-less, TTS-less marketing preview needs. setState/setLevel
   // keep the same call shape the old design-handoff ThimbleAvatar used, so

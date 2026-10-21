@@ -6,12 +6,12 @@ This file now covers only cross-app and repo-level work. Each of the seven
 app codenames (see `IDEAS.md`'s "App codenames" section) has its own
 phase-level checklist, living in that app's folder:
 
-- [Thimble](apps/intake-app/thimble-product-roadmap.md) — solo intake, the
+- [Thimble](apps/thimble/thimble-product-roadmap.md) — solo intake, the
   main conflict-mediation pipeline
-- [Suture](apps/joint-session-app/suture-product-roadmap.md) — the live
+- [Suture](apps/suture/suture-product-roadmap.md) — the live
   two-person joint session inside Thimble
-- [Seam](apps/manager-app/seam-product-roadmap.md) — the manager app
-- [Splice](apps/group-session-app/splice-product-roadmap.md) — group
+- [Seam](apps/seam/seam-product-roadmap.md) — the manager app
+- [Splice](apps/splice/splice-product-roadmap.md) — group
   consensus-building as a Zoom plugin
 - [Swatch](apps/swatch/swatch-product-roadmap.md) — designer preflight
   collaboration (not yet built)
@@ -24,18 +24,18 @@ phase-level checklist, living in that app's folder:
 
 Not phase-bound; apply to every phase's feature and pricing decisions.
 
-- **Trust moat over tech moat.** A corporate/HR-suite incumbent (Microsoft, Workday, Slack, Google) cannot credibly build this: their business model runs on compliance/eDiscovery and employer-controlled tenant keys, so employees would rationally assume surveillance. Mend's neutrality (zero-trace, ephemeral memory, no durable transcripts) is an architectural requirement, not branding. Never add a feature that creates a durable, attributable dispute record a manager or IT admin could read (e.g. a PM-tool ticket titled after the dispute) — see Thimble's roadmap (`apps/intake-app/thimble-product-roadmap.md`) HR-escalation design for the pattern (anonymized payload only, no transcript either way).
+- **Trust moat over tech moat.** A corporate/HR-suite incumbent (Microsoft, Workday, Slack, Google) cannot credibly build this: their business model runs on compliance/eDiscovery and employer-controlled tenant keys, so employees would rationally assume surveillance. Mend's neutrality (zero-trace, ephemeral memory, no durable transcripts) is an architectural requirement, not branding. Never add a feature that creates a durable, attributable dispute record a manager or IT admin could read (e.g. a PM-tool ticket titled after the dispute) — see Thimble's roadmap (`apps/thimble/thimble-product-roadmap.md`) HR-escalation design for the pattern (anonymized payload only, no transcript either way).
 - **Price below the enterprise sales floor, on purpose.** Target an accessible flat tier (e.g. $7k-9k/year per ~100-person org, or ~$10-15 per episodic session) — small enough that a legacy enterprise sales force won't bother chasing it, while still high-margin (near-zero storage cost, fractions of a cent per model turn). Anchor price against the cost of friction (hours lost to conflict, cost of a resignation), not the cost of building the software. Don't propose enterprise-tier pricing or large-deal-size features.
 - **"No paper trail" is the feature, not a limitation.** Market the intentional forgetting as the differentiator in a world where every Slack DM and Jira comment is kept forever.
 
 ## Phase 0 — Local prototypes (mostly done)
 
-- [x] Real hard-cut classifier (`apps/classifier/`), wired into `joint-session-app` (app-specific follow-up items: see Suture's roadmap)
+- [x] Real hard-cut classifier (`apps/classifier/`), wired into `suture` (app-specific follow-up items: see Suture's roadmap)
 - [x] Real signup/invite backend (`demo-app`), direct and peer-suggested
 - [x] Unified local proxy (`run_all.sh` + `Caddyfile`)
 - [x] Brand identity applied everywhere (logo, Pink/Evergreen/Honey/Oat, Manrope)
 
-App-specific Phase 0 items (manager-app, intake-app, joint-session-app,
+App-specific Phase 0 items (seam, thimble, suture,
 etc.) have moved to each app's own roadmap file, linked above.
 
 ## Phase 1 — Ready for a real pilot

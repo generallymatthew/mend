@@ -8,12 +8,12 @@ Since this conversation normally starts with context from a joint session
 that already happened (was anything escalated, and about whom), and this
 harness doesn't chain to a real joint-session run, /api/start takes a
 small scenario configuration instead of just firing blind. Text + voice
-memo, text + spoken replies, same pattern as intake-app and
-joint-session-app. Single-user, in-memory, nothing persisted.
+memo, text + spoken replies, same pattern as thimble and
+suture. Single-user, in-memory, nothing persisted.
 
 Run:
     pip install -r requirements.txt
-    cp ../intake-app/.env .env
+    cp ../thimble/.env .env
     uvicorn server:app --reload --port 8422
 """
 import os
@@ -34,7 +34,7 @@ from fastapi.staticfiles import StaticFiles
 ROOT = Path(__file__).parent
 
 # Shared local cost/usage logger (../usage_log.py) -- same sys.path trick as
-# intake-app/server.py and joint-session-app/server.py.
+# thimble/server.py and suture/server.py.
 sys.path.insert(0, str(ROOT.parent.parent))
 from usage_log import log_usage
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-post-session-system-prompt.md"
@@ -48,7 +48,7 @@ app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 
 # --- Rate limiting --------------------------------------------------------
-# Same reasoning as ../intake-app/server.py: a free/public pilot with no
+# Same reasoning as ../thimble/server.py: a free/public pilot with no
 # request limit on endpoints that call a paid LLM API is an open invitation
 # to run up the bill. In-memory fixed-window limiter per client IP.
 RATE_LIMIT_MAX = int(os.environ.get("RATE_LIMIT_MAX", "20"))
@@ -81,17 +81,17 @@ SYSTEM_PROMPT = load_system_prompt()
 conversation: list[dict] = []
 
 _whisper_model = None
-# Same latency fix as ../intake-app/server.py, applied here too: "small.en"
+# Same latency fix as ../thimble/server.py, applied here too: "small.en"
 # was noticeably slower than needed, and CTranslate2's own cpu_threads=0
 # default measured slower on real hardware than just handing it every
 # logical core (no accuracy cost, unlike the model-size trade). See
-# intake-app/README.md's "Why voice used to feel stuck on 'transcribing...'"
+# thimble/README.md's "Why voice used to feel stuck on 'transcribing...'"
 # for the actual numbers this is based on.
 WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "tiny.en")
 WHISPER_CPU_THREADS = int(os.environ.get("WHISPER_CPU_THREADS", str(os.cpu_count() or 4)))
-# Same beam-size fix as ../intake-app/server.py: greedy decoding (beam_size=1)
+# Same beam-size fix as ../thimble/server.py: greedy decoding (beam_size=1)
 # measured ~30% faster than faster-whisper's own default (beam_size=5) on
-# tiny.en, same transcript in that test -- see intake-app/server.py's comment.
+# tiny.en, same transcript in that test -- see thimble/server.py's comment.
 WHISPER_BEAM_SIZE = int(os.environ.get("WHISPER_BEAM_SIZE", "1"))
 
 
@@ -109,7 +109,7 @@ def get_whisper():
 async def preload_whisper():
     # Loads (and on first run, downloads) the model now, during startup,
     # instead of lazily on the first voice message -- same fix as
-    # intake-app/server.py, this app was missing it (this one still loaded
+    # thimble/server.py, this app was missing it (this one still loaded
     # cold on whichever turn happened to be first).
     get_whisper()
 
@@ -156,7 +156,7 @@ def synthesize_speech(text: str) -> str | None:
 
 
 def facilitator_reply(synthesize: bool = False) -> dict:
-    """synthesize=False by default -- see intake-app/server.py's
+    """synthesize=False by default -- see thimble/server.py's
     facilitator_reply docstring for the full reasoning. Callers get reply
     text back fast and fetch audio separately via POST /api/speak."""
     if client is None:

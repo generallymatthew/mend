@@ -1,6 +1,6 @@
 # Facilitator system prompt — group session (Thimble)
 
-Used by `group-session-app/server.py`'s `thimble_reply()`. This is a
+Used by `splice/server.py`'s `thimble_reply()`. This is a
 different shape of session from intake or the two-person joint session
 (`facilitator-intake-system-prompt.md`, `facilitator-joint-session-system-prompt.md`):
 several people who don't know each other, at an impasse on one concrete,

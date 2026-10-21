@@ -6,11 +6,11 @@ section for the conceptual version, and its "Not yet designed" note on how
 the private breakout sub-room is implemented in LiveKit specifically --
 this module, plus its wiring into agent.py below, is that piece.
 
-Deliberately mirrors ../joint-session-app/server.py's own session_state /
+Deliberately mirrors ../suture/server.py's own session_state /
 checkin_target vocabulary (paused_checkin) rather than inventing a new one,
 so a future integration connecting the two has a natural interface to call
 into. That integration -- giving this audio bridge an actual facilitator
-voice, driven live by joint-session-app's LLM -- is explicitly out of scope
+voice, driven live by suture's LLM -- is explicitly out of scope
 here; see README.md's Scope boundaries.
 
 No LiveKit dependency here -- same split as delay_buffer.py and

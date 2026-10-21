@@ -8,7 +8,7 @@ Every testable URL in one place, split by **Local** (needs something running on 
 ./run_all.sh
 ```
 
-Run from the repo root (needs `caddy` — see the root `README.md`). Puts demo-app, intake-app, joint-session-app, and post-session-app (all under `apps/`) behind one port, `:8080`, with the same path prefixes Render uses live (`/intake/`, `/joint/`, `/post/`) — so a local URL and its live equivalent below differ only in the host, nothing else. `joint-session-audio` is opt-in (needs `livekit-server` and its own agent worker — see that app's own README) and is skipped automatically if that setup hasn't been done. `manager-app` (Seam) and `group-session-app` (Splice) aren't wired into this proxy yet — run them standalone.
+Run from the repo root (needs `caddy` — see the root `README.md`). Puts demo-app, thimble, suture, and post-session-app (all under `apps/`) behind one port, `:8080`, with the same path prefixes Render uses live (`/intake/`, `/joint/`, `/post/`) — so a local URL and its live equivalent below differ only in the host, nothing else. `joint-session-audio` is opt-in (needs `livekit-server` and its own agent worker — see that app's own README) and is skipped automatically if that setup hasn't been done. `seam` (Seam) and `splice` (Splice) aren't wired into this proxy yet — run them standalone.
 
 Docs and standalone HTML files (Roadmap, Status, product spec, pitch page, design handoffs) need a plain file server instead, from the repo root:
 
@@ -28,7 +28,7 @@ python3 -m http.server 8000
 | Joint session · audio (opt-in, needs LiveKit) | [localhost:8080/joint-audio/](http://localhost:8080/joint-audio/) | — not deployed |
 | About (why this matters) | [localhost:8080/about](http://localhost:8080/about) or [localhost:8000/about.html](http://localhost:8000/about.html) | [mend-mvp.onrender.com/about](https://mend-mvp.onrender.com/about) |
 
-Only demo-app + intake-app are in the live Render deploy (`render.yaml`/`deploy/start.sh`) — everything else above only exists locally. Open both Employee A and Employee B links (two tabs, or send B to someone else) for a real two-person joint session.
+Only demo-app + thimble are in the live Render deploy (`render.yaml`/`deploy/start.sh`) — everything else above only exists locally. Open both Employee A and Employee B links (two tabs, or send B to someone else) for a real two-person joint session.
 
 ## QA / internal tools
 

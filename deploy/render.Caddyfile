@@ -1,5 +1,5 @@
 # Render deploy variant of ../Caddyfile: same path-prefix scheme (demo-app
-# at root, intake-app under /intake/), but listens on Render's injected
+# at root, Thimble under /intake/), but listens on Render's injected
 # $PORT instead of a fixed local port, and only proxies the two apps this
 # deploy actually runs.
 #

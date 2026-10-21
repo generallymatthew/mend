@@ -531,3 +531,7 @@
 {"ts": 1792535678.062755, "app": "joint-session-app", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 4734, "output_tokens": 385, "chars": null, "seconds": null, "cost_usd": 0.019977}
 {"ts": 1792535792.409225, "app": "joint-session-app", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 4734, "output_tokens": 267, "chars": null, "seconds": null, "cost_usd": 0.018207}
 {"ts": 1792535796.887328, "app": "joint-session-app", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 442, "seconds": null, "cost_usd": 0.0066300000000000005}
+{"ts": 1792590199.1500502, "app": "suture", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 4734, "output_tokens": 288, "chars": null, "seconds": null, "cost_usd": 0.018522}
+{"ts": 1792590225.1528351, "app": "suture", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 513, "seconds": null, "cost_usd": 0.0076950000000000005}
+{"ts": 1792590505.9203022, "app": "suture", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 4734, "output_tokens": 293, "chars": null, "seconds": null, "cost_usd": 0.018597000000000002}
+{"ts": 1792590510.187571, "app": "suture", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 583, "seconds": null, "cost_usd": 0.008745000000000001}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Local demo hub: sign-up / anonymous-invite screen plus a walkthrough of the
-full journey across ../intake-app, ../joint-session-app, ../post-session-app.
+full journey across ../thimble, ../suture, ../post-session-app.
 
 Runs the real access-code signup and one-time invite flow from Section 3 of
 ../../product-spec.html -- not a client-side simulation. In-memory only (no
@@ -13,7 +13,7 @@ restart. What's real:
   deliberately NOT collected here for this test round -- static/index.html's
   signup form has no email field, and signup() below treats it as optional
   if a caller sends one anyway. Follow-up email is instead collected once,
-  via intake-app's own post-session survey, per explicit direction: testers
+  via thimble's own post-session survey, per explicit direction: testers
   don't need it twice.
 - An invite is a server-side record, so it resolves correctly for a real
   second person on a different device/browser, not just the same browser
@@ -72,7 +72,7 @@ PAIR_INVITES: dict[str, dict] = {}  # pair_id -> {status_a, status_b, ciphertext
 # /api/signup is a brute-force surface for ORG_ACCESS_CODE -- a wrong guess
 # costs nothing but a dict lookup, so without a limit it can be guessed as
 # fast as requests arrive. General /api/* limit covers invite/accept/decline
-# abuse the same way ../intake-app/server.py covers its own LLM-calling
+# abuse the same way ../thimble/server.py covers its own LLM-calling
 # endpoints. In-memory fixed-window per client IP, no new dependency.
 SIGNUP_RATE_MAX = int(os.environ.get("SIGNUP_RATE_MAX", "5"))
 SIGNUP_RATE_WINDOW = int(os.environ.get("SIGNUP_RATE_WINDOW", "60"))
@@ -118,7 +118,7 @@ async def signup(payload: dict):
         return JSONResponse({"error": "that access code isn't recognized"}, status_code=400)
     # Personal email is no longer collected at signup for this test round --
     # the static/index.html form no longer has the field at all, and
-    # follow-up email is instead collected once, via intake-app's own
+    # follow-up email is instead collected once, via thimble's own
     # post-session survey. Still accepted here if a caller does send one
     # (kept valid, not re-validated with the old "@" check), so this isn't a
     # breaking change to the API shape -- just stop requiring it. A non-empty

@@ -40,7 +40,7 @@
 
   /* Thimble avatar: same port as about.html -- see that file for the
      fuller comment on where this shape and the render loop below come
-     from (intake-app/static/index.html's live avatar). */
+     from (thimble/static/index.html's live avatar). */
   .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
@@ -504,7 +504,7 @@
 (function(){
   // ThimbleAvatarV2: same port as about.html -- see that file for the
   // fuller comment on where this shape and render loop come from
-  // (intake-app/static/index.html's live avatar).
+  // (thimble/static/index.html's live avatar).
   var DOME_RADIUS_CAP = 12, DOME_RADIUS_RIM = 14;
   var THIMBLE_SHAPES = {
     idle:      {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},

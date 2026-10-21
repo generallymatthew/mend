@@ -27,7 +27,7 @@ domain, real platform risk (Figma could ship this natively).
 - [x] Platform decision: runs as a companion panel over a real video call
       (Zoom first, via the Apps SDK) — Swatch does not build its own video
       or screen-share UI, same architecture call as Splice
-      (`../group-session-app/splice-product-roadmap.md`)
+      (`../splice/splice-product-roadmap.md`)
 - [x] Single-driver v0 (not full realtime multiplayer sync) decided as the
       first build target
 - [ ] Export the Claude Artifact mockups (workflow canvas vs. two rejected
@@ -41,7 +41,7 @@ domain, real platform risk (Figma could ship this natively).
 ## Phase 1 — First build pass
 
 - [ ] Stand up the companion-panel shape, likely reusing
-      `../group-session-app/`'s room/WebSocket backend and Zoom Apps SDK
+      `../splice/`'s room/WebSocket backend and Zoom Apps SDK
       pattern rather than building from scratch (see Splice's roadmap "Shared
       infrastructure note") — trust model is the opposite of Splice's
       (encouragement/warmth between two people, not neutral group-vote

@@ -29,7 +29,7 @@ from inference import ConflictClassifier  # noqa: E402
 
 logger = logging.getLogger("mend.joint_session_audio.delay_buffer")
 
-# Same checkpoint and threshold convention as ../joint-session-app/server.py:
+# Same checkpoint and threshold convention as ../suture/server.py:
 # v3, not v4 -- see classifier/README.md's Results section and commit
 # 314e6c2 for why v4's cut_trigger F1 regressed despite fixing
 # illegal_activity.
