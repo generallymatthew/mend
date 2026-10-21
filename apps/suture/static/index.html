@@ -211,6 +211,25 @@
   </div>
 </div>
 
+<!-- Second gate, shown once this employee's own private intake finishes
+     (see the 'intake_complete' case in initRoom). A real consent moment
+     before being dropped into the room with the other person, not an
+     automatic transition -- the joint room only actually opens once BOTH
+     employees have clicked through this (server.py's ready_to_join,
+     alongside intake_done). Reuses the same checkin-overlay/checkin-card
+     styling as the gate above rather than inventing a second visual
+     language for what's functionally the same kind of moment. -->
+<div class="checkin-overlay" id="joinReadyOverlay" hidden>
+  <div class="checkin-card">
+    <div class="checkin-ring">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+    </div>
+    <h2>Ready to be taken to the joint session?</h2>
+    <p>Thimble has what it needs from your private check-in. The next step brings you into the room with the other person, facilitated live.</p>
+    <button class="checkin-ready-btn" id="joinReadyBtn" type="button">Yes, take me there</button>
+  </div>
+</div>
+
 <div class="landing" id="landing" hidden>
   <div class="eyebrow">Mend &middot; joint session (local prototype)</div>
   <h1>Start a two-person session</h1>
@@ -525,6 +544,17 @@ function initRoom() {
     document.getElementById('checkinOverlay').hidden = true;
   });
 
+  // Wired here even though `ws` isn't connected yet at this point in
+  // initRoom -- the listener only fires later, once this employee's own
+  // intake has actually finished and the overlay below is shown, by which
+  // point connect() further down has long since run.
+  document.getElementById('joinReadyBtn').addEventListener('click', () => {
+    document.getElementById('joinReadyOverlay').hidden = true;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({type: 'join_ready'}));
+    }
+  });
+
   // Path-relative, not hardcoded: "/" standalone, "/joint/" behind the
   // local Caddy proxy (../Caddyfile). Used for both the WebSocket URL and
   // any server-returned "/api/audio/..." URL -- both are absolute paths
@@ -815,14 +845,16 @@ function initRoom() {
           break;
         case 'intake_complete':
           // My own private intake just finished -- Thimble's closing line
-          // for it already arrived as a prior 'intake_message'. Nothing
-          // left to show here except locking the composer and updating
-          // the header/status wording while the other person finishes
-          // theirs; the joint room opens itself the moment both sides are
-          // done (server.py's maybe_start), no polling needed here.
+          // for it already arrived as a prior 'intake_message'. Composer
+          // locks and the header/status wording updates immediately; the
+          // "ready to be taken to the joint session?" gate below is a
+          // separate, explicit consent step, not an automatic transition
+          // -- the room only actually opens once both sides have clicked
+          // through it (server.py's ready_to_join, alongside intake_done).
           intakeDone = true;
           setAvatarState('waiting_other');
           updateComposer();
+          document.getElementById('joinReadyOverlay').hidden = false;
           break;
         case 'thinking':
           enterJointPhase();
@@ -876,6 +908,7 @@ function initRoom() {
           intakeDone = false;
           jointStarted = false;
           participantsRow.hidden = true;
+          document.getElementById('joinReadyOverlay').hidden = true;
           setAvatarState('idle');
           setSpeaking(null);
           updateTiles();

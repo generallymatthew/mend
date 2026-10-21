@@ -261,6 +261,12 @@ class Session:
         self.intake_started: dict[str, bool] = {"employee_a": False, "employee_b": False}
         self.intake_done: dict[str, bool] = {"employee_a": False, "employee_b": False}
         self.intake_summary: dict[str, str | None] = {"employee_a": None, "employee_b": None}
+        # Explicit consent gate, separate from intake_done above: finishing
+        # your own private intake doesn't by itself drop you into the room
+        # with the other person -- each side has to click through their own
+        # "ready to be taken to the joint session?" prompt first (see the
+        # "join_ready" websocket message below). maybe_start waits on both.
+        self.ready_to_join: dict[str, bool] = {"employee_a": False, "employee_b": False}
 
 
 SESSIONS: dict[str, Session] = {}
@@ -605,6 +611,8 @@ async def maybe_start(session: Session) -> None:
         return
     if not (session.intake_done["employee_a"] and session.intake_done["employee_b"]):
         return
+    if not (session.ready_to_join["employee_a"] and session.ready_to_join["employee_b"]):
+        return
     session.started = True
     for r in ("employee_a", "employee_b"):
         await send_to(session, r, {"type": "thinking"})
@@ -624,6 +632,7 @@ async def handle_reset(session: Session) -> None:
     session.intake_started = {"employee_a": False, "employee_b": False}
     session.intake_done = {"employee_a": False, "employee_b": False}
     session.intake_summary = {"employee_a": None, "employee_b": None}
+    session.ready_to_join = {"employee_a": False, "employee_b": False}
     for f in AUDIO_DIR.glob("*.m4a"):
         f.unlink(missing_ok=True)
     for role in ("employee_a", "employee_b"):
@@ -686,6 +695,16 @@ async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
 
             if msg_type == "reset":
                 await handle_reset(session)
+                continue
+
+            if msg_type == "join_ready":
+                # The explicit consent click on "ready to be taken to the
+                # joint session?" -- only meaningful once this role's own
+                # intake is actually done; a stray/duplicate click is
+                # harmless (maybe_start is idempotent via session.started).
+                if session.intake_done[role]:
+                    session.ready_to_join[role] = True
+                    await maybe_start(session)
                 continue
 
             if msg_type != "message":
