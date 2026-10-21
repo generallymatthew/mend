@@ -9,4 +9,5 @@ apps/thimble/survey_responses.jsonl
 apps/thimble/analytics_events.jsonl
 apps/thimble/tests/benchmark_results_*.json
 apps/seam/cases.db
+apps/seam/survey_responses.jsonl
 .obsidian/

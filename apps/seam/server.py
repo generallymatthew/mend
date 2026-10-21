@@ -102,6 +102,13 @@ CONVERSATIONS: dict[str, list[dict]] = {}
 # the back-and-forth that produced it does not.
 MEETING_CONVERSATIONS: dict[str, list[dict]] = {}
 
+# Same treatment again, for written (tone-check) sessions. Only a short
+# title/preview (written_sessions table) survives a restart; the drafts and
+# feedback that produced them do not. A session's row isn't written until
+# its first exchange completes -- see post_written_message -- so a draft
+# abandoned before any reply never shows up anywhere.
+WRITTEN_CONVERSATIONS: dict[str, list[dict]] = {}
+
 # In-memory per-case name roster (name.lower() -> {"name", "slot", "descriptor"}),
 # same "never touches disk" treatment as CONVERSATIONS -- a real name the
 # manager types is exactly the kind of thing that must never reach cases.db.
@@ -213,6 +220,15 @@ def init_db():
                 updated_at REAL NOT NULL
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS written_sessions (
+                id TEXT PRIMARY KEY,
+                title TEXT,
+                preview TEXT,
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL
+            )
+        """)
 
 
 init_db()
@@ -304,6 +320,11 @@ async def index():
     return FileResponse(ROOT / "static" / "index.html")
 
 
+@app.get("/survey")
+async def survey_page():
+    return FileResponse(ROOT / "static" / "survey.html")
+
+
 @app.get("/sw.js")
 async def service_worker():
     # Served at root, not /static/sw.js, so its default scope covers the
@@ -333,7 +354,7 @@ app.mount("/pitch-assets", StaticFiles(directory=ROOT.parent.parent / "Mend Pitc
 @app.middleware("http")
 async def no_cache_static(request: Request, call_next):
     response = await call_next(request)
-    if request.url.path == "/" or request.url.path.startswith("/static/"):
+    if request.url.path in ("/", "/survey") or request.url.path.startswith("/static/"):
         response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -636,10 +657,6 @@ async def delete_plan_step(case_id: str, step_id: str):
         return get_plan_steps(conn, case_id)
 
 
-class ToneCheckRequest(BaseModel):
-    content: str
-
-
 def strip_tone_check(reply_text: str) -> dict | None:
     match = re.search(r"<tone_check>(.*?)</tone_check>", reply_text, re.S)
     if not match:
@@ -650,29 +667,9 @@ def strip_tone_check(reply_text: str) -> dict | None:
         return None
 
 
-@app.post("/api/tone-check")
-async def tone_check(body: ToneCheckRequest):
-    """Stateless, one-shot: no case, no persistence, nothing written to
-    cases.db. The manager pastes a draft, gets feedback plus a rewrite
-    back; neither the draft nor the response is stored anywhere."""
-    if not body.content.strip():
-        return JSONResponse({"error": "content is required"}, status_code=400)
-    if client is None:
-        return JSONResponse({"error": "ANTHROPIC_API_KEY is not set in this shell"}, status_code=500)
-    try:
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=2048,
-            system=TONE_CHECK_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": body.content}],
-        )
-    except Exception as e:
-        return JSONResponse({"error": f"error calling Claude: {e}"}, status_code=502)
-    raw = "".join(block.text for block in response.content if block.type == "text")
-    result = strip_tone_check(raw)
-    if result is None or "feedback" not in result or "rewrite" not in result:
-        return JSONResponse({"error": "couldn't parse a tone-check response, try again"}, status_code=502)
-    return {"feedback": result["feedback"], "rewrite": result["rewrite"]}
+def truncate(text: str, n: int) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= n else text[: n - 1].rstrip() + "…"
 
 
 @app.post("/api/voice")
@@ -818,3 +815,189 @@ async def post_meeting_message(session_id: str, body: Message):
                 conn.execute("UPDATE meeting_sessions SET updated_at = ? WHERE id = ?", (time.time(), session_id))
         session = get_meeting_session(conn, session_id)
     return {"reply": result["reply"], "session": session}
+
+
+# --- Written (tone-check, chat) -----------------------------------------
+#
+# A chat UI like Conflicts/Meetings, not the old single draft-box-plus-card:
+# the manager pastes a draft, Thimble replies in the same thread, and they
+# can paste another one right after. Two things set it apart from those two:
+#
+# - Launch state is always a blank, ready-to-type thread (see
+#   createWrittenSession in index.html, called the moment the section is
+#   first opened) -- never the last session reopened, for speed.
+# - A session's row in written_sessions isn't created until its first
+#   exchange actually completes (see post_written_message below), and
+#   list_written_sessions only returns rows with a preview. A draft typed
+#   and abandoned never becomes a list item; one that got a reply does.
+
+def written_session_row_to_dict(row: sqlite3.Row) -> dict:
+    return {
+        "id": row["id"],
+        "title": row["title"],
+        "preview": row["preview"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def get_written_session(conn: sqlite3.Connection, session_id: str) -> dict | None:
+    row = conn.execute("SELECT * FROM written_sessions WHERE id = ?", (session_id,)).fetchone()
+    return written_session_row_to_dict(row) if row else None
+
+
+@app.get("/api/written-sessions")
+async def list_written_sessions():
+    with db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM written_sessions WHERE preview IS NOT NULL ORDER BY updated_at DESC"
+        ).fetchall()
+        return [written_session_row_to_dict(r) for r in rows]
+
+
+@app.post("/api/written-sessions")
+async def create_written_session():
+    now = time.time()
+    session_id = str(uuid.uuid4())
+    with db() as conn:
+        conn.execute(
+            "INSERT INTO written_sessions (id, title, preview, created_at, updated_at) VALUES (?, NULL, NULL, ?, ?)",
+            (session_id, now, now),
+        )
+        session = get_written_session(conn, session_id)
+    WRITTEN_CONVERSATIONS[session_id] = []
+    return session
+
+
+@app.get("/api/written-sessions/{session_id}")
+async def get_written_session_detail(session_id: str):
+    with db() as conn:
+        session = get_written_session(conn, session_id)
+        if session is None:
+            return JSONResponse({"error": "no such written session"}, status_code=404)
+    messages = [
+        {"role": m["role"], "content": m.get("visible", m["content"])}
+        for m in WRITTEN_CONVERSATIONS.get(session_id, [])
+        if not m.get("hidden")
+    ]
+    return {"session": session, "messages": messages}
+
+
+def written_facilitator_reply(session_id: str, conn: sqlite3.Connection) -> dict:
+    """Same shape as facilitator_reply/meeting_strategy_reply, for the
+    tone-check prompt. Each user turn is still graded as its own draft per
+    TONE_CHECK_SYSTEM_PROMPT (it always answers in the same <tone_check>
+    block), but now sits in a real back-and-forth thread instead of a
+    single stateless call."""
+    conversation = WRITTEN_CONVERSATIONS[session_id]
+    if client is None:
+        conversation.pop()
+        return {"reply": "(server error: ANTHROPIC_API_KEY is not set in this shell)", "feedback": None}
+    visible_history = [{"role": m["role"], "content": m["content"]} for m in conversation]
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=2048,
+            system=TONE_CHECK_SYSTEM_PROMPT,
+            messages=visible_history,
+        )
+    except Exception as e:
+        conversation.pop()
+        return {"reply": f"(server error calling Claude: {e})", "feedback": None}
+    raw = "".join(block.text for block in response.content if block.type == "text")
+    if not raw:
+        conversation.pop()
+        return {"reply": "(server error: empty response from Claude, try again)", "feedback": None}
+    result = strip_tone_check(raw)
+    if result is None or "feedback" not in result or "rewrite" not in result:
+        conversation.pop()
+        return {"reply": "(couldn't parse a tone-check response, try again)", "feedback": None}
+    display = f"{result['feedback']}\n\nTry this instead:\n{result['rewrite']}"
+    conversation.append({"role": "assistant", "content": raw, "visible": display, "hidden": False})
+    return {"reply": display, "feedback": result["feedback"]}
+
+
+@app.post("/api/written-sessions/{session_id}/messages")
+async def post_written_message(session_id: str, body: Message):
+    with db() as conn:
+        session = get_written_session(conn, session_id)
+        if session is None:
+            return JSONResponse({"error": "no such written session"}, status_code=404)
+        if session_id not in WRITTEN_CONVERSATIONS:
+            WRITTEN_CONVERSATIONS[session_id] = []
+        WRITTEN_CONVERSATIONS[session_id].append({"role": "user", "content": body.content, "hidden": False})
+        result = written_facilitator_reply(session_id, conn)
+        if result["feedback"] is not None:
+            fields = {"preview": truncate(result["feedback"], 70)}
+            if not session["title"]:
+                fields["title"] = truncate(body.content, 50)
+            set_clause = ", ".join(f"{k} = ?" for k in fields)
+            conn.execute(
+                f"UPDATE written_sessions SET {set_clause}, updated_at = ? WHERE id = ?",
+                (*fields.values(), time.time(), session_id),
+            )
+        session = get_written_session(conn, session_id)
+    return {"reply": result["reply"], "session": session}
+
+
+# Pre-use manager survey (static/survey.html) -- not post-session feedback
+# like ../thimble's /api/survey, which asks how a specific session went.
+# This one is a discovery/outreach instrument: sent to prospective manager
+# testers to gauge their conflict-management pressures and interest in
+# Seam's 3 offerings before they've necessarily used the app at all. Same
+# "nothing about a real case/conversation is recorded" boundary as the rest
+# of this file -- these answers are the tester's own opinions about
+# conflict management in general, not anything from a real case.
+#
+# Local-only for now, deliberately not wired to a Google Sheet the way
+# ../thimble's survey is (GOOGLE_SHEET_ID/GOOGLE_SERVICE_ACCOUNT_JSON would
+# need to be set up for Seam specifically, or this would need to share
+# Thimble's sheet under a different worksheet tab -- neither decided yet).
+# SURVEY_FILE is the real store until that's resolved.
+SURVEY_FILE = ROOT / "survey_responses.jsonl"
+SURVEY_RADIO_FIELDS = {
+    "conflict_frequency": {"rarely", "occasionally", "regularly", "constantly"},
+    "first_move": {"talk_direct", "loop_in_hr_or_manager", "wait_and_see", "other"},
+    "feels_judged": {"yes", "somewhat", "no"},
+    "pressure_source": {"leadership", "hr", "employees", "not_much"},
+    "avoided_due_to_pressure": {"yes", "sometimes", "no"},
+    "would_use_conflicts": {"yes", "maybe", "no"},
+    "would_use_written": {"yes", "maybe", "no"},
+    "would_use_meetings": {"yes", "maybe", "no"},
+    "team_size": {"1-3", "4-8", "9-15", "16+"},
+}
+SURVEY_SCALE_FIELDS = ("confidence", "useful_conflicts", "useful_written", "useful_meetings", "overall_interest")
+
+
+@app.post("/api/survey")
+async def submit_survey(request: Request):
+    data = await request.json()
+    if data.get("conflict_frequency") not in SURVEY_RADIO_FIELDS["conflict_frequency"]:
+        return JSONResponse({"error": "conflict_frequency is required"}, status_code=400)
+    radios = {}
+    for field, valid_values in SURVEY_RADIO_FIELDS.items():
+        value = data.get(field)
+        if value not in valid_values and value is not None:
+            return JSONResponse({"error": f"invalid {field} value"}, status_code=400)
+        radios[field] = value
+    scales = {}
+    for field in SURVEY_SCALE_FIELDS:
+        value = data.get(field)
+        if value is not None and (not isinstance(value, int) or not (1 <= value <= 5)):
+            return JSONResponse({"error": f"{field} must be an integer 1-5"}, status_code=400)
+        scales[field] = value
+    # Generous caps, not unbounded -- this is open free text from an
+    # unauthenticated page.
+    email = str(data.get("email") or "")[:200]
+    comments = str(data.get("comments") or "")[:4000]
+    record = {
+        "ts": time.time(),
+        **radios,
+        **scales,
+        "email": email,
+        "comments": comments,
+    }
+    with SURVEY_FILE.open("a") as f:
+        f.write(json.dumps(record) + "\n")
+    print(f"[survey] {json.dumps(record)}", flush=True)
+    return {"ok": True}

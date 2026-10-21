@@ -153,7 +153,7 @@
     float: right; border: none; background: none; color: var(--faint);
     font-size: 18px; cursor: pointer; line-height: 1; margin-left: 12px;
   }
-  #case-list, #meeting-list { flex: 1; overflow: auto; }
+  #case-list, #meeting-list, #written-list { flex: 1; overflow: auto; }
   .item-row {
     padding: 10px 12px; margin: 0 8px 2px 8px;
     display: flex; flex-direction: column; gap: 3px;
@@ -351,7 +351,7 @@
   .empty-state.returning .flow-steps, .empty-state.returning .privacy-note { display: none; }
   .empty-state.returning h1 { font-size: 15px; font-weight: 600; color: var(--muted); }
   .empty-state.returning .mark { display: none; }
-  .empty-state.returning p.lede { display: none; }
+  .empty-state.returning p.lede { font-size: 13px; margin: -4px 0 24px 0; }
 
   .composer-row {
     padding: 16px 28px 24px 28px; border-top: 1px solid var(--border);
@@ -444,39 +444,13 @@
   .strategy-point .t { font-size: 13.5px; line-height: 1.55; }
   .strategy-placeholder { font-size: 13px; color: var(--faint); font-style: italic; }
 
-  /* Written section (tone-check): no list-driven thread, just a draft box
-     and a result card below it -- matches design-mockups/ToneCheck.dc.html,
-     minus the "read it back to me" audio framing (no TTS is scoped/built
-     for this; relabeled to describe what actually happens). */
-  #written-view { flex-direction: column; padding: 26px 32px 30px; gap: 16px; max-width: 640px; overflow: auto; }
-  .written-hint { font-size: 12.5px; color: var(--muted); }
-  .draft-card {
-    background: #fff; border-radius: 18px; box-shadow: 0 8px 20px rgba(23,55,46,0.06); padding: 16px; position: relative;
-  }
-  .draft-card label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 8px; }
-  #tonecheck-draft {
-    width: 100%; box-sizing: border-box; resize: vertical; min-height: 70px; border: none; background: transparent;
-    padding: 0 40px 0 0; font-size: 15px; line-height: 1.55; color: var(--ink); font-family: inherit; outline: none;
-  }
-  .draft-card .mic-btn { position: absolute; right: 14px; bottom: 14px; width: 30px; height: 30px; }
-  #tonecheck-btn {
-    align-self: flex-start; background: var(--accent-pink); color: #17372E; border: none; border-radius: 999px;
-    padding: 10px 20px; font-size: 13.5px; font-weight: 700; cursor: pointer;
-  }
-  #tonecheck-btn:disabled { opacity: 0.6; cursor: default; }
-  .tonecheck-result { display: flex; gap: 11px; align-items: flex-start; }
-  .tonecheck-card {
-    background: #E7EFEF; border-radius: 6px 20px 20px 20px; padding: 14px 16px;
-    display: flex; flex-direction: column; gap: 14px; max-width: 460px;
-  }
-  .tonecheck-card .label { font-size: 11px; font-weight: 700; color: #3E6B6B; letter-spacing: .03em; margin-bottom: 4px; }
-  .tonecheck-card .body { font-size: 14.5px; line-height: 1.55; }
-  .tonecheck-card .rewrite-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-  .tonecheck-card .copy-rewrite {
-    flex-shrink: 0; background: #fff; border: 1px solid #CFE3E3; color: #3E6B6B; border-radius: 999px;
-    padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
-  }
-  .tonecheck-error { font-size: 13px; color: #8c0d28; }
+  /* Written section (tone-check): same thread-col chat pattern as Conflicts
+     and Meetings, not a separate draft-box-plus-card layout. See
+     server.py's "Written (tone-check, chat)" section for why a session
+     only becomes a sidebar list item after its first reply. */
+  .written-hint { padding: 10px 28px 0 28px; font-size: 12.5px; color: var(--muted); flex-shrink: 0; line-height: 1.5; }
+  .written-hint strong { color: var(--ink); font-weight: 700; }
+  .sidebar-new-btn.written { background: #E7EFEF; color: #3E6B6B; }
 
   /* Mobile: rail + section list become one off-canvas drawer; the
      relevant side panel (plan / strategy) becomes the other. */
@@ -507,7 +481,6 @@
     .side-panel.open { transform: translateX(0); }
 
     .thread-col { width: 100%; }
-    #written-view { max-width: none; }
 
     #sidebar-toggle { display: flex; }
     #plan-toggle, #meeting-plan-toggle { display: inline-block; }
@@ -586,11 +559,11 @@
     </div>
 
     <div class="sidebar-section" id="sidebar-written">
-      <div class="sidebar-subheader"><span class="label">Written</span></div>
-      <div class="written-static-row active" id="written-nav-row">
-        <span class="name">Written</span>
-        <span class="desc">Draft something, see how it reads</span>
+      <div class="sidebar-subheader">
+        <span class="label">Written</span>
+        <button class="sidebar-new-btn written" id="new-written-btn" title="New draft">+</button>
       </div>
+      <div id="written-list"></div>
       <div class="written-static-row soon">
         <span class="name">Slack announcement</span>
         <span class="soon-badge">soon</span>
@@ -599,6 +572,7 @@
         <span class="name">Calibration write-up</span>
         <span class="soon-badge">soon</span>
       </div>
+      <div class="sidebar-footer">Each draft's back-and-forth isn't kept, just a short preview so you can find it again.</div>
     </div>
   </div>
 
@@ -688,16 +662,24 @@
 
   <!-- Written (tone-check) -->
   <div class="section-view" id="written-view">
-    <div class="written-hint">Paste it, or dictate it, before you send it. Nothing here is kept.</div>
-    <div class="draft-card">
-      <label for="tonecheck-draft">What you're about to send</label>
-      <textarea id="tonecheck-draft" rows="4" placeholder="Paste or type your draft..."></textarea>
-      <button class="mic-btn written-mic" id="tonecheck-mic-btn" title="Hold to dictate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
+    <div class="thread-col">
+      <div class="thread-header" id="written-thread-header">
+        <div class="name" id="written-thread-title">New draft</div>
+      </div>
+      <div class="written-hint" id="written-hint"><strong>Check how a message reads before you send it.</strong> Paste or dictate a draft -- an email, a Slack reply, feedback -- and get a quick, honest read plus a rewrite. Only a short preview is kept, not the back-and-forth.</div>
+      <div class="messages" id="written-messages" style="display:flex"></div>
+      <div class="composer-row" id="written-composer-row">
+        <div class="composer-pill">
+          <textarea id="written-composer" rows="1" placeholder="Paste or type a draft..."></textarea>
+          <button class="mic-btn written-mic" id="written-mic-btn" title="Hold to dictate">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <button class="send-btn" id="written-send-btn" title="Send">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </button>
+        </div>
+      </div>
     </div>
-    <button id="tonecheck-btn">Check how this reads</button>
-    <div id="tonecheck-result"></div>
   </div>
 </div>
 
@@ -755,6 +737,7 @@ function apiPath(p) { return BASE_PATH.replace(/\/$/, '') + '/' + p.replace(/^\/
 // ---------------------------------------------------------------------
 let currentSection = "conflicts";
 let meetingsLoaded = false;
+let writtenLoaded = false;
 
 function showSection(name) {
   currentSection = name;
@@ -772,12 +755,16 @@ function showSection(name) {
     meetingsLoaded = true;
     loadMeetings();
   }
+  if (name === "written" && !writtenLoaded) {
+    writtenLoaded = true;
+    loadWrittenSessions();
+    createWrittenSession();
+  }
 }
 
 document.querySelectorAll(".rail-item").forEach((btn) => {
   btn.addEventListener("click", () => showSection(btn.dataset.section));
 });
-document.getElementById("written-nav-row").addEventListener("click", () => showSection("written"));
 
 function escapeHtml(s) {
   const d = document.createElement("div");
@@ -1441,58 +1428,113 @@ meetingComposerEl.addEventListener("input", () => {
 wirePushToTalk(document.getElementById("meeting-mic-btn"), meetingComposerEl);
 
 // ---------------------------------------------------------------------
-// Written (tone-check): stateless, one draft at a time, no history.
+// Written (tone-check) -- a chat thread like Conflicts/Meetings, except
+// entering the section always drops you into a brand-new blank thread
+// (createWrittenSession, called once from showSection) instead of
+// reopening whatever was open last. A session only shows up in the
+// sidebar list once it's gotten its first reply -- see server.py.
 // ---------------------------------------------------------------------
-const tonecheckDraftEl = document.getElementById("tonecheck-draft");
-wirePushToTalk(document.getElementById("tonecheck-mic-btn"), tonecheckDraftEl);
+let currentWrittenId = null;
+let writtenSessions = [];
 
-async function runToneCheck() {
-  const text = tonecheckDraftEl.value.trim();
-  const resultEl = document.getElementById("tonecheck-result");
+async function loadWrittenSessions() {
+  const res = await fetch(apiPath("/api/written-sessions"));
+  writtenSessions = await res.json();
+  renderWrittenList();
+}
+
+function renderWrittenList() {
+  const list = document.getElementById("written-list");
+  list.innerHTML = "";
+  for (const s of writtenSessions) {
+    const row = document.createElement("div");
+    row.className = "item-row" + (s.id === currentWrittenId ? " active" : "");
+    const name = s.title || "Draft";
+    const preview = s.preview || "";
+    row.innerHTML = `
+      <div class="top"><div class="name">${escapeHtml(name)}</div><div class="time">${timeAgo(s.updated_at)}</div></div>
+      <div class="preview">${escapeHtml(preview)}</div>
+    `;
+    row.onclick = () => openWrittenSession(s.id);
+    list.appendChild(row);
+  }
+}
+
+async function createWrittenSession() {
+  const res = await fetch(apiPath("/api/written-sessions"), { method: "POST" });
+  const s = await res.json();
+  currentWrittenId = s.id;
+  document.getElementById("written-thread-title").textContent = "New draft";
+  document.getElementById("written-messages").innerHTML = "";
+  document.getElementById("written-hint").style.display = "block";
+  renderWrittenList();
+  closeSidebarOnMobile();
+  document.getElementById("written-composer").focus();
+}
+
+async function openWrittenSession(sessionId) {
+  currentWrittenId = sessionId;
+  renderWrittenList();
+  closeSidebarOnMobile();
+  const res = await fetch(apiPath(`/api/written-sessions/${sessionId}`));
+  const data = await res.json();
+  document.getElementById("written-thread-title").textContent = data.session.title || "Draft";
+  const messagesEl = document.getElementById("written-messages");
+  messagesEl.innerHTML = "";
+  for (const m of data.messages) {
+    appendBubble(messagesEl, m.role, m.content);
+  }
+  document.getElementById("written-hint").style.display = data.messages.length ? "none" : "block";
+}
+
+async function sendWrittenMessage() {
+  const composer = document.getElementById("written-composer");
+  const text = composer.value.trim();
   if (!text) return;
-  const btn = document.getElementById("tonecheck-btn");
-  btn.disabled = true;
-  resultEl.innerHTML = "";
+  if (!currentWrittenId) await createWrittenSession();
+  composer.value = "";
+  composer.style.height = "auto";
+  const messagesEl = document.getElementById("written-messages");
+  document.getElementById("written-hint").style.display = "none";
+  appendBubble(messagesEl, "user", text);
+  document.getElementById("written-send-btn").disabled = true;
+  const pending = appendBubble(messagesEl, "assistant", "...", true);
   try {
-    const res = await fetch(apiPath("/api/tone-check"), {
+    const res = await fetch(apiPath(`/api/written-sessions/${currentWrittenId}/messages`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: text }),
     });
     const body = await res.json();
-    if (body.error) {
-      resultEl.innerHTML = `<div class="tonecheck-error">${escapeHtml(body.error)}</div>`;
-      return;
+    pending.closest(".msg-row").remove();
+    appendBubble(messagesEl, "assistant", body.reply);
+    document.getElementById("written-thread-title").textContent = body.session.title || "New draft";
+    if (body.session.preview) {
+      const idx = writtenSessions.findIndex((s) => s.id === body.session.id);
+      if (idx >= 0) writtenSessions[idx] = body.session;
+      else writtenSessions.unshift(body.session);
+      writtenSessions.sort((a, b) => b.updated_at - a.updated_at);
+      renderWrittenList();
     }
-    resultEl.innerHTML = `
-      <div class="tonecheck-result">
-        ${avatarSvg()}
-        <div class="tonecheck-card">
-          <div>
-            <div class="label">HOW THIS READS</div>
-            <div class="body">${escapeHtml(body.feedback)}</div>
-          </div>
-          <div>
-            <div class="label">TRY THIS INSTEAD</div>
-            <div class="rewrite-row">
-              <div class="body" id="tonecheck-rewrite">${escapeHtml(body.rewrite)}</div>
-              <button class="copy-rewrite" id="tonecheck-copy">Copy</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById("tonecheck-copy").onclick = () => {
-      navigator.clipboard.writeText(body.rewrite);
-    };
-  } catch (e) {
-    resultEl.innerHTML = `<div class="tonecheck-error">Couldn't reach Seam, try again.</div>`;
   } finally {
-    btn.disabled = false;
+    document.getElementById("written-send-btn").disabled = false;
   }
 }
 
-document.getElementById("tonecheck-btn").onclick = runToneCheck;
+document.getElementById("new-written-btn").onclick = createWrittenSession;
+document.getElementById("written-send-btn").onclick = sendWrittenMessage;
+const writtenComposerEl = document.getElementById("written-composer");
+writtenComposerEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendWrittenMessage();
+  }
+});
+writtenComposerEl.addEventListener("input", () => {
+  writtenComposerEl.style.height = "auto";
+  writtenComposerEl.style.height = writtenComposerEl.scrollHeight + "px";
+});
+wirePushToTalk(document.getElementById("written-mic-btn"), writtenComposerEl);
 
 // ---------------------------------------------------------------------
 // Help modal, mobile drawers

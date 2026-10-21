@@ -1,0 +1,324 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seam feedback</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --muted:#6B7A73; --paper:#FAFBFA; --card:#FFFFFF;
+    --accent:#17372E; --accent-pink:#F3829A; --accent-pink-bg:#FCEEF0; --border:#E7EBE8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
+  .wrap{max-width:640px; margin:0 auto; padding:28px 24px 60px;}
+  .header{display:flex; align-items:center; gap:10px; margin-bottom:28px;}
+  .brand-mark{height:26px; width:auto; display:block;}
+  .brand-name{font-weight:800; font-size:22px; letter-spacing:-0.01em; color:var(--ink);}
+  h1{font-size:22px; margin:0 0 6px;}
+  .sub{color:var(--muted); font-size:14.5px; line-height:1.5; margin:0 0 10px;}
+  .section-label{font-weight:800; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:30px 2px 12px;}
+  .section-label:first-of-type{margin-top:22px;}
+  .section-hint{font-weight:500; font-size:13px; color:var(--muted); margin:-10px 2px 14px;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px 22px 24px; margin-bottom:14px;}
+  .help-card{border-color:var(--accent-pink); background:var(--accent-pink-bg);}
+  .help-title{font-weight:800; font-size:14px; margin-bottom:4px;}
+  .help-desc{font-weight:500; font-size:13.5px; color:var(--muted); margin:0 0 16px; line-height:1.5;}
+  .q-label{font-weight:700; font-size:15px; margin-bottom:12px;}
+  .q-label.secondary{margin-top:18px;}
+  .q-hint{font-weight:500; font-size:13px; color:var(--muted); margin:-8px 0 14px;}
+  .scale{display:flex; gap:8px; flex-wrap:wrap;}
+  .scale button{flex:1; min-width:36px; border:1.5px solid var(--border); background:var(--paper); color:var(--ink); border-radius:999px; padding:10px 0; font:inherit; font-weight:700; font-size:15px; cursor:pointer;}
+  .scale button.sel{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .scale-labels{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:8px;}
+  .choice-row{display:flex; flex-direction:column; gap:8px;}
+  .choice{display:flex; align-items:center; gap:10px; border:1.5px solid var(--border); background:var(--paper); border-radius:12px; padding:11px 14px; cursor:pointer; font-size:14.5px;}
+  .choice.sel{border-color:var(--accent-pink); background:var(--accent-pink-bg);}
+  .choice input{accent-color:var(--accent-pink); flex-shrink:0;}
+  input[type=text],input[type=email]{width:100%; border:1.5px solid var(--border); border-radius:12px; padding:11px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
+  textarea{width:100%; resize:vertical; min-height:80px; border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
+  .submit-row{display:flex; justify-content:flex-end; margin-top:6px;}
+  button.primary{border:1.5px solid var(--ink); background:var(--ink); color:#fff; border-radius:999px; padding:13px 26px; font:inherit; font-weight:700; font-size:15px; cursor:pointer;}
+  button.primary:disabled{opacity:.5; cursor:default;}
+  .error{color:#8C3B2E; font-size:13px; margin-top:10px; text-align:right;}
+  .thanks{text-align:center; padding:60px 20px;}
+  .thanks .mark{height:48px; margin-bottom:18px;}
+  .thanks h1{margin-bottom:10px;}
+  .thanks p{color:var(--muted); font-size:15px; line-height:1.6;}
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <img class="brand-mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E" alt="">
+    <span class="brand-name">Seam</span>
+  </div>
+
+  <div id="form-view">
+    <h1>A few questions for managers</h1>
+    <p class="sub">Five minutes, anonymous unless you choose to leave your email. It goes straight to the people building this.</p>
+
+    <div class="section-label">You &amp; conflict on your team</div>
+
+    <div class="card">
+      <div class="q-label">How often does conflict come up on your team?</div>
+      <div class="choice-row" data-radio="conflict_frequency">
+        <label class="choice"><input type="radio" name="conflict_frequency" value="rarely"> Rarely</label>
+        <label class="choice"><input type="radio" name="conflict_frequency" value="occasionally"> Occasionally</label>
+        <label class="choice"><input type="radio" name="conflict_frequency" value="regularly"> Regularly</label>
+        <label class="choice"><input type="radio" name="conflict_frequency" value="constantly"> Constantly</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">When something comes up, what do you usually do first?</div>
+      <div class="choice-row" data-radio="first_move">
+        <label class="choice"><input type="radio" name="first_move" value="talk_direct"> Talk to the people involved directly</label>
+        <label class="choice"><input type="radio" name="first_move" value="loop_in_hr_or_manager"> Loop in HR or my own manager</label>
+        <label class="choice"><input type="radio" name="first_move" value="wait_and_see"> Wait and see if it resolves itself</label>
+        <label class="choice"><input type="radio" name="first_move" value="other"> Something else</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">How confident do you feel handling it when it happens?</div>
+      <div class="scale" id="q-confidence">
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+        <button type="button" data-val="4">4</button>
+        <button type="button" data-val="5">5</button>
+      </div>
+      <div class="scale-labels"><span>Not confident</span><span>Very confident</span></div>
+    </div>
+
+    <div class="section-label">The pressure of being the manager</div>
+
+    <div class="card">
+      <div class="q-label">Do you feel like how you handle conflict on your team is something you're being judged on?</div>
+      <div class="choice-row" data-radio="feels_judged">
+        <label class="choice"><input type="radio" name="feels_judged" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="feels_judged" value="somewhat"> Somewhat</label>
+        <label class="choice"><input type="radio" name="feels_judged" value="no"> No</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Where does that pressure mostly come from?</div>
+      <div class="choice-row" data-radio="pressure_source">
+        <label class="choice"><input type="radio" name="pressure_source" value="leadership"> My own manager or leadership</label>
+        <label class="choice"><input type="radio" name="pressure_source" value="hr"> HR</label>
+        <label class="choice"><input type="radio" name="pressure_source" value="employees"> The employees involved</label>
+        <label class="choice"><input type="radio" name="pressure_source" value="not_much"> I don't feel much pressure</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Has that pressure ever made you avoid addressing something you probably should have?</div>
+      <div class="choice-row" data-radio="avoided_due_to_pressure">
+        <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="sometimes"> Sometimes</label>
+        <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="no"> No</label>
+      </div>
+    </div>
+
+    <div class="section-label">The 3 kinds of help Seam offers</div>
+    <div class="section-hint">For each one: how useful would it be, and would you actually use it.</div>
+
+    <div class="card help-card">
+      <div class="help-title">Conflicts</div>
+      <p class="help-desc">Talk through a specific conflict with a direct report and walk away with an action plan.</p>
+      <div class="q-label">How useful would this be to you?</div>
+      <div class="scale" id="q-useful-conflicts">
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+        <button type="button" data-val="4">4</button>
+        <button type="button" data-val="5">5</button>
+      </div>
+      <div class="scale-labels"><span>Not useful</span><span>Very useful</span></div>
+      <div class="q-label secondary">Would you use it?</div>
+      <div class="choice-row" data-radio="would_use_conflicts">
+        <label class="choice"><input type="radio" name="would_use_conflicts" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="would_use_conflicts" value="maybe"> Maybe</label>
+        <label class="choice"><input type="radio" name="would_use_conflicts" value="no"> No</label>
+      </div>
+    </div>
+
+    <div class="card help-card">
+      <div class="help-title">Written</div>
+      <p class="help-desc">Get a tone-check and rewrite on a tricky message before you send it.</p>
+      <div class="q-label">How useful would this be to you?</div>
+      <div class="scale" id="q-useful-written">
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+        <button type="button" data-val="4">4</button>
+        <button type="button" data-val="5">5</button>
+      </div>
+      <div class="scale-labels"><span>Not useful</span><span>Very useful</span></div>
+      <div class="q-label secondary">Would you use it?</div>
+      <div class="choice-row" data-radio="would_use_written">
+        <label class="choice"><input type="radio" name="would_use_written" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="would_use_written" value="maybe"> Maybe</label>
+        <label class="choice"><input type="radio" name="would_use_written" value="no"> No</label>
+      </div>
+    </div>
+
+    <div class="card help-card">
+      <div class="help-title">Meetings</div>
+      <p class="help-desc">Build a strategy before a hard 1:1 or team meeting.</p>
+      <div class="q-label">How useful would this be to you?</div>
+      <div class="scale" id="q-useful-meetings">
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+        <button type="button" data-val="4">4</button>
+        <button type="button" data-val="5">5</button>
+      </div>
+      <div class="scale-labels"><span>Not useful</span><span>Very useful</span></div>
+      <div class="q-label secondary">Would you use it?</div>
+      <div class="choice-row" data-radio="would_use_meetings">
+        <label class="choice"><input type="radio" name="would_use_meetings" value="yes"> Yes</label>
+        <label class="choice"><input type="radio" name="would_use_meetings" value="maybe"> Maybe</label>
+        <label class="choice"><input type="radio" name="would_use_meetings" value="no"> No</label>
+      </div>
+    </div>
+
+    <div class="section-label">Wrap-up</div>
+
+    <div class="card">
+      <div class="q-label">How many people do you manage directly?</div>
+      <div class="choice-row" data-radio="team_size">
+        <label class="choice"><input type="radio" name="team_size" value="1-3"> 1-3</label>
+        <label class="choice"><input type="radio" name="team_size" value="4-8"> 4-8</label>
+        <label class="choice"><input type="radio" name="team_size" value="9-15"> 9-15</label>
+        <label class="choice"><input type="radio" name="team_size" value="16+"> 16+</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Overall, how interested are you in trying something like this?</div>
+      <div class="scale" id="q-overall-interest">
+        <button type="button" data-val="1">1</button>
+        <button type="button" data-val="2">2</button>
+        <button type="button" data-val="3">3</button>
+        <button type="button" data-val="4">4</button>
+        <button type="button" data-val="5">5</button>
+      </div>
+      <div class="scale-labels"><span>Not interested</span><span>Very interested</span></div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Want in on the pilot?</div>
+      <div class="q-hint">Optional. Leave your email if you'd like early access.</div>
+      <input type="email" id="email" placeholder="you@company.com">
+    </div>
+
+    <div class="card">
+      <div class="q-label">Anything else you'd like to share?</div>
+      <textarea id="comments" placeholder="Optional. What's actually hard about this for you right now"></textarea>
+    </div>
+
+    <div class="submit-row">
+      <button type="button" class="primary" id="submitBtn">Submit feedback</button>
+    </div>
+    <div class="error" id="errorMsg" hidden>Please answer how often conflict comes up before submitting.</div>
+  </div>
+
+  <div id="thanks-view" class="thanks" hidden>
+    <img class="mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E" alt="">
+    <h1>Thank you</h1>
+    <p>Your answers were recorded. This genuinely shapes what we build next.</p>
+  </div>
+</div>
+
+<script>
+// Served at "/survey" standalone or "/manager/survey" behind the local
+// Caddy proxy -- strip the last path segment to get the app's own base,
+// same approach as index.html's BASE_PATH.
+const BASE_PATH = location.pathname.replace(/[^/]*$/, '');
+function apiPath(p) { return BASE_PATH.replace(/\/$/, '') + '/' + p.replace(/^\//, ''); }
+
+function wireScale(id) {
+  let val = null;
+  const buttons = document.querySelectorAll(`#${id} button`);
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      val = Number(btn.dataset.val);
+      buttons.forEach(b => b.classList.toggle('sel', b === btn));
+    });
+  });
+  return () => val;
+}
+const getConfidence = wireScale('q-confidence');
+const getUsefulConflicts = wireScale('q-useful-conflicts');
+const getUsefulWritten = wireScale('q-useful-written');
+const getUsefulMeetings = wireScale('q-useful-meetings');
+const getOverallInterest = wireScale('q-overall-interest');
+
+// Every single-choice question block shares the same radio + highlight
+// pattern -- wire them all generically off data-radio instead of repeating
+// per-question listener code for each of them.
+document.querySelectorAll('[data-radio]').forEach(row => {
+  row.querySelectorAll('.choice').forEach(label => {
+    const input = label.querySelector('input');
+    input.addEventListener('change', () => {
+      row.querySelectorAll('.choice').forEach(l => l.classList.toggle('sel', l.querySelector('input').checked));
+    });
+  });
+});
+function getRadio(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+
+const submitBtn = document.getElementById('submitBtn');
+const errorMsg = document.getElementById('errorMsg');
+submitBtn.addEventListener('click', async () => {
+  const conflictFrequency = getRadio('conflict_frequency');
+  if (!conflictFrequency) { errorMsg.hidden = false; return; }
+  errorMsg.hidden = true;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+  const payload = {
+    conflict_frequency: conflictFrequency,
+    first_move: getRadio('first_move'),
+    confidence: getConfidence(),
+    feels_judged: getRadio('feels_judged'),
+    pressure_source: getRadio('pressure_source'),
+    avoided_due_to_pressure: getRadio('avoided_due_to_pressure'),
+    useful_conflicts: getUsefulConflicts(),
+    would_use_conflicts: getRadio('would_use_conflicts'),
+    useful_written: getUsefulWritten(),
+    would_use_written: getRadio('would_use_written'),
+    useful_meetings: getUsefulMeetings(),
+    would_use_meetings: getRadio('would_use_meetings'),
+    team_size: getRadio('team_size'),
+    overall_interest: getOverallInterest(),
+    email: document.getElementById('email').value.trim(),
+    comments: document.getElementById('comments').value.trim(),
+  };
+  try {
+    const res = await fetch(apiPath('/api/survey'), {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('request failed');
+    document.getElementById('form-view').hidden = true;
+    document.getElementById('thanks-view').hidden = false;
+  } catch (e) {
+    errorMsg.textContent = "Couldn't submit just now -- please try again.";
+    errorMsg.hidden = false;
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit feedback';
+  }
+});
+</script>
+</body>
+</html>

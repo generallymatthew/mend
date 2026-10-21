@@ -19,11 +19,19 @@ from usage_log import log_usage
 from scenarios import get_scenario, scenario_text
 
 load_dotenv(REPO_ROOT / ".env")
+load_dotenv(REPO_ROOT / "apps" / "thimble" / ".env")
 
 MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 
 MAX_USER_TURNS = 3
+
+
+def _first_text(response) -> str:
+    for block in response.content:
+        if block.type == "text":
+            return block.text
+    return ""
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
@@ -106,7 +114,7 @@ def reply(req: ReplyRequest):
         input_tokens=response.usage.input_tokens,
         output_tokens=response.usage.output_tokens,
     )
-    reply_text = response.content[0].text.strip()
+    reply_text = _first_text(response).strip()
 
     user_turns = sum(1 for turn in req.history if turn["from"] == "me") + 1
     done = user_turns >= MAX_USER_TURNS
@@ -119,18 +127,41 @@ READOUT_SYSTEM_PROMPT = (
     "finished a roleplay testing how they handle a status-asymmetric first contact: asking "
     "something from a stranger who can say no, where that person already has a reputation "
     "for pushing back.\n\n"
+    "Judge the WHOLE conversation, not just the opening message. What matters is whether "
+    "they read and adapted to the counterpart as it went: did they keep the same approach "
+    "even after the counterpart signaled friction, did they only supply real content once "
+    "pressed for it, or did they give the counterpart what they needed from the start and "
+    "stay attuned to them throughout (not backsliding into pressure once things got easier).\n\n"
     "Given the full transcript, write a readout with exactly three parts, as plain prose, "
     "no headers or labels:\n"
-    "1. One concrete observation tied to what they actually wrote. Quote back the specific "
-    "line of theirs that drove the counterpart's reaction.\n"
-    "2. Name the general pattern that line reflects (leading with their own constraint "
-    "versus leading with the counterpart's stake), without labeling the person as a type.\n"
+    "1. One concrete observation tied to what they actually wrote, drawn from across the "
+    "conversation, not just the first message. Quote back the specific line that best shows "
+    "whether they adjusted or didn't.\n"
+    "2. Name the general pattern that reflects: did they hold one approach regardless of the "
+    "counterpart's reaction, did they only adapt once pressed, or did they read the room from "
+    "the start. Without labeling the person as a type.\n"
     "3. One sentence connecting it to why this is hard to see in the moment it actually "
     "matters.\n\n"
     "Keep it under 120 words total. Second person. Plain, direct sentences. No aphorism-"
     "style headline reversals (no 'X is the symptom, Y is the cause' constructions). No "
-    "em-dashes anywhere in the text."
+    "em-dashes anywhere in the text.\n\n"
+    "Then, on a final line by itself, classify the whole conversation into exactly one of "
+    "these three categories and output ONLY that line in the exact format shown:\n"
+    "CATEGORY: A -- held the same approach throughout even as the counterpart signaled "
+    "friction; never adapted.\n"
+    "CATEGORY: B -- started self-focused or caused friction, but adjusted once the "
+    "counterpart's reaction made the mismatch visible; recovered, didn't lead that way.\n"
+    "CATEGORY: C -- read the counterpart's position from the start, gave them what they "
+    "needed to engage, and stayed attuned throughout without backsliding.\n"
+    "Output the final line as exactly 'CATEGORY: A', 'CATEGORY: B', or 'CATEGORY: C' with "
+    "nothing else on that line."
 )
+
+CATEGORY_INFO = {
+    "A": {"score": 35, "label": "Didn't read the room"},
+    "B": {"score": 70, "label": "Caught up"},
+    "C": {"score": 95, "label": "Read it from the start"},
+}
 
 
 @app.post("/api/readout")
@@ -151,7 +182,7 @@ def readout(req: ReadoutRequest):
 
     response = client.messages.create(
         model=MODEL,
-        max_tokens=300,
+        max_tokens=320,
         system=READOUT_SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_prompt}],
     )
@@ -163,4 +194,19 @@ def readout(req: ReadoutRequest):
         input_tokens=response.usage.input_tokens,
         output_tokens=response.usage.output_tokens,
     )
-    return {"readout": response.content[0].text.strip()}
+    raw = _first_text(response).strip()
+
+    category = "B"  # fallback if the model ever skips the line
+    lines = raw.splitlines()
+    for i in range(len(lines) - 1, -1, -1):
+        stripped = lines[i].strip()
+        if stripped.upper().startswith("CATEGORY:"):
+            value = stripped.split(":", 1)[1].strip().upper()
+            if value in CATEGORY_INFO:
+                category = value
+            lines = lines[:i]
+            break
+    readout_text = "\n".join(lines).strip()
+
+    info = CATEGORY_INFO[category]
+    return {"readout": readout_text, "score": info["score"], "label": info["label"]}

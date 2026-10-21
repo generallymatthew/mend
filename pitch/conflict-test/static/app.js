@@ -10,7 +10,6 @@ const modalSend = document.getElementById('modal-send');
 const modalClose = document.getElementById('modal-close');
 const modalAvatar = document.getElementById('modal-avatar');
 const modalName = document.getElementById('modal-name');
-const modalReadout = document.getElementById('modal-readout');
 
 let state = 'ask_role'; // ask_role -> ready -> in_modal -> done
 let scenario = null;
@@ -46,14 +45,7 @@ function initials(name) {
     .toUpperCase();
 }
 
-addBubble(
-  chatEl,
-  'bot',
-  "Most people think they're pretty good at this. We want to find out, for real, not with a quiz where you can see the right answer."
-);
-setTimeout(() => {
-  addBubble(chatEl, 'bot', "First: what's your job?");
-}, 300);
+addBubble(chatEl, 'bot', "First: what's your job?");
 
 composer.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -92,7 +84,6 @@ function openModal() {
   modalAvatar.textContent = initials(scenario.counterpart_name);
   modalHistory = [{ from: 'them', text: scenario.opening_line }];
   modalChat.innerHTML = '';
-  modalReadout.classList.add('hidden');
   modalComposer.classList.remove('hidden');
   addBubble(modalChat, 'them', scenario.opening_line);
   modalInput.disabled = false;
@@ -139,8 +130,11 @@ modalComposer.addEventListener('submit', async (e) => {
 });
 
 async function showReadout() {
-  modalReadout.classList.remove('hidden');
-  modalReadout.innerHTML = '<span class="readout-tag">What this shows</span><div>Reading the conversation&hellip;</div>';
+  const readoutEl = document.createElement('div');
+  readoutEl.className = 'readout';
+  readoutEl.innerHTML = '<span class="readout-tag">What this shows</span><div>Reading the conversation&hellip;</div>';
+  modalChat.appendChild(readoutEl);
+  modalChat.scrollTop = modalChat.scrollHeight;
 
   const res = await fetch('/api/readout', {
     method: 'POST',
@@ -148,6 +142,23 @@ async function showReadout() {
     body: JSON.stringify({ role: scenario.role, history: modalHistory }),
   });
   const data = await res.json();
-  modalReadout.innerHTML = `<span class="readout-tag">What this shows</span><div>${data.readout.replace(/\n/g, '<br><br>')}</div>`;
+  readoutEl.innerHTML = `
+    <div class="score-row">
+      <div class="score-number">${data.score}</div>
+      <div class="score-meta">
+        <div class="score-label">${data.label}</div>
+        <div class="score-sub">out of 100, reading the room</div>
+      </div>
+    </div>
+    <span class="readout-tag">What this shows</span>
+    <div>${data.readout.replace(/\n/g, '<br><br>')}</div>
+    <div class="scoring-note">
+      <span class="scoring-note-label">How this was scored</span>
+      Judged on the whole exchange, not just your opening line: whether you held one
+      approach even after the other person signaled friction, adjusted only once it
+      became obvious, or gave them what they needed from the start and stayed with it.
+    </div>
+  `;
+  modalChat.scrollTop = modalChat.scrollHeight;
   state = 'done';
 }
