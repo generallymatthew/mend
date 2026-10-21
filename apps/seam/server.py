@@ -32,12 +32,14 @@ import time
 import uuid
 from pathlib import Path
 
+import gspread
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from google.oauth2.service_account import Credentials as GoogleCredentials
 from pydantic import BaseModel
 
 ROOT = Path(__file__).parent
@@ -949,12 +951,65 @@ async def post_written_message(session_id: str, body: Message):
 # of this file -- these answers are the tester's own opinions about
 # conflict management in general, not anything from a real case.
 #
-# Local-only for now, deliberately not wired to a Google Sheet the way
-# ../thimble's survey is (GOOGLE_SHEET_ID/GOOGLE_SERVICE_ACCOUNT_JSON would
-# need to be set up for Seam specifically, or this would need to share
-# Thimble's sheet under a different worksheet tab -- neither decided yet).
-# SURVEY_FILE is the real store until that's resolved.
+# Shares the same Google Sheet (GOOGLE_SHEET_ID) as ../thimble's survey, on
+# its own "Seam" worksheet tab rather than a separate spreadsheet, per
+# explicit request -- same service account
+# (GOOGLE_SERVICE_ACCOUNT_JSON), copied into this app's own .env from
+# ../thimble/.env since each app loads its env independently. In
+# production, Render's dashboard needs both vars added to Seam's own
+# service the same way they're already set on Thimble's -- not something
+# this session can do from here.
 SURVEY_FILE = ROOT / "survey_responses.jsonl"
+GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
+GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+SURVEY_WORKSHEET_TITLE = "Seam"
+SURVEY_SHEET_HEADER = [
+    "Timestamp", "Conflict frequency", "First move", "Confidence (1-5)",
+    "Feels judged", "Pressure source", "Avoided due to pressure",
+    "Useful: Conflicts (1-5)", "Would use: Conflicts",
+    "Useful: Written (1-5)", "Would use: Written",
+    "Useful: Meetings (1-5)", "Would use: Meetings",
+    "Team size", "Overall interest (1-5)", "Email", "Comments",
+]
+_sheet = None
+_sheet_init_failed = False
+
+
+def get_survey_sheet():
+    """Returns the "Seam" worksheet of GOOGLE_SHEET_ID (the same spreadsheet
+    ../thimble's survey writes to, its own tab), authenticated via the same
+    service account. Creates the worksheet with its header row on first use
+    if it doesn't exist yet. Returns None, logging why, if either env var is
+    unset or auth fails -- a survey submission still succeeds either way,
+    falling back to SURVEY_FILE/stdout below. See ../thimble/server.py's
+    own get_survey_sheet() for the one-time Google Cloud Console setup
+    steps (already done once for that service account/sheet)."""
+    global _sheet, _sheet_init_failed
+    if _sheet is not None or _sheet_init_failed:
+        return _sheet
+    if not GOOGLE_SHEET_ID or not GOOGLE_SERVICE_ACCOUNT_JSON:
+        _sheet_init_failed = True
+        return None
+    try:
+        info = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+        creds = GoogleCredentials.from_service_account_info(
+            info, scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        spreadsheet = gspread.authorize(creds).open_by_key(GOOGLE_SHEET_ID)
+        try:
+            _sheet = spreadsheet.worksheet(SURVEY_WORKSHEET_TITLE)
+        except gspread.WorksheetNotFound:
+            _sheet = spreadsheet.add_worksheet(
+                title=SURVEY_WORKSHEET_TITLE, rows=1000, cols=len(SURVEY_SHEET_HEADER)
+            )
+            _sheet.append_row(SURVEY_SHEET_HEADER, table_range="A1")
+    except Exception as e:
+        print(f"[survey] Google Sheets auth/open failed, falling back to local log: {e}", flush=True)
+        _sheet_init_failed = True
+        return None
+    return _sheet
+
+
 SURVEY_RADIO_FIELDS = {
     "conflict_frequency": {"rarely", "occasionally", "regularly", "constantly"},
     "first_move": {"talk_direct", "loop_in_hr_or_manager", "wait_and_see", "other"},
@@ -997,6 +1052,41 @@ async def submit_survey(request: Request):
         "email": email,
         "comments": comments,
     }
+    sheet = get_survey_sheet()
+    if sheet is not None:
+        try:
+            # table_range pins where gspread appends, same reasoning as
+            # ../thimble/server.py's own append_row call -- without it, a
+            # real submission there once landed with every value shifted
+            # columns off from auto-detection.
+            await run_in_threadpool(
+                sheet.append_row,
+                [
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(record["ts"])) + " UTC",
+                    radios["conflict_frequency"] or "",
+                    radios["first_move"] or "",
+                    scales["confidence"] if scales["confidence"] is not None else "",
+                    radios["feels_judged"] or "",
+                    radios["pressure_source"] or "",
+                    radios["avoided_due_to_pressure"] or "",
+                    scales["useful_conflicts"] if scales["useful_conflicts"] is not None else "",
+                    radios["would_use_conflicts"] or "",
+                    scales["useful_written"] if scales["useful_written"] is not None else "",
+                    radios["would_use_written"] or "",
+                    scales["useful_meetings"] if scales["useful_meetings"] is not None else "",
+                    radios["would_use_meetings"] or "",
+                    radios["team_size"] or "",
+                    scales["overall_interest"] if scales["overall_interest"] is not None else "",
+                    email,
+                    comments,
+                ],
+                table_range=f"A1:{chr(ord('A') + len(SURVEY_SHEET_HEADER) - 1)}1",
+            )
+        except Exception as e:
+            # A real write failure (quota, revoked share, transient network
+            # error) shouldn't lose the response -- it still lands in the
+            # fallback log below.
+            print(f"[survey] Sheets append failed, response saved to local log only: {e}", flush=True)
     with SURVEY_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
     print(f"[survey] {json.dumps(record)}", flush=True)

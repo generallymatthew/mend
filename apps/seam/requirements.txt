@@ -5,3 +5,5 @@ python-dotenv>=1.0
 pydantic>=2.0
 faster-whisper>=1.0
 python-multipart>=0.0.9  # required for FastAPI's UploadFile (/api/voice)
+gspread>=6  # appends each /api/survey response to a Google Sheet -- see server.py's get_survey_sheet() for the required GOOGLE_SHEET_ID/GOOGLE_SERVICE_ACCOUNT_JSON env vars
+google-auth>=2.30
