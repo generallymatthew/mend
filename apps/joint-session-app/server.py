@@ -52,11 +52,20 @@ from pathlib import Path
 import httpx
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).parent
+
+# Must run before any os.environ.get() below -- it used to sit much later
+# in the file (after OPENAI_API_KEY was already read), which meant
+# OPENAI_API_KEY was always None regardless of what .env actually had,
+# silently falling back to the macOS `say` voice every time. Real bug,
+# not a config issue: confirmed .env had a working key the whole time.
+load_dotenv(ROOT / ".env")
+
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-joint-session-system-prompt.md"
 
 # Shared local cost/usage logger (../usage_log.py) -- same sys.path trick as
@@ -66,6 +75,34 @@ from usage_log import log_usage
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("mend.joint_session")
+
+# Voice-memo dictation for the composer: hold, speak, release, transcribe
+# via /api/voice, drop the text into the field (never auto-sent). Same
+# lightweight one-shot pattern as apps/manager-app/server.py's own
+# get_whisper/transcribe_file -- deliberately not intake-app's full live-
+# conversation pipeline (VAD, partial/streaming transcripts, Deepgram),
+# since this just needs to turn one short clip into text.
+WHISPER_MODEL_NAME = os.environ.get("WHISPER_MODEL", "tiny.en")
+WHISPER_CPU_THREADS = int(os.environ.get("WHISPER_CPU_THREADS", str(os.cpu_count() or 4)))
+_whisper_model = None
+
+
+def get_whisper():
+    global _whisper_model
+    if _whisper_model is None:
+        from faster_whisper import WhisperModel
+        _whisper_model = WhisperModel(
+            WHISPER_MODEL_NAME, device="cpu", compute_type="int8", cpu_threads=WHISPER_CPU_THREADS,
+        )
+    return _whisper_model
+
+
+def transcribe_file(path: str) -> str:
+    """Synchronous, CPU-bound -- always call via run_in_threadpool from a
+    route handler, never directly."""
+    model = get_whisper()
+    segments, _info = model.transcribe(path, beam_size=1)
+    return " ".join(seg.text.strip() for seg in segments).strip()
 
 # Real tier-3 hard-cut classifier (../classifier/inference.py). v3 is the
 # reference checkpoint, not v4 -- v4 fixed illegal_activity but regressed
@@ -129,8 +166,6 @@ def ws_rate_limited(ip: str) -> bool:
     hits.append(now)
     _ws_rate_hits[ip] = hits
     return False
-
-load_dotenv(ROOT / ".env")
 
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
@@ -592,6 +627,25 @@ async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
         other = session.sockets.get(OTHER_ROLE[role])
         if other:
             await send_to(session, OTHER_ROLE[role], {"type": "waiting"})
+
+
+@app.post("/api/voice")
+async def post_voice(file: UploadFile):
+    """Transcription only, no persistence: the clip is written to a temp
+    file for the length of this request and discarded after. Returns the
+    transcript text for the frontend to drop into the composer; never
+    calls the facilitator itself."""
+    with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as tmp:
+        body = await file.read()
+        tmp.write(body)
+        tmp.flush()
+        try:
+            transcript = await run_in_threadpool(transcribe_file, tmp.name)
+        except Exception:
+            transcript = ""
+    if not transcript:
+        return JSONResponse({"error": "couldn't transcribe audio"}, status_code=400)
+    return {"transcript": transcript}
 
 
 @app.get("/api/audio/{filename}")

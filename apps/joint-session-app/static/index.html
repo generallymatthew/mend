@@ -16,53 +16,136 @@
     --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
     --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
     --a:#17372E; --b:#E9B949; --facilitator:#F3829A;
+    /* The call window's own paler-than-paper white, same as intake-app's
+       --stage-bg -- the window itself (border, rounded corners, white)
+       is what makes this read as "the Thimble app" rather than the plain
+       tan page background showing through. */
+    --stage-bg:#FBF8F3;
   }
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
-  .wrap{max-width:760px; margin:0 auto; padding:20px 16px; display:flex; flex-direction:column; height:100vh;}
-  .header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:4px;}
+  /* Edge-to-edge, no padding/max-width/centering -- confirmed against the
+     real intake-app call view: the header and call window run flush to
+     all four viewport edges, not floating in a padded, centered, rounded
+     card. Getting this wrong (a padded tan-background wrap) was the
+     actual bug in every earlier pass at this. */
+  .wrap{display:flex; flex-direction:column; height:100vh;}
+  /* Top nav, a direct port of intake-app's own .top-nav/.top-bar-brand/
+     .brand-mark/.privacy-chip: a white bordered-bottom bar (not sitting
+     transparent on the tan page), the wordmark lowercase/26px/800, and a
+     small subtle "Private" chip rather than a bigger pill spelling out
+     the whole disclaimer. */
+  .header{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--card); flex-shrink:0;}
   .brand{display:flex; align-items:center; gap:9px;}
-  .brand-mark{height:22px; width:auto; display:block;}
-  .brand-name{font-weight:800; font-size:19px; letter-spacing:-0.01em; color:var(--ink);}
-  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
-  .privacy-pill{display:flex; align-items:center; gap:7px; padding:6px 12px; border-radius:999px; background:var(--accent-soft); font-size:12px; font-weight:500; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
+  .brand-mark{height:21px; width:auto; display:block;}
+  .brand-name{font-weight:800; font-size:26px; letter-spacing:-.02em; color:var(--ink); text-transform:lowercase;}
+  .eyebrow{font-family:'Manrope',sans-serif; font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
+  .privacy-pill{display:inline-flex; align-items:center; gap:5px; padding:4px 9px 4px 7px; border-radius:999px; background:#17372E0D; font-size:11px; letter-spacing:.02em; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
   .privacy-pill svg{flex-shrink:0;}
-  .signal{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:10px; white-space:pre-wrap;}
 
-  .stage{display:flex; gap:10px; margin-bottom:10px;}
-  .tile{flex:1; min-width:0; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 8px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px; opacity:.55; position:relative; transition:opacity .2s ease, box-shadow .2s ease;}
-  .tile.unlocked{opacity:1;}
-  .tile.speaking{box-shadow:0 0 0 2px var(--accent);}
-  .tile .avatar{width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:19px; color:#fff; flex:none;}
-  .tile.a .avatar{background:var(--a);} /* Evergreen fill, white letter passes at 12.9:1 */
-  .tile.b .avatar{background:var(--b); color:var(--ink);} /* Honey fill needs dark letter -- white fails at 1.8:1, Evergreen passes at 7.1:1 */
-  .tile.facilitator .avatar{background:var(--facilitator); color:var(--ink); font-size:16px;} /* Pink fill, same reasoning: Evergreen letter passes at 5.2:1 */
-  .tile.facilitator{opacity:1;}
-  .tile .name{font-size:11.5px; font-weight:600; line-height:1.3;}
-  .tile .you{position:absolute; top:6px; right:8px; font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:.03em; color:var(--accent);}
-  .tile.thinking .avatar{animation:pulse 1.1s ease-in-out infinite;}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  /* This whole block is a direct port of intake-app's own call-layout/
+     call-main/call-header/stage/avatar-stack structure (static/
+     session.html), not a reinvented layout -- same class names, same
+     positioning rules. The only addition is the participants-row of two
+     tiles inside .stage, alongside the existing avatar-stack. */
+  .call-layout{flex:1; display:flex; min-height:0;}
+  .call-main{position:relative; flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--stage-bg); overflow-y:auto;}
+  .call-header{position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:12px; padding:12px 16px; border-bottom:1px solid #17372E14; z-index:3;}
+  .state-pill{display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--ink);}
+  .state-pill::before{content:''; width:8px; height:8px; border-radius:50%; background:#F3829A; flex-shrink:0;}
+  .state-pill b{font-weight:700;}
+  .state-word{opacity:.72; font-weight:500;}
+  .transcript-panel{width:340px; flex-shrink:0; min-height:0; border-left:1px solid var(--border); background:var(--card); display:flex; flex-direction:column;}
 
-  .thread{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-bottom:16px;}
-  .msg{max-width:82%; padding:10px 13px; border-radius:12px; line-height:1.5; font-size:14px; white-space:pre-wrap;}
-  .msg .who{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.03em; opacity:.7; display:block; margin-bottom:3px;}
-  .msg.facilitator{background:var(--card); border:1px solid var(--border); align-self:center; max-width:92%;}
-  .msg.mine{align-self:flex-end;}
-  .msg.theirs{align-self:flex-start;}
-  .msg.from-a{background:var(--a); color:#fff;}
-  .msg.from-b{background:var(--b); color:var(--ink);} /* Honey fill, Evergreen text -- same contrast reasoning as the tile avatar above */
-  .msg.private{border:1.5px dashed var(--ink-soft); background:transparent; align-self:center; max-width:92%; font-style:italic;}
-  .composer{display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--border); padding-top:10px;}
-  .row{display:flex; gap:8px; align-items:flex-end;}
-  textarea{flex:1; resize:none; border:1.5px solid var(--border); border-radius:10px; padding:8px 10px; font:inherit; font-size:14px; background:var(--card); color:var(--ink);}
+  /* Extra top padding clears .call-header's own height (it's position:
+     absolute, floating over the stage, not pushing it down in flow) --
+     without this, centering the avatar in the stage's full height put it
+     right up against/overlapping the state-pill bar above it. */
+  .stage{position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px; padding:64px 32px 32px; min-width:0; min-height:280px; background:var(--stage-bg); border-radius:18px;}
+  .avatar-stack{display:flex; flex-direction:column; align-items:center;}
+  .avatar-row{display:flex; align-items:center; justify-content:center;}
+  /* Pushed down toward the bottom of the stage via the auto top-margin
+     (flex column), instead of grouped tight with Thimble in one centered
+     block -- there's real space below Thimble, use it. */
+  .participants-row{display:flex; gap:16px; width:100%; max-width:480px; margin-top:auto;}
+  .video-tile{flex:1; min-width:0; height:180px; background:var(--card); border:1px solid var(--border); border-radius:16px; display:flex; align-items:center; justify-content:center; position:relative; opacity:.55; transition:opacity .2s ease, box-shadow .2s ease;}
+  .video-tile.unlocked{opacity:1;}
+  .video-tile.speaking{box-shadow:0 0 0 3px var(--accent);}
+  .video-tile.a{background:linear-gradient(180deg, color-mix(in srgb, var(--a) 7%, var(--card)), var(--card));}
+  .video-tile.b{background:linear-gradient(180deg, color-mix(in srgb, var(--b) 14%, var(--card)), var(--card));}
+  .tile-avatar{width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:24px; color:#fff; flex:none;}
+  .tile-avatar.you{font-size:14px;}
+  .video-tile.a .tile-avatar{background:var(--a);} /* Evergreen fill, white letter passes at 12.9:1 */
+  .video-tile.b .tile-avatar{background:var(--b); color:var(--ink);} /* Honey fill needs dark letter -- white fails at 1.8:1, Evergreen passes at 7.1:1 */
+  /* Label sits bottom-left inside the box -- your own tile just says
+     "You" here (set at runtime, see initRoom), the other keeps its role
+     label, same "where am I" convention without needing a separate
+     corner-pinned layout for the boxes themselves. */
+  .tile-label{position:absolute; left:10px; bottom:10px; background:rgba(23,55,46,.6); color:#fff; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px;}
+
+  /* Thimble's real avatar: a direct port of intake-app's own engine
+     (static/session.html -- THIMBLE_SHAPES/applyThimbleState/
+     updateThimbleMotion), the same character used everywhere else in the
+     product, not a flat approximation of it. Sized down (96px, no card
+     chrome) for this header-style placement rather than a full call
+     stage. See this file's own <script> for the ported motion engine;
+     mic/TTS-level-specific pieces (hearing ripple, VAD) are dropped --
+     this app is text-only, so there's no real listening state. */
+  .thimble-avatar{position:relative; width:200px; height:200px; transition:opacity .4s ease; isolation:isolate; margin:0 auto;}
+  .thimble-core{position:absolute; inset:0; transition:transform .7s cubic-bezier(.3,1.4,.5,1);}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
+  .thimble-shadow{position:absolute; left:50%; top:calc(100% + 20px); width:66%; height:14px; transform:translateX(-50%); background:radial-gradient(ellipse closest-side at center, rgba(23,55,46,.34) 0%, rgba(23,55,46,.2) 50%, rgba(23,55,46,.07) 78%, rgba(23,55,46,0) 100%); border-radius:50%; pointer-events:none; z-index:-1;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
+  .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
+  .thimble-brain-dot{position:absolute; left:0; top:0; border-radius:50%; mix-blend-mode:multiply; opacity:.5; pointer-events:none;}
+  @keyframes thimble-idle-bounce{0%,100%{transform:translateY(0);} 50%{transform:translateY(-5%);}}
+  @keyframes thimble-idle-shadow{0%,100%{transform:translateX(-50%) scale(1); opacity:1;} 50%{transform:translateX(-50%) scale(.7); opacity:.55;}}
+
+  /* Right-hand panel, a direct port of intake-app's own chat-panel
+     component (chat-header/chat-msg-wrap/chat-who/chat-bubble/
+     chat-composer/chat-input-row/chat-hint) -- not the generic .msg/
+     .thread pattern used elsewhere in this app's history. Adapted for
+     three senders (You / Them / Thimble) instead of intake-app's two
+     (You / Thimble), same visual language otherwise. */
+  .chat-header{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid #17372E14; flex-shrink:0;}
+  .chat-header-text{display:flex; flex-direction:column; gap:2px;}
+  .chat-name{font-weight:700; font-size:15px;}
+  .chat-status{font-size:12.5px; opacity:.6;}
+  .overflow-btn{width:34px; height:34px; padding:0; border:none; background:transparent; color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:50%; flex-shrink:0;}
+  .overflow-btn:hover{background:#17372E0D; color:var(--ink);}
+  .thread{flex:1; overflow-y:auto; padding:24px 16px; display:flex; flex-direction:column; gap:14px;}
+  .chat-msg-wrap{display:flex; flex-direction:column; gap:4px;}
+  .chat-msg-wrap.mine{align-items:flex-end;}
+  .chat-msg-wrap.theirs{align-items:flex-start;}
+  .chat-who{font-size:11.5px; font-weight:600; opacity:.55;}
+  .chat-bubble{padding:12px 16px; border-radius:16px; font-size:15.5px; line-height:1.6; white-space:pre-wrap; max-width:94%;}
+  .chat-bubble.mine{background:var(--accent); color:var(--paper); border-bottom-right-radius:4px;}
+  .chat-bubble.theirs{background:var(--paper); color:var(--ink); border-bottom-left-radius:4px;}
+  .chat-bubble.from-a{background:var(--a); color:#fff; border-bottom-left-radius:4px;}
+  .chat-bubble.from-b{background:var(--b); color:var(--ink); border-bottom-left-radius:4px;} /* Honey fill, Evergreen text -- same contrast reasoning as the tile avatar */
+  .chat-bubble.private{border:1.5px dashed var(--ink-soft); background:transparent; font-style:italic;}
+  .composer{display:flex; flex-direction:column; gap:8px; border-top:1px solid #17372E14; padding:12px 16px 16px; flex-shrink:0;}
+  .chat-input-row{display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--border); border-radius:18px; padding:8px 8px 8px 16px;}
+  .chat-hint{margin-top:2px; font-size:12px; opacity:.55; text-align:center;}
+  /* Voice-memo dictation: hold, speak, release -- transcribes via
+     /api/voice and drops the text into the composer, same push-to-talk
+     pattern as manager-app's own .mic-btn/wirePushToTalk. */
+  .mic-btn{width:36px; height:36px; border-radius:999px; border:1.5px solid var(--border); background:var(--card); color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; padding:0; -webkit-user-select:none; user-select:none; touch-action:none;}
+  .mic-btn.recording{background:#E85D4A; border-color:#E85D4A; color:#fff;}
+  textarea{flex:1; min-width:0; resize:none; outline:none; overflow-y:auto; max-height:160px; border:1.5px solid var(--border); border-radius:10px; padding:8px 10px; font:inherit; font-size:14px; line-height:1.5; background:var(--card); color:var(--ink);}
+  .chat-input-row textarea{border:none; border-radius:0; background:transparent;}
   button{border:1.5px solid var(--border); background:var(--card); color:var(--ink); border-radius:10px; padding:8px 12px; font:inherit; font-weight:600; cursor:pointer; font-size:13px;}
+  .send-btn{height:44px; padding:0 20px; border-radius:12px; flex-shrink:0; background:var(--accent); color:#fff; border-color:var(--accent); font-size:14px;}
   button:disabled{opacity:.5; cursor:default;}
-  .status{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-top:4px; min-height:14px;}
-  .reset{align-self:flex-end; margin-bottom:8px;}
-  .banner{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:10px 14px; margin-bottom:10px; font-size:13.5px;}
+  .status{font-family:'Manrope',sans-serif; font-size:11px; color:var(--ink-soft); padding:0 16px 10px; min-height:14px;}
+  /* Pill-shaped secondary button, a direct port of intake-app's own
+     .end-session-btn (border, transparent background, soft ink text). */
+  .banner{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; padding:10px 14px; margin-top:10px; font-size:13.5px; flex-shrink:0;}
   .banner a{text-decoration:none;}
   .banner button{background:var(--accent); color:#fff; border-color:var(--accent); padding:7px 12px; font-size:13px;}
-  .overlay{display:flex; align-items:center; justify-content:center; gap:8px; background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:22px 18px; text-align:center; color:var(--ink-soft); margin-bottom:10px;}
+  .overlay{display:flex; align-items:center; justify-content:center; gap:8px; background:var(--card); border:1px dashed var(--border); border-radius:10px; padding:22px 18px; text-align:center; color:var(--ink-soft); flex:1;}
   .overlay svg{flex-shrink:0;}
   /* Paused-for-privacy (the facilitator checking in with just one side) gets
      the brand's honey "private/caucus" tint -- same color language as the
@@ -75,14 +158,31 @@
   .overlay.private{border-style:solid; border-color:#E9B949; background:#E9B9491A; color:var(--ink);}
   [hidden]{display:none !important;}
 
+  /* "Are you ready to join" gate, a direct port of intake-app's own
+     checkin-overlay/checkin-card. Not just framing -- the click itself is
+     the real user gesture browsers require before letting a page auto-
+     play audio; without it, Thimble's TTS reply plays silently
+     (audioEl.play() rejects and the rejection is swallowed) the moment
+     the session actually starts, which is why Thimble looked like it
+     never "talks" even though the text/avatar state both update fine. */
+  .checkin-overlay{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:20px; background:var(--paper);}
+  .checkin-card{width:100%; max-width:340px; background:var(--card); border-radius:22px; padding:30px 26px 26px; box-shadow:0 24px 56px -16px rgba(23,55,46,.35); border:1px solid var(--border); text-align:center;}
+  .checkin-ring{width:60px; height:60px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; margin:0 auto 18px;}
+  .checkin-ring svg{width:24px; height:24px; color:var(--ink);}
+  .checkin-card h2{font-size:17px; margin:0 0 12px; line-height:1.3;}
+  .checkin-card p{font-size:13.5px; line-height:1.55; color:var(--ink-soft); margin:0 0 14px;}
+  .checkin-privacy{font-size:12px; line-height:1.5; color:var(--ink); background:var(--accent-soft); border-radius:12px; padding:10px 12px; margin:0 0 20px;}
+  .checkin-ready-btn{width:100%; font:inherit; font-size:14px; font-weight:700; height:46px; border-radius:999px; border:none; background:var(--ink); color:var(--paper); cursor:pointer;}
+  .checkin-ready-btn:hover{opacity:.92;}
+
   /* landing / link-generator view */
   .landing{max-width:640px; margin:60px auto; padding:0 16px; display:flex; flex-direction:column; gap:18px;}
   .landing h1{font-size:20px; margin:0;}
   .landing p{color:var(--ink-soft); line-height:1.5; margin:0;}
   .linkcard{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 18px; display:flex; flex-direction:column; gap:8px;}
-  .linkcard .label{font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);}
+  .linkcard .label{font-family:'Manrope',sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);}
   .linkrow{display:flex; gap:8px; align-items:center;}
-  .linkrow input{flex:1; font-family:'IBM Plex Mono',monospace; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px 10px; background:var(--paper); color:var(--ink);}
+  .linkrow input{flex:1; font-family:'Manrope',sans-serif; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:8px 10px; background:var(--paper); color:var(--ink);}
 </style>
 </head>
 <body>
@@ -107,45 +207,79 @@
       <img class="brand-mark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E" alt="">
       <span class="brand-name">Mend</span>
     </div>
-    <div class="privacy-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private. Nothing is recorded.</div>
-  </div>
-  <div class="eyebrow" id="roleLabel">Mend &middot; joint session</div>
-  <div class="signal" id="signal">no signal yet</div>
-
-  <div class="stage" id="stage" hidden>
-    <div class="tile a" id="tileA">
-      <span class="you" id="youA" hidden>you</span>
-      <div class="avatar">A</div>
-      <div class="name">Employee A</div>
-    </div>
-    <div class="tile facilitator" id="tileF">
-      <div class="avatar">&#9670;</div>
-      <div class="name">Thimble</div>
-    </div>
-    <div class="tile b" id="tileB">
-      <span class="you" id="youB" hidden>you</span>
-      <div class="avatar">B</div>
-      <div class="name">Employee B</div>
-    </div>
-  </div>
-  <div class="overlay" id="overlay" hidden>
-    <svg id="overlayLock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" hidden><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-    <span id="overlayText"></span>
+    <div class="privacy-pill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private</div>
   </div>
 
-  <div class="banner" id="banner" hidden>
-    <span id="bannerText">Session ended.</span>
-    <a id="bannerLink" href="/post/"><button>Continue to post-session &rarr;</button></a>
-  </div>
-  <button class="reset" id="resetBtn">reset session</button>
-  <div class="thread" id="thread"></div>
-  <div class="composer">
-    <div class="row">
-      <textarea id="input" rows="2" placeholder="Type your message..."></textarea>
-      <button id="send">Send</button>
+  <div class="call-layout">
+    <div class="call-main">
+      <div class="call-header">
+        <div class="state-pill" id="statePill"><b>Thimble:</b> <span class="state-word" id="stateWord">Waiting&hellip;</span></div>
+      </div>
+      <div class="stage" id="stage" hidden>
+        <div class="avatar-stack">
+          <div class="avatar-row">
+            <div class="thimble-avatar" id="facilitatorAvatar">
+              <div class="thimble-shadow" id="facilitatorShadow"></div>
+              <div class="thimble-core" id="facilitatorCore">
+                <div class="thimble-ripple" id="facilitatorRippleA" hidden></div>
+                <div class="thimble-ring" id="facilitatorRing">
+                  <div class="thimble-body" id="facilitatorBody">
+                    <div class="thimble-blend" id="facilitatorBlend"></div>
+                    <div class="thimble-brain-dot" id="facilitatorDotA" style="background:#F3829A;" hidden></div>
+                    <div class="thimble-brain-dot" id="facilitatorDotB" style="background:#b0ded1;" hidden></div>
+                    <div class="thimble-brain-dot" id="facilitatorDotC" style="background:#A3CFE0;" hidden></div>
+                    <div class="thimble-mouth" id="facilitatorMouth"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="participants-row">
+          <div class="video-tile a" id="tileA">
+            <div class="tile-avatar" id="avatarA">A</div>
+            <div class="tile-label" id="labelA">Employee A</div>
+          </div>
+          <div class="video-tile b" id="tileB">
+            <div class="tile-avatar" id="avatarB">B</div>
+            <div class="tile-label" id="labelB">Employee B</div>
+          </div>
+        </div>
+      </div>
+      <div class="overlay" id="overlay" hidden>
+        <svg id="overlayLock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" hidden><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        <span id="overlayText"></span>
+      </div>
+      <div class="banner" id="banner" hidden>
+        <span id="bannerText">Session ended.</span>
+        <a id="bannerLink" href="/post/"><button>Continue to post-session &rarr;</button></a>
+      </div>
+    </div>
+
+    <div class="transcript-panel">
+      <div class="chat-header">
+        <div class="chat-header-text">
+          <span class="chat-name">Thimble</span>
+          <span class="chat-status" id="chatStatus">Facilitating this conversation</span>
+        </div>
+        <button class="overflow-btn" type="button" aria-label="More options">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg>
+        </button>
+      </div>
+      <div class="thread" id="thread"></div>
+      <div class="composer">
+        <div class="chat-input-row">
+          <textarea id="input" rows="2" placeholder="Type your message..."></textarea>
+          <button class="mic-btn" id="micBtn" title="Hold to dictate">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3"/></svg>
+          </button>
+          <button id="send" class="primary send-btn">Send</button>
+        </div>
+        <div class="chat-hint">Enter to send &middot; Shift+Enter for a new line</div>
+      </div>
+      <div class="status" id="status"></div>
     </div>
   </div>
-  <div class="status" id="status"></div>
 </div>
 
 <script>
@@ -174,6 +308,184 @@ if (!code || !role) {
   initRoom();
 }
 
+// --- Thimble avatar engine -------------------------------------------
+// Ported from intake-app's static/session.html (the real, live-tuned
+// Thimble character) rather than approximated here. Trimmed to the
+// states this text-only app actually uses (idle/thinking/talking/
+// paused -- no listening/ready, since there's no mic), and the
+// mic/TTS-amplitude-specific pieces (hearing ripple, VAD, real audio
+// level) are dropped since this app has no live audio input to react
+// to. Talking's mouth motion uses a synthetic gentle oscillation
+// instead of real TTS amplitude, just enough to read as "speaking"
+// rather than a frozen oval -- see ttsLevel below.
+const DOME_RADIUS = '50% 50% 50% 50% / 58% 58% 42% 42%';
+const THIMBLE_SHAPES = {
+  idle:     {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'thimble-idle-bounce 2.6s ease-in-out infinite', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
+  thinking: {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58},
+  talking:  {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
+  paused:   {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
+};
+const THIMBLE_COLORS = {
+  idle:     '#A3CFE0',
+  thinking: '#E9B949',
+  talking:  '#F3829A',
+  paused:   '#A9A39A',
+};
+function thimbleHexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
+}
+const BRAIN_DOTS_TIGHT = [
+  {base:'dotA', r:7,  speed:4.6,  phase:0},
+  {base:'dotB', r:5,  speed:-3.6, phase:2.1},
+  {base:'dotC', r:8,  speed:3.1,  phase:4.2},
+];
+function thimbleInstance(prefix, size) {
+  return {
+    size,
+    el: document.getElementById(prefix + 'Avatar'),
+    core: document.getElementById(prefix + 'Core'),
+    shadow: document.getElementById(prefix + 'Shadow'),
+    ring: document.getElementById(prefix + 'Ring'),
+    body: document.getElementById(prefix + 'Body'),
+    blend: document.getElementById(prefix + 'Blend'),
+    mouth: document.getElementById(prefix + 'Mouth'),
+    rippleA: document.getElementById(prefix + 'RippleA'),
+    dotA: document.getElementById(prefix + 'DotA'),
+    dotB: document.getElementById(prefix + 'DotB'),
+    dotC: document.getElementById(prefix + 'DotC'),
+    renderedState: null, mouthLevel: 0, geo: 0, lvl: 0,
+    wobblePhase: 0, breathePhase: 0, lastT: null,
+  };
+}
+function domeWobbleRadius(domeFactor, lvl) {
+  const capY = 50 + (12 + 3 * lvl) * domeFactor;
+  const rimY = 50 - (14 + 3 * lvl) * domeFactor;
+  return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+}
+function renderThimbleMouth(inst, state) {
+  const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.idle;
+  const s = inst.size;
+  inst.mouth.style.top = shape.mouthTop + '%';
+  inst.mouth.style.left = (shape.mouthX || 50) + '%';
+  inst.mouth.className = 'thimble-mouth';
+  inst.mouth.innerHTML = '';
+  inst.mouth.style.width = (shape.mouthW * s) + 'px';
+  inst.mouth.style.height = (shape.mouthH * s) + 'px';
+  inst.mouth.style.boxSizing = 'border-box';
+  inst.mouth.style.background = '#F6F1E7';
+  inst.mouth.style.borderBottom = 'none';
+  inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
+}
+function applyThimbleState(inst, state) {
+  if (state === inst.renderedState) return;
+  inst.renderedState = state;
+  const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.idle;
+  inst.core.style.transform = shape.lean;
+  inst.body.style.animation = shape.anim;
+  inst.body.style.borderRadius = shape.radius;
+  if (inst.shadow) {
+    inst.shadow.style.animation = (state === 'idle')
+      ? 'thimble-idle-shadow 2.6s ease-in-out infinite'
+      : 'none';
+  }
+  const targetHex = THIMBLE_COLORS[state] || THIMBLE_COLORS.talking;
+  inst.colorTargetRGB = thimbleHexToRgb(targetHex);
+  if (!inst.colorRGB) {
+    inst.colorRGB = {...inst.colorTargetRGB};
+    inst.body.style.backgroundColor = targetHex;
+  }
+  const talking = state === 'talking';
+  inst.rippleA.hidden = !talking;
+  const thinkingNow = state === 'thinking';
+  const dotSize = inst.size * 0.065;
+  [inst.dotA, inst.dotB, inst.dotC].forEach(d => {
+    d.hidden = !thinkingNow;
+    d.style.width = d.style.height = dotSize + 'px';
+  });
+  inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
+  renderThimbleMouth(inst, state);
+}
+function updateThimbleMotion(inst, now, idleBreathing) {
+  applyThimbleState(inst, avatarState);
+  const dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
+  inst.lastT = now;
+  if (inst.colorRGB) {
+    const colorRate = 1 - Math.pow(0.000001, dt);
+    inst.colorRGB.r += (inst.colorTargetRGB.r - inst.colorRGB.r) * colorRate;
+    inst.colorRGB.g += (inst.colorTargetRGB.g - inst.colorRGB.g) * colorRate;
+    inst.colorRGB.b += (inst.colorTargetRGB.b - inst.colorRGB.b) * colorRate;
+    inst.body.style.backgroundColor = `rgb(${Math.round(inst.colorRGB.r)}, ${Math.round(inst.colorRGB.g)}, ${Math.round(inst.colorRGB.b)})`;
+  }
+  const speaking = avatarState === 'talking';
+  const thinkingState = avatarState === 'thinking';
+  const ttsLevel = speaking ? (0.35 + 0.25 * Math.sin(now / 120)) : 0;
+  const active = idleBreathing || speaking || thinkingState;
+  if (!active) { inst.ring.style.transform = 'none'; inst.body.style.clipPath = 'none'; inst.geo = 0; inst.lvl = 0; }
+  else {
+    const wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
+    if (thinkingState) {
+      const ts = now / 1000;
+      const cx = inst.size * (59 / 118), cy = inst.size * (36 / 118);
+      BRAIN_DOTS_TIGHT.forEach(d => {
+        const ang = ts * d.speed + d.phase;
+        const r = inst.size * (d.r / 118);
+        const half = (inst.size * 0.065) / 2;
+        const x = cx + Math.cos(ang) * r - half;
+        const y = cy + Math.sin(ang) * r * 0.8 - half;
+        inst[d.base].style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+      });
+    }
+    const breathePeriod = speaking ? 2.2 : thinkingState ? 3 : 4.5;
+    inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+    const breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
+    inst.ring.style.transform = `rotate(${wiggle.toFixed(2)}deg) scale(${breathe.toFixed(4)})`;
+    const input = speaking ? ttsLevel : thinkingState ? 0.15 : 0;
+    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
+    const wobblePeriod = thinkingState ? 3.4 : 1.6;
+    inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+    const domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
+    inst.body.style.clipPath = 'none';
+    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+    if (speaking) {
+      const ringRadius = inst.body.style.borderRadius;
+      const ringTransform = inst.ring.style.transform;
+      inst.rippleA.style.animation = 'none';
+      inst.rippleA.style.borderRadius = ringRadius;
+      inst.rippleA.style.transform = `${ringTransform} scale(${(1.04 + 0.05 * domeFactor).toFixed(3)})`;
+      inst.rippleA.style.opacity = (0.22 + 0.16 * domeFactor).toFixed(3);
+    }
+  }
+  if (speaking) {
+    const rate = ttsLevel > inst.mouthLevel ? 0.7 : 0.25;
+    inst.mouthLevel += (ttsLevel - inst.mouthLevel) * rate;
+    const minH = inst.size * 0.03;
+    const maxH = THIMBLE_SHAPES[avatarState].mouthW * inst.size * 0.7;
+    inst.mouth.style.height = (minH + (maxH - minH) * inst.mouthLevel) + 'px';
+  } else {
+    inst.mouthLevel = 0;
+  }
+}
+let avatarState = 'idle';
+// Header-bar wording, a direct port of intake-app's own STATE_WORDS/
+// CHAT_STATUS -- trimmed to the states this app actually uses.
+const STATE_WORDS = {idle: 'Waiting…', thinking: 'Thinking…', talking: 'Talking…', paused: 'Paused'};
+const CHAT_STATUS = {idle: 'Facilitating this conversation', thinking: 'Thinking…', talking: 'Replying…', paused: 'Paused.'};
+const stateWordEl = document.getElementById('stateWord');
+const chatStatusEl = document.getElementById('chatStatus');
+function setAvatarState(state) {
+  avatarState = state;
+  stateWordEl.textContent = STATE_WORDS[state] || STATE_WORDS.idle;
+  chatStatusEl.textContent = CHAT_STATUS[state] || CHAT_STATUS.idle;
+}
+const thimbleFacilitator = thimbleInstance('facilitator', 200);
+function animateAvatar(now) {
+  requestAnimationFrame(animateAvatar);
+  updateThimbleMotion(thimbleFacilitator, now || performance.now(), avatarState === 'idle');
+}
+requestAnimationFrame(animateAvatar);
+// --- end Thimble avatar engine ----------------------------------------
+
 function initRoom() {
   // Path-relative, not hardcoded: "/" standalone, "/joint/" behind the
   // local Caddy proxy (../Caddyfile). Used for both the WebSocket URL and
@@ -183,7 +495,6 @@ function initRoom() {
   function apiPath(p) { return BASE_PATH + p.replace(/^\//, ''); }
 
   const thread = document.getElementById('thread');
-  const signalEl = document.getElementById('signal');
   const statusEl = document.getElementById('status');
   const stage = document.getElementById('stage');
   const overlay = document.getElementById('overlay');
@@ -191,18 +502,84 @@ function initRoom() {
   const overlayLock = document.getElementById('overlayLock');
   const tileA = document.getElementById('tileA');
   const tileB = document.getElementById('tileB');
-  const tileF = document.getElementById('tileF');
   const input = document.getElementById('input');
   const send = document.getElementById('send');
-  const resetBtn = document.getElementById('resetBtn');
+  const micBtn = document.getElementById('micBtn');
   const banner = document.getElementById('banner');
   const bannerLink = document.getElementById('bannerLink');
   const audioEl = new Audio();
-  const myLabel = roleSlug === 'a' ? 'Employee A' : 'Employee B';
 
-  document.getElementById('roleLabel').textContent =
-    `Mend · joint session · you are ${myLabel}`;
-  document.getElementById(roleSlug === 'a' ? 'youA' : 'youB').hidden = false;
+  // Push-to-talk dictation: hold, speak, release -- transcribes via
+  // /api/voice and drops the text into the composer, never auto-sends.
+  // Ported from manager-app's own wirePushToTalk helper.
+  (function wirePushToTalk(btn, targetEl) {
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    async function press() {
+      if (mediaRecorder) return;
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e) {
+        alert("Couldn't access the microphone.");
+        return;
+      }
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        btn.classList.remove('recording');
+        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        mediaRecorder = null;
+        if (blob.size < 1000) return;
+        const form = new FormData();
+        form.append('file', blob, 'clip.webm');
+        btn.disabled = true;
+        try {
+          const res = await fetch(apiPath('/api/voice'), { method: 'POST', body: form });
+          const data = await res.json();
+          if (data.transcript) {
+            targetEl.value = (targetEl.value ? targetEl.value + ' ' : '') + data.transcript;
+            targetEl.dispatchEvent(new Event('input'));
+            targetEl.focus();
+          }
+        } catch (e) {
+          // silent: dictation failing shouldn't block typing instead
+        } finally {
+          btn.disabled = false;
+        }
+      };
+      mediaRecorder.start();
+      btn.classList.add('recording');
+    }
+
+    function release() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    }
+
+    btn.addEventListener('mousedown', (e) => { e.preventDefault(); press(); });
+    btn.addEventListener('mouseup', release);
+    btn.addEventListener('mouseleave', release);
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); press(); }, { passive: false });
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); release(); }, { passive: false });
+  })(micBtn, input);
+
+  // Own tile just says "You" -- the other side keeps its role label, since
+  // this app never learns the other participant's real name (see
+  // PHILOSOPHY.md's anonymity design). No separate "Mend · joint session ·
+  // you are Employee A" line anymore; the tile itself is the only place
+  // that needs to say who you are.
+  // "You" is written in the circle itself, not a separate label beside
+  // it -- the small corner tag under your own tile is dropped, the other
+  // person's role label stays as the identifier for them.
+  const myAvatarEl = document.getElementById(roleSlug === 'a' ? 'avatarA' : 'avatarB');
+  myAvatarEl.textContent = 'You';
+  myAvatarEl.classList.add('you');
+  document.getElementById(roleSlug === 'a' ? 'labelA' : 'labelB').remove();
 
   // `paused` covers both the "not both connected yet" and "private
   // check-in, I'm not the target" cases -- in both, the stage collapses to
@@ -230,17 +607,23 @@ function initRoom() {
     stage.hidden = false;
   }
 
-  function addMessage(text, cls, who) {
-    const div = document.createElement('div');
-    div.className = 'msg ' + cls;
-    if (who) {
-      const label = document.createElement('span');
-      label.className = 'who';
-      label.textContent = who;
-      div.appendChild(label);
-    }
-    div.appendChild(document.createTextNode(text));
-    thread.appendChild(div);
+  // A direct port of intake-app's own addMessage (chat-msg-wrap/chat-who/
+  // chat-bubble), not the older flat .msg pattern. `mine` controls the
+  // wrap's side (right for your own messages, left for everyone else's,
+  // facilitator included); `bubbleCls` is the bubble's own color variant
+  // (mine/theirs/from-a/from-b/private).
+  function addMessage(text, who, mine, bubbleCls) {
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-msg-wrap ' + (mine ? 'mine' : 'theirs');
+    const whoEl = document.createElement('span');
+    whoEl.className = 'chat-who';
+    whoEl.textContent = who;
+    wrap.appendChild(whoEl);
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + bubbleCls;
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    thread.appendChild(wrap);
     thread.scrollTop = thread.scrollHeight;
   }
 
@@ -248,10 +631,6 @@ function initRoom() {
     if (!url) return;
     audioEl.src = apiPath(url);
     audioEl.play().catch(() => {});
-  }
-
-  function renderSignal(signal) {
-    signalEl.textContent = signal ? JSON.stringify(signal) : 'no signal yet';
   }
 
   // next_speaker (and, for whichever side actually receives it,
@@ -270,13 +649,13 @@ function initRoom() {
   function updateTiles() {
     tileA.classList.toggle('unlocked', !tileLocked('employee_a'));
     tileB.classList.toggle('unlocked', !tileLocked('employee_b'));
-    tileF.classList.toggle('thinking', thinking);
+    if (thinking) setAvatarState('thinking');
   }
 
   function setSpeaking(from) {
     tileA.classList.toggle('speaking', from === 'employee_a');
     tileB.classList.toggle('speaking', from === 'employee_b');
-    tileF.classList.toggle('speaking', from === 'facilitator');
+    setAvatarState(from === 'facilitator' ? 'talking' : 'idle');
   }
 
   function canSendNow() {
@@ -296,7 +675,6 @@ function initRoom() {
   function applySignal(signal) {
     if (!signal) return;
     lastSignal = signal;
-    renderSignal(signal);
     updateTiles();
   }
 
@@ -304,15 +682,14 @@ function initRoom() {
     thinking = false;
     setSpeaking(data.from);
     if (data.from === 'facilitator') {
-      const cls = data.private ? 'private' : 'facilitator';
       const label = 'Thimble' + (data.private ? ' (private, just for you)' : '');
-      addMessage(data.text, cls, label);
+      addMessage(data.text, label, false, data.private ? 'private' : 'theirs');
       // Audio arrives separately now, via the 'audio' case below (see
       // server.py's send_audio_followup) -- text doesn't wait on TTS.
     } else {
       const mine = data.from === role;
       const colorCls = data.from === 'employee_a' ? 'from-a' : 'from-b';
-      addMessage(data.text, `${mine ? 'mine' : 'theirs'} ${colorCls}`, mine ? 'You' : 'Them');
+      addMessage(data.text, mine ? 'You' : 'Them', mine, mine ? 'mine' : colorCls);
     }
     if (data.signal) applySignal(data.signal);
     updateComposer();
@@ -344,11 +721,13 @@ function initRoom() {
       switch (data.type) {
         case 'waiting':
           paused = true;
+          setAvatarState('paused');
           showOverlay('Waiting for the other participant to join…');
           updateComposer();
           break;
         case 'ready':
           paused = false;
+          setAvatarState('idle');
           hideOverlay();
           updateComposer();
           break;
@@ -376,12 +755,14 @@ function initRoom() {
           // specific than "one moment" would leak that by omission.
           paused = true;
           thinking = false;
+          setAvatarState('paused');
           showOverlay('One moment — Thimble is checking in privately with the other participant.', true);
           updateComposer();
           break;
         case 'resumed':
           paused = false;
           thinking = false;
+          setAvatarState('idle');
           hideOverlay();
           if (data.signal) applySignal(data.signal);
           updateComposer();
@@ -391,12 +772,12 @@ function initRoom() {
           break;
         case 'reset':
           thread.innerHTML = '';
-          signalEl.textContent = 'no signal yet';
           banner.hidden = true;
           statusEl.textContent = '';
           lastSignal = null;
           thinking = false;
           ended = false;
+          setAvatarState('idle');
           setSpeaking(null);
           updateTiles();
           updateComposer();
@@ -424,9 +805,6 @@ function initRoom() {
   send.addEventListener('click', sendMessage);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  });
-  resetBtn.addEventListener('click', () => {
-    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({type: 'reset'}));
   });
 }
 </script>
