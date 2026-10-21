@@ -878,6 +878,14 @@
   .confirm-modal-cancel:hover{color:var(--ink); border-color:var(--ink-soft);}
   .confirm-modal-ok{background:var(--ink); border:1px solid var(--ink); color:var(--paper);}
   .confirm-modal-ok:hover{background:#0e241e;}
+
+  .video-modal-overlay{position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(23,55,46,.32);}
+  .video-modal{width:100%; max-width:720px; background:var(--card); border-radius:16px; padding:16px; box-shadow:0 20px 48px -12px rgba(23,55,46,.35);}
+  .video-modal-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; font-size:14px; font-weight:700; color:var(--ink);}
+  .video-modal-close{font:inherit; font-size:20px; line-height:1; background:transparent; border:0; color:var(--ink-soft); cursor:pointer; padding:2px 6px;}
+  .video-modal-close:hover{color:var(--ink);}
+  .video-modal-frame{position:relative; width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:#000;}
+  .video-modal-frame iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
 </style>
 </head>
 <body>
@@ -1191,7 +1199,7 @@
 
   <div class="banner" id="banner" hidden>
     <span>Thimble says you're ready for a joint session.</span>
-    <a href="/joint/" target="_blank" rel="noopener"><button>Continue &rarr;</button></a>
+    <button id="jointSessionVideoBtn" type="button">Continue &rarr;</button>
   </div>
 
   <div class="banner survey-toast" id="surveyToast" hidden>
@@ -1203,6 +1211,24 @@
        the Private chip above, read on interaction instead of always on
        screen. -->
   <div class="disclaimer-footer" hidden>Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
+</div>
+
+<!-- Test builds only ever have one real tester, so the actual joint
+     session (which needs a second person on the other end) can't run here.
+     "Continue" instead shows the same Session Opening video the pitch site
+     uses to explain what the joint session looks like, rather than linking
+     to /joint/ and leaving a solo tester stuck waiting for someone who'll
+     never join. -->
+<div class="video-modal-overlay" id="jointSessionVideoOverlay" hidden>
+  <div class="video-modal">
+    <div class="video-modal-head">
+      <span>What the joint session looks like</span>
+      <button class="video-modal-close" id="jointSessionVideoCloseBtn" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="video-modal-frame">
+      <iframe src="/pitch-assets/Mend%20Session%20Opening.dc.html" loading="lazy" title="Mend Session Opening" allow="autoplay"></iframe>
+    </div>
+  </div>
 </div>
 
 <!-- Custom confirm modal, replacing the browser-native confirm() End
@@ -3789,6 +3815,20 @@ function addHandsFreeHintMessage() {
 }
 
 const banner = document.getElementById('banner');
+
+const jointSessionVideoOverlay = document.getElementById('jointSessionVideoOverlay');
+document.getElementById('jointSessionVideoBtn').addEventListener('click', () => {
+  jointSessionVideoOverlay.hidden = false;
+});
+document.getElementById('jointSessionVideoCloseBtn').addEventListener('click', () => {
+  jointSessionVideoOverlay.hidden = true;
+  // Drop the iframe's src on close so the video stops playing in the
+  // background instead of looping silently behind the modal.
+  const frame = jointSessionVideoOverlay.querySelector('iframe');
+  const src = frame.src;
+  frame.src = '';
+  frame.src = src;
+});
 
 const roleplayBadge = document.getElementById('roleplayBadge');
 

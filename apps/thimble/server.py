@@ -1781,6 +1781,13 @@ async def index():
 
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 
+# Serves the repo-root "Mend Pitch" explainer videos (self-contained
+# dc.html docs, same ones pitch/microsite/videos.html already iframes) so
+# the "ready for a joint session" banner can show the Session Opening video
+# in a modal instead of linking to /joint/ -- manager test builds only have
+# one tester, so the real multi-person joint session can't actually run.
+app.mount("/pitch-assets", StaticFiles(directory=ROOT.parent.parent / "Mend Pitch"), name="pitch-assets")
+
 
 # No explicit Cache-Control on index.html/static/* meant browsers were
 # applying their own heuristic freshness lifetime and sometimes serving a
