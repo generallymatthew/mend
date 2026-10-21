@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Suture test transcript — transcript-test-1792595852</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --a:#17372E; --b:#E9B949; --facilitator:#F3829A;
+    --stage-bg:#FBF8F3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); font-family:'Manrope',sans-serif; color:var(--ink);}
+  .page{max-width:720px; margin:0 auto; padding:40px 20px 80px;}
+  .masthead{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+  .brand-mark{height:22px; width:auto;}
+  .brand-name{font-weight:800; font-size:22px; letter-spacing:-.02em; text-transform:lowercase;}
+  .meta{font-size:13px; color:var(--ink-soft); margin:0 0 36px;}
+  .meta code{background:var(--accent-soft); padding:2px 6px; border-radius:6px; font-size:12px;}
+  .note{background:var(--accent-soft); border-radius:12px; padding:14px 16px; font-size:13.5px; line-height:1.6; color:var(--ink); margin-bottom:40px;}
+
+  .section{margin-bottom:48px;}
+  .section-title{display:flex; align-items:center; gap:10px; margin:0 0 4px;}
+  .section-title h2{font-size:17px; margin:0;}
+  .pill{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:3px 9px; border-radius:999px;}
+  .pill.private{background:var(--accent-soft); color:var(--ink);}
+  .pill.joint{background:var(--facilitator); color:#fff;}
+  .section-sub{font-size:13px; color:var(--ink-soft); margin:0 0 18px;}
+
+  .thread{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:20px 20px 10px;}
+  .chat-msg-wrap{display:flex; flex-direction:column; gap:4px; margin-bottom:16px;}
+  .chat-msg-wrap.mine{align-items:flex-end;}
+  .chat-msg-wrap.theirs{align-items:flex-start;}
+  .chat-who{font-size:11.5px; font-weight:600; opacity:.55;}
+  .chat-bubble{padding:12px 16px; border-radius:16px; font-size:14.5px; line-height:1.6; white-space:pre-wrap; max-width:88%;}
+  .chat-bubble.mine{background:var(--accent); color:var(--paper); border-bottom-right-radius:4px;}
+  .chat-bubble.theirs{background:var(--paper); color:var(--ink); border-bottom-left-radius:4px;}
+  .chat-bubble.from-a{background:var(--a); color:#fff; border-bottom-left-radius:4px;}
+  .chat-bubble.from-b{background:var(--b); color:var(--ink); border-bottom-left-radius:4px;}
+
+  footer{font-size:12px; color:var(--ink-soft); text-align:center; margin-top:40px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="masthead">
+    <svg class="brand-mark" viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#F3829A"/></svg>
+    <span class="brand-name">mend</span>
+  </div>
+  <p class="meta">Suture test transcript &middot; room code <code>transcript-test-1792595852</code> &middot; both sides played by Claude for testing, verifying the private intake never leaks into the joint transcript &middot; 2026-10-21</p>
+
+  <div class="note">Scenario used: a presentation credit dispute. Employee A felt Employee B took credit for A's work in front of the director; Employee B says it wasn't intentional. Same incident, two independent paragraphs, one per side.</div>
+
+  <div class="section">
+    <div class="section-title"><h2>Employee A</h2><span class="pill private">Private intake</span></div>
+    <p class="section-sub">Only Employee A and Thimble ever see this. Employee B has no visibility into it, during or after.</p>
+    <div class="thread" id="intake-a"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><h2>Employee B</h2><span class="pill private">Private intake</span></div>
+    <p class="section-sub">Only Employee B and Thimble ever see this. Employee A has no visibility into it, during or after.</p>
+    <div class="thread" id="intake-b"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><h2>Joint session</h2><span class="pill joint">Both present</span></div>
+    <p class="section-sub">Opens only once both employees finished their own private intake above AND both explicitly confirmed "ready to join." Thimble's opening line is informed by both intakes without quoting either one back verbatim.</p>
+    <div class="thread" id="joint"></div>
+  </div>
+
+  <footer>Generated for local testing only &mdash; not a real session, nothing here was actually recorded by the app itself.</footer>
+</div>
+
+<script>
+function render(containerId, messages) {
+  const el = document.getElementById(containerId);
+  for (const m of messages) {
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-msg-wrap ' + (m.mine ? 'mine' : 'theirs');
+    const who = document.createElement('span');
+    who.className = 'chat-who';
+    who.textContent = m.who;
+    wrap.appendChild(who);
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + m.bubbleCls;
+    bubble.textContent = m.text;
+    wrap.appendChild(bubble);
+    el.appendChild(wrap);
+  }
+}
+
+render('intake-a', [
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"Hi, thanks for hopping on a bit early. This is just a quick private word before the joint session opens — it's not recorded, and the other person isn't here and won't see any of this.\n\nSo I can walk in with a sense of the situation, can you tell me what happened, in your own words?"},
+  {who:'Employee A', mine:true, bubbleCls:'mine', text:"My coworker and I co-presented our project to the director last week, but during the meeting they jumped in and answered most of the technical questions themselves, even ones that were clearly about the parts I built. Afterward the director sent a follow-up email to just them, not both of us, asking about 'their' timeline for the next phase. It felt like I got pushed to the side in a meeting I helped lead, and now it looks like I did less than I actually did."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"That sounds frustrating, especially since it's not just about the meeting itself but the lasting impression it left with the director. A couple more things to help me walk in prepared:\n\nWhat would you like to get out of the joint session — an acknowledgment from them, a change in how you two present going forward, help correcting the record with the director, or something else?\n\nAnd how are you feeling about this right now — pretty heated, more just frustrated and wanting it resolved, something else?"},
+  {who:'Employee A', mine:true, bubbleCls:'mine', text:"I want them to acknowledge that I did real work on this and for us to agree we both get credited going forward. I'm honestly pretty frustrated, not blowing up but it's bothering me."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"Got it, that's clear and reasonable. One last thing — is this the first time something like this has happened with this coworker, or has it been building over a few instances? Just want to know if I should expect this to be a one-off frustration or something with more history behind it."},
+  {who:'Employee A', mine:true, bubbleCls:'mine', text:"It's happened once or twice before in smaller ways, but this was the most obvious instance."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"That's helpful context, thanks. I think I've got what I need — what happened, what you're hoping for, and where you're at with it. I'll bring you into the room with them once everyone's ready; I don't control the exact timing since they may still be finishing up on their end, but it shouldn't be long."},
+]);
+
+render('intake-b', [
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"Hi, thanks for hopping on a few minutes early. This is just a quick private word between us before the joint session opens — it's not recorded, and the other person isn't here and won't ever see what we talk about. I just want to get a quick sense of things from your side before we all get in the room together.\n\nSo, in your own words — what happened?"},
+  {who:'Employee B', mine:true, bubbleCls:'mine', text:"During the presentation I jumped in on some of the technical questions because I could tell my coworker was getting flustered and I wanted the meeting to go smoothly for both of us, not to take over. I didn't see the follow-up email going to just me until after it was sent, and I actually forwarded it to them right away. I think they're reading intent into things that were really just me trying to help in the moment."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"Okay, that's helpful context. A couple more quick things before I let you go:\n\nWhat are you hoping comes out of the joint session itself — is it that you want them to understand your intent wasn't to undermine them, some clarity going forward on how you two handle presentations together, or something else?\n\nAnd how are you feeling heading into this — pretty calm and ready to talk it through, or more keyed up/defensive about it?"},
+  {who:'Employee B', mine:true, bubbleCls:'mine', text:"I just want them to know it wasn't intentional and that I was trying to help, not take credit. I feel pretty calm about it, mostly just want to clear the air."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"Got it, that's clear and makes sense. I've got what I need — thanks for walking me through that.\n\nI'll bring you both in once the other side's ready too; I don't control the exact timing on that, but it shouldn't be long. See you in there shortly."},
+]);
+
+render('joint', [
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"Thanks for both being here. The idea for this time is pretty simple: it's a chance for each of you to hear how the presentation and the follow-up afterward actually looked and felt from the other side, including what was going through each of your minds at the time, and for each of you to share your own part in how it played out. I'm not here to run the conversation for you so much as make sure both of you get a real, full turn to say what you need to and to hear each other out.\n\nWhoever wants to start, go ahead. What would be useful for the other person to understand about how this looked from where you were sitting?"},
+  {who:'Employee A', mine:false, bubbleCls:'from-a', text:"I'll start. In the meeting, when the director asked about the integration piece, you jumped in and said 'I handled that' before I could even answer. That part was mine, and it felt like you were taking credit in front of the person who matters most for how our work gets seen."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"That's a useful specific moment to put on the table. Can you say more about what that moment felt like for you in the room, beyond just that one line? And then I want to make sure B gets a real chance to respond to it, not just defend against it.\n\nLet's hear from you now, B. What was going through your mind right at that point, when the integration question came up?"},
+  {who:'Employee B', mine:false, bubbleCls:'from-b', text:"I hear that, and I'm sorry it landed that way. Honestly in the moment I was just trying to keep the meeting moving because I could tell you looked a little thrown by the question, not trying to take it from you. I didn't even clock that I'd said 'I' instead of 'we' until just now."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"That's helpful context, thank you. A, I want to check something with you before we keep going: hearing that the intent in the moment was to keep the meeting moving rather than to take the work from you, does that match or shift anything about how you experienced it, or does the impact still feel the same to you regardless of intent?"},
+  {who:'Employee A', mine:false, bubbleCls:'from-a', text:"That actually helps, hearing it wasn't on purpose. I think going forward I just want us to agree that if we're co-presenting, we both get named when either of us answers a question, even if one of us jumps in to help."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"That sounds like a meaningful shift from where you started. B, I'll let you respond to that directly, what A just said about wanting both names attached going forward, but I'll also just flag for both of you: if something like an agreement naturally comes together here, that's a good sign, but it's not something we lock in in this room. Whatever you land on today is worth confirming for real with me separately and privately afterward, just so it's not just something that felt right in the moment under each other's gaze.\n\nB, go ahead, what's your reaction to what A's proposing?"},
+  {who:'Employee B', mine:false, bubbleCls:'from-b', text:"Yes, I can absolutely do that. And I'll follow up with the director myself to make sure she knows the integration work was yours."},
+  {who:'Thimble', mine:false, bubbleCls:'theirs', text:"That's good to hear, and it's good that you both got there together. Like I mentioned, I'm not going to treat that as locked in right now, that part happens separately with each of you afterward, but it's a good sign that you were able to talk it through directly.\n\nBefore we wrap, I want to make sure neither of you is leaving something unsaid. A, is there anything else from the smaller moments before this one that you want B to hear directly, or does this feel like it covered the main thing? And B, anything else on your end?"},
+]);
+</script>
+</body>
+</html>

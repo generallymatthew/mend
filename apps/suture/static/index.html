@@ -771,6 +771,12 @@ function initRoom() {
     if (jointStarted) return;
     jointStarted = true;
     participantsRow.hidden = false;
+    // The private intake thread was only ever meant for this one employee
+    // to see, during a phase that's over now -- it doesn't belong in the
+    // joint session's transcript (which both participants effectively
+    // share, even though each tab renders its own copy), so the panel
+    // starts clean rather than scrolling up into it.
+    thread.innerHTML = '';
   }
 
   function addIntakeMessage(text) {
