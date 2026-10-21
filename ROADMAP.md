@@ -40,7 +40,7 @@ etc.) have moved to each app's own roadmap file, linked above.
 
 ## Phase 1 — Ready for a real pilot
 
-- [ ] GitHub account unsuspended, or an alternative remote/host chosen
+- [x] GitHub account unsuspended; Render's live deploy also repointed to it (2026-10-21), GitLab no longer load-bearing
 - [ ] `trymend.solutions` actually hosting the pitch page
 - [ ] Real employment counsel engaged (`docs/pitch-strategy/10_LEGAL_COUNSEL_OUTREACH.md` drafted, not sent)
 - [ ] Trigger-category legal review (`product-spec.html` Section 10 — the floor categories are illustrative, not a finished legal standard)
