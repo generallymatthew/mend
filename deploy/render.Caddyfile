@@ -1,7 +1,7 @@
 # Render deploy variant of ../Caddyfile: same path-prefix scheme (demo-app
-# at root, Thimble under /intake/), but listens on Render's injected
-# $PORT instead of a fixed local port, and only proxies the two apps this
-# deploy actually runs.
+# at root, Thimble under /intake/, Seam under /manager/), but listens on
+# Render's injected $PORT instead of a fixed local port, and only proxies
+# the apps this deploy actually runs.
 #
 # Repo-root static pages (about.html, story.html, testers.html, the Mend
 # Pitch/ demo assets they embed, etc.) are served directly from disk when
@@ -13,6 +13,10 @@
 :{$PORT} {
 	handle_path /intake/* {
 		reverse_proxy 127.0.0.1:8420
+	}
+
+	handle_path /manager/* {
+		reverse_proxy 127.0.0.1:8460
 	}
 
 	root * .

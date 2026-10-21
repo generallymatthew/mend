@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs the whole product locally behind one entry point:
 # http://localhost:8080/ -- demo-app at the root, Thimble/Suture/
-# post-session under /intake/, /joint/, /post/ (see Caddyfile).
+# post-session/Seam under /intake/, /joint/, /post/, /manager/ (see Caddyfile).
 #
 # Starts all four apps' own uvicorn (each in its own .venv, unmodified) in
 # the background, then Caddy in the foreground. Ctrl-C stops Caddy and
@@ -44,6 +44,7 @@ start_app demo-app        apps/demo-app          8423
 start_app thimble         apps/thimble           8420
 start_app suture          apps/suture            8421
 start_app post-session    apps/post-session-app  8422
+start_app seam            apps/seam              8460
 
 # joint-session-audio needs livekit-server (`brew install livekit`) and its
 # own agent.py worker in addition to its uvicorn app -- see that app's
