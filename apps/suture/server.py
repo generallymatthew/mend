@@ -9,12 +9,25 @@ Each participant connects as Employee A or Employee B over a WebSocket
     http://localhost:8421/?code=test1&role=a
     http://localhost:8421/?code=test1&role=b
 
-The facilitator only opens the session once both roles are connected. The
-one privacy boundary this enforces beyond "both sides see everything" is the
-facilitator's private check-in (mend_signal.session_state ==
-"paused_checkin"): only the addressed employee (checkin_target) can talk or
-hear the facilitator's reply during that window; the other side just sees a
-neutral pause.
+Each employee's own private intake starts the moment THEIR link connects --
+it does not wait for the other person (see facilitator-suture-intake-
+system-prompt.md). This is a real, separate conversation thread per role
+(Session.intake_conversation), never merged with the other employee's or
+with the joint conversation itself; only a short synthesized summary of
+each (Session.intake_summary) ever reaches the joint session's opening
+turn. The joint session itself only opens once both roles are connected
+AND both have finished their own private intake (session.intake_done) --
+see maybe_start. The facilitator-joint-session-system-prompt.md's own
+opening line ("...who each already completed a private initial side
+conversation with you...") used to describe a conversation that happened
+in a separate app (Thimble) before handoff; it's now literally true of
+what happens inside this one app.
+
+The one privacy boundary this enforces beyond "both sides see everything"
+once the joint session is open is the facilitator's private check-in
+(mend_signal.session_state == "paused_checkin"): only the addressed
+employee (checkin_target) can talk or hear the facilitator's reply during
+that window; the other side just sees a neutral pause.
 
 Outside a check-in, employee-to-employee messages are mutually visible --
 *unless* the real tier-3 hard-cut classifier (../classifier/inference.py,
@@ -67,6 +80,7 @@ ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
 
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-joint-session-system-prompt.md"
+INTAKE_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-suture-intake-system-prompt.md"
 
 # Shared local cost/usage logger (../usage_log.py) -- same sys.path trick as
 # the classifier import just below.
@@ -171,21 +185,43 @@ app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 
 
-def load_system_prompt() -> str:
-    text = SYSTEM_PROMPT_FILE.read_text()
+def load_system_prompt(path: Path) -> str:
+    text = path.read_text()
     match = re.search(r"```\n(.*?)\n```", text, re.S)
     if not match:
-        raise RuntimeError(f"couldn't find fenced system prompt in {SYSTEM_PROMPT_FILE}")
+        raise RuntimeError(f"couldn't find fenced system prompt in {path}")
     return match.group(1)
 
 
-SYSTEM_PROMPT = load_system_prompt()
+SYSTEM_PROMPT = load_system_prompt(SYSTEM_PROMPT_FILE)
+INTAKE_SYSTEM_PROMPT = load_system_prompt(INTAKE_SYSTEM_PROMPT_FILE)
 
-KICKOFF_TURN = (
-    "(Both employees have just joined the joint session, having already "
-    "completed their private side conversations. Begin the session now: frame what "
-    "it's for and manage the room.)"
+# Fires the instant an employee's own private intake connects -- there's no
+# prior user turn yet for the model to respond to, same synthetic-prompt
+# pattern build_kickoff_turn below uses to open the joint session.
+INTAKE_KICKOFF_TURN = (
+    "(This employee just connected and hasn't said anything yet. Open the "
+    "private intake now: welcome them briefly and ask what happened, per "
+    "your instructions.)"
 )
+
+
+def build_kickoff_turn(session: "Session") -> str:
+    """Both employees' own words never reach the joint session's opening
+    turn verbatim -- only the short per-role summary each one's private
+    intake produced (session.intake_summary), same "synthesized, not
+    forwarded" boundary as every other cross-role data flow in this app."""
+    summary_a = session.intake_summary["employee_a"] or "(no summary captured)"
+    summary_b = session.intake_summary["employee_b"] or "(no summary captured)"
+    return (
+        "(Both employees have just joined the joint session, having each "
+        "just completed a short private intake with you. What each privately "
+        f"told you:\n- Employee A: {summary_a}\n- Employee B: {summary_b}\n"
+        "Begin the session now: frame what it's for and manage the room, "
+        "informed by this context -- but never repeat either person's private "
+        "words back to them verbatim, and never reveal that you're drawing on "
+        "something said privately.)"
+    )
 
 
 class Session:
@@ -214,6 +250,17 @@ class Session:
         # turn it's actually about rather than firing a stray facilitator
         # reply of its own the moment a signal arrives.
         self.pending_prosody: dict[str, list[str]] = {}
+        # Each employee's own private pre-join intake (see
+        # facilitator-suture-intake-system-prompt.md) -- a separate
+        # conversation thread per role, never merged with the other role's
+        # or with self.conversation above. intake_started guards against
+        # re-firing INTAKE_KICKOFF_TURN on a reconnect after it's already
+        # running; intake_done/intake_summary are what maybe_start and
+        # build_kickoff_turn read to decide when/how to open the joint room.
+        self.intake_conversation: dict[str, list[dict]] = {"employee_a": [], "employee_b": []}
+        self.intake_started: dict[str, bool] = {"employee_a": False, "employee_b": False}
+        self.intake_done: dict[str, bool] = {"employee_a": False, "employee_b": False}
+        self.intake_summary: dict[str, str | None] = {"employee_a": None, "employee_b": None}
 
 
 SESSIONS: dict[str, Session] = {}
@@ -325,6 +372,41 @@ def facilitator_reply(session: Session) -> dict:
     visible, signal = strip_signal(raw)
     session.conversation.append({"role": "assistant", "content": raw})
     return {"reply": visible, "signal": signal, "audio_url": None}
+
+
+def intake_facilitator_reply(session: Session, role: str) -> dict:
+    """Same shape and same rollback-on-failure convention as
+    facilitator_reply above, but against this role's own
+    session.intake_conversation and the shorter INTAKE_SYSTEM_PROMPT. The
+    other role's thread is never touched or referenced here. Assumes the
+    latest turn just appended to session.intake_conversation[role] is a
+    user turn; caller must hold session.lock."""
+    convo = session.intake_conversation[role]
+    if client is None:
+        convo.pop()
+        return {"reply": "(server error: ANTHROPIC_API_KEY is not set -- see README)", "signal": None}
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=4096,
+            system=INTAKE_SYSTEM_PROMPT,
+            messages=convo,
+        )
+    except Exception as e:
+        convo.pop()
+        return {"reply": f"(server error calling Claude: {e})", "signal": None}
+    log_usage("suture", "anthropic", MODEL, "intake_facilitator_reply",
+              input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
+    raw = "".join(block.text for block in response.content if block.type == "text")
+    if not raw:
+        convo.pop()
+        return {
+            "reply": f"(server error: no text in response, stop_reason={response.stop_reason})",
+            "signal": None,
+        }
+    visible, signal = strip_signal(raw)
+    convo.append({"role": "assistant", "content": raw})
+    return {"reply": visible, "signal": signal}
 
 
 async def send_audio_followup(session: Session, recipients: list[str], text: str) -> None:
@@ -486,14 +568,48 @@ async def broadcast_result(
     session.state = signal or session.state
 
 
+async def maybe_start_intake(session: Session, role: str) -> None:
+    """Fires the instant this role's own websocket connects -- does not
+    wait for the other role, unlike maybe_start below. Guarded by
+    intake_started so a reconnect (same role, new socket) never restarts
+    the private intake from scratch."""
+    if session.intake_started[role]:
+        return
+    session.intake_started[role] = True
+    await send_to(session, role, {"type": "intake_thinking"})
+    async with session.lock:
+        session.intake_conversation[role].append({"role": "user", "content": INTAKE_KICKOFF_TURN})
+        result = intake_facilitator_reply(session, role)
+    await send_intake_result(session, role, result)
+
+
+async def send_intake_result(session: Session, role: str, result: dict) -> None:
+    """Routes one private-intake turn to just this role (never the other
+    one -- there is no shared channel for this conversation at all) and,
+    on the turn intake_complete first flips true, marks this role done and
+    gives maybe_start another chance to open the joint room."""
+    reply_text = result.get("reply")
+    signal = result.get("signal") or {}
+    await send_to(session, role, {"type": "intake_message", "text": reply_text})
+    if reply_text:
+        asyncio.create_task(send_audio_followup(session, [role], reply_text))
+    if signal.get("intake_complete") and not session.intake_done[role]:
+        session.intake_done[role] = True
+        session.intake_summary[role] = signal.get("intake_summary")
+        await send_to(session, role, {"type": "intake_complete"})
+        await maybe_start(session)
+
+
 async def maybe_start(session: Session) -> None:
     if session.started or len(session.sockets) < 2:
+        return
+    if not (session.intake_done["employee_a"] and session.intake_done["employee_b"]):
         return
     session.started = True
     for r in ("employee_a", "employee_b"):
         await send_to(session, r, {"type": "thinking"})
     async with session.lock:
-        session.conversation.append({"role": "user", "content": KICKOFF_TURN})
+        session.conversation.append({"role": "user", "content": build_kickoff_turn(session)})
         result = facilitator_reply(session)
     await broadcast_result(session, sender_role=None, sender_text=None, result=result)
 
@@ -504,10 +620,17 @@ async def handle_reset(session: Session) -> None:
     session.started = False
     session.ended = False
     session.pending_prosody.clear()
+    session.intake_conversation = {"employee_a": [], "employee_b": []}
+    session.intake_started = {"employee_a": False, "employee_b": False}
+    session.intake_done = {"employee_a": False, "employee_b": False}
+    session.intake_summary = {"employee_a": None, "employee_b": None}
     for f in AUDIO_DIR.glob("*.m4a"):
         f.unlink(missing_ok=True)
     for role in ("employee_a", "employee_b"):
         await send_to(session, role, {"type": "reset"})
+    for role in ("employee_a", "employee_b"):
+        if session.sockets.get(role):
+            await maybe_start_intake(session, role)
     await maybe_start(session)
 
 
@@ -548,12 +671,13 @@ async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
     session = get_session(code)
     session.sockets[role] = websocket
 
-    if len(session.sockets) < 2:
-        await send_to(session, role, {"type": "waiting"})
-    else:
-        for r in ("employee_a", "employee_b"):
-            await send_to(session, r, {"type": "ready"})
-        await maybe_start(session)
+    # No more "waiting for the other participant" blank screen before
+    # anything happens -- this role's own private intake starts right now,
+    # regardless of whether the other role has connected yet. maybe_start
+    # is still gated on both sockets AND both intakes being done (see its
+    # own definition above), so it's harmless to call unconditionally here.
+    await maybe_start_intake(session, role)
+    await maybe_start(session)
 
     try:
         while True:
@@ -574,6 +698,23 @@ async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
             ip = websocket.client.host if websocket.client else "unknown"
             if ws_rate_limited(ip):
                 await send_to(session, role, {"type": "error", "error": "too many messages -- slow down and try again shortly"})
+                continue
+
+            if not session.intake_done[role]:
+                await send_to(session, role, {"type": "intake_thinking"})
+                async with session.lock:
+                    session.intake_conversation[role].append({"role": "user", "content": text})
+                    result = intake_facilitator_reply(session, role)
+                await send_intake_result(session, role, result)
+                continue
+
+            if not session.started:
+                # Own intake is done, but the joint room hasn't opened yet
+                # (either the other role hasn't connected, or hasn't
+                # finished their own intake). The composer should already
+                # be locked client-side in this state -- this is a
+                # defensive backstop, not the primary guard.
+                await send_to(session, role, {"type": "error", "error": "waiting for the other participant to finish their own intake"})
                 continue
 
             current_state = session.state.get("session_state", "active")
@@ -625,7 +766,10 @@ async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
         if session.sockets.get(role) is websocket:
             del session.sockets[role]
         other = session.sockets.get(OTHER_ROLE[role])
-        if other:
+        # Only meaningful once the joint room is actually open -- each
+        # role's own private intake doesn't depend on the other role being
+        # connected at all, so there's nothing to interrupt before that.
+        if other and session.started:
             await send_to(session, OTHER_ROLE[role], {"type": "waiting"})
 
 

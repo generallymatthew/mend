@@ -72,16 +72,18 @@
   .video-tile{flex:1; min-width:0; height:180px; background:var(--card); border:1px solid var(--border); border-radius:16px; display:flex; align-items:center; justify-content:center; position:relative; opacity:.55; transition:opacity .2s ease, box-shadow .2s ease;}
   .video-tile.unlocked{opacity:1;}
   .video-tile.speaking{box-shadow:0 0 0 3px var(--accent);}
-  .video-tile.a{background:linear-gradient(180deg, color-mix(in srgb, var(--a) 7%, var(--card)), var(--card));}
-  .video-tile.b{background:linear-gradient(180deg, color-mix(in srgb, var(--b) 14%, var(--card)), var(--card));}
-  .tile-avatar{width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:24px; color:#fff; flex:none;}
-  .tile-avatar.you{font-size:14px;}
+  /* order is set at runtime (see initRoom) so your own tile always sits on
+     the right, regardless of whether you're role A or B. */
+  .tile-avatar{width:96px; height:96px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:34px; color:#fff; flex:none;}
+  /* Own circle doubles as a push-to-talk button -- see wirePushToTalk's
+     second call site in initRoom. */
+  .tile-avatar.you{font-size:18px; cursor:pointer; transition:box-shadow .15s ease;}
+  .tile-avatar.you.recording{box-shadow:0 0 0 4px var(--accent);}
   .video-tile.a .tile-avatar{background:var(--a);} /* Evergreen fill, white letter passes at 12.9:1 */
   .video-tile.b .tile-avatar{background:var(--b); color:var(--ink);} /* Honey fill needs dark letter -- white fails at 1.8:1, Evergreen passes at 7.1:1 */
-  /* Label sits bottom-left inside the box -- your own tile just says
-     "You" here (set at runtime, see initRoom), the other keeps its role
-     label, same "where am I" convention without needing a separate
-     corner-pinned layout for the boxes themselves. */
+  /* Label sits bottom-left inside the box -- always "Employee A"/
+     "Employee B" on both tiles now, regardless of which one is yours;
+     the circle itself ("You" vs the letter) is what says who you are. */
   .tile-label{position:absolute; left:10px; bottom:10px; background:rgba(23,55,46,.6); color:#fff; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px;}
 
   /* Thimble's real avatar: a direct port of thimble's own engine
@@ -168,7 +170,8 @@
      never "talks" even though the text/avatar state both update fine. */
   .checkin-overlay{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:20px; background:var(--paper);}
   .checkin-card{width:100%; max-width:340px; background:var(--card); border-radius:22px; padding:30px 26px 26px; box-shadow:0 24px 56px -16px rgba(23,55,46,.35); border:1px solid var(--border); text-align:center;}
-  .checkin-ring{width:60px; height:60px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; margin:0 auto 18px;}
+  .checkin-ring{width:60px; height:60px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; margin:0 auto 18px; animation:checkin-breathe 4s ease-in-out infinite;}
+  @keyframes checkin-breathe{0%,100%{transform:scale(1); border-color:var(--border);} 50%{transform:scale(1.08); border-color:var(--accent);}}
   .checkin-ring svg{width:24px; height:24px; color:var(--ink);}
   .checkin-card h2{font-size:17px; margin:0 0 12px; line-height:1.3;}
   .checkin-card p{font-size:13.5px; line-height:1.55; color:var(--ink-soft); margin:0 0 14px;}
@@ -187,6 +190,26 @@
 </style>
 </head>
 <body>
+
+<!-- Pre-session check-in, a direct port of thimble's own checkin-overlay/
+     checkin-card. Not just framing -- see this overlay's own CSS comment
+     above for why the click itself is load-bearing: it's the real user
+     gesture browsers require before letting a page autoplay audio.
+     Without it, Thimble's TTS reply played silently the moment the
+     session actually started (audioEl.play() rejected, the rejection was
+     swallowed), which is why Thimble looked like it never "talks" even
+     though the text/avatar state both updated fine. -->
+<div class="checkin-overlay" id="checkinOverlay" hidden>
+  <div class="checkin-card">
+    <div class="checkin-ring">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+    </div>
+    <h2>Ready to join?</h2>
+    <p>You and the other person will each see and hear Thimble facilitate this conversation in real time.</p>
+    <div class="checkin-privacy">Nothing is recorded or saved. Not the audio, not the transcript, not a summary.</div>
+    <button class="checkin-ready-btn" id="checkinReadyBtn" type="button">I'm ready</button>
+  </div>
+</div>
 
 <div class="landing" id="landing" hidden>
   <div class="eyebrow">Mend &middot; joint session (local prototype)</div>
@@ -236,7 +259,7 @@
             </div>
           </div>
         </div>
-        <div class="participants-row">
+        <div class="participants-row" id="participantsRow" hidden>
           <div class="video-tile a" id="tileA">
             <div class="tile-avatar" id="avatarA">A</div>
             <div class="tile-label" id="labelA">Employee A</div>
@@ -326,9 +349,13 @@ const THIMBLE_SHAPES = {
   talking:  {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 63, mouthW: .19, mouthH: .12},
   paused:   {radius: DOME_RADIUS, anim: 'none', lean: 'none', mouthTop: 60, mouthW: .14, mouthH: .03},
 };
+// Tuned on the thimble-ripple-wip branch (c92d7fe) while reworking the
+// listening-state ripple into the spokes-and-balls concept -- idle and
+// thinking moved off their original shades, carried over here even though
+// that ripple rework itself never shipped to main.
 const THIMBLE_COLORS = {
-  idle:     '#A3CFE0',
-  thinking: '#E9B949',
+  idle:     '#B9D1A9',
+  thinking: '#F3DC68',
   talking:  '#F3829A',
   paused:   '#A9A39A',
 };
@@ -470,8 +497,8 @@ function updateThimbleMotion(inst, now, idleBreathing) {
 let avatarState = 'idle';
 // Header-bar wording, a direct port of thimble's own STATE_WORDS/
 // CHAT_STATUS -- trimmed to the states this app actually uses.
-const STATE_WORDS = {idle: 'Waiting…', thinking: 'Thinking…', talking: 'Talking…', paused: 'Paused'};
-const CHAT_STATUS = {idle: 'Facilitating this conversation', thinking: 'Thinking…', talking: 'Replying…', paused: 'Paused.'};
+const STATE_WORDS = {idle: 'Waiting…', thinking: 'Thinking…', talking: 'Talking…', paused: 'Paused', waiting_other: 'Almost there…'};
+const CHAT_STATUS = {idle: 'Facilitating this conversation', thinking: 'Thinking…', talking: 'Replying…', paused: 'Paused.', waiting_other: 'Waiting for the other person to finish up.'};
 const stateWordEl = document.getElementById('stateWord');
 const chatStatusEl = document.getElementById('chatStatus');
 function setAvatarState(state) {
@@ -488,6 +515,16 @@ requestAnimationFrame(animateAvatar);
 // --- end Thimble avatar engine ----------------------------------------
 
 function initRoom() {
+  // Shown immediately on entering a room link -- the WebSocket connect
+  // below still starts right away, unblocked by this (same "check-in
+  // never gates the connect" convention as thimble's own overlay). The
+  // click just dismisses it AND is the real user gesture that unlocks
+  // audioEl.play() for the rest of the tab's lifetime.
+  document.getElementById('checkinOverlay').hidden = false;
+  document.getElementById('checkinReadyBtn').addEventListener('click', () => {
+    document.getElementById('checkinOverlay').hidden = true;
+  });
+
   // Path-relative, not hardcoded: "/" standalone, "/joint/" behind the
   // local Caddy proxy (../Caddyfile). Used for both the WebSocket URL and
   // any server-returned "/api/audio/..." URL -- both are absolute paths
@@ -503,6 +540,7 @@ function initRoom() {
   const overlayLock = document.getElementById('overlayLock');
   const tileA = document.getElementById('tileA');
   const tileB = document.getElementById('tileB');
+  const participantsRow = document.getElementById('participantsRow');
   const input = document.getElementById('input');
   const send = document.getElementById('send');
   const micBtn = document.getElementById('micBtn');
@@ -512,8 +550,10 @@ function initRoom() {
 
   // Push-to-talk dictation: hold, speak, release -- transcribes via
   // /api/voice and drops the text into the composer, never auto-sends.
-  // Ported from seam's own wirePushToTalk helper.
-  (function wirePushToTalk(btn, targetEl) {
+  // Ported from seam's own wirePushToTalk helper. Called twice below: once
+  // for the composer's mic button, once for your own avatar circle --
+  // each call gets its own independent mediaRecorder closure.
+  function wirePushToTalk(btn, targetEl) {
     let mediaRecorder = null;
     let recordedChunks = [];
 
@@ -567,20 +607,24 @@ function initRoom() {
     btn.addEventListener('mouseleave', release);
     btn.addEventListener('touchstart', (e) => { e.preventDefault(); press(); }, { passive: false });
     btn.addEventListener('touchend', (e) => { e.preventDefault(); release(); }, { passive: false });
-  })(micBtn, input);
+  }
+  wirePushToTalk(micBtn, input);
 
-  // Own tile just says "You" -- the other side keeps its role label, since
-  // this app never learns the other participant's real name (see
-  // PHILOSOPHY.md's anonymity design). No separate "Mend · joint session ·
-  // you are Employee A" line anymore; the tile itself is the only place
-  // that needs to say who you are.
-  // "You" is written in the circle itself, not a separate label beside
-  // it -- the small corner tag under your own tile is dropped, the other
-  // person's role label stays as the identifier for them.
+  // Own circle says "You" -- the other side keeps its role label, which
+  // now stays visible on BOTH tiles (both "Employee A" and "Employee B"
+  // pills always show; only the circle itself says who you are). Your
+  // tile is also always ordered to sit on the right of the row,
+  // regardless of whether you're role A or B, and doubles as a
+  // push-to-talk button -- same wirePushToTalk flow as the composer's mic
+  // button, just a second target.
+  const myTileEl = roleSlug === 'a' ? tileA : tileB;
+  const otherTileEl = roleSlug === 'a' ? tileB : tileA;
+  myTileEl.style.order = '2';
+  otherTileEl.style.order = '1';
   const myAvatarEl = document.getElementById(roleSlug === 'a' ? 'avatarA' : 'avatarB');
   myAvatarEl.textContent = 'You';
   myAvatarEl.classList.add('you');
-  document.getElementById(roleSlug === 'a' ? 'labelA' : 'labelB').remove();
+  wirePushToTalk(myAvatarEl, input);
 
   // `paused` covers both the "not both connected yet" and "private
   // check-in, I'm not the target" cases -- in both, the stage collapses to
@@ -594,6 +638,13 @@ function initRoom() {
   let thinking = false;
   let ended = false;
   let lastSignal = null;
+  // Own private pre-join intake (see server.py's maybe_start_intake) runs
+  // the moment this tab connects -- jointStarted flips true only once the
+  // first real joint-phase event ('thinking'/'message', never the
+  // 'intake_'-prefixed ones) arrives, which is also when the two-tile
+  // participants row first becomes relevant and gets revealed.
+  let intakeDone = false;
+  let jointStarted = false;
 
   function showOverlay(text, isPrivate) {
     overlayText.textContent = text;
@@ -660,6 +711,7 @@ function initRoom() {
   }
 
   function canSendNow() {
+    if (!jointStarted) return !intakeDone && !thinking;
     if (paused || thinking || ended) return false;
     if (!lastSignal) return true;
     if (lastSignal.session_state === 'paused_checkin') return lastSignal.checkin_target === role;
@@ -679,7 +731,24 @@ function initRoom() {
     updateTiles();
   }
 
+  // Both intakes finished and the joint room is actually open -- the only
+  // two events that ever mean this are the un-prefixed 'thinking'/
+  // 'message' (see server.py's maybe_start vs. maybe_start_intake).
+  // Reveals the two-tile participants row, which stays hidden throughout
+  // each employee's own private intake since there's nothing to show
+  // there yet.
+  function enterJointPhase() {
+    if (jointStarted) return;
+    jointStarted = true;
+    participantsRow.hidden = false;
+  }
+
+  function addIntakeMessage(text) {
+    addMessage(text, 'Thimble', false, 'theirs');
+  }
+
   function handleMessage(data) {
+    enterJointPhase();
     thinking = false;
     setSpeaking(data.from);
     if (data.from === 'facilitator') {
@@ -721,18 +790,44 @@ function initRoom() {
       const data = JSON.parse(ev.data);
       switch (data.type) {
         case 'waiting':
+          // Only ever sent once the joint room was already open and the
+          // other participant's socket just dropped -- each employee's
+          // own private intake never depends on the other being connected
+          // at all, so this can't fire before then. See server.py's
+          // WebSocketDisconnect handler.
           paused = true;
           setAvatarState('paused');
-          showOverlay('Waiting for the other participant to join…');
+          showOverlay('Waiting for the other participant to reconnect…');
           updateComposer();
           break;
-        case 'ready':
-          paused = false;
-          setAvatarState('idle');
+        case 'intake_thinking':
+          thinking = true;
           hideOverlay();
+          setAvatarState('thinking');
+          updateComposer();
+          break;
+        case 'intake_message':
+          thinking = false;
+          hideOverlay();
+          addIntakeMessage(data.text);
+          setAvatarState('idle');
+          updateComposer();
+          break;
+        case 'intake_complete':
+          // My own private intake just finished -- Thimble's closing line
+          // for it already arrived as a prior 'intake_message'. Nothing
+          // left to show here except locking the composer and updating
+          // the header/status wording while the other person finishes
+          // theirs; the joint room opens itself the moment both sides are
+          // done (server.py's maybe_start), no polling needed here.
+          intakeDone = true;
+          setAvatarState('waiting_other');
           updateComposer();
           break;
         case 'thinking':
+          enterJointPhase();
+          paused = false;
+          hideOverlay();
           thinking = true;
           updateTiles();
           updateComposer();
@@ -778,6 +873,9 @@ function initRoom() {
           lastSignal = null;
           thinking = false;
           ended = false;
+          intakeDone = false;
+          jointStarted = false;
+          participantsRow.hidden = true;
           setAvatarState('idle');
           setSpeaking(null);
           updateTiles();
@@ -800,6 +898,12 @@ function initRoom() {
     const text = input.value.trim();
     if (!text || !canSendNow() || ws.readyState !== WebSocket.OPEN) return;
     input.value = '';
+    // The joint-phase echo of a sent message comes back from the server
+    // (broadcast_result sends it to both roles, including the sender, so
+    // everyone's view of turn order matches). The private intake thread
+    // has no such echo -- it's a single-viewer conversation with nothing
+    // to keep in sync -- so it's added optimistically here instead.
+    if (!jointStarted) addMessage(text, 'You', true, 'mine');
     ws.send(JSON.stringify({type: 'message', text}));
   }
 
