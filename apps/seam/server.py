@@ -317,6 +317,13 @@ async def service_worker():
 
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 
+# Serves the repo-root "Mend Pitch" explainer videos (self-contained
+# dc.html docs, same ones pitch/microsite/videos.html already iframes) so
+# "Create peer session" can show the Session Opening video in a modal
+# instead of generating real handoff links -- manager test builds only
+# have one tester, so the actual two-person joint session can't run.
+app.mount("/pitch-assets", StaticFiles(directory=ROOT.parent.parent / "Mend Pitch"), name="pitch-assets")
+
 
 # No explicit Cache-Control meant browsers could serve a stale cached copy
 # of index.html/static/* on an ordinary reload instead of revalidating with

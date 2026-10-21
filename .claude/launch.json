@@ -24,6 +24,12 @@
       "runtimeExecutable": "apps/suture/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--port", "8421", "--app-dir", "apps/suture"],
       "port": 8421
+    },
+    {
+      "name": "conflict-test",
+      "runtimeExecutable": "pitch/conflict-test/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8480", "--app-dir", "pitch/conflict-test"],
+      "port": 8480
     }
   ]
 }

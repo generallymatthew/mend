@@ -244,6 +244,34 @@
     font-size: 13px; font-weight: 600; cursor: pointer;
   }
 
+  /* "Create peer session" explainer video: a manager test build only ever
+     has one tester, so the real two-link handoff above can't actually be
+     used end to end. Tapping the chip shows the same joint-session video
+     the pitch site uses instead of generating links nobody can open. */
+  #joint-video-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(23,55,46,0.3);
+    align-items: center; justify-content: center; z-index: 20; padding: 20px;
+  }
+  #joint-video-overlay.open { display: flex; }
+  #joint-video-modal {
+    width: 720px; max-width: 100%; background: var(--bg); border-radius: 24px;
+    padding: 20px; box-shadow: 0 24px 60px rgba(23,55,46,0.2);
+  }
+  #joint-video-modal .joint-video-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin-bottom: 12px; font-size: 14px; font-weight: 700;
+  }
+  #joint-video-dismiss {
+    background: none; border: none; color: var(--muted); font-size: 20px;
+    line-height: 1; cursor: pointer; padding: 2px 6px;
+  }
+  #joint-video-dismiss:hover { color: var(--ink); }
+  #joint-video-frame {
+    position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px;
+    overflow: hidden; background: #000;
+  }
+  #joint-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
   .messages {
     flex: 1; overflow: auto; padding: 22px 28px;
     display: flex; flex-direction: column; gap: 14px;
@@ -699,6 +727,18 @@
   </div>
 </div>
 
+<div id="joint-video-overlay">
+  <div id="joint-video-modal">
+    <div class="joint-video-head">
+      <span>What the joint session looks like</span>
+      <button id="joint-video-dismiss" aria-label="Close">&times;</button>
+    </div>
+    <div id="joint-video-frame">
+      <iframe src="/pitch-assets/Mend%20Session%20Opening.dc.html" loading="lazy" title="Mend Session Opening" allow="autoplay"></iframe>
+    </div>
+  </div>
+</div>
+
 <script>
 // ---------------------------------------------------------------------
 // Section switching
@@ -1038,8 +1078,27 @@ async function openHandoffModal() {
   document.getElementById("handoff-overlay").classList.add("open");
 }
 
-document.getElementById("handoff-chip").onclick = openHandoffModal;
+// "Create peer session" opens the joint-session explainer video rather
+// than openHandoffModal's real two-person links above -- a manager test
+// build only has one tester, so there's never a second person to send the
+// other link to. openHandoffModal is left in place (and the server route
+// it calls untouched) for when this ships past single-tester demos.
+function openJointSessionVideoModal() {
+  document.getElementById("joint-video-overlay").classList.add("open");
+}
+function closeJointSessionVideoModal() {
+  document.getElementById("joint-video-overlay").classList.remove("open");
+  // Drop and restore the iframe src so the video actually stops instead
+  // of looping silently behind the closed modal.
+  const frame = document.querySelector("#joint-video-frame iframe");
+  const src = frame.src;
+  frame.src = "";
+  frame.src = src;
+}
+
+document.getElementById("handoff-chip").onclick = openJointSessionVideoModal;
 document.getElementById("handoff-dismiss").onclick = () => document.getElementById("handoff-overlay").classList.remove("open");
+document.getElementById("joint-video-dismiss").onclick = closeJointSessionVideoModal;
 
 function updateCaseFromResult(updatedCase) {
   if (updatedCase.roster) roster = updatedCase.roster;

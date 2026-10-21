@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mend: can you read the room?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="page">
+  <header class="header">
+    <span class="logo-mark">
+      <svg width="22" height="16" viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#17372E"></path></svg>
+    </span>
+    <span class="header-title">mend: can you read the room?</span>
+  </header>
+
+  <main id="chat" class="chat"></main>
+
+  <form id="composer" class="composer">
+    <input id="composer-input" type="text" autocomplete="off" placeholder="Message mend&hellip;">
+  </form>
+</div>
+
+<div id="modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div id="modal-avatar" class="avatar"></div>
+      <div class="modal-header-text">
+        <div id="modal-name" class="modal-name"></div>
+        <div id="modal-sub" class="modal-sub">first message &middot; no history</div>
+      </div>
+      <button id="modal-close" class="modal-close" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div id="modal-chat" class="modal-chat"></div>
+    <form id="modal-composer" class="modal-composer">
+      <input id="modal-input" type="text" autocomplete="off" placeholder="Type your reply&hellip;">
+      <button id="modal-send" type="submit">Send</button>
+    </form>
+    <div id="modal-readout" class="readout hidden"></div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
