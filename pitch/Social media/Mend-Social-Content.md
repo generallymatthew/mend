@@ -69,7 +69,7 @@ That's the gap I'm building Mend to close.
 
 **Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always structural misalignment: different goals, different workloads, or processes that were never built to fit together, colliding in one interaction.[^8] The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
 
-**Most workplace conflicts are structural misalignment dressed up as interpersonal drama.**
+**We blame bad behavior for what's usually structural misalignment.**
 
 Here's a common scenario in tech:
 
