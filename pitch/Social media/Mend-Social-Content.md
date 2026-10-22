@@ -107,7 +107,7 @@ Anyone else notice this pattern? Feels like venting to friends is almost designe
 
 ## Post 3: The Big Realization — Systems, Not Personalities
 
-**Core insight:** Workplace friction is rarely caused by "bad people" or malice; it's almost always the result of structural incentives and opposing metrics colliding.
+**Core insight:** Workplace friction is rarely caused by "bad people" or malice; it's almost always the result of structural incentives and opposing metrics colliding. And it's not just the two people in the friction who misread it this way: a manager who steps in to settle it usually makes the same mistake, and solving it for them teaches the team to escalate instead of work it out on their own.
 
 ### TikTok / Reels / Shorts script
 
@@ -115,6 +115,8 @@ Anyone else notice this pattern? Feels like venting to friends is almost designe
 - "Think about product designers and core platform engineers. A designer gets promoted for feature velocity and launching cool UI flows. But the platform engineer gets held accountable if there's a single sev-1 outage or latency regression."
 - "When the engineer blocks the designer's pull request, the designer thinks, 'They're territorial and have a massive ego.' And the engineer thinks, 'This designer is reckless and doesn't know what they're doing.' Neither person is malicious. Their performance reviews are set up to make them enemies."
 - "When you stop diagnosing personalities and start looking at incentive architecture, the personal resentment evaporates. You stop fighting a coworker and start solving a broken system."
+- "Here's the part almost nobody talks about: their manager can't fix this for them either. Managers read the same fight and see the same two personalities. And even when a manager does spot the real structural mismatch, stepping in and settling it themselves teaches the team one lesson: don't work it out, go get the manager. That's not management. That's a bottleneck with a title."
+- "The two people in the disagreement are the only ones who actually hold the information a manager doesn't have: what it's actually like to sit in each seat. So the fix has to come from them, not get handed down from above."
 
 ### LinkedIn mini-essay
 
@@ -135,6 +137,10 @@ If you want to resolve cross-functional friction, stop asking "why are they bein
 
 The moment you map the opposing metrics, the malice disappears.
 
+Here's the part that surprises most managers: they default to the same personality read their reports do. And even on the rare occasion a manager does see the structural mismatch clearly, personally stepping in and settling it for the two people involved solves that one fight and quietly breaks something bigger. It teaches the team that disagreements get resolved by escalation, not by working it out between the people who actually understand the tradeoffs. A manager who mediates every low-stakes dispute isn't being helpful. They're training their team to bring them every future one too.
+
+The two people in the room are the only ones holding the full picture: what the deadline pressure actually feels like from each seat. A manager handing down a verdict skips that step. The teams that get genuinely better at this are the ones where the people in the friction work out the structural mismatch themselves, with the manager out of the room entirely.
+
 ### Reddit post
 
 **Suggested subreddits:** r/ExperiencedDevs, r/programming, r/ProductManagement, r/managers
@@ -147,7 +153,9 @@ Classic example in tech: a designer gets rewarded for shipping fast and iteratin
 
 This is basically the fundamental attribution error at a team level: we explain our own behavior by context, and other people's behavior by character. Once you start asking "what metric is this person actually being judged on" instead of "why are they being difficult," most of the personal resentment evaporates.
 
-Anyone else have a cross-functional relationship that got better the second you figured out the other person's actual incentives?
+And for the managers in here: you're not immune to this either. Most managers who get pulled into a dispute like this default to the same personality read as the two people fighting. Even when you do spot the real structural cause, fixing it for them trains your team to escalate instead of sort it out themselves. The people who actually hold the information you need, what each seat's pressure really feels like, are the two in the disagreement, not you.
+
+Anyone else have a cross-functional relationship that got better the second you figured out the other person's actual incentives? Or a time stepping back and letting two reports work it out themselves actually worked better than mediating it yourself?
 
 ---
 
