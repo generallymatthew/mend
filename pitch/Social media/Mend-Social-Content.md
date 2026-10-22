@@ -513,6 +513,10 @@ Curious how others building people-facing tools have handled the trust problem, 
 
 Realized early on that a product requiring both people to opt in on day one was dead on arrival. If you're already frustrated with a coworker, sending them an invite that basically says "let's mediate our conflict" reads as an accusation. The social risk is way too high, especially if you're junior or anxious about how it'll land.
 
+Most people who could use a formal mediation option just don't, largely because raising a concern can get you labeled fragile, difficult, or a culture risk long after it's actually resolved.
+
+*(Internal note, not for posting: the earlier draft of this line cited a specific "3 to 10%" self-referral figure attributed to Amy Edmondson and "David X. Lee." That figure and attribution could not be verified, so it's written as a qualitative claim only here. See Sources & Data Notes, item 6, before reintroducing a hard number.)*
+
 So the whole flow starts solo. One person vents, works through what actually happened, maps out the other person's likely constraints, with zero obligation to ever loop the other person in. Even if a joint session never happens, they still walk away with a clearer head and an actual plan.
 
 Feels like a broader lesson: if a product requires bravery or vulnerability upfront just to try it, most people will never try it. Anyone else had to redesign around a similar "nobody will take the first step" problem?
