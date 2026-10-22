@@ -285,6 +285,62 @@
   }
   #joint-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
+  /* Pre-use tester gate: shown once per browser before anything else is
+     interactive (z-index above every other overlay). Merges what used to
+     be two separate steps -- manager-story.html's own "read this first"
+     modal and the standalone survey.html -- into one blocking screen
+     inside Seam itself, so a tester can't skip past the instructions
+     without landing in survey.html at all (manager-story.html's
+     pre-story modal still exists for context on that page, this is the
+     actual gate). Submits the same trimmed set of fields survey.html
+     posts to /api/survey, just four of its nine questions -- the signal
+     worth gating on, not the full post-use survey. */
+  #gate-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(23, 55, 46, 0.55);
+    align-items: flex-start; justify-content: center; z-index: 50; overflow-y: auto;
+    padding: 40px 16px;
+  }
+  #gate-overlay.open { display: flex; }
+  #gate-modal {
+    width: 460px; max-width: 100%; background: var(--app-bg); border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(23,55,46,0.32); display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  #gate-modal .gate-head { padding: 26px 28px 18px; border-bottom: 1px solid var(--border); }
+  #gate-modal .gate-tag {
+    display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; color: #B9872C; background: #FBF2DC;
+    padding: 4px 10px; border-radius: 999px; margin-bottom: 12px;
+  }
+  #gate-modal h1 { margin: 0 0 8px; font-size: 20px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+  #gate-modal .gate-sub { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+  #gate-modal .gate-body { padding: 20px 28px; }
+  #gate-modal .gate-section-label {
+    font-size: 12px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 10px;
+  }
+  #gate-modal ul { margin: 0 0 20px; padding-left: 18px; font-size: 13px; color: var(--ink); line-height: 1.6; }
+  #gate-modal .gate-divider { height: 1px; background: var(--border); margin: 0 0 20px; }
+  #gate-modal .gate-q { margin-bottom: 16px; }
+  #gate-modal .gate-q:last-child { margin-bottom: 0; }
+  #gate-modal .gate-q-label { font-weight: 700; font-size: 12.5px; margin-bottom: 8px; color: var(--ink); }
+  #gate-modal .choice-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  #gate-modal .choice {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+    padding: 6px 12px 6px 10px; border-radius: 999px; border: 1px solid var(--rail-border);
+    color: var(--muted); background: var(--bg); cursor: pointer;
+  }
+  #gate-modal .choice.sel { background: var(--ink); color: #F6F1E7; border-color: var(--ink); }
+  #gate-modal .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  #gate-modal .gate-error { display: none; font-size: 12.5px; color: #b3261e; margin: -8px 0 14px; }
+  #gate-modal .gate-error.show { display: block; }
+  #gate-modal .gate-foot { padding: 18px 28px 24px; border-top: 1px solid var(--border); }
+  #gate-modal .gate-submit {
+    width: 100%; background: var(--ink); color: #fff; font-weight: 700; font-size: 14px;
+    padding: 13px; border: none; border-radius: 999px; cursor: pointer; font-family: inherit;
+  }
+  #gate-modal .gate-submit:disabled { opacity: .55; cursor: default; }
+
   .messages {
     flex: 1; overflow: auto; padding: 22px 28px;
     display: flex; flex-direction: column; gap: 14px;
@@ -731,6 +787,77 @@
     </div>
   </div>
 </div>
+
+<div id="gate-overlay">
+  <form id="gate-modal">
+    <div class="gate-head">
+      <span class="gate-tag">Before you test Seam</span>
+      <h1>Two quick things first</h1>
+      <p class="gate-sub">A short read, then four questions about how you handle conflict today. Under 2 minutes.</p>
+    </div>
+    <div class="gate-body">
+      <div class="gate-section-label">What this build is</div>
+      <ul>
+        <li>Seam is a prototype &mdash; some things are stubbed, not a finished product.</li>
+        <li>Try Conflicts, Written, or Meetings on a real situation from your team.</li>
+        <li>Nothing is saved after your session ends.</li>
+      </ul>
+      <div class="gate-divider"></div>
+      <div class="gate-section-label">Before you dive in</div>
+
+      <div class="gate-q">
+        <div class="gate-q-label">How often does conflict come up on your team?</div>
+        <div class="choice-row" data-radio="conflict_frequency">
+          <label class="choice"><input type="radio" name="conflict_frequency" value="rarely">Rarely</label>
+          <label class="choice"><input type="radio" name="conflict_frequency" value="occasionally">Occasionally</label>
+          <label class="choice"><input type="radio" name="conflict_frequency" value="regularly">Regularly</label>
+          <label class="choice"><input type="radio" name="conflict_frequency" value="constantly">Constantly</label>
+        </div>
+      </div>
+
+      <div class="gate-q">
+        <div class="gate-q-label">When something comes up, what do you usually do first?</div>
+        <div class="choice-row" data-radio="first_move">
+          <label class="choice"><input type="radio" name="first_move" value="talk_direct">Talk to them directly</label>
+          <label class="choice"><input type="radio" name="first_move" value="loop_in_hr_or_manager">Loop in HR/manager</label>
+          <label class="choice"><input type="radio" name="first_move" value="wait_and_see">Wait and see</label>
+          <label class="choice"><input type="radio" name="first_move" value="other">Something else</label>
+        </div>
+      </div>
+
+      <div class="gate-q">
+        <div class="gate-q-label">Do you feel judged on how you handle it?</div>
+        <div class="choice-row" data-radio="feels_judged">
+          <label class="choice"><input type="radio" name="feels_judged" value="yes">Yes</label>
+          <label class="choice"><input type="radio" name="feels_judged" value="somewhat">Somewhat</label>
+          <label class="choice"><input type="radio" name="feels_judged" value="no">No</label>
+        </div>
+      </div>
+
+      <div class="gate-q">
+        <div class="gate-q-label">Has that ever made you avoid addressing something?</div>
+        <div class="choice-row" data-radio="avoided_due_to_pressure">
+          <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="yes">Yes</label>
+          <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="sometimes">Sometimes</label>
+          <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="no">No</label>
+        </div>
+      </div>
+
+      <div class="gate-error" id="gate-error">Pick an answer for "how often does conflict come up" to continue.</div>
+    </div>
+    <div class="gate-foot">
+      <button type="submit" class="gate-submit" id="gate-submit">Start testing Seam &rarr;</button>
+    </div>
+  </form>
+</div>
+<script>
+  // Synchronous, right after the overlay exists in the DOM, so a
+  // completed tester never sees even a flash of the gate -- doesn't wait
+  // for the rest of the page or the bottom script block to parse.
+  if (!localStorage.getItem('seam_gate_completed')) {
+    document.getElementById('gate-overlay').classList.add('open');
+  }
+</script>
 
 <script>
 // Path-relative, not hardcoded absolute: this page is served standalone
@@ -1628,6 +1755,58 @@ installBtn.onclick = async () => {
 };
 window.addEventListener("appinstalled", () => {
   installBtn.style.display = "none";
+});
+
+// ---------------------------------------------------------------------
+// Pre-use tester gate (see #gate-overlay CSS comment above for why this
+// lives in the app instead of a separate survey page). Same choice-row +
+// data-radio wiring pattern as static/survey.html, trimmed to 4 fields;
+// posts to the same /api/survey endpoint that page uses.
+// ---------------------------------------------------------------------
+document.querySelectorAll('#gate-modal [data-radio]').forEach((row) => {
+  row.querySelectorAll('.choice').forEach((label) => {
+    const input = label.querySelector('input');
+    input.addEventListener('change', () => {
+      row.querySelectorAll('.choice').forEach((l) => l.classList.toggle('sel', l.querySelector('input').checked));
+    });
+  });
+});
+function gateRadio(name) {
+  const el = document.querySelector(`#gate-modal input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+document.getElementById('gate-modal').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const conflictFrequency = gateRadio('conflict_frequency');
+  const errorEl = document.getElementById('gate-error');
+  if (!conflictFrequency) {
+    errorEl.classList.add('show');
+    return;
+  }
+  errorEl.classList.remove('show');
+  const submitBtn = document.getElementById('gate-submit');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting…';
+  try {
+    const res = await fetch(apiPath('/api/survey'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conflict_frequency: conflictFrequency,
+        first_move: gateRadio('first_move'),
+        feels_judged: gateRadio('feels_judged'),
+        avoided_due_to_pressure: gateRadio('avoided_due_to_pressure'),
+      }),
+    });
+    if (!res.ok) throw new Error('survey submit failed');
+    localStorage.setItem('seam_gate_completed', '1');
+    document.getElementById('gate-overlay').classList.remove('open');
+  } catch (err) {
+    errorEl.textContent = "Couldn't submit that, try again.";
+    errorEl.classList.add('show');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Start testing Seam →';
+  }
 });
 
 loadCases();
