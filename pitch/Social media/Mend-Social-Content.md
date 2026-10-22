@@ -90,11 +90,9 @@ In organizational psychology, this is the **fundamental attribution error**: we 
 
 Most of what reads as ego or unprofessionalism in a coworker is them reacting to pressure you can't see: a deadline, understaffing, a bad week, pressure from their own manager.
 
-If you want to resolve cross-functional friction, stop asking "why are they being so difficult?" Start asking "what metric gets them flagged by their boss if it slips?"
+If you want to resolve cross-functional friction, stop asking "why are they being so difficult?" Start asking "what pressure are they under that I can't see, a metric, a deadline, a process I don't have to deal with?"
 
-The moment you map the opposing metrics, the malice disappears.
-
-Metrics are just one flavor of this. The same pattern shows up anywhere two roles have different goals, workloads, or processes bolted together instead of designed to fit. A 1969 study on interdepartmental conflict found the same thing: friction tracks with differentiated goals and task interdependence, not who's in the role. (Walton & Dutton, 1969: https://doi.org/10.2307/2391364)
+The moment you map that pressure instead of their character, the malice disappears. In this designer/engineer example it happens to be a metric. Just as often it's a workload, a deadline, or a process bolted together instead of designed to fit. A 1969 study on interdepartmental conflict found the same thing at the organizational level: friction tracks with differentiated goals and task interdependence, not who's in the role. (Walton & Dutton, 1969: https://doi.org/10.2307/2391364)
 
 Managers default to the same personality read. And even when a manager does see the structural mismatch, settling it for the two people solves one fight and breaks something bigger: it teaches the team that disagreements get resolved by escalation, not by working them out. A manager who mediates every low-stakes dispute trains their team to bring every future one too.
 
