@@ -10,7 +10,7 @@
 <style>
   :root{
     --ink:#17372E; --muted:#6B7A73; --paper:#FAFBFA; --card:#FFFFFF;
-    --accent:#17372E; --accent-pink:#F3829A; --accent-pink-bg:#FCEEF0; --border:#E7EBE8;
+    --accent:#17372E; --accent-honey:#E9B949; --accent-honey-bg:#FBF4E2; --border:#E7EBE8;
   }
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
@@ -24,7 +24,7 @@
   .section-label:first-of-type{margin-top:22px;}
   .section-hint{font-weight:500; font-size:13px; color:var(--muted); margin:-10px 2px 14px;}
   .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px 22px 24px; margin-bottom:14px;}
-  .help-card{border-color:var(--accent-pink); background:var(--accent-pink-bg);}
+  .help-card{border-color:var(--accent-honey); background:var(--accent-honey-bg);}
   .help-title{font-weight:800; font-size:14px; margin-bottom:4px;}
   .help-desc{font-weight:500; font-size:13.5px; color:var(--muted); margin:0 0 16px; line-height:1.5;}
   .q-label{font-weight:700; font-size:15px; margin-bottom:12px;}
@@ -36,8 +36,8 @@
   .scale-labels{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:8px;}
   .choice-row{display:flex; flex-direction:column; gap:8px;}
   .choice{display:flex; align-items:center; gap:10px; border:1.5px solid var(--border); background:var(--paper); border-radius:12px; padding:11px 14px; cursor:pointer; font-size:14.5px;}
-  .choice.sel{border-color:var(--accent-pink); background:var(--accent-pink-bg);}
-  .choice input{accent-color:var(--accent-pink); flex-shrink:0;}
+  .choice.sel{border-color:var(--accent-honey); background:var(--accent-honey-bg);}
+  .choice input{accent-color:var(--accent-honey); flex-shrink:0;}
   input[type=text],input[type=email]{width:100%; border:1.5px solid var(--border); border-radius:12px; padding:11px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
   textarea{width:100%; resize:vertical; min-height:80px; border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
   .submit-row{display:flex; justify-content:flex-end; margin-top:6px;}
@@ -114,17 +114,14 @@
         <label class="choice"><input type="radio" name="pressure_source" value="leadership"> My own manager or leadership</label>
         <label class="choice"><input type="radio" name="pressure_source" value="hr"> HR</label>
         <label class="choice"><input type="radio" name="pressure_source" value="employees"> The employees involved</label>
+        <label class="choice"><input type="radio" name="pressure_source" value="myself"> Myself</label>
         <label class="choice"><input type="radio" name="pressure_source" value="not_much"> I don't feel much pressure</label>
       </div>
     </div>
 
     <div class="card">
-      <div class="q-label">Has that pressure ever made you avoid addressing something you probably should have?</div>
-      <div class="choice-row" data-radio="avoided_due_to_pressure">
-        <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="yes"> Yes</label>
-        <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="sometimes"> Sometimes</label>
-        <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="no"> No</label>
-      </div>
+      <div class="q-label">How do you manage that pressure when you experience it?</div>
+      <textarea id="pressure_management" placeholder="Optional"></textarea>
     </div>
 
     <div class="section-label">The 3 kinds of help Seam offers</div>
@@ -293,7 +290,7 @@ submitBtn.addEventListener('click', async () => {
     confidence: getConfidence(),
     feels_judged: getRadio('feels_judged'),
     pressure_source: getRadio('pressure_source'),
-    avoided_due_to_pressure: getRadio('avoided_due_to_pressure'),
+    pressure_management: document.getElementById('pressure_management').value.trim(),
     useful_conflicts: getUsefulConflicts(),
     would_use_conflicts: getRadio('would_use_conflicts'),
     useful_written: getUsefulWritten(),

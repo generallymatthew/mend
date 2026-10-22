@@ -974,7 +974,7 @@ GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 SURVEY_WORKSHEET_TITLE = "Seam"
 SURVEY_SHEET_HEADER = [
     "Timestamp", "Conflict frequency", "First move", "Confidence (1-5)",
-    "Feels judged", "Pressure source", "Avoided due to pressure",
+    "Feels judged", "Pressure source", "How managed",
     "Useful: Conflicts (1-5)", "Would use: Conflicts",
     "Useful: Written (1-5)", "Would use: Written",
     "Useful: Meetings (1-5)", "Would use: Meetings",
@@ -1023,8 +1023,7 @@ SURVEY_RADIO_FIELDS = {
     "conflict_frequency": {"rarely", "occasionally", "regularly", "constantly"},
     "first_move": {"talk_direct", "loop_in_hr_or_manager", "wait_and_see", "other"},
     "feels_judged": {"yes", "somewhat", "no"},
-    "pressure_source": {"leadership", "hr", "employees", "not_much"},
-    "avoided_due_to_pressure": {"yes", "sometimes", "no"},
+    "pressure_source": {"leadership", "hr", "employees", "myself", "not_much"},
     "would_use_conflicts": {"yes", "maybe", "no"},
     "would_use_written": {"yes", "maybe", "no"},
     "would_use_meetings": {"yes", "maybe", "no"},
@@ -1053,12 +1052,14 @@ async def submit_survey(request: Request):
     # Generous caps, not unbounded -- this is open free text from an
     # unauthenticated page.
     email = str(data.get("email") or "")[:200]
+    pressure_management = str(data.get("pressure_management") or "")[:4000]
     comments = str(data.get("comments") or "")[:4000]
     record = {
         "ts": time.time(),
         **radios,
         **scales,
         "email": email,
+        "pressure_management": pressure_management,
         "comments": comments,
     }
     sheet = get_survey_sheet()
@@ -1077,7 +1078,7 @@ async def submit_survey(request: Request):
                     scales["confidence"] if scales["confidence"] is not None else "",
                     radios["feels_judged"] or "",
                     radios["pressure_source"] or "",
-                    radios["avoided_due_to_pressure"] or "",
+                    pressure_management,
                     scales["useful_conflicts"] if scales["useful_conflicts"] is not None else "",
                     radios["would_use_conflicts"] or "",
                     scales["useful_written"] if scales["useful_written"] is not None else "",

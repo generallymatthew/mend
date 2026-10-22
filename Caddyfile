@@ -34,6 +34,15 @@
 		reverse_proxy 127.0.0.1:8460
 	}
 
+	root * .
+
+	@staticfile {
+		file
+	}
+	handle @staticfile {
+		file_server
+	}
+
 	handle {
 		reverse_proxy 127.0.0.1:8423
 	}
