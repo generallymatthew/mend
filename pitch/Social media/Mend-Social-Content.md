@@ -20,7 +20,7 @@ In tech, we spend decades mastering our craft: design heuristics, system archite
 
 Yet almost nobody teaches us how to navigate social dynamics, mismatched expectations, or cross-functional friction.
 
-In CPP Inc.'s landmark global human capital study, which surveyed 5,000 full-time workers across 9 countries, employees reported losing an average of **2.8 hours every week** to unmanaged coworker friction.[^1]
+In CPP Inc.'s landmark global human capital study, which surveyed 5,000 full-time workers across 9 countries, employees reported losing an average of **2.8 hours every week** to unmanaged coworker friction. Source: CPP Inc., "Workplace Conflict and How Businesses Can Harness It to Thrive" (2008): https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf
 
 When that interpersonal tension inevitably hits, corporate culture gives employees two bad options:
 
@@ -55,9 +55,9 @@ Friends aren't the only option people reach for. There are really three, and all
 - They can't point out your own role in the breakdown, because they aren't neutral.
 - They aren't naturally inclined to wonder what larger forces, like team misalignment or competing KPIs, actually caused the conflict.
 
-**2. Ask a generic AI chatbot.** More people do this than you'd think. Anthropic's own usage data (Oct 2025) shows 2.9% of all Claude.ai conversations are "interpersonal advice," and OpenAI's usage research (Sept 2025) puts 1.9% of ChatGPT messages under relationships and personal reflection, which works out to roughly 340 million messages a week on ChatGPT alone.[^7] But a general-purpose chatbot has no way to hear the other person's side, no memory of your working relationship across sessions, and it's built to agree with whoever is typing, which is the opposite of what you need when the real question is what you're getting wrong.
+**2. Ask a generic AI chatbot.** More people do this than you'd think. Anthropic's own usage data (Oct 2025) shows 2.9% of all Claude.ai conversations are "interpersonal advice," and OpenAI's usage research (Sept 2025) puts 1.9% of ChatGPT messages under relationships and personal reflection, which works out to roughly 340 million messages a week on ChatGPT alone. (OpenAI, "How People Use ChatGPT," 2025: https://www.hks.harvard.edu/publications/how-people-use-chatgpt. Anthropic, "How People Use Claude for Support, Advice, and Companionship," 2025: https://www.anthropic.com/news/how-people-use-claude-for-support-advice-and-companionship) But a general-purpose chatbot has no way to hear the other person's side, no memory of your working relationship across sessions, and it's built to agree with whoever is typing, which is the opposite of what you need when the real question is what you're getting wrong.
 
-**3. Go to HR or your manager.** The real risk here has nothing to do with getting caught venting. Once you report something, you hand over control of how it gets handled. HR decides the process, the timeline, and the resolution, not you. Self-determination research from psychologists Edward Deci and Richard Ryan backs this up: outcomes imposed by an authority produce "controlled compliance" rather than real buy-in, because the people actually affected weren't the ones who shaped the fix.[^4] And there's a real career cost on top of that: research on dispute-resolution adoption puts voluntary self-referral to formal channels at just 3 to 10% of employees, because raising a concern can mean getting labeled difficult, or a culture risk, long after the issue itself is resolved.[^6]
+**3. Go to HR or your manager.** The real risk here has nothing to do with getting caught venting. Once you report something, you hand over control of how it gets handled. HR decides the process, the timeline, and the resolution, not you. Self-determination research from psychologists Edward Deci and Richard Ryan backs this up: outcomes imposed by an authority produce "controlled compliance" rather than real buy-in, because the people actually affected weren't the ones who shaped the fix. (Deci & Ryan, "The 'What' and 'Why' of Goal Pursuits," Psychological Inquiry, 2000: https://doi.org/10.1207/S15327965PLI1104_01) And there's a real career cost on top of that: employees who raise a concern through formal channels risk getting labeled difficult, or a culture risk, long after the issue itself is resolved, which is a well-documented reason people avoid formal channels even when they're available. [NEEDS A REAL SOURCE: the specific "3 to 10%" figure and the Edmondson/Lee attribution in this file could not be verified; see note below before publishing this line.]
 
 Friends, AI, and HR all run into the same wall. None of them can really help you work through the dynamics that caused the conflict in the first place. They can only make you feel better, agree with you, or put something on the record.
 
@@ -67,7 +67,7 @@ That's the gap I'm building Mend to close.
 
 ### Post 3: The Big Realization: What You Get Blamed For Shapes How You Act
 
-**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always structural misalignment: different goals, different workloads, or processes that were never built to fit together, colliding in one interaction.[^8] The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
+**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always structural misalignment: different goals, different workloads, or processes that were never built to fit together, colliding in one interaction. (Walton & Dutton, "The Management of Interdepartmental Conflict," Administrative Science Quarterly, 1969: https://doi.org/10.2307/2391364) The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
 
 **We blame bad behavior for what's usually structural misalignment.**
 
@@ -80,7 +80,7 @@ Both are talented, well-intentioned, and acting completely rationally based on h
 
 Yet some interactions still feel personal, maybe it's lack of sleep, a bad day, something unrelated to the actual disagreement. It happens often enough to be a real pattern, even though most of their day-to-day interactions are fine. The designer assumes the engineer is a territorial gatekeeper with an unchecked ego. The engineer assumes the designer is reckless and sloppy.
 
-In organizational psychology, this is the **fundamental attribution error**: we judge our own behavior based on context and constraints, but we judge our colleagues' behavior based on perceived character flaws.[^3]
+In organizational psychology, this is the **fundamental attribution error**: we judge our own behavior based on context and constraints, but we judge our colleagues' behavior based on perceived character flaws. (Lee Ross, "The Intuitive Psychologist and His Shortcomings," 1977: https://explore.psychsafety.com/n/ross-1977/)
 
 Zoom out and the pattern holds well beyond this one example. Most of what reads as ego or a lack of professionalism in a coworker is someone reacting to pressure you can't see: a deadline, understaffing, a bad week, pressure coming down from their own manager.
 
@@ -88,7 +88,7 @@ If you want to resolve cross-functional friction, stop asking "why are they bein
 
 The moment you map the opposing metrics, the malice disappears.
 
-Metrics are just one flavor of this. The same pattern shows up anywhere two roles have different goals, different workloads, or processes that were bolted together instead of designed to fit, not just where there's a scoreboard involved. A landmark 1969 study on interdepartmental conflict (Walton & Dutton, *Administrative Science Quarterly*) found the same thing at the organizational level: friction between departments tracks with differentiated goals and task interdependence, not with who happens to be in the role.[^8]
+Metrics are just one flavor of this. The same pattern shows up anywhere two roles have different goals, different workloads, or processes that were bolted together instead of designed to fit, not just where there's a scoreboard involved. A landmark 1969 study on interdepartmental conflict found the same thing at the organizational level: friction between departments tracks with differentiated goals and task interdependence, not with who happens to be in the role. (Walton & Dutton, Administrative Science Quarterly, 1969: https://doi.org/10.2307/2391364)
 
 Here's the part that surprises most managers: they default to the same personality read their reports do. And even on the rare occasion a manager does see the structural mismatch clearly, personally stepping in and settling it for the two people involved solves that one fight and quietly breaks something bigger. It teaches the team that disagreements get resolved by escalation, not by working it out between the people who actually understand the tradeoffs. A manager who mediates every low-stakes dispute ends up training their team to bring them every future one too.
 
@@ -104,8 +104,8 @@ The two people in the room are the only ones holding the full picture: what the 
 
 The data on workplace disputes highlights a striking contradiction:
 
-- **At intake:** 49–55% of employees attribute friction to "personality clashes and difficult egos."[^1]
-- **Post-resolution:** over 80% of resolved agreements focus on operational mechanics: turnaround SLAs, swimlanes, and handoff criteria.[^2]
+- **At intake:** 49-55% of employees attribute friction to "personality clashes and difficult egos." (CPP Inc., 2008: https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf)
+- **Post-resolution:** over 80% of resolved agreements focus on operational mechanics: turnaround SLAs, swimlanes, and handoff criteria. (Karen Jehn, Administrative Science Quarterly, 1995: https://doi.org/10.2307/2393638)
 
 In empirical mediation data, you almost never see a settlement that says *"Alex agrees to be 20% less arrogant."* You see settlements that say *"code reviews must be completed within 24 hours via tickets rather than public Slack channels."*
 
@@ -123,7 +123,7 @@ And organizations gladly accept that conclusion. Blaming an individual's "attitu
 
 In knowledge work, we often treat workplace friction like an infectious disease: something to be suppressed, smoothed over, or handed to HR.
 
-Organizational research, most notably Karen Jehn's work on conflict taxonomy, paints a different picture:[^2]
+Organizational research, most notably Karen Jehn's work on conflict taxonomy, paints a different picture (Administrative Science Quarterly, 1995: https://doi.org/10.2307/2393638):
 
 - **Task conflict:** debating technical architecture, feature scope, and data interpretation. High-performing teams consistently demonstrate high levels of task debate. It eliminates groupthink and surfaces critical bugs before launch.
 - **The cost of polite avoidance:** when team members stop raising objections, it rarely means consensus. It usually means they've calculated that caring isn't worth the political friction.
@@ -151,7 +151,7 @@ We need a third path: grounded human maturity.
 
 Being professional shouldn't mean turning into an appliance. Adults have bad days, communication mismatches, and finite emotional bandwidth.
 
-Psychologists have a name for the first option: surface acting, faking an emotion you don't feel. It's linked to burnout and job dissatisfaction. Deep acting, actually working through the feeling instead of just masking it, isn't.[^9]
+Psychologists have a name for the first option: surface acting, faking an emotion you don't feel. It's linked to burnout and job dissatisfaction. Deep acting, actually working through the feeling instead of just masking it, isn't. (Hochschild, The Managed Heart, 1983: https://www.ucpress.edu/books/the-managed-heart/paper; Grandey, Journal of Occupational Health Psychology, 2000: https://doi.org/10.1037/1076-8998.5.1.95)
 
 True professionalism means having a safe, off-the-record outlet to be messy, angry, or petty in private, so you can process the emotional charge, uncover the root issue, and step back into the room focused on the work.
 
@@ -168,7 +168,7 @@ When peer friction escalates, the corporate reflex is to bring in an "adult": a 
 Decades of alternative dispute resolution and self-determination research show why this fails:
 
 - **Triadic status threat.** The presence of an evaluative authority triggers the brain's social threat circuitry. Employees subconsciously realize: *this dispute is now tied to my performance review.*
-- **Controlled compliance vs. buy-in.** Under authority surveillance, people optimize for impression management. They agree to performative compromises to appease the manager, but without genuine agency the agreement falls apart within weeks.[^4]
+- **Controlled compliance vs. buy-in.** Under authority surveillance, people optimize for impression management. They agree to performative compromises to appease the manager, but without genuine agency the agreement falls apart within weeks. (Deci & Ryan, Psychological Inquiry, 2000: https://doi.org/10.1207/S15327965PLI1104_01)
 - **The "culture risk" stigma.** Employees who raise relational concerns are frequently tagged as "difficult" or "high-maintenance."
 
 The thesis behind Mend is simple: **outcomes over surveillance.**
@@ -191,7 +191,7 @@ Contrast that with corporate enterprise software:
 - A minor disagreement over a code review lives forever in ticket comments, Slack threads, and manager 1:1 notes.
 - The permanent paper trail makes people defensive, guarded, and terrified of being honest.
 
-This tracks with research on workplace monitoring generally: employees under electronic performance monitoring report more stress, and there's no evidence the monitoring even improves performance.[^10]
+This tracks with research on workplace monitoring generally: employees under electronic performance monitoring report more stress, and there's no evidence the monitoring even improves performance. (Ravid et al., Personnel Psychology, 2023: https://gwern.net/doc/sociology/technology/2022-ravid.pdf)
 
 To solve this, Mend uses confidential computing and volatile memory enclaves. Conversations are never written to disk. Once two colleagues calibrate their working dynamic and establish their operating boundaries, the session disappears.
 
@@ -210,7 +210,7 @@ When an employee is dealing with a difficult peer dynamic, the perceived social 
 - It triggers impression anxiety ("will I look fragile or incompetent?").
 - It risks peer retaliation ("are you accusing me of being the problem?").
 
-Voluntary self-referral to formal mediation channels historically hovers between 3% and 10%, largely because employees fear being labeled fragile, difficult, or a culture risk.[^6] If a platform requires mutual consensus just to open the door, adoption will land in that same range.
+Employees who could use formal mediation channels mostly don't, largely because raising a concern can mean being labeled fragile, difficult, or a culture risk long after the issue is resolved. [NEEDS A REAL SOURCE: the original draft cited a specific "3 to 10%" adoption figure attributed to Amy Edmondson and "David X. Lee," but that figure and attribution could not be verified, don't publish a specific number or those names until you've confirmed a real source.] If a platform requires mutual consensus just to open the door, adoption will land in that same low range.
 
 To solve the adoption hurdle, Mend is built **solo-first**:
 
@@ -234,7 +234,7 @@ At Mend, we reframe the conversation around **operational calibration:**
 
 - **Standard sprint hygiene.** Calibrating working relationships is no different than running a linter, refactoring technical debt, or running a sprint retro.
 - **Compulsory friendship is rejected.** We don't demand forced apologies, corporate toxic positivity, or performative smiles. Interpersonal warmth is a welcome byproduct, but clear, functional operating boundaries are completely valid on their own.
-- **Restoring human agency.** When two teammates author their own working agreements peer-to-peer, away from managerial surveillance, they build genuine resilience and are far more likely to actually honor what they agreed to.[^5]
+- **Restoring human agency.** When two teammates author their own working agreements peer-to-peer, away from managerial surveillance, they build genuine resilience and are far more likely to actually honor what they agreed to. (Norton, Mochon & Ariely, "The IKEA Effect," Journal of Consumer Psychology, 2012: https://people.duke.edu/~dandan/webfiles/PapersUpside/Ikea%20Effect.pdf)
 
 Teams don't need another HR compliance policy. They need private operational scaffolding to turn friction into clarity, reclaim their sprint focus, and stay human in modern workplaces.
 
@@ -248,7 +248,7 @@ Teams don't need another HR compliance policy. They need private operational sca
 
 - "I'm a UX product designer from North Carolina, and right now I'm building probably the most unconventional app of my career. It's called Mend, and it's an AI tool built to help coworkers resolve workplace friction completely off the record."
 - "I don't have an HR degree, I'm not an executive coach, and I don't have a background in corporate mediation. What I do have is years of designing digital systems, and years of realizing that the humans working behind the screens are harder to debug than the code itself."
-- "Here's a number that should concern every manager: the average employee burns 2.8 hours a week on unmanaged coworker friction. That's a global study from CPP Inc., the people behind the Myers-Briggs test.[^1] But right now, you only get two bad options: vent to friends, which feels great but fixes zero problems, or go to HR, which turns standard friction into an adversarial tribunal and puts a target on your back."
+- "Here's a number that should concern every manager: the average employee burns 2.8 hours a week on unmanaged coworker friction. That's a global study from CPP Inc., the people behind the Myers-Briggs test. (CPP Inc., 2008: https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf) But right now, you only get two bad options: vent to friends, which feels great but fixes zero problems, or go to HR, which turns standard friction into an adversarial tribunal and puts a target on your back."
 - "We spend our whole lives learning hard craft skills, but nobody teaches us how to navigate interpersonal power dynamics without blowing up our reputations. I started building Mend because I desperately needed it years ago. Over the next few weeks, I'm sharing 10 lessons on why the corporate view of conflict is completely broken. Follow along."
 
 ---
@@ -261,20 +261,20 @@ Teams don't need another HR compliance policy. They need private operational sca
 - "Friends care about you, so their instinct is to take your side. Mine told me my coworker was wrong and I had nothing to feel bad about. That felt good in the moment."
 - "But a friend who's automatically on your side can't tell you where you're wrong, or where you contributed to the problem. I'd go back to work certain I was right, make a reactive decision, and end up worse off."
 - "When you're frustrated, you don't need someone to agree with you. You need a private place to say the messy version out loud, then work out what's actually going on before you act."
-- "And if you're thinking 'I'll just ask ChatGPT,' people already do, a lot. But a generic AI chatbot can't hear the other person's side, has no memory of your relationship, and is built to agree with whoever's typing.[^7]"
+- "And if you're thinking 'I'll just ask ChatGPT,' people already do, a lot. But a generic AI chatbot can't hear the other person's side, has no memory of your relationship, and is built to agree with whoever's typing." (OpenAI 2025: https://www.hks.harvard.edu/publications/how-people-use-chatgpt / Anthropic 2025: https://www.anthropic.com/news/how-people-use-claude-for-support-advice-and-companionship)
 
 ---
 
 ### Post 3: The Big Realization: What You Get Blamed For Shapes How You Act
 
-**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always structural misalignment: different goals, different workloads, or processes that were never built to fit together, colliding in one interaction.[^8] The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
+**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always structural misalignment: different goals, different workloads, or processes that were never built to fit together, colliding in one interaction. (Walton & Dutton, "The Management of Interdepartmental Conflict," Administrative Science Quarterly, 1969: https://doi.org/10.2307/2391364) The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
 
 - "It took me years in tech to realize this: that coworker who makes your blood boil is probably just doing their job."
 - "Think about product designers and core platform engineers. A designer gets promoted for feature velocity and launching cool UI flows. But the platform engineer gets held accountable if there's a single sev-1 outage or latency regression."
 - "When the engineer blocks the designer's pull request, the designer thinks, 'They're territorial and have a massive ego.' And the engineer thinks, 'This designer is reckless and doesn't know what they're doing.' Neither person is malicious. Their performance reviews are set up to make them enemies."
 - "Zoom out and this happens everywhere. Most of what reads as ego or a lack of professionalism in a coworker is them reacting to pressure you can't see: a deadline, a bad week, pressure from their own manager."
 - "When you stop diagnosing personalities and start looking at what each person actually gets judged on, the personal resentment evaporates. You stop fighting a coworker and start solving a broken system."
-- "And it's not always about metrics. Sometimes it's mismatched workloads, or two processes that were never built to talk to each other. The pattern's the same either way: structural setup creates the friction, not character.[^8]"
+- "And it's not always about metrics. Sometimes it's mismatched workloads, or two processes that were never built to talk to each other. The pattern's the same either way: structural setup creates the friction, not character. (Walton & Dutton, "The Management of Interdepartmental Conflict," Administrative Science Quarterly, 1969: https://doi.org/10.2307/2391364)"
 - "Here's the part almost nobody talks about: their manager can't fix this for them either. Managers read the same fight and see the same two personalities. And even when a manager does spot the real structural mismatch, stepping in and settling it themselves teaches the team one lesson: don't work it out, go get the manager. That's a bottleneck wearing a management title."
 - "The two people in the disagreement are the only ones who actually hold the information a manager doesn't have: what it's actually like to sit in each seat. So the fix has to come from them, not get handed down from above."
 
@@ -285,7 +285,7 @@ Teams don't need another HR compliance policy. They need private operational sca
 **Core insight:** Employees routinely blame personality and ego for conflict because systemic pressure is invisible. Corporations encourage this narrative because pathologizing individuals absolves leadership from auditing broken systems.
 
 - "There's a crazy data point in dispute research that reveals one of the biggest blind spots in corporate culture."
-- "At intake, around 49–55% of employees blame coworker tension on 'personality clashes and warring egos.'[^1] But once those exact disputes are resolved through mediation, over 80% of the actual fixes turn out to be process, SLAs, and structural rules.[^2]"
+- "At intake, around 49-55% of employees blame coworker tension on 'personality clashes and warring egos.' (CPP Inc., 2008: https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf) But once those exact disputes are resolved through mediation, over 80% of the actual fixes turn out to be process, SLAs, and structural rules. (Karen Jehn, 1995: https://doi.org/10.2307/2393638)"
 - "Almost no mediation agreement reads 'Person A agrees to have less ego.' They read 'specs must be submitted 48 hours before sprint planning.' So why do companies love the 'ego' narrative? Because if you have an ego problem, it's a personal flaw. If it's a process flaw, it's leadership's fault."
 - "Blaming egos lets management off the hook. It's a lot cheaper to send someone to an emotional-intelligence webinar than it is to fix broken cross-team incentives."
 
@@ -310,7 +310,7 @@ Teams don't need another HR compliance policy. They need private operational sca
 - "We're told we only have two choices. Choice A: act like a robot, plaster on a corporate smile, swallow your feelings, and pretend you don't have a nervous system. Or choice B: let raw emotions rip, start drama, and torch your reputation."
 - "There's a third option: being professionally human. It says, 'I don't have to become an emotionless appliance to do my job, but I also don't have to ruin my career over a bad interaction.'"
 - "Real professionalism means having an unmonitored space to process anger or pettiness honestly in private, so you can walk into the room as a clear-headed adult."
-- "There's actual research on this. Faking an emotion you don't feel is called 'surface acting,' and it's linked to burnout. Actually working through the feeling first isn't.[^9]"
+- "There's actual research on this. Faking an emotion you don't feel is called 'surface acting,' and it's linked to burnout. Actually working through the feeling first isn't." (Hochschild, The Managed Heart, 1983: https://www.ucpress.edu/books/the-managed-heart/paper; Grandey, Journal of Occupational Health Psychology, 2000: https://doi.org/10.1037/1076-8998.5.1.95)
 
 ---
 
@@ -321,7 +321,7 @@ Teams don't need another HR compliance policy. They need private operational sca
 - "Here's why traditional HR will never be able to fix everyday coworker conflict: real honesty cannot survive an audience."
 - "The second an authority figure (a manager or an HRBP) sits in the room, resolution is dead. Your brain instantly registers a career threat: 'is this going to affect my bonus, my rating, or my promotion?'"
 - "So instead of actually working through the issue, everyone puts on a performance. You shake hands, offer fake corporate smiles, and nod along just to get out of the room. The second you leave, the resentment festers."
-- "People will only drop their guard and acknowledge their mistakes when they know their words can't end up on a performance review.[^4] You can have surveillance, or you can have resolution. You cannot have both."
+- "People will only drop their guard and acknowledge their mistakes when they know their words can't end up on a performance review. You can have surveillance, or you can have resolution. You cannot have both." (Deci & Ryan, 2000: https://doi.org/10.1207/S15327965PLI1104_01)
 
 ---
 
@@ -333,7 +333,7 @@ Teams don't need another HR compliance policy. They need private operational sca
 - "We named the app Mend because of a medical metaphor: the dissolving suture. When a surgeon closes an incision, the stitch holds the tissue steady while it heals, and then it dissolves completely. No trace left behind."
 - "Most corporate software is built to compile dossiers: logging Slack chats, emails, and tickets forever. We built Mend so it runs purely in volatile hardware memory. There are no stored transcripts to subpoena, and nothing for HR to audit."
 - "Software for human relationships shouldn't build permanent records. It should do its job, heal the dynamic, and disappear."
-- "There's research backing this up too. Workplace monitoring is linked to more stress for employees, with no evidence it actually makes anyone perform better.[^10]"
+- "There's research backing this up too. Workplace monitoring is linked to more stress for employees, with no evidence it actually makes anyone perform better." (Ravid et al., Personnel Psychology, 2023: https://gwern.net/doc/sociology/technology/2022-ravid.pdf)
 
 ---
 
@@ -385,7 +385,7 @@ Learned this one the hard way early in my career. Whenever a coworker pissed me 
 
 Felt amazing in the moment. Problem is, a friend who's on your side by default can't tell you where you're wrong, and they definitely won't point out your own blind spots. I'd walk back into the office fully validated and armed with nothing but righteous anger, make some reactive call, and make things worse for myself.
 
-Worth noting there's research behind this too: when a decision gets handed down instead of worked out, people comply on the surface but don't actually buy in, and it tends to fall apart once nobody's watching.[^4]
+Worth noting there's research behind this too: when a decision gets handed down instead of worked out, people comply on the surface but don't actually buy in, and it tends to fall apart once nobody's watching. (Deci & Ryan, 2000: https://doi.org/10.1207/S15327965PLI1104_01)
 
 Anyone else notice this pattern? Feels like venting to friends is almost designed to make you overconfident right before you do something you'll regret.
 
@@ -405,7 +405,7 @@ This is basically the fundamental attribution error at a team level: we explain 
 
 Zoom out and this holds generally: most of what gets read as ego or a lack of professionalism in a coworker is them reacting to pressure nobody else can see, a deadline, understaffing, a bad week, pressure coming down from their own manager.
 
-And it's not just metrics. Mismatched workloads, incompatible processes, unclear ownership between teams, any structural setup that wasn't designed to fit together will produce the same effect.[^8]
+And it's not just metrics. Mismatched workloads, incompatible processes, unclear ownership between teams, any structural setup that wasn't designed to fit together will produce the same effect. (Walton & Dutton, "The Management of Interdepartmental Conflict," Administrative Science Quarterly, 1969: https://doi.org/10.2307/2391364)
 
 And for the managers in here: you're not immune to this either. Most managers who get pulled into a dispute like this default to the same personality read as the two people fighting. Even when you do spot the real structural cause, fixing it for them trains your team to escalate instead of sort it out themselves. The people who actually hold the information you need, what each seat's pressure really feels like, are the two in the disagreement, not you.
 
@@ -451,7 +451,7 @@ Starting to think corporate professionalism has sold people a bad binary: either
 
 There's a third option that doesn't get talked about enough: having somewhere private to actually process the messy, petty, angry version of your reaction, so you can walk back into the room as a clear-headed adult instead of either an appliance or a liability.
 
-Adults have bad days and limited emotional bandwidth. Pretending otherwise is just suppression with better branding. Psychologists call faking a feeling you don't have "surface acting," and it's linked to burnout, working through the feeling first instead of just masking it doesn't carry the same cost.[^9] How do you all actually process that stuff before it either gets bottled up or blows up?
+Adults have bad days and limited emotional bandwidth. Pretending otherwise is just suppression with better branding. Psychologists call faking a feeling you don't have "surface acting," and it's linked to burnout, working through the feeling first instead of just masking it doesn't carry the same cost. (Hochschild, The Managed Heart, 1983: https://www.ucpress.edu/books/the-managed-heart/paper; Grandey, Journal of Occupational Health Psychology, 2000: https://doi.org/10.1037/1076-8998.5.1.95) How do you all actually process that stuff before it either gets bottled up or blows up?
 
 ---
 
@@ -477,7 +477,7 @@ People only really drop their guard and own their part in a conflict when they k
 
 Working on a tool meant to help coworkers work through friction privately, and the hardest part wasn't the AI, it was the architecture question: how do you build something that can credibly prove it isn't just another surveillance tool logging everything for later?
 
-Most corporate software defaults to keeping everything forever, every Slack message, every ticket comment, every 1:1 note. That permanent paper trail is exactly why people stay guarded and never say what they actually mean. Research on electronic monitoring backs this up broadly: it's linked to higher stress, with no real evidence it improves performance.[^10] So we built this to run in volatile memory only, nothing written to disk, no transcripts to subpoena or audit. Once two people work out their issue, the session is just gone.
+Most corporate software defaults to keeping everything forever, every Slack message, every ticket comment, every 1:1 note. That permanent paper trail is exactly why people stay guarded and never say what they actually mean. Research on electronic monitoring backs this up broadly: it's linked to higher stress, with no real evidence it improves performance. (Ravid et al., Personnel Psychology, 2023: https://gwern.net/doc/sociology/technology/2022-ravid.pdf) So we built this to run in volatile memory only, nothing written to disk, no transcripts to subpoena or audit. Once two people work out their issue, the session is just gone.
 
 Curious how others building people-facing tools have handled the trust problem, where the only way to get honesty out of users is to prove you can't hold anything against them later.
 
@@ -523,24 +523,24 @@ A few things worth knowing before posting any of the above:
 
 ## Sources & Data Notes
 
-Cite these benchmarks when publishing these posts or defending the data against peer skepticism (e.g., colleagues who claim they "never experience friction").
+Every citation now lives inline in the post text itself (name, year, and a direct link), right next to the claim it supports, so there's no footnote marker to strip when you copy a post out of this file. This section is just the master list for your own records and fact-checking, not something to paste anywhere.
 
-[^1]: **The 2.8-hour metric and the 49–55% ego-attribution benchmark.** CPP Global Human Capital Report, *"Workplace Conflict and How Businesses Can Harness It to Thrive"* (commissioned by CPP Inc., publisher of the MBTI and the Thomas-Kilmann Conflict Mode Instrument; surveyed 5,000 full-time employees across 9 countries). Finding: employees lose an average of 2.8 hours per week to unresolved workplace conflict (roughly $359 billion in paid U.S. hours); 49–55% of employees initially attribute workplace conflict to "personality clashes and warring egos."
+**1. The 2.8-hour metric and the 49-55% ego-attribution benchmark.** CPP Inc., *"Workplace Conflict and How Businesses Can Harness It to Thrive"* (2008 global human capital report, 5,000 full-time employees across 9 countries). https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf
 
-[^2]: **Conflict taxonomy and post-resolution coding (task vs. relationship conflict).** Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (*Administrative Science Quarterly*), with follow-up studies alongside Kristin Behfar. Finding: while participants enter disputes attributing 50–70% of conflict to relationship/interpersonal clashes, over 80% of durable post-resolution agreements are classified as task, process, or structural fixes (clarifying handoffs, SLAs, metrics).
+**2. Conflict taxonomy and post-resolution coding (task vs. relationship conflict).** Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (Administrative Science Quarterly, 1995). https://doi.org/10.2307/2393638
 
-[^3]: **The fundamental attribution error.** Lee Ross (1977), *"The Intuitive Psychologist and His Shortcomings: Distortions in the Attribution Process"* (*Advances in Experimental Social Psychology*, Stanford University). Finding: the systematic cognitive bias where individuals explain others' negative behaviors via internal character flaws or ego, while explaining their own behaviors via external, situational constraints.
+**3. The fundamental attribution error.** Lee Ross, *"The Intuitive Psychologist and His Shortcomings: Distortions in the Attribution Process"* (Advances in Experimental Social Psychology, 1977). https://explore.psychsafety.com/n/ross-1977/
 
-[^4]: **Autonomous commitment vs. controlled compliance.** Edward L. Deci & Richard M. Ryan (2000), *"The 'What' and 'Why' of Goal Pursuits: Human Needs and the Self-Determination of Behavior"* (*Psychological Inquiry*). Finding: monitored or mandated settlements produce "controlled compliance" that degrades once authority is removed; autonomous, peer-authored agreements yield sustained commitment.
+**4. Autonomous commitment vs. controlled compliance.** Edward L. Deci & Richard M. Ryan, *"The 'What' and 'Why' of Goal Pursuits: Human Needs and the Self-Determination of Behavior"* (Psychological Inquiry, 2000). https://doi.org/10.1207/S15327965PLI1104_01
 
-[^5]: **Psychological ownership of solutions.** Michael I. Norton, Daniel Mochon, & Dan Ariely (2012), *"The IKEA Effect: When Labor Leads to Love"* (*Journal of Consumer Psychology*). Finding: people value and protect operational agreements significantly more when they've had a direct hand in co-creating them.
+**5. Psychological ownership of solutions.** Michael I. Norton, Daniel Mochon, & Dan Ariely, *"The IKEA Effect: When Labor Leads to Love"* (Journal of Consumer Psychology, 2012). https://people.duke.edu/~dandan/webfiles/PapersUpside/Ikea%20Effect.pdf
 
-[^6]: **Voluntary ADR adoption and impression stigma.** Amy Edmondson (Harvard Business School, research on psychological safety) and David X. Lee (organizational help-seeking and impression management). Finding: formal dispute channels carry high social threat and impression costs, causing voluntary self-referral to hover between 3% and 10%, as employees fear being labeled fragile, difficult, or a culture risk.
+**6. Voluntary ADR adoption and impression stigma. UNVERIFIED, do not use as written.** The original draft of this file cited a specific "3 to 10%" voluntary self-referral figure attributed to "Amy Edmondson and David X. Lee." A source search could not confirm that figure or that attribution anywhere. Posts 2 and 9 have been edited to drop the specific number and names; they now make the qualitative claim only (people avoid formal channels because of stigma), which is a defensible, well-known pattern but currently has no specific citation attached in this file. Find and swap in a real source before using a hard percentage again.
 
-[^8]: **Structural, not personal, causes of intergroup conflict.** Richard E. Walton & John M. Dutton (1969), *"The Management of Interdepartmental Conflict: A Model and Review"* (*Administrative Science Quarterly*). Finding: conflict between organizational units is driven by structural factors, differentiated goals, task interdependence, resource competition, not by the personalities or character of the people in those roles.
+**7. Generic AI usage for relationships and personal dynamics.** OpenAI, *How People Use ChatGPT* (Chatterji et al., 2025): https://www.hks.harvard.edu/publications/how-people-use-chatgpt. Anthropic, *How People Use Claude for Support, Advice, and Companionship* (2025): https://www.anthropic.com/news/how-people-use-claude-for-support-advice-and-companionship. Neither company isolates conflict navigation specifically from companionship/reflection, so the percentages are ceiling-adjacent proxies, not precise figures. See `docs/pitch-strategy/23_CHATBOT_SOCIAL_DYNAMICS_USAGE_EVIDENCE.md` for the full source trace.
 
-[^9]: **Surface acting vs. deep acting.** Arlie R. Hochschild (1983), *The Managed Heart: Commercialization of Human Feeling*; Alicia A. Grandey (2000), *"Emotion Regulation in the Workplace: A New Way to Conceptualize Emotional Labor"* (*Journal of Occupational Health Psychology*). Finding: faking or suppressing an emotion without changing how you actually feel ("surface acting") is associated with burnout and job dissatisfaction; genuinely working through the feeling ("deep acting") is not.
+**8. Structural, not personal, causes of intergroup conflict.** Richard E. Walton & John M. Dutton, *"The Management of Interdepartmental Conflict: A Model and Review"* (Administrative Science Quarterly, 1969). https://doi.org/10.2307/2391364
 
-[^10]: **Electronic performance monitoring and worker stress.** Danielle M. Ravid, Jolene C. White, David L. Tomczak, Allison F. Miles, & Tara S. Behrend (2023), *"A Meta-Analysis of the Effects of Electronic Performance Monitoring on Work Outcomes"* (*Personnel Psychology*, 94 samples, ~23,461 workers). Finding: electronic performance monitoring is associated with increased worker stress regardless of how it's implemented, with no evidence that it improves performance; more transparent, less invasive monitoring produces somewhat less negative reactions but doesn't remove the effect.
+**9. Surface acting vs. deep acting.** Arlie R. Hochschild, *The Managed Heart: Commercialization of Human Feeling* (1983): https://www.ucpress.edu/books/the-managed-heart/paper. Alicia A. Grandey, *"Emotion Regulation in the Workplace: A New Way to Conceptualize Emotional Labor"* (Journal of Occupational Health Psychology, 2000): https://doi.org/10.1037/1076-8998.5.1.95
 
-[^7]: **Generic AI usage for relationships and personal dynamics.** OpenAI, *How People Use ChatGPT* (Chatterji et al., Sept 2025, n≈1.1M sampled conversations): 1.9% of all ChatGPT messages fall under "Relationships and Personal Reflection," which against OpenAI's reported 18B messages/week works out to roughly 340M messages/week on that topic. Anthropic, *How People Use Claude for Support, Advice, and Companionship*: 2.9% of all Claude.ai usage is "affective conversations," with Interpersonal Advice ("navigating relationships and personal dynamics") the closest literal match, though only the 2.9% aggregate is published. Neither company isolates conflict navigation specifically from companionship/reflection, so these are ceiling-adjacent proxies, not precise figures. See `docs/pitch-strategy/23_CHATBOT_SOCIAL_DYNAMICS_USAGE_EVIDENCE.md` for the full source trace, including structural reasons (no mechanism for hearing both sides, no persistent memory across sessions, sycophancy bias) these tools produce poor results for this use case.
+**10. Electronic performance monitoring and worker stress.** Danielle M. Ravid, Jolene C. White, David L. Tomczak, Allison F. Miles, & Tara S. Behrend, *"A Meta-Analysis of the Effects of Electronic Performance Monitoring on Work Outcomes"* (Personnel Psychology, 2023, 94 samples, ~23,461 workers). https://gwern.net/doc/sociology/technology/2022-ravid.pdf
