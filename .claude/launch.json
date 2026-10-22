@@ -30,6 +30,18 @@
       "runtimeExecutable": "pitch/conflict-test/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--port", "8480", "--app-dir", "pitch/conflict-test"],
       "port": 8480
+    },
+    {
+      "name": "manager-read-test",
+      "runtimeExecutable": "pitch/manager-read-test/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8481", "--app-dir", "pitch/manager-read-test"],
+      "port": 8481
+    },
+    {
+      "name": "pitch-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8099"],
+      "port": 8099
     }
   ]
 }

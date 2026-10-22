@@ -1,0 +1,693 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; the Manager&rsquo;s Conflict Story</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9,700;1,9,500&display=swap" rel="stylesheet">
+<style>
+  /* Same brand kit as story.html/about.html: Evergreen ink, Oat paper,
+     Evergreen as the primary accent, Pink reserved for the logo mark,
+     Honey as a highlight fill paired with ink text on top. */
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .brand-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .wordmark{font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; line-height:1;}
+  .hero{display:flex; align-items:center; gap:32px;}
+  .hero-text{flex:1; min-width:0;}
+  @media (max-width:600px){ .hero{flex-direction:column; align-items:flex-start; gap:20px;} }
+
+  /* Thimble avatar: same port as story.html/about.html -- see those files
+     for the fuller comment on where this shape and render loop come from
+     (thimble/static/index.html's live avatar). */
+  .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease;}
+  .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
+
+  .kicker{font-family:'Fraunces',Georgia,serif; font-style:italic; font-size:14px; color:var(--muted); margin:0 0 10px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.15rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:700;}
+  h2.eyebrow{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase;}
+  h3.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:48px 0 10px; color:var(--ink); line-height:1.25;}
+  p.lede{font-size:1.05rem; color:var(--ink-soft); margin:0 0 8px; max-width:56ch;}
+  .cta-row{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px;}
+  .btn-top{display:inline-flex; align-items:center; gap:6px; margin:0; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 2px 6px rgba(23,55,46,0.18);}
+  .btn-top:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(23,55,46,0.24);}
+  .hr-link{display:inline-flex; align-items:center; gap:6px; margin:0; background:#fff; color:var(--ink); font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; border:1px solid var(--border); transition:transform .15s ease, box-shadow .15s ease;}
+  .hr-link:hover{transform:translateY(-1px); box-shadow:0 2px 6px rgba(23,55,46,0.1);}
+  p{margin:0 0 14px;}
+  section.block{margin-top:48px;}
+  section.block:first-of-type{margin-top:36px;}
+
+  .advantage-row{display:flex; align-items:center; gap:28px; margin-top:18px;}
+  .advantage-avatar{flex-shrink:0; width:104px; height:104px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 50%, rgba(243,130,154,0.16) 0%, rgba(243,130,154,0.16) 45%, rgba(233,185,73,0) 72%);}
+  .advantage-row .icon-list{flex:1; min-width:0; margin-top:0;}
+  @media (max-width:620px){ .advantage-row{flex-direction:column; align-items:flex-start; gap:20px;} .advantage-avatar{margin:0 auto;} }
+
+  .icon-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
+  .icon-list li{display:flex; gap:14px; align-items:flex-start;}
+  .icon-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
+  .icon-list li:nth-child(2) .ico{background:var(--pink-soft);}
+  .icon-list li:nth-child(3) .ico{background:var(--honey-soft);}
+  .icon-list .ico svg{width:18px; height:18px; display:block;}
+  .icon-list .txt{padding-top:2px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
+  .icon-list .txt b{color:var(--ink); display:block; font-size:14.5px; margin-bottom:2px;}
+
+  .evidence-block{background:var(--ink); border-radius:22px; padding:clamp(32px,5vw,52px) clamp(24px,5vw,48px); margin-top:8px;}
+  .evidence-head{max-width:640px; margin-bottom:clamp(24px,4vw,36px);}
+  .evidence-eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.09em; text-transform:uppercase; color:var(--honey); margin-bottom:10px;}
+  .evidence-title{font-size:clamp(22px,3vw,30px); line-height:1.2; color:#fff; margin:0 0 10px; font-weight:800;}
+  .evidence-sub{font-size:14.5px; line-height:1.55; color:rgba(255,255,255,0.68); margin:0;}
+  .evidence-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;}
+  .evidence-card{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; gap:10px;}
+  .evidence-card.lead{background:var(--honey); border-color:var(--honey);}
+  .evidence-tag{align-self:flex-start; font-size:10.5px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; padding:4px 10px; border-radius:999px;}
+  .evidence-tag.primary{background:rgba(23,55,46,0.85); color:#fff;}
+  .evidence-tag.independent{background:rgba(255,255,255,0.14); color:#fff;}
+  .evidence-tag.secondary{background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.7);}
+  .evidence-card.lead .evidence-tag{background:var(--ink); color:#fff;}
+  .evidence-org{font-size:20px; font-weight:800; color:#fff;}
+  .evidence-card.lead .evidence-org{color:var(--ink);}
+  .evidence-finding{font-size:15px; line-height:1.5; color:rgba(255,255,255,0.92); font-weight:600;}
+  .evidence-card.lead .evidence-finding{color:var(--ink);}
+  .evidence-meta{font-size:12.5px; line-height:1.5; color:rgba(255,255,255,0.55);}
+  .evidence-card.lead .evidence-meta{color:rgba(23,55,46,0.72);}
+  .evidence-card.secondary{opacity:0.82;}
+  @media (max-width:600px){ .evidence-org{font-size:18px;} .evidence-finding{font-size:14px;} }
+
+  .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
+  @media (max-width:520px){ .door-grid{grid-template-columns:1fr;} }
+  .door-card{min-width:0; background:var(--card); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:16px; padding:22px 20px; box-shadow:0 1px 2px rgba(23,55,46,0.04); transition:transform .15s ease, box-shadow .15s ease;}
+  .door-card:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(23,55,46,0.08);}
+  .door-card:nth-child(2){border-top-color:var(--pink);}
+  .door-card:nth-child(3){border-top-color:var(--honey);}
+  @media (max-width:700px){ .door-grid{gap:10px;} .door-card{padding:16px 12px;} }
+  @media (max-width:520px){ .door-card{background:transparent; border:none; border-radius:0; box-shadow:none; padding:20px 0; border-bottom:1px solid var(--border);} .door-card:last-child{border-bottom:none;} .door-card:hover{transform:none; box-shadow:none;} }
+  .door-ico{width:38px; height:38px; border-radius:11px; background:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .door-card:nth-child(2) .door-ico{background:var(--pink);}
+  .door-card:nth-child(3) .door-ico{background:var(--honey);}
+  .door-ico svg{width:20px; height:20px; display:block;}
+  @media (max-width:700px){ .door-ico{width:32px; height:32px; margin-bottom:10px;} .door-ico svg{width:17px; height:17px;} }
+  .door-t{font-weight:700; font-size:15px; margin-bottom:8px; line-height:1.3;}
+  .door-d{font-size:13px; color:var(--ink-soft); line-height:1.5;}
+  @media (max-width:700px){ .door-t{font-size:13.5px; margin-bottom:6px;} .door-d{font-size:12px;} }
+
+  .privacy-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
+  .privacy-list li{display:flex; gap:14px; align-items:flex-start;}
+  .privacy-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
+  .privacy-list li:nth-child(2) .ico{background:var(--honey-soft);}
+  .privacy-list .ico svg{width:18px; height:18px; display:block;}
+  .privacy-list .k{font-weight:800; color:var(--ink); font-size:14.5px; display:block; margin-bottom:3px; padding-top:2px;}
+  .privacy-list .v{color:var(--ink-soft); font-size:14px; line-height:1.55;}
+
+  .research-callout{margin-top:18px; display:flex; align-items:center; gap:16px; background:var(--honey-soft); border:1px solid var(--border); border-radius:16px; padding:18px 20px;}
+  .research-callout .ico{flex-shrink:0; width:42px; height:42px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(23,55,46,0.06);}
+  .research-callout .ico svg{width:20px; height:20px; display:block;}
+  .research-callout .txt{flex:1; min-width:0;}
+  .research-callout .txt b{display:block; color:var(--ink); font-size:14px; margin-bottom:2px; line-height:1.35;}
+  .research-callout .txt span{font-size:12.5px; color:var(--ink-soft); line-height:1.5;}
+  .research-callout .callout-btn{flex-shrink:0; background:var(--accent); color:#fff; border:none; font-weight:700; font-size:13px; padding:10px 18px; border-radius:999px; cursor:pointer; white-space:nowrap; font-family:inherit; transition:background .15s ease;}
+  .research-callout .callout-btn:hover{background:#0F2A21;}
+  @media (max-width:580px){ .research-callout{flex-direction:column; align-items:flex-start;} .research-callout .callout-btn{width:100%; text-align:center;} }
+
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(23,55,46,0.45); z-index:50; align-items:flex-start; justify-content:center; padding:48px 20px; overflow-y:auto;}
+  .modal-overlay.open{display:flex;}
+  .modal-card{background:var(--card); border-radius:20px; max-width:640px; width:100%; padding:36px 32px 32px; position:relative; box-shadow:0 24px 60px rgba(23,55,46,0.25);}
+  .modal-close{position:absolute; top:18px; right:18px; width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--paper); color:var(--ink-soft); font-size:16px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .modal-close:hover{color:var(--ink); border-color:var(--ink-soft);}
+  .modal-card h2.modal-title{font-size:1.4rem; font-weight:800; margin:0 0 4px; letter-spacing:-0.01em; line-height:1.3; max-width:46ch; padding-right:36px;}
+  .modal-card .modal-sub{font-size:13px; color:var(--muted); margin:0 0 22px;}
+  .modal-card ul{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:14px;}
+  .modal-card li{font-size:13.5px; line-height:1.55; color:var(--ink-soft);}
+  .modal-card li b{color:var(--ink);}
+  .modal-card p.lead-line{font-size:13.5px; color:var(--ink-soft); font-style:italic; margin:22px 0 0; padding-top:18px; border-top:1px solid var(--border);}
+  @media (max-width:600px){ .modal-card{padding:28px 20px 24px;} }
+
+  /* Tester-modal: shown on page load, embeds seam-testers.html (same
+     directory, static file) so a visitor testing Seam reads the intro
+     before ever seeing the story page underneath. Dismissing it just
+     closes the overlay -- the story is already fully rendered behind it. */
+  .tester-modal-card{max-width:860px; width:100%; padding:0; overflow:hidden; display:flex; flex-direction:column; max-height:min(820px, calc(100vh - 64px));}
+  .tester-modal-head{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:22px 24px 18px; border-bottom:1px solid var(--border); background:var(--card);}
+  .tester-modal-head .kicker{margin:0 0 6px;}
+  .tester-modal-head h2{font-family:'Fraunces',Georgia,serif; font-size:1.25rem; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em; color:var(--ink);}
+  .tester-modal-head p{font-size:13px; color:var(--ink-soft); margin:0; max-width:48ch;}
+  .tester-modal-close{flex-shrink:0; width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--paper); color:var(--ink-soft); font-size:16px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .tester-modal-close:hover{color:var(--ink); border-color:var(--ink-soft);}
+  .tester-modal-body{flex:1; min-height:0; background:var(--paper);}
+  .tester-modal-body iframe{display:block; width:100%; height:100%; min-height:480px; border:0;}
+  .tester-modal-foot{padding:14px 24px; border-top:1px solid var(--border); background:var(--card); text-align:center;}
+  .tester-modal-foot button{appearance:none; border:none; background:none; font-family:inherit; font-size:13px; font-weight:700; color:var(--accent); cursor:pointer; padding:4px;}
+  .tester-modal-foot button:hover{text-decoration:underline;}
+  @media (max-width:600px){ .tester-modal-card{max-height:calc(100vh - 32px);} .tester-modal-head{padding:18px 18px 14px;} .tester-modal-foot{padding:12px 18px;} }
+
+  .builder-note{margin-top:48px; background:var(--card); border:1px solid var(--border); border-left:3px solid var(--honey); border-radius:16px; padding:28px 28px 24px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .builder-note .kicker{margin-bottom:10px;}
+  .builder-note .section-headline{margin-top:0;}
+  .builder-note p{font-size:14px; color:var(--ink-soft); max-width:none;}
+  .builder-note .read-more summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; color:var(--accent); margin-bottom:4px;}
+  .builder-note .read-more summary::-webkit-details-marker{display:none;}
+  .builder-note .read-more summary::after{content:'Read the rest of the letter';}
+  .builder-note .read-more[open] summary::after{content:'Show less';}
+  .builder-note .read-more summary .chevron{display:inline-block; transition:transform .15s ease;}
+  .builder-note .read-more[open] summary .chevron{transform:rotate(180deg);}
+  .builder-note .read-more .more-body{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
+
+  /* Thimble vs. generic LLM comparison. Desktop: a three-column grid
+     (dimension / Thimble / generic chatbot). Mobile: each row's two
+     answer cells stack under a small col-tag label instead of relying
+     on a header row, since a sticky three-column table doesn't fit a
+     phone width. */
+  .compare-wrap{margin-top:18px; background:var(--border); border-radius:16px; overflow:hidden; border:1px solid var(--border); display:flex; flex-direction:column; gap:2px;}
+  .compare-head, .compare-row{display:grid; grid-template-columns:1.25fr 1fr 1fr; gap:2px;}
+  .compare-head > div{background:var(--ink); color:#fff; font-size:11.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:12px 14px; display:flex; align-items:center;}
+  .compare-head > div:first-child{opacity:.6;}
+  .compare-row > div{background:var(--card); padding:16px 14px;}
+  .compare-label{font-weight:700; font-size:13.5px; color:var(--ink); display:flex; align-items:center; line-height:1.35;}
+  .compare-cell{display:flex; flex-direction:column; gap:6px;}
+  .compare-cell .inner{display:flex; gap:9px; align-items:flex-start;}
+  .compare-cell .inner svg{flex-shrink:0; width:19px; height:19px; margin-top:1px;}
+  .compare-cell .inner span{font-size:13px; line-height:1.5; color:var(--ink-soft);}
+  .compare-cell.win{background:var(--accent-soft);}
+  .compare-cell.fail{background:var(--paper);}
+  .compare-cell .col-tag{display:none; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);}
+  @media (max-width:640px){
+    .compare-head{display:none;}
+    .compare-row{grid-template-columns:1fr;}
+    .compare-row > div{border-bottom:none;}
+    .compare-row > .compare-label{padding-bottom:6px; background:var(--paper);}
+    .compare-cell .col-tag{display:block;}
+  }
+
+  .cta{margin-top:48px; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .cta h3.section-headline{color:var(--ink); margin:0 0 8px; font-size:1.3rem;}
+  .cta p{color:var(--ink-soft); margin:0 0 20px; font-size:14px;}
+  .cta a.btn{display:inline-block; background:var(--pink); color:#fff; font-weight:700; font-size:14.5px; padding:13px 28px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 4px 12px rgba(243,130,154,0.35);}
+  .cta a.btn:hover{transform:translateY(-1px); box-shadow:0 8px 18px rgba(243,130,154,0.45);}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+
+  .demo-reel{margin-top:16px; background:#0F2A21; border-radius:16px; overflow:hidden; box-shadow:0 10px 24px rgba(23,55,46,0.16); position:relative;}
+  .demo-reel iframe{display:block; width:100%; height:420px; border:0;}
+  @media (max-width:600px){ .demo-reel iframe{height:320px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand-row" style="justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="mark"></div>
+      <div class="wordmark">Mend</div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-text">
+      <p class="kicker">For Managers</p>
+      <h1>Before the Hard Conversation, You're Guessing.</h1>
+      <p class="lede">A direct report needs tough feedback. Two people on your team can't work together. You know you have to do something, but there's no neutral person to think it through with, and getting it wrong costs you the relationship, the team's trust, or both. Mend is where you work out what's actually going on and how to handle it, before you're in the room.</p>
+      <div class="cta-row">
+        <a class="btn-top" href="/intake/session">Start a Private Session &rarr;</a>
+        <a class="hr-link" href="#for-hr">How Mend Can Help HR &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <section class="block builder-note">
+    <h3 class="section-headline">A note from the builder</h3>
+    <p>Earlier in my career, whenever I ran into tension with a coworker, I did what almost everyone does: I asked my friends.</p>
+    <p>Because they cared about me, they validated me. They told me I was right, that the other person was being unreasonable, and that I didn&rsquo;t deserve it. It felt good in the moment. But they didn&rsquo;t tell me what I actually needed to hear: my own part in the dynamic.</p>
+    <details class="read-more">
+      <summary><span class="chevron">&#9662;</span></summary>
+      <div class="more-body">
+        <p>Armed with that validation, I made reactive, defensive choices I wouldn&rsquo;t make now. What I actually needed wasn&rsquo;t more validation, it was help navigating the social dynamics at play.</p>
+        <p>People pretend workplace dynamics are common sense. They aren&rsquo;t. They&rsquo;re complicated, emotionally charged, and rarely taught.</p>
+        <p>Worse, corporate culture tells us the only way to be &ldquo;professional&rdquo; is to pretend our humanity doesn&rsquo;t exist: check your feelings at the door, smile through misaligned expectations, and treat emotional friction like an HR malfunction. But suppressing how you feel doesn&rsquo;t make you professional, it just drives the frustration into quiet avoidance and backchannel gossip.</p>
+        <p>Managers get an even worse version of this same problem. You can't vent to your own peers about a direct report without it starting to sound political, and you can't vent to that report's peers at all. When something's genuinely gone sideways between two people on your team, there's nobody neutral to think out loud with, so most managers either wing the conversation or sit on the problem and hope it settles itself.</p>
+        <p>We built Mend around a third option: being professionally human, for managers too. A place to work out, off the record, what's actually driving the conflict in front of you, get the hard conversation right before you have it, and handle it like a grown-up instead of either avoiding it or steamrolling through it.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">What managers actually do when conflict lands on their desk</h3>
+    <ul class="icon-list">
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4a8 8 0 105.3 14" stroke="#17372E" stroke-width="2" stroke-linecap="round"/><path d="M17.5 4.5l1 4-4-1" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="txt"><b>Hope it resolves on its own.</b> It almost never does, and by the time it reaches you unprompted, it's usually already worse than the first version you saw.</div>
+      </li>
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H8l-3 3v-3H5a2 2 0 01-2-2V6z" stroke="#F3829A" stroke-width="2" stroke-linejoin="round"/><path d="M13 9h6a2 2 0 012 2v3a2 2 0 01-2 2h-1v3l-3-3h-1a2 2 0 01-2-2" stroke="#F3829A" stroke-width="2" stroke-linejoin="round" opacity=".6"/></svg></div>
+        <div class="txt"><b>Vent to a peer manager.</b> Feels safer than venting to HR, but it still risks turning into office politics about one of your own reports, and it still only gives you one side.</div>
+      </li>
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 16V5M12 5l-4 4M12 5l4 4" stroke="#B9872C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="#B9872C" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="txt"><b>Escalate to HR before you've actually worked out what's going on.</b> Sometimes the right call, but reaching for it too early turns a fixable team problem into a formal process neither employee asked for.</div>
+      </li>
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2" width="10" height="20" rx="2" stroke="#17372E" stroke-width="2"/><path d="M10 18h4" stroke="#17372E" stroke-width="2" stroke-linecap="round"/><path d="M9.5 6h5v6h-5z" stroke="#17372E" stroke-width="1.6" stroke-linejoin="round" opacity=".6"/></svg></div>
+        <div class="txt"><b>Open a generic AI chatbot and paste in the situation.</b> It only ever hears your read on your own report, so it has no way to tell whether your framing is actually fair. It will still hand you a confident script.</div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="block evidence-block">
+    <div class="evidence-head">
+      <span class="evidence-eyebrow">The research behind these numbers</span>
+      <h3 class="evidence-title">What unresolved team conflict actually costs you</h3>
+      <p class="evidence-sub">Six datasets, current and historical, all pointing the same direction. This cost doesn't land on HR, it lands on your team's output and your own time.</p>
+    </div>
+    <div class="evidence-grid">
+      <div class="evidence-card lead">
+        <span class="evidence-tag primary">Primary &middot; current</span>
+        <div class="evidence-org">SHRM</div>
+        <div class="evidence-finding">$2.6B lost per day to workplace incivility in the US (Q2 2026), up from $2B/day in 2024.</div>
+        <div class="evidence-meta">Society for Human Resource Management, Civility Index &middot; independent HR professional body.</div>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Independent corroboration</span>
+        <div class="evidence-org">CIPD / Warwick</div>
+        <div class="evidence-finding">&pound;28.5bn a year lost to workplace conflict in the UK alone, about &pound;1,000 per employee. 9.7M employees affected annually.</div>
+        <div class="evidence-meta">&ldquo;The Cost of Conflict at Work and Its Impact on Productivity&rdquo; &middot; CIPD-funded, Warwick Institute for Employment Research, using Acas analysis.</div>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Health &amp; wellness</span>
+        <div class="evidence-org">Peer-reviewed / IJERPH</div>
+        <div class="evidence-finding">Burdensome conflict with a superior predicts a 22% increase in physician-certified sick days.</div>
+        <div class="evidence-meta">&ldquo;The Relationship between Workplace Conflicts and Subsequent Physician-Certified Sick Leave,&rdquo; prospective population study, <i>Int. J. Environ. Res. Public Health</i> (2022). Also backed by a CDC/NIOSH-archived meta-analysis of 79 studies linking interpersonal conflict to measurable physical strain.</div>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Engagement cost</span>
+        <div class="evidence-org">Gallup</div>
+        <div class="evidence-finding">Each actively disengaged employee costs $3,400&ndash;$10,000 a year: 18% less productive, 37% more absenteeism.</div>
+        <div class="evidence-meta">State of the Global Workplace &middot; $450&ndash;550B lost annually in the US, $8.8T globally.</div>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Engagement upside</span>
+        <div class="evidence-org">Gallup</div>
+        <div class="evidence-finding">Top-quartile-engagement teams are 23% more profitable, 18% more productive, 78% less absenteeism.</div>
+        <div class="evidence-meta">Q12 meta-analysis, thousands of business units &middot; the flip side of what unresolved conflict drags down.</div>
+      </div>
+      <div class="evidence-card secondary">
+        <span class="evidence-tag secondary">Historical reference</span>
+        <div class="evidence-org">CPP Inc. (2008)</div>
+        <div class="evidence-finding">2.8 hrs/week per employee, ~50% cite personality clashes as the leading cause. ~5,000 employees, nine countries.</div>
+        <div class="evidence-meta">The most widely cited figure in this field. Newer, independent research above lands on the same scale of cost.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Why Mend was built for managers</h3>
+    <p>Mend lets you talk through a specific, named conflict with Thimble, the same facilitator employees use, whose job is to hear you out and drive toward an understanding of what's actually causing the friction, not just hand you a script.</p>
+    <p>Mend focuses on the structural forces that cause conflict between people on your team, rather than asking you to referee a personality clash, leveraging current conflict-resolution best practices.</p>
+    <h2 class="eyebrow" style="margin-top:28px;">Ways managers can use Mend</h2>
+    <div class="door-grid">
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
+        <div class="door-t">Rehearse Mode</div>
+        <div class="door-d">For a hard performance or conduct conversation you need to have with your own direct report. Practice it before you're actually in the room.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="26" rx="3" stroke="#fff" stroke-width="2"/><path d="M15 8v-2a2 2 0 012-2h6a2 2 0 012 2v2" stroke="#fff" stroke-width="2"/><path d="M14 18h12M14 23h12M14 28h8" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg></div>
+        <div class="door-t">Case Mode</div>
+        <div class="door-d">For a conflict between two people on your team. Work out what's actually driving it and land on a concrete plan, without you having to play judge.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><path d="M10 20h20M24 14l6 6-6 6" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="door-t">Handoff Mode</div>
+        <div class="door-d">Once both sides agree on the real blocker, hand the case to a private session between the two people themselves. You stay out of that room entirely.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Thimble vs. a generic AI chatbot, for managing someone else's conflict</h3>
+    <p>Every manager already has a general-purpose AI chatbot in their pocket. It's a fair question to ask why that isn't enough here. Side by side, these are the places it actually matters:</p>
+    <div class="compare-wrap">
+      <div class="compare-head">
+        <div>Where it matters</div>
+        <div>Thimble</div>
+        <div>Generic AI chatbot</div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label">Whose side is it on?</div>
+        <div class="compare-cell win">
+          <span class="col-tag">Thimble</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#EAF0EC"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Not simply on your side. It pushes back if your plan would be unfair, vague, or likely to blindside the person who isn't in the room.</span></div>
+        </div>
+        <div class="compare-cell fail">
+          <span class="col-tag">Generic AI chatbot</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F6F1E7" stroke="#DDD4C0"/><path d="M8 12h8" stroke="#6E7268" stroke-width="2" stroke-linecap="round"/></svg><span>Agrees with whatever framing you type in. It has no reason to question your read on your own report.</span></div>
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label">Behavior vs. character</div>
+        <div class="compare-cell win">
+          <span class="col-tag">Thimble</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#EAF0EC"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Pushes back the moment you slide into a character judgment and makes you name the specific, observable behavior instead.</span></div>
+        </div>
+        <div class="compare-cell fail">
+          <span class="col-tag">Generic AI chatbot</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F6F1E7" stroke="#DDD4C0"/><path d="M8 12h8" stroke="#6E7268" stroke-width="2" stroke-linecap="round"/></svg><span>Happily drafts a script around &ldquo;they're lazy&rdquo; or &ldquo;they don't respect me,&rdquo; which reads as a character attack once it's actually said out loud.</span></div>
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label">A real conversation structure</div>
+        <div class="compare-cell win">
+          <span class="col-tag">Thimble</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#EAF0EC"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Won't call it done until six things are nailed down: the behavior, why it matters, what needs to change, what support you can actually offer, how to open it, and what's already decided elsewhere.</span></div>
+        </div>
+        <div class="compare-cell fail">
+          <span class="col-tag">Generic AI chatbot</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F6F1E7" stroke="#DDD4C0"/><path d="M8 12h8" stroke="#6E7268" stroke-width="2" stroke-linecap="round"/></svg><span>Gives you exactly what you asked for and nothing more. No structure is enforced unless you already know to ask for it.</span></div>
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label">Rehearsing the conversation</div>
+        <div class="compare-cell win">
+          <span class="col-tag">Thimble</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#EAF0EC"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Plays a plausible, realistic version of your report, then offers a second pass with a different reaction, so you're not just prepping for one script.</span></div>
+        </div>
+        <div class="compare-cell fail">
+          <span class="col-tag">Generic AI chatbot</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F6F1E7" stroke="#DDD4C0"/><path d="M8 12h8" stroke="#6E7268" stroke-width="2" stroke-linecap="round"/></svg><span>No built-in sense of staying in character. Drifts toward whichever reaction is easiest to generate: instant agreement, or manufactured hostility.</span></div>
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label">A real legal/safety floor</div>
+        <div class="compare-cell win">
+          <span class="col-tag">Thimble</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#EAF0EC"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Screens every message. If what you describe crosses into discrimination, retaliation, or illegal conduct, it stops coaching the plan and tells you plainly this goes to HR.</span></div>
+        </div>
+        <div class="compare-cell fail">
+          <span class="col-tag">Generic AI chatbot</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F6F1E7" stroke="#DDD4C0"/><path d="M8 12h8" stroke="#6E7268" stroke-width="2" stroke-linecap="round"/></svg><span>No floor at all. It will help you word a write-up for an unfair or even retaliatory action just as readily as a fair one.</span></div>
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label">Staying in its lane</div>
+        <div class="compare-cell win">
+          <span class="col-tag">Thimble</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#EAF0EC"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Never tells you the actual personnel outcome (a PIP, a warning, termination). Says plainly that's HR's call, not its.</span></div>
+        </div>
+        <div class="compare-cell fail">
+          <span class="col-tag">Generic AI chatbot</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F6F1E7" stroke="#DDD4C0"/><path d="M8 12h8" stroke="#6E7268" stroke-width="2" stroke-linecap="round"/></svg><span>Will confidently tell you what to do, with the false authority of a decision it has no business making.</span></div>
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label">What happens to what you typed</div>
+        <div class="compare-cell win">
+          <span class="col-tag">Thimble</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#EAF0EC"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Nothing is stored. The conversation is held in memory for the session and flushed the moment it ends.</span></div>
+        </div>
+        <div class="compare-cell fail">
+          <span class="col-tag">Generic AI chatbot</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F6F1E7" stroke="#DDD4C0"/><path d="M8 12h8" stroke="#6E7268" stroke-width="2" stroke-linecap="round"/></svg><span>Logged by the provider under whatever retention policy applies to your account. It wasn't built to hold a conversation about someone's job.</span></div>
+        </div>
+      </div>
+
+      <div class="compare-row">
+        <div class="compare-label">An ongoing case, not one chat</div>
+        <div class="compare-cell win">
+          <span class="col-tag">Thimble</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#EAF0EC"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Tracks a case over time: a running action plan, who's involved by role, and what you tried last, so you can come back to it a week later and pick up where you left off.</span></div>
+        </div>
+        <div class="compare-cell fail">
+          <span class="col-tag">Generic AI chatbot</span>
+          <div class="inner"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F6F1E7" stroke="#DDD4C0"/><path d="M8 12h8" stroke="#6E7268" stroke-width="2" stroke-linecap="round"/></svg><span>Starts from zero every new chat. No memory of the case, what you already tried, or how it went.</span></div>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:14px;font-size:12.5px;color:var(--muted)">All of this is prompt and application engineering layered on top of the same kind of underlying model a generic chatbot uses. The difference is the structure, the floor, and the escalation plumbing built around it, not a secret smarter model.</p>
+  </section>
+
+  <section class="block" id="for-hr">
+    <h3 class="section-headline">For HR: Your Managers Are Guessing Too</h3>
+    <p>The conflicts that reach you are already the exception, severe enough that a manager felt out of their depth or a situation felt risky enough to escalate. Everything short of that, the daily friction between two reports, the performance conversation a manager keeps putting off, stays invisible and unresolved, handled badly or not at all. Not because your managers don't care, but because admitting they don't know how to handle something on their own team can feel like admitting they're bad at the job, which is exactly why most won't ask for help with it.</p>
+    <p>Once a conflict is small enough to stay inside a team, there's nothing you can personally do about it anyway, you weren't in the room and the manager has no obligation to bring it to you. The only way to actually help is giving managers somewhere that makes it safe to think out loud about a problem they haven't solved yet, which starts with that somewhere being genuinely safe to use.</p>
+    <p>Your job is to improve how your managers manage, and sometimes that means stepping out of the way: giving them somewhere to work through a case before it becomes a formal one. You're not giving up oversight of what matters. You're finally getting ahead of the cases that would otherwise never have reached you in a state you could still do something useful with.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Will managers actually use this?</h3>
+    <p>None of this matters if a manager doesn't feel safe using it, because they fear HR or their own boss is &ldquo;listening in&rdquo; on a conversation about their own shortcomings as a manager.</p>
+    <p>That's why Mend is built from the ground up with total anonymity: no persistent record of what's shared. Session content is never truly saved; it's held in volatile memory and flushed as soon as the session ends.</p>
+    <ul class="privacy-list">
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.6-3 8.3-7 10-4-1.7-7-5.4-7-10V6l7-3z" stroke="#17372E" stroke-width="2" stroke-linejoin="round"/><path d="M12 8v5M12 16v.01" stroke="#17372E" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><span class="k">Illegal conduct or safety risk goes to HR automatically</span><span class="v">If what's being discussed meets the legal standard for discrimination, retaliation, or a physical threat, Thimble escalates on its own. That call isn't left to the manager in the moment, and it isn't left unsaid either; they're always told plainly, before anything is sent.</span></div>
+      </li>
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#B9872C" stroke-width="2"/><path d="M8 11V8a4 4 0 118 0v3" stroke="#B9872C" stroke-width="2" stroke-linecap="round"/><path d="M12 14.5v2" stroke="#B9872C" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><span class="k">Everything else stays off the record</span><span class="v">That one safeguard is what makes the rest of the promise credible: for ordinary friction and an ordinary hard conversation, nothing is saved, nothing reaches HR, and nothing gets back to the manager's own boss.</span></div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Mend isn't for every company</h3>
+    <p>The deal Mend makes with customers: they're paying for better-handled conflict and stronger teams, not control of the process or visibility into every manager's conversation. Control is exactly what prevents a manager from admitting, honestly, that they're stuck.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Why an AI facilitator works better than a person</h3>
+    <div class="advantage-row">
+      <div class="advantage-avatar"><div id="advantageAvatar"></div></div>
+      <ul class="icon-list">
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3M4 6h16M12 6v12M8 21h8" stroke="#17372E" stroke-width="2" stroke-linecap="round"/><path d="M4 6l-2.5 6a3 3 0 006 0L4 6z" stroke="#17372E" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 6l-2.5 6a3 3 0 006 0L20 6z" stroke="#17372E" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+          <div class="txt">An AI facilitator is unbiased and has no stake in whether you or your report comes out looking better.</div>
+        </li>
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" stroke="#F3829A" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <div class="txt">Managers are measurably more comfortable admitting they're unsure how to handle something to an AI persona than to another manager or HR.</div>
+        </li>
+        <li>
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#B9872C" stroke-width="2"/><path d="M12 8v4l3 2" stroke="#B9872C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="txt">Mend is always available and doesn't pull a peer manager's or HR's time into a problem that's still yours to work through.</div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">The research against &ldquo;no friction, no dissent&rdquo;</h3>
+    <p>A team with zero visible conflict isn't necessarily a healthy team you're managing well, it can just as easily be a team that's learned not to disagree with you.</p>
+    <div class="research-callout">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 6c-1.8-1.3-4.2-2-6.5-2-.8 0-1.5.7-1.5 1.5v11c0 .8.7 1.5 1.5 1.5 2.3 0 4.7.7 6.5 2m0-14c1.8-1.3 4.2-2 6.5-2 .8 0 1.5.7 1.5 1.5v11c0 .8-.7 1.5-1.5 1.5-2.3 0-4.7.7-6.5 2m0-14v14" stroke="#B9872C" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
+      <div class="txt"><b>Visible conflict isn't the problem.</b><span>Noted researchers Lencioni, Edmondson, and Gino all point to healthy disagreement as what separates high-performing teams from quietly dysfunctional ones. That's why destigmatizing conflict matters for the managers running those teams too: only once it's safe to name can it actually get resolved. Left alone, it doesn't disappear, it just sits as an unaddressed wound on the team.</span></div>
+      <button type="button" class="callout-btn" onclick="document.getElementById('researchModal').classList.add('open')">Read the research &rarr;</button>
+    </div>
+  </section>
+
+  <div class="cta">
+    <h3 class="section-headline">Ready to Work Through It?</h3>
+    <p>Describe the conflict or the conversation you need to have in your own words. Off the record, zero judgment, and completely confidential.</p>
+    <a class="btn" href="/intake/session">Start the Conversation &rarr;</a>
+    <p style="margin-top:16px;"><a href="http://localhost:8426/survey" style="color:var(--ink-soft); font-size:13px; font-weight:700;">Testing Seam? Continue to the survey &rarr;</a></p>
+    <p style="margin-top:8px;"><a href="/manager-test/" style="color:var(--ink-soft); font-size:13px; font-weight:700;">How good a read do you have on your own team's conflicts? Take the 2-minute test &rarr;</a></p>
+  </div>
+
+  <section class="block">
+    <h3 class="section-headline">More on workplace conflict</h3>
+    <div class="demo-reel">
+      <iframe src="https://www.youtube.com/embed/MnaLS7OE2pk" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product.</div>
+  </footer>
+</div>
+
+<div class="modal-overlay open" id="testerModal">
+  <div class="modal-card tester-modal-card" role="dialog" aria-modal="true" aria-labelledby="testerModalTitle">
+    <div class="tester-modal-head">
+      <div>
+        <p class="kicker" style="margin:0 0 6px;">Before you read on</p>
+        <h2 id="testerModalTitle">If you're here to test Seam, read this first</h2>
+        <p>What Seam is, how to go through the test, and what's intentionally left out of this build. Dismiss it when you're ready to read the rest of the manager story.</p>
+      </div>
+      <button type="button" class="tester-modal-close" id="testerModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="tester-modal-body" id="testerModalBody">
+      <iframe id="testerModalFrame" src="seam-testers.html" title="Before you test Seam"></iframe>
+    </div>
+    <div class="tester-modal-foot">
+      <button type="button" id="testerModalSkip">Dismiss and read the manager story &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="researchModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="researchTitle">
+    <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('researchModal').classList.remove('open')">&times;</button>
+    <h2 class="modal-title" id="researchTitle">The Research Against &ldquo;No Friction, No Dissent&rdquo;</h2>
+    <p class="modal-sub">Team dynamics and conflict, from three researchers</p>
+    <ul>
+      <li><b>Patrick Lencioni's &ldquo;artificial harmony&rdquo;</b> (<i>The Five Dysfunctions of a Team</i>): teams that avoid conflict end up with unresolved disagreements and unvoiced concerns sitting just under the surface, which resurface later as resentment or disengagement rather than actually going away.</li>
+      <li><b>Amy Edmondson's psychological safety research</b> (Harvard Business School): teams that prioritize harmony over honest discourse consistently make worse decisions than teams where disagreement is normalized. Psychological safety isn't the absence of conflict, it's the thing that makes productive conflict possible.</li>
+      <li><b>Francesca Gino's research on constructive disagreement</b>: teams significantly outperform peers when leaders explicitly model and reward disagreement; task conflict generated by even one or two team members has been shown, across multiple studies, to positively predict team performance.</li>
+    </ul>
+    <p class="lead-line">The goal isn't zero conflict, it's conflict that actually gets resolved instead of either suppressed (false harmony) or escalated unmanaged. Mend is a structured path to resolution, which is different from a tool that just makes conflict disappear.</p>
+  </div>
+</div>
+<script>
+(function(){
+  // Research modal: Escape closes it regardless of focus, same as the
+  // backdrop-click handler inlined on the overlay itself.
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') document.getElementById('researchModal').classList.remove('open');
+  });
+})();
+</script>
+<script>
+(function(){
+  // Tester modal: open by default in markup (no flash-of-hidden-content
+  // wait on JS), embeds seam-testers.html, a static same-origin file, so
+  // no reachability probing is needed, just load it and let the visitor
+  // dismiss it into the manager story page rendered underneath.
+  var overlay = document.getElementById('testerModal');
+  if (!overlay) return;
+  function close(){ overlay.classList.remove('open'); }
+  document.getElementById('testerModalClose').addEventListener('click', close);
+  document.getElementById('testerModalSkip').addEventListener('click', close);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+  });
+})();
+</script>
+<script>
+(function(){
+  // ThimbleAvatarV2: same port as story.html/about.html -- see those
+  // files for the fuller comment on where this shape and render loop
+  // come from (thimble/static/index.html's live avatar).
+  var DOME_RADIUS_CAP = 12, DOME_RADIUS_RIM = 14;
+  var THIMBLE_SHAPES = {
+    idle:      {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
+    listening: {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
+    thinking:  {lean:'none', mouthTop:62, mouthW:.12, mouthH:.07, mouthX:58},
+    talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
+  };
+  function domeWobbleRadius(domeFactor, lvl){
+    var capY = 50 + (DOME_RADIUS_CAP + 3 * lvl) * domeFactor;
+    var rimY = 50 - (DOME_RADIUS_RIM + 3 * lvl) * domeFactor;
+    return '50% 50% 50% 50% / ' + capY.toFixed(1) + '% ' + capY.toFixed(1) + '% ' + rimY.toFixed(1) + '% ' + rimY.toFixed(1) + '%';
+  }
+  function renderMouth(inst, state){
+    var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+    inst.mouth.style.top = shape.mouthTop + '%';
+    inst.mouth.style.left = (shape.mouthX || 50) + '%';
+    inst.mouth.style.width = (shape.mouthW * inst.size) + 'px';
+    inst.mouth.style.height = (shape.mouthH * inst.size) + 'px';
+    inst.mouth.style.background = '#F6F1E7';
+    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
+  }
+  function applyState(inst, state){
+    if (state === inst.renderedState) return;
+    inst.renderedState = state;
+    var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+    inst.el.style.transform = shape.lean;
+    inst.blend.style.opacity = '0';
+    var talking = state === 'talking';
+    inst.ripple.hidden = !talking;
+    inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
+    renderMouth(inst, state);
+  }
+  function tick(inst, now){
+    applyState(inst, inst.state);
+    var dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
+    inst.lastT = now;
+    var speaking = inst.state === 'talking';
+    var thinkingState = inst.state === 'thinking';
+    var nodding = inst.state === 'listening';
+    var y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
+    var wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
+    var breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
+    inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+    var breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
+    inst.ring.style.transform = 'translateY(' + y.toFixed(2) + '%) rotate(' + wiggle.toFixed(2) + 'deg) scale(' + breathe.toFixed(4) + ')';
+    var input = thinkingState ? 0.15 : inst.level;
+    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
+    var wobblePeriod = thinkingState ? 3.4 : 1.6;
+    inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+    var domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
+    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+    if (speaking) {
+      inst.ripple.style.borderRadius = inst.body.style.borderRadius;
+      inst.ripple.style.transform = inst.ring.style.transform + ' scale(' + (1.04 + 0.05 * domeFactor).toFixed(3) + ')';
+      inst.ripple.style.opacity = (0.22 + 0.16 * domeFactor).toFixed(3);
+    }
+    requestAnimationFrame(function(t){ tick(inst, t); });
+  }
+  window.ThimbleAvatarV2 = function(host, opts){
+    var size = (opts && opts.size) || 140;
+    host.innerHTML = '<div class="thimble-avatar" style="width:' + size + 'px;height:' + size + 'px;">' +
+      '<div class="thimble-ripple" hidden></div>' +
+      '<div class="thimble-ring"><div class="thimble-body"><div class="thimble-blend"></div><div class="thimble-mouth"></div></div></div>' +
+    '</div>';
+    var el = host.querySelector('.thimble-avatar');
+    var inst = {
+      size: size, el: el,
+      ring: el.querySelector('.thimble-ring'),
+      body: el.querySelector('.thimble-body'),
+      blend: el.querySelector('.thimble-blend'),
+      mouth: el.querySelector('.thimble-mouth'),
+      ripple: el.querySelector('.thimble-ripple'),
+      renderedState: null, state: 'idle', level: 0, lvl: 0,
+      wobblePhase: 0, breathePhase: 0, lastT: null
+    };
+    requestAnimationFrame(function(t){ tick(inst, t); });
+    return {
+      setState: function(s){ inst.state = s; },
+      setLevel: function(l){ inst.level = l; }
+    };
+  };
+})();
+</script>
+<script>
+(function(){
+  // Advantage-section Thimble: cycles idle -> listening -> thinking ->
+  // talking on a loop with a fake amplitude signal, same as story.html.
+  if (!window.ThimbleAvatarV2) return;
+  var states = ['idle', 'listening', 'thinking', 'talking'];
+  var t0 = performance.now();
+  var advHost = document.getElementById('advantageAvatar');
+  if (advHost) {
+    var adv = new ThimbleAvatarV2(advHost, { size: 104 });
+    var advI = 0;
+    adv.setState(states[advI % states.length]);
+    setInterval(function(){ advI++; adv.setState(states[advI % states.length]); }, 3200);
+    setInterval(function(){
+      var t = (performance.now() - t0) / 1000;
+      adv.setLevel(0.35 + 0.35 * Math.abs(Math.sin(t * 1.8 + 1.5)));
+    }, 80);
+  }
+})();
+</script>
+</body>
+</html>

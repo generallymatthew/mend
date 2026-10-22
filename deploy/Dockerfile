@@ -1,4 +1,5 @@
-# Render deploy image for demo-app + Thimble + Seam behind Caddy. Build
+# Render deploy image for demo-app + Thimble + Seam + manager-read-test
+# behind Caddy. Build
 # context is the repo root (see render.yaml's dockerContext), since these
 # apps read sibling files like ../facilitator-intake-system-prompt.md and
 # ../../product-spec.html at runtime -- the whole repo ships, not just the
@@ -24,7 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 WORKDIR /app
 COPY . .
 
-RUN pip install --no-cache-dir -r apps/demo-app/requirements.txt -r apps/thimble/requirements.txt -r apps/seam/requirements.txt
+RUN pip install --no-cache-dir -r apps/demo-app/requirements.txt -r apps/thimble/requirements.txt -r apps/seam/requirements.txt -r pitch/manager-read-test/requirements.txt
 
 # Pre-download the Whisper model at build time, not on a tester's first
 # request -- avoids a slow, surprising first-reply latency in prod.

@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; for employees</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9,700;1,9,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .brand-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .wordmark{font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; line-height:1;}
+  .hero{display:flex; align-items:center; gap:32px;}
+  .hero-text{flex:1; min-width:0;}
+
+  .kicker{font-family:'Fraunces',Georgia,serif; font-style:italic; font-size:14px; color:var(--muted); margin:0 0 10px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.15rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:700;}
+  h2.eyebrow{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase;}
+  h3.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:48px 0 10px; color:var(--ink); line-height:1.25;}
+  p.lede{font-size:1.05rem; color:var(--ink-soft); margin:0 0 8px; max-width:56ch;}
+  .cta-row{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px;}
+  .btn-top{display:inline-flex; align-items:center; gap:6px; margin:0; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 2px 6px rgba(23,55,46,0.18);}
+  .btn-top:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(23,55,46,0.24);}
+  .hr-link{display:inline-flex; align-items:center; gap:6px; margin:0; background:#fff; color:var(--ink); font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; border:1px solid var(--border); transition:transform .15s ease, box-shadow .15s ease;}
+  .hr-link:hover{transform:translateY(-1px); box-shadow:0 2px 6px rgba(23,55,46,0.1);}
+  p{margin:0 0 14px;}
+  section.block{margin-top:48px;}
+  section.block:first-of-type{margin-top:36px;}
+
+  .icon-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
+  .icon-list li{display:flex; gap:14px; align-items:flex-start;}
+  .icon-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
+  .icon-list li:nth-child(2) .ico{background:var(--pink-soft);}
+  .icon-list li:nth-child(3) .ico{background:var(--honey-soft);}
+  .icon-list .ico svg{width:18px; height:18px; display:block;}
+  .icon-list .txt{padding-top:2px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
+  .icon-list .txt b{color:var(--ink); display:block; font-size:14.5px; margin-bottom:2px;}
+
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px;}
+  .two-col.three-up{grid-template-columns:1fr 1fr 1fr;}
+  @media (max-width:620px){ .two-col{grid-template-columns:1fr;} }
+  @media (max-width:860px){ .two-col.three-up{grid-template-columns:1fr 1fr;} }
+  .cause-card{background:var(--card); border:1px solid var(--border); border-top:3px solid var(--honey); border-radius:16px; padding:22px 20px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .cause-card:nth-child(2){border-top-color:var(--pink);}
+  .cause-card:nth-child(3){border-top-color:var(--accent);}
+  .cause-tag{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  .cause-t{font-weight:700; font-size:15.5px; margin-bottom:8px; line-height:1.35;}
+  .cause-d{font-size:13.5px; color:var(--ink-soft); line-height:1.55;}
+
+  .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
+  @media (max-width:520px){ .door-grid{grid-template-columns:1fr;} }
+  .door-card{min-width:0; background:var(--card); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:16px; padding:22px 20px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .door-card:nth-child(2){border-top-color:var(--pink);}
+  .door-card:nth-child(3){border-top-color:var(--honey);}
+  .door-ico{width:38px; height:38px; border-radius:11px; background:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .door-card:nth-child(2) .door-ico{background:var(--pink);}
+  .door-card:nth-child(3) .door-ico{background:var(--honey);}
+  .door-ico svg{width:20px; height:20px; display:block;}
+  .door-t{font-weight:700; font-size:15px; margin-bottom:8px; line-height:1.3;}
+  .door-d{font-size:13px; color:var(--ink-soft); line-height:1.5;}
+
+  .privacy-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
+  .privacy-list li{display:flex; gap:14px; align-items:flex-start;}
+  .privacy-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
+  .privacy-list li:nth-child(2) .ico{background:var(--honey-soft);}
+  .privacy-list .ico svg{width:18px; height:18px; display:block;}
+  .privacy-list .k{font-weight:800; color:var(--ink); font-size:14.5px; display:block; margin-bottom:3px; padding-top:2px;}
+  .privacy-list .v{color:var(--ink-soft); font-size:14px; line-height:1.55;}
+
+  .cta{margin-top:48px; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
+  .cta h3.section-headline{color:var(--ink); margin:0 0 8px; font-size:1.3rem;}
+  .cta p{color:var(--ink-soft); margin:0 0 20px; font-size:14px;}
+  .cta a.btn{display:inline-block; background:var(--pink); color:#fff; font-weight:700; font-size:14.5px; padding:13px 28px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 4px 12px rgba(243,130,154,0.35);}
+  .cta a.btn:hover{transform:translateY(-1px); box-shadow:0 8px 18px rgba(243,130,154,0.45);}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand-row">
+    <div class="mark"></div>
+    <div class="wordmark">Mend</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-text">
+      <p class="kicker">For employees</p>
+      <h1>You Lost The People Who Used To Catch Your Mistakes</h1>
+      <p class="lede">You used to have people between you and the moments that mattered: a manager who'd catch a bad message before it went out, a hallway conversation that told you how someone was really doing. A lot of that is gone. Mend is the catch you lost, private, before you're in the room.</p>
+      <div class="cta-row">
+        <a class="btn-top" href="/intake/session">Start a Private Session &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <section class="block">
+    <h3 class="section-headline">What actually changed</h3>
+    <p>Reading people at work used to be something you built up almost by accident, through sheer volume of exposure. A few things have quietly cut that off.</p>
+    <div class="two-col three-up">
+      <div class="cause-card">
+        <span class="cause-tag">Remote work</span>
+        <div class="cause-t">Fewer low-stakes reps</div>
+        <div class="cause-d">Hallway chat, the five minutes before a meeting starts, watching someone's face while they talk: that's where you used to calibrate, for free, on easy stakes. Most of that didn't move to video calls. It just stopped happening. What's left is a thinner stream of interactions, and each one now matters more because you have less practice to fall back on.</div>
+      </div>
+      <div class="cause-card">
+        <span class="cause-tag">AI agents</span>
+        <div class="cause-t">Fewer people between you and the room</div>
+        <div class="cause-d">A lot of what used to buffer you, a PM drafting the update, a manager pressure-testing your message before it reached leadership, is now done by an agent instead of a person. The work still gets done, but the judgment call about how it'll land doesn't come with it. That call now lands on you, directly, with no one checking it first.</div>
+      </div>
+      <div class="cause-card">
+        <span class="cause-tag">AI production</span>
+        <div class="cause-t">Everyone has an opinion now</div>
+        <div class="cause-d">When a draft, a design, or a deck takes thirty seconds to produce instead of a week, the output stops speaking for itself and every stakeholder in the room feels entitled to weigh in. The job shifts from defending hours of work to defending a judgment call, and that call only holds up if you can tie it to what the people using it actually need, not just your own preference.</div>
+      </div>
+    </div>
+    <p style="margin-top:18px">Put together: fewer reps to learn from, no one left to catch it when you misjudge something, and more people than ever with a stake in whether your read was right. That combination is new, and it's why this feels harder even though nothing about you changed.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">What Mend does about it</h3>
+    <p>Before a message goes out, or after an exchange that didn't sit right, Mend gives you the read you used to get from a person who had your back: is this actually a problem, or does it just feel like one because you don't have the data to tell the difference anymore.</p>
+    <h2 class="eyebrow" style="margin-top:28px;">Ways to use it</h2>
+    <div class="door-grid">
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="16" cy="20" r="10" stroke="#fff" stroke-width="2"/><circle cx="24" cy="20" r="10" stroke="#fff" stroke-width="2" stroke-opacity=".55"/></svg></div>
+        <div class="door-t">Pressure-test a message</div>
+        <div class="door-d">Before it goes to someone who doesn't know you well, run it past Mend first. Not a tone-softener, a read on how it's actually likely to land.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
+        <div class="door-t">Make sense of a reaction</div>
+        <div class="door-d">Something landed wrong and you're not sure why. Walk through it and figure out whether it was real, or whether you're reading too much into too little data.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="11" stroke="#17372E" stroke-width="2"/><path d="M14 20l4 4 8-8" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="door-t">Rehearse the conversation</div>
+        <div class="door-d">For the conversation you're about to have with someone you don't get regular face time with anymore. Say it out loud first, somewhere private.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Why not just ask a coworker, or your own chatbot</h3>
+    <p>Asking a coworker costs you something: it signals you weren't sure, and in a flatter org there may not be anyone with the standing to catch it for you anyway. A general chatbot has the opposite problem, it only ever hears your side and is built to agree with you, so it can't tell you when you're wrong.</p>
+  </section>
+
+  <section class="block">
+    <h3 class="section-headline">Private, by default</h3>
+    <ul class="privacy-list">
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.6-3 8.3-7 10-4-1.7-7-5.4-7-10V6l7-3z" stroke="#17372E" stroke-width="2" stroke-linejoin="round"/><path d="M12 8v5M12 16v.01" stroke="#17372E" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><span class="k">No one has to know you used it</span><span class="v">Nothing is saved once the session ends. Using the catch doesn't cost you the thing it's supposed to protect, how capable you look.</span></div>
+      </li>
+      <li>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#B9872C" stroke-width="2"/><path d="M8 11V8a4 4 0 118 0v3" stroke="#B9872C" stroke-width="2" stroke-linecap="round"/><path d="M12 14.5v2" stroke="#B9872C" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><span class="k">Harassment or threats still get escalated</span><span class="v">Everyday friction stays off the record. Anything that meets the legal bar for harassment or a real threat routes to HR automatically.</span></div>
+      </li>
+    </ul>
+  </section>
+
+  <div class="cta">
+    <h3 class="section-headline">Get the Catch Back</h3>
+    <p>Bring the message, the moment, or the conversation you're not sure about. Off the record, nothing saved.</p>
+    <a class="btn" href="/intake/session">Start the Conversation &rarr;</a>
+  </div>
+
+  <footer>
+    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product.</div>
+  </footer>
+</div>
+</body>
+</html>

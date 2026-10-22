@@ -19,6 +19,10 @@
 		reverse_proxy 127.0.0.1:8460
 	}
 
+	handle_path /manager-test/* {
+		reverse_proxy 127.0.0.1:8481
+	}
+
 	root * .
 
 	handle /about {

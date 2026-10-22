@@ -327,6 +327,11 @@ async def survey_page():
     return FileResponse(ROOT / "static" / "survey.html")
 
 
+@app.get("/survey/post")
+async def survey_post_page():
+    return FileResponse(ROOT / "static" / "survey-after.html")
+
+
 @app.get("/sw.js")
 async def service_worker():
     # Served at root, not /static/sw.js, so its default scope covers the
@@ -356,7 +361,7 @@ app.mount("/pitch-assets", StaticFiles(directory=ROOT.parent.parent / "Mend Pitc
 @app.middleware("http")
 async def no_cache_static(request: Request, call_next):
     response = await call_next(request)
-    if request.url.path in ("/", "/survey") or request.url.path.startswith("/static/"):
+    if request.url.path in ("/", "/survey", "/survey/post") or request.url.path.startswith("/static/"):
         response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -942,14 +947,18 @@ async def post_written_message(session_id: str, body: Message):
     return {"reply": result["reply"], "session": session}
 
 
-# Pre-use manager survey (static/survey.html) -- not post-session feedback
-# like ../thimble's /api/survey, which asks how a specific session went.
-# This one is a discovery/outreach instrument: sent to prospective manager
-# testers to gauge their conflict-management pressures and interest in
-# Seam's 3 offerings before they've necessarily used the app at all. Same
-# "nothing about a real case/conversation is recorded" boundary as the rest
-# of this file -- these answers are the tester's own opinions about
-# conflict management in general, not anything from a real case.
+# Two surveys, deliberately separate instruments, not one form reused twice:
+# the pre-use one (static/survey.html, below) is a discovery/outreach
+# instrument sent to prospective manager testers to gauge their existing
+# conflict-management pressures and interest in Seam's 3 offerings BEFORE
+# they've used the app at all -- answers have to be uncontaminated by
+# having just seen Seam work, or "how confident do you feel handling this"
+# would be measuring the demo, not their actual baseline. The second one
+# (static/survey-after.html, /api/survey/post further down) is post-use
+# feedback on a specific case they just worked, the Seam equivalent of
+# ../thimble's /api/survey ("how did that go"). Same "nothing about a real
+# case/conversation is recorded" boundary as the rest of this file applies
+# to both -- these are the tester's own opinions, not case content.
 #
 # Shares the same Google Sheet (GOOGLE_SHEET_ID) as ../thimble's survey, on
 # its own "Seam" worksheet tab rather than a separate spreadsheet, per
@@ -1090,4 +1099,106 @@ async def submit_survey(request: Request):
     with SURVEY_FILE.open("a") as f:
         f.write(json.dumps(record) + "\n")
     print(f"[survey] {json.dumps(record)}", flush=True)
+    return {"ok": True}
+
+
+# Post-use survey (static/survey-after.html) -- see the comment above
+# SURVEY_FILE for how this differs from the pre-use one. Own file, own
+# sheet tab, own cache variable: kept as a parallel block rather than
+# generalizing get_survey_sheet() into something both share, since the two
+# surveys have different fields/header and this only runs twice total.
+SURVEY_POST_FILE = ROOT / "survey_responses_post.jsonl"
+SURVEY_POST_WORKSHEET_TITLE = "Seam Post-Use"
+SURVEY_POST_SHEET_HEADER = [
+    "Timestamp", "Overall (1-5)", "Read felt right", "Changed approach",
+    "Plan panel value", "Would use for real case", "Issues", "Comments",
+]
+_sheet_post = None
+_sheet_post_init_failed = False
+
+
+def get_survey_post_sheet():
+    """Same auth/create-if-missing pattern as get_survey_sheet() above, just
+    against the "Seam Post-Use" tab of the same spreadsheet instead of
+    "Seam". See that function's docstring for the one-time setup notes."""
+    global _sheet_post, _sheet_post_init_failed
+    if _sheet_post is not None or _sheet_post_init_failed:
+        return _sheet_post
+    if not GOOGLE_SHEET_ID or not GOOGLE_SERVICE_ACCOUNT_JSON:
+        _sheet_post_init_failed = True
+        return None
+    try:
+        info = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+        creds = GoogleCredentials.from_service_account_info(
+            info, scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        spreadsheet = gspread.authorize(creds).open_by_key(GOOGLE_SHEET_ID)
+        try:
+            _sheet_post = spreadsheet.worksheet(SURVEY_POST_WORKSHEET_TITLE)
+        except gspread.WorksheetNotFound:
+            _sheet_post = spreadsheet.add_worksheet(
+                title=SURVEY_POST_WORKSHEET_TITLE, rows=1000, cols=len(SURVEY_POST_SHEET_HEADER)
+            )
+            _sheet_post.append_row(SURVEY_POST_SHEET_HEADER, table_range="A1")
+    except Exception as e:
+        print(f"[survey/post] Google Sheets auth/open failed, falling back to local log: {e}", flush=True)
+        _sheet_post_init_failed = True
+        return None
+    return _sheet_post
+
+
+SURVEY_POST_RADIO_FIELDS = {
+    "read_felt_right": {"yes", "partly", "no"},
+    "changed_approach": {"yes", "somewhat", "no"},
+    "plan_panel_value": {"both", "mostly_chat", "mostly_plan", "neither"},
+    "would_use_real_case": {"yes", "maybe", "no"},
+}
+
+
+@app.post("/api/survey/post")
+async def submit_survey_post(request: Request):
+    data = await request.json()
+    overall_rating = data.get("overall_rating")
+    if not isinstance(overall_rating, int) or not (1 <= overall_rating <= 5):
+        return JSONResponse({"error": "overall_rating must be an integer 1-5"}, status_code=400)
+    radios = {}
+    for field, valid_values in SURVEY_POST_RADIO_FIELDS.items():
+        value = data.get(field)
+        if value not in valid_values and value is not None:
+            return JSONResponse({"error": f"invalid {field} value"}, status_code=400)
+        radios[field] = value
+    issues_raw = data.get("issues") or []
+    if not isinstance(issues_raw, list):
+        return JSONResponse({"error": "issues must be a list"}, status_code=400)
+    issues = [str(i)[:40] for i in issues_raw][:10]
+    comments = str(data.get("comments") or "")[:4000]
+    record = {
+        "ts": time.time(),
+        "overall_rating": overall_rating,
+        **radios,
+        "issues": issues,
+        "comments": comments,
+    }
+    sheet = get_survey_post_sheet()
+    if sheet is not None:
+        try:
+            await run_in_threadpool(
+                sheet.append_row,
+                [
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(record["ts"])) + " UTC",
+                    overall_rating,
+                    radios["read_felt_right"] or "",
+                    radios["changed_approach"] or "",
+                    radios["plan_panel_value"] or "",
+                    radios["would_use_real_case"] or "",
+                    ", ".join(issues),
+                    comments,
+                ],
+                table_range=f"A1:{chr(ord('A') + len(SURVEY_POST_SHEET_HEADER) - 1)}1",
+            )
+        except Exception as e:
+            print(f"[survey/post] Sheets append failed, response saved to local log only: {e}", flush=True)
+    with SURVEY_POST_FILE.open("a") as f:
+        f.write(json.dumps(record) + "\n")
+    print(f"[survey/post] {json.dumps(record)}", flush=True)
     return {"ok": True}
