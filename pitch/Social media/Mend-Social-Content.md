@@ -6,9 +6,9 @@
 
 ## Part 1: LinkedIn Posts (sequential order)
 
-### Post 1: The Origin — A Designer, Not a Diplomat
+### Post 1: The Origin: A Designer Building an AI for Workplace Conflict
 
-**Core insight:** The hardest systems to debug in modern software companies aren't lines of code — they're human relationships. Navigating social dynamics and office politics is an advanced skill almost no one is taught.
+**Core insight:** In modern software companies, human relationships are harder to debug than the code itself. Navigating social dynamics and office politics is an advanced skill almost no one is taught.
 
 **Employees lose 2.8 hours a week to coworker friction nobody ever resolves.**
 
@@ -16,7 +16,7 @@ I'm a UX product designer from North Carolina, and right now I'm building probab
 
 Here is why
 
-In tech, we spend decades mastering our craft — design heuristics, system architecture, code syntax, data pipelines.
+In tech, we spend decades mastering our craft: design heuristics, system architecture, code syntax, data pipelines.
 
 Yet almost nobody teaches us how to navigate social dynamics, mismatched expectations, or cross-functional friction.
 
@@ -31,7 +31,7 @@ The result: most friction sits in what dispute researchers call the **"Missing M
 
 Which is why I am building Mend
 
-**Mend** — is an off-the-record AI sounding board to help teammates deconstruct tension, map misaligned team incentives, and reach clear working boundaries without creating an HR paper trail.
+**Mend** is an off-the-record AI sounding board to help teammates deconstruct tension, map misaligned team incentives, and reach clear working boundaries without creating an HR paper trail.
 
 Over the next few weeks, I'm going to share 10 lessons on why the way modern companies handle team friction is fundamentally broken, starting with why the corporate playbook prefers you to swallow your humanity rather than make a fuss.
 
@@ -39,7 +39,7 @@ If you're a founder, design leader, or someone who's ever lost sleep over an awk
 
 ---
 
-### Post 2: The Validation Trap — Why Good Friends Make Bad Career Counselors
+### Post 2: The Validation Trap: Why Good Friends Make Bad Career Counselors
 
 **Core insight:** Venting to friends provides emotional comfort, but their natural loyalty fuels righteous indignation, hides personal blind spots, and sends people back into the office primed to make reactive decisions that damage their careers.
 
@@ -57,7 +57,7 @@ Friends aren't the only option people reach for. There are really three, and all
 
 **2. Ask a generic AI chatbot.** More people do this than you'd think. Anthropic's own usage data (Oct 2025) shows 2.9% of all Claude.ai conversations are "interpersonal advice," and OpenAI's usage research (Sept 2025) puts 1.9% of ChatGPT messages under relationships and personal reflection, which works out to roughly 340 million messages a week on ChatGPT alone. But a general-purpose chatbot has no way to hear the other person's side, no memory of your working relationship across sessions, and it's built to agree with whoever is typing, which is the opposite of what you need when the real question is what you're getting wrong.
 
-**3. Go to HR or your manager.** The real cost here isn't getting caught venting, it's that once you report something, you hand over control of how it gets handled. HR decides the process, the timeline, and the resolution, not you. Self-determination research from psychologists Edward Deci and Richard Ryan backs this up: outcomes imposed by an authority produce "controlled compliance" rather than real buy-in, because the people actually affected weren't the ones who shaped the fix. And there's a real career cost on top of that: research on dispute-resolution adoption puts voluntary self-referral to formal channels at just 3 to 10% of employees, because raising a concern can mean getting labeled difficult, or a culture risk, long after the issue itself is resolved.
+**3. Go to HR or your manager.** The real risk here has nothing to do with getting caught venting. Once you report something, you hand over control of how it gets handled. HR decides the process, the timeline, and the resolution, not you. Self-determination research from psychologists Edward Deci and Richard Ryan backs this up: outcomes imposed by an authority produce "controlled compliance" rather than real buy-in, because the people actually affected weren't the ones who shaped the fix. And there's a real career cost on top of that: research on dispute-resolution adoption puts voluntary self-referral to formal channels at just 3 to 10% of employees, because raising a concern can mean getting labeled difficult, or a culture risk, long after the issue itself is resolved.
 
 Friends, AI, and HR all run into the same wall. None of them can really help you work through the dynamics that caused the conflict in the first place. They can only make you feel better, agree with you, or put something on the record.
 
@@ -65,11 +65,11 @@ That's the gap I'm building Mend to close.
 
 ---
 
-### Post 3: The Big Realization — Systems, Not Personalities
+### Post 3: The Big Realization: Opposing Incentives Create Workplace Conflict
 
-**Core insight:** Workplace friction is rarely caused by "bad people" or malice; it's almost always the result of structural incentives and opposing metrics colliding. And it's not just the two people in the friction who misread it this way: a manager who steps in to settle it usually makes the same mistake, and solving it for them teaches the team to escalate instead of work it out on their own.
+**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always the result of structural incentives and opposing metrics colliding. The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
 
-**Most workplace conflicts aren't personality clashes. They're opposing KPIs pretending to be interpersonal drama.**
+**Most workplace conflicts are opposing KPIs pretending to be interpersonal drama.**
 
 Here's a common scenario in tech:
 
@@ -86,13 +86,13 @@ If you want to resolve cross-functional friction, stop asking "why are they bein
 
 The moment you map the opposing metrics, the malice disappears.
 
-Here's the part that surprises most managers: they default to the same personality read their reports do. And even on the rare occasion a manager does see the structural mismatch clearly, personally stepping in and settling it for the two people involved solves that one fight and quietly breaks something bigger. It teaches the team that disagreements get resolved by escalation, not by working it out between the people who actually understand the tradeoffs. A manager who mediates every low-stakes dispute isn't being helpful. They're training their team to bring them every future one too.
+Here's the part that surprises most managers: they default to the same personality read their reports do. And even on the rare occasion a manager does see the structural mismatch clearly, personally stepping in and settling it for the two people involved solves that one fight and quietly breaks something bigger. It teaches the team that disagreements get resolved by escalation, not by working it out between the people who actually understand the tradeoffs. A manager who mediates every low-stakes dispute ends up training their team to bring them every future one too.
 
 The two people in the room are the only ones holding the full picture: what the deadline pressure actually feels like from each seat. A manager handing down a verdict skips that step. The teams that get genuinely better at this are the ones where the people in the friction work out the structural mismatch themselves, with the manager out of the room entirely.
 
 ---
 
-### Post 4: The 55% Myth — How Corporations Shift the Blame
+### Post 4: The 55% Myth: How Corporations Shift the Blame
 
 **Core insight:** Employees routinely blame personality and ego for conflict because systemic pressure is invisible. Corporations encourage this narrative because pathologizing individuals absolves leadership from auditing broken systems.
 
@@ -101,27 +101,27 @@ The two people in the room are the only ones holding the full picture: what the 
 The data on workplace disputes highlights a striking contradiction:
 
 - **At intake:** 49–55% of employees attribute friction to "personality clashes and difficult egos."[^1]
-- **Post-resolution:** over 80% of resolved agreements focus on operational mechanics — turnaround SLAs, swimlanes, and handoff criteria.[^2]
+- **Post-resolution:** over 80% of resolved agreements focus on operational mechanics: turnaround SLAs, swimlanes, and handoff criteria.[^2]
 
 In empirical mediation data, you almost never see a settlement that says *"Alex agrees to be 20% less arrogant."* You see settlements that say *"code reviews must be completed within 24 hours via tickets rather than public Slack channels."*
 
 People default to blaming personality because human beings are visible, while incentive architecture is invisible.
 
-And organizations gladly accept that conclusion. Blaming an individual's "attitude" lets a company preserve its org chart, stack-ranking policies, and opposing quotas. Treating operational friction as an individual moral flaw isn't leadership — it's abdication.
+And organizations gladly accept that conclusion. Blaming an individual's "attitude" lets a company preserve its org chart, stack-ranking policies, and opposing quotas. Treating operational friction as an individual moral flaw is abdication, not leadership.
 
 ---
 
-### Post 5: Friction as Kinetic Energy — De-Stigmatizing Disagreement
+### Post 5: Friction as Kinetic Energy: De-Stigmatizing Disagreement
 
 **Core insight:** An absence of conflict in a workplace rarely signals harmony; it signals apathy, cynicism, and fear. Friction is the kinetic energy of ambitious people working on hard problems under real constraints.
 
-**A team with zero conflict isn't healthy. It's disengaged.**
+**A team with zero conflict is a disengaged team.**
 
-In knowledge work, we often treat workplace friction like an infectious disease — something to be suppressed, smoothed over, or handed to HR.
+In knowledge work, we often treat workplace friction like an infectious disease: something to be suppressed, smoothed over, or handed to HR.
 
 Organizational research, most notably Karen Jehn's work on conflict taxonomy, paints a different picture:[^2]
 
-- **Task conflict:** debating technical architecture, feature scope, and data interpretation. High-performing teams consistently demonstrate high levels of task debate — it eliminates groupthink and surfaces critical bugs before launch.
+- **Task conflict:** debating technical architecture, feature scope, and data interpretation. High-performing teams consistently demonstrate high levels of task debate. It eliminates groupthink and surfaces critical bugs before launch.
 - **The cost of polite avoidance:** when team members stop raising objections, it rarely means consensus. It usually means they've calculated that caring isn't worth the political friction.
 
 Friction is simply the kinetic energy of people who give a damn. High-performing teams don't fail because they experience friction; they fail because they lack the neutral scaffolding to process task debate cleanly, which lets it degenerate into personal resentment.
@@ -130,9 +130,9 @@ Stop trying to build frictionless teams. Start building resilient teams that kno
 
 ---
 
-### Post 6: The False Binary — Redefining Workplace "Professionalism"
+### Post 6: The False Binary: Redefining Workplace "Professionalism"
 
-**Core insight:** Modern corporate "professionalism" is often shorthand for human erasure — demanding that employees suppress their nervous systems to keep the machinery humming. True professionalism is human maturity.
+**Core insight:** Modern corporate "professionalism" is often shorthand for human erasure: demanding that employees suppress their nervous systems to keep the machinery humming. True professionalism is human maturity.
 
 **What companies call "professionalism" often just means suppressing a normal reaction.**
 
@@ -151,13 +151,13 @@ True professionalism means having a safe, off-the-record outlet to be messy, ang
 
 ---
 
-### Post 7: The Core Bet — Outcomes Over Surveillance
+### Post 7: The Core Bet: Outcomes Over Surveillance
 
 **Core insight:** You can have institutional surveillance, or you can have honest conflict resolution, but not both. True psychological safety requires that vulnerability can't be weaponized against your career.
 
 **Why traditional conflict mediation consistently backfires in tech orgs:**
 
-When peer friction escalates, the corporate reflex is to bring in an "adult" — a frontline lead or an HRBP.
+When peer friction escalates, the corporate reflex is to bring in an "adult": a frontline lead or an HRBP.
 
 Decades of alternative dispute resolution and self-determination research show why this fails:
 
@@ -167,11 +167,11 @@ Decades of alternative dispute resolution and self-determination research show w
 
 The thesis behind Mend is simple: **outcomes over surveillance.**
 
-If companies want high-performing, resilient teams, they have to give up the need to police every interaction. Radical privacy isn't about hiding bad behavior; it's the baseline precondition for honest alignment.
+If companies want high-performing, resilient teams, they have to give up the need to police every interaction. Radical privacy is the baseline precondition for honest alignment, not a way to hide bad behavior.
 
 ---
 
-### Post 8: The Architecture — The Dissolving Suture
+### Post 8: The Architecture: The Dissolving Suture
 
 **Core insight:** Software built for human relationships should act like a surgical dissolving suture: holding the dynamic together while the tissue repairs, then disappearing without leaving permanent institutional scar tissue.
 
@@ -191,7 +191,7 @@ The tool holds the team together while it heals, then gets out of the way.
 
 ---
 
-### Post 9: Meeting People Where They Are — The Solo-First Door
+### Post 9: Meeting People Where They Are: The Solo-First Door
 
 **Core insight:** Employees will rarely voluntarily invite a colleague to "mediate an argument" with an AI. Uptake requires a high-value solo front door that solves individual frustration without requiring buy-in from the other person.
 
@@ -214,9 +214,9 @@ Software shouldn't demand bravery from vulnerable users; it should provide scaff
 
 ---
 
-### Post 10: The Vision — Mend as Operational Scaffolding
+### Post 10: The Vision: Mend as Operational Scaffolding
 
-**Core insight:** The destination isn't remedial "conflict resolution" or compulsory corporate friendship; it's forward-looking operational calibration that restores sprint focus and human dignity.
+**Core insight:** The destination is forward-looking operational calibration that restores sprint focus and human dignity, not remedial "conflict resolution" or compulsory corporate friendship.
 
 **Why we need to retire the term "conflict resolution" in modern product teams:**
 
@@ -234,18 +234,18 @@ Teams don't need another HR compliance policy. They need private operational sca
 
 ## Part 2: TikTok / Reels / Shorts Scripts (sequential order)
 
-### Post 1: The Origin — A Designer, Not a Diplomat
+### Post 1: The Origin: A Designer Building an AI for Workplace Conflict
 
-**Core insight:** The hardest systems to debug in modern software companies aren't lines of code — they're human relationships. Navigating social dynamics and office politics is an advanced skill almost no one is taught.
+**Core insight:** In modern software companies, human relationships are harder to debug than the code itself. Navigating social dynamics and office politics is an advanced skill almost no one is taught.
 
 - "I'm a UX product designer from North Carolina, and right now I'm building probably the most unconventional app of my career. It's called Mend, and it's an AI tool built to help coworkers resolve workplace friction completely off the record."
-- "I don't have an HR degree, I'm not an executive coach, and I don't have a background in corporate mediation. What I do have is years of designing digital systems — and years of realizing that the hardest systems to debug aren't computer code, they're the humans working behind the screens."
+- "I don't have an HR degree, I'm not an executive coach, and I don't have a background in corporate mediation. What I do have is years of designing digital systems, and years of realizing that the humans working behind the screens are harder to debug than the code itself."
 - "Here's a number that should concern every manager: the average employee burns 2.8 hours a week on unmanaged coworker friction. That's a global study from CPP Inc., the people behind the Myers-Briggs test.[^1] But right now, you only get two bad options: vent to friends, which feels great but fixes zero problems, or go to HR, which turns standard friction into an adversarial tribunal and puts a target on your back."
 - "We spend our whole lives learning hard craft skills, but nobody teaches us how to navigate interpersonal power dynamics without blowing up our reputations. I started building Mend because I desperately needed it years ago. Over the next few weeks, I'm sharing 10 lessons on why the corporate view of conflict is completely broken. Follow along."
 
 ---
 
-### Post 2: The Validation Trap — Why Good Friends Make Bad Career Counselors
+### Post 2: The Validation Trap: Why Good Friends Make Bad Career Counselors
 
 **Core insight:** Venting to friends provides emotional comfort, but their natural loyalty fuels righteous indignation, hides personal blind spots, and sends people back into the office primed to make reactive decisions that damage their careers.
 
@@ -256,20 +256,20 @@ Teams don't need another HR compliance policy. They need private operational sca
 
 ---
 
-### Post 3: The Big Realization — Systems, Not Personalities
+### Post 3: The Big Realization: Opposing Incentives Create Workplace Conflict
 
-**Core insight:** Workplace friction is rarely caused by "bad people" or malice; it's almost always the result of structural incentives and opposing metrics colliding. And it's not just the two people in the friction who misread it this way: a manager who steps in to settle it usually makes the same mistake, and solving it for them teaches the team to escalate instead of work it out on their own.
+**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always the result of structural incentives and opposing metrics colliding. The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
 
-- "It took me years in tech to realize this: that coworker who makes your blood boil probably isn't a jerk. They're just doing their job."
+- "It took me years in tech to realize this: that coworker who makes your blood boil is probably just doing their job."
 - "Think about product designers and core platform engineers. A designer gets promoted for feature velocity and launching cool UI flows. But the platform engineer gets held accountable if there's a single sev-1 outage or latency regression."
 - "When the engineer blocks the designer's pull request, the designer thinks, 'They're territorial and have a massive ego.' And the engineer thinks, 'This designer is reckless and doesn't know what they're doing.' Neither person is malicious. Their performance reviews are set up to make them enemies."
 - "When you stop diagnosing personalities and start looking at incentive architecture, the personal resentment evaporates. You stop fighting a coworker and start solving a broken system."
-- "Here's the part almost nobody talks about: their manager can't fix this for them either. Managers read the same fight and see the same two personalities. And even when a manager does spot the real structural mismatch, stepping in and settling it themselves teaches the team one lesson: don't work it out, go get the manager. That's not management. That's a bottleneck with a title."
+- "Here's the part almost nobody talks about: their manager can't fix this for them either. Managers read the same fight and see the same two personalities. And even when a manager does spot the real structural mismatch, stepping in and settling it themselves teaches the team one lesson: don't work it out, go get the manager. That's a bottleneck wearing a management title."
 - "The two people in the disagreement are the only ones who actually hold the information a manager doesn't have: what it's actually like to sit in each seat. So the fix has to come from them, not get handed down from above."
 
 ---
 
-### Post 4: The 55% Myth — How Corporations Shift the Blame
+### Post 4: The 55% Myth: How Corporations Shift the Blame
 
 **Core insight:** Employees routinely blame personality and ego for conflict because systemic pressure is invisible. Corporations encourage this narrative because pathologizing individuals absolves leadership from auditing broken systems.
 
@@ -280,51 +280,51 @@ Teams don't need another HR compliance policy. They need private operational sca
 
 ---
 
-### Post 5: Friction as Kinetic Energy — De-Stigmatizing Disagreement
+### Post 5: Friction as Kinetic Energy: De-Stigmatizing Disagreement
 
 **Core insight:** An absence of conflict in a workplace rarely signals harmony; it signals apathy, cynicism, and fear. Friction is the kinetic energy of ambitious people working on hard problems under real constraints.
 
 - "If your team never argues about anything, I have bad news for you: you don't have a harmonious team. You have an exhausted, checked-out team."
 - "When people completely stop pushing back in meetings, it doesn't mean everyone agrees. It means nobody cares enough about the product architecture or the user experience to deal with the hassle of fighting for it."
-- "Disagreement isn't a cultural malfunction. It's kinetic energy. It's what happens when ambitious people with high standards are trying to solve complex problems under tight deadlines."
-- "Conflict isn't an HR red flag — it's proof of investment. The goal shouldn't be to stamp out friction. The goal is building tools that help teams channel that energy into better operational agreements."
+- "Disagreement is kinetic energy. It's what happens when ambitious people with high standards are trying to solve complex problems under tight deadlines."
+- "Conflict is proof of investment, not an HR red flag. The goal shouldn't be to stamp out friction. The goal is building tools that help teams channel that energy into better operational agreements."
 
 ---
 
-### Post 6: The False Binary — Redefining Workplace "Professionalism"
+### Post 6: The False Binary: Redefining Workplace "Professionalism"
 
-**Core insight:** Modern corporate "professionalism" is often shorthand for human erasure — demanding that employees suppress their nervous systems to keep the machinery humming. True professionalism is human maturity.
+**Core insight:** Modern corporate "professionalism" is often shorthand for human erasure: demanding that employees suppress their nervous systems to keep the machinery humming. True professionalism is human maturity.
 
 - "Corporate culture has sold us a toxic definition of what it means to be 'professional.'"
 - "We're told we only have two choices. Choice A: act like a robot, plaster on a corporate smile, swallow your feelings, and pretend you don't have a nervous system. Or choice B: let raw emotions rip, start drama, and torch your reputation."
 - "There's a third option: being professionally human. It says, 'I don't have to become an emotionless appliance to do my job, but I also don't have to ruin my career over a bad interaction.'"
-- "Real professionalism isn't pretending you never get angry or petty. It's having an unmonitored space to process those feelings honestly in private, so you can walk into the room as a clear-headed adult."
+- "Real professionalism means having an unmonitored space to process anger or pettiness honestly in private, so you can walk into the room as a clear-headed adult."
 
 ---
 
-### Post 7: The Core Bet — Outcomes Over Surveillance
+### Post 7: The Core Bet: Outcomes Over Surveillance
 
 **Core insight:** You can have institutional surveillance, or you can have honest conflict resolution, but not both. True psychological safety requires that vulnerability can't be weaponized against your career.
 
 - "Here's why traditional HR will never be able to fix everyday coworker conflict: real honesty cannot survive an audience."
-- "The second an authority figure — a manager or an HRBP — sits in the room, resolution is dead. Your brain instantly registers a career threat: 'is this going to affect my bonus, my rating, or my promotion?'"
+- "The second an authority figure (a manager or an HRBP) sits in the room, resolution is dead. Your brain instantly registers a career threat: 'is this going to affect my bonus, my rating, or my promotion?'"
 - "So instead of actually working through the issue, everyone puts on a performance. You shake hands, offer fake corporate smiles, and nod along just to get out of the room. The second you leave, the resentment festers."
 - "People will only drop their guard and acknowledge their mistakes when they know their words can't end up on a performance review.[^4] You can have surveillance, or you can have resolution. You cannot have both."
 
 ---
 
-### Post 8: The Architecture — The Dissolving Suture
+### Post 8: The Architecture: The Dissolving Suture
 
 **Core insight:** Software built for human relationships should act like a surgical dissolving suture: holding the dynamic together while the tissue repairs, then disappearing without leaving permanent institutional scar tissue.
 
 - "When I was designing Mend, the hardest technical problem wasn't the AI prompts. It was this: how do you build an app that proves it isn't spying on you?"
 - "We named the app Mend because of a medical metaphor: the dissolving suture. When a surgeon closes an incision, the stitch holds the tissue steady while it heals, and then it dissolves completely. No trace left behind."
-- "Most corporate software is built to compile dossiers — logging Slack chats, emails, and tickets forever. We built Mend so it runs purely in volatile hardware memory. There are no stored transcripts to subpoena, and nothing for HR to audit."
+- "Most corporate software is built to compile dossiers: logging Slack chats, emails, and tickets forever. We built Mend so it runs purely in volatile hardware memory. There are no stored transcripts to subpoena, and nothing for HR to audit."
 - "Software for human relationships shouldn't build permanent records. It should do its job, heal the dynamic, and disappear."
 
 ---
 
-### Post 9: Meeting People Where They Are — The Solo-First Door
+### Post 9: Meeting People Where They Are: The Solo-First Door
 
 **Core insight:** Employees will rarely voluntarily invite a colleague to "mediate an argument" with an AI. Uptake requires a high-value solo front door that solves individual frustration without requiring buy-in from the other person.
 
@@ -335,12 +335,12 @@ Teams don't need another HR compliance policy. They need private operational sca
 
 ---
 
-### Post 10: The Vision — Mend as Operational Scaffolding
+### Post 10: The Vision: Mend as Operational Scaffolding
 
-**Core insight:** The destination isn't remedial "conflict resolution" or compulsory corporate friendship; it's forward-looking operational calibration that restores sprint focus and human dignity.
+**Core insight:** The destination is forward-looking operational calibration that restores sprint focus and human dignity, not remedial "conflict resolution" or compulsory corporate friendship.
 
-- "The ultimate goal of resolving workplace friction isn't making sure everyone becomes best friends. It's making sure work doesn't ruin your life."
-- "We need to retire the phrase 'conflict resolution.' It sounds remedial, like adults who failed basic professionalism. We don't call fixing broken code 'code therapy' — we call it refactoring."
+- "The ultimate goal of resolving workplace friction is making sure work doesn't ruin your life, not making sure everyone becomes best friends."
+- "We need to retire the phrase 'conflict resolution.' It sounds remedial, like adults who failed basic professionalism. We don't call fixing broken code 'code therapy.' We call it refactoring."
 - "Calibrating team dynamics should be standard sprint hygiene. And if two people walk away with a plain, functional working agreement to only communicate via tickets with a 24-hour turnaround SLA, that's a 100% win."
 - "Workplace tools shouldn't force emotional performance. They should give people their agency back, reclaim lost focus, and leave human dignity completely intact."
 
@@ -348,7 +348,7 @@ Teams don't need another HR compliance policy. They need private operational sca
 
 ## Part 3: Reddit Posts (sequential order)
 
-### Post 1: The Origin — A Designer, Not a Diplomat
+### Post 1: The Origin: A Designer Building an AI for Workplace Conflict
 
 **Suggested subreddits:** r/managers, r/humanresources, r/ExperiencedDevs, r/cscareerquestions
 
@@ -362,9 +362,7 @@ I've been designing software for a while and started digging into why there's no
 
 ---
 
----
-
-### Post 2: The Validation Trap — Why Good Friends Make Bad Career Counselors
+### Post 2: The Validation Trap: Why Good Friends Make Bad Career Counselors
 
 **Suggested subreddits:** r/managers, r/careerguidance, r/work, r/ExperiencedDevs
 
@@ -378,9 +376,7 @@ Anyone else notice this pattern? Feels like venting to friends is almost designe
 
 ---
 
----
-
-### Post 3: The Big Realization — Systems, Not Personalities
+### Post 3: The Big Realization: Opposing Incentives Create Workplace Conflict
 
 **Suggested subreddits:** r/ExperiencedDevs, r/programming, r/ProductManagement, r/managers
 
@@ -398,9 +394,7 @@ Anyone else have a cross-functional relationship that got better the second you 
 
 ---
 
----
-
-### Post 4: The 55% Myth — How Corporations Shift the Blame
+### Post 4: The 55% Myth: How Corporations Shift the Blame
 
 **Suggested subreddits:** r/humanresources, r/managers, r/antiwork
 
@@ -414,25 +408,21 @@ Curious if anyone here has seen this play out, where a "personality" conflict tu
 
 ---
 
----
-
-### Post 5: Friction as Kinetic Energy — De-Stigmatizing Disagreement
+### Post 5: Friction as Kinetic Energy: De-Stigmatizing Disagreement
 
 **Suggested subreddits:** r/managers, r/ExperiencedDevs, r/agile, r/ProductManagement
 
-**Title:** If your team never disagrees about anything, that's not harmony. That's disengagement.
+**Title:** If your team never disagrees about anything, that's disengagement, not harmony.
 
 Had to relearn this one. A quiet team isn't necessarily a healthy team. When people stop pushing back on technical decisions or product calls, it usually doesn't mean everyone's aligned. It usually means they've decided it's not worth the hassle of fighting for their position anymore.
 
-Karen Jehn's research on team conflict draws a useful distinction here: task conflict (debating architecture, scope, priorities) is actually a sign of a high-performing team, it's how groupthink gets caught before launch. The problem isn't disagreement itself, it's teams that lack any neutral way to process that disagreement, so it curdles into personal resentment instead of staying about the work.
+Karen Jehn's research on team conflict draws a useful distinction here: task conflict (debating architecture, scope, priorities) is actually a sign of a high-performing team, it's how groupthink gets caught before launch. The real problem is teams that lack any neutral way to process disagreement, which lets it curdle into personal resentment instead of staying about the work.
 
 Anyone worked on a team that went quiet and it turned out to be a bad sign rather than a good one?
 
 ---
 
----
-
-### Post 6: The False Binary — Redefining Workplace "Professionalism"
+### Post 6: The False Binary: Redefining Workplace "Professionalism"
 
 **Suggested subreddits:** r/careerguidance, r/managers, r/antiwork, r/work
 
@@ -442,13 +432,11 @@ Starting to think corporate professionalism has sold people a bad binary: either
 
 There's a third option that doesn't get talked about enough: having somewhere private to actually process the messy, petty, angry version of your reaction, so you can walk back into the room as a clear-headed adult instead of either an appliance or a liability.
 
-Adults have bad days and limited emotional bandwidth. Pretending otherwise isn't professionalism, it's just suppression with better branding. How do you all actually process that stuff before it either gets bottled up or blows up?
+Adults have bad days and limited emotional bandwidth. Pretending otherwise is just suppression with better branding. How do you all actually process that stuff before it either gets bottled up or blows up?
 
 ---
 
----
-
-### Post 7: The Core Bet — Outcomes Over Surveillance
+### Post 7: The Core Bet: Outcomes Over Surveillance
 
 **Suggested subreddits:** r/managers, r/humanresources, r/ExperiencedDevs
 
@@ -462,9 +450,7 @@ People only really drop their guard and own their part in a conflict when they k
 
 ---
 
----
-
-### Post 8: The Architecture — The Dissolving Suture
+### Post 8: The Architecture: The Dissolving Suture
 
 **Suggested subreddits:** r/privacy, r/SideProject, r/startups, r/ExperiencedDevs
 
@@ -478,9 +464,7 @@ Curious how others building people-facing tools have handled the trust problem, 
 
 ---
 
----
-
-### Post 9: Meeting People Where They Are — The Solo-First Door
+### Post 9: Meeting People Where They Are: The Solo-First Door
 
 **Suggested subreddits:** r/SideProject, r/startups, r/UXDesign, r/ProductManagement
 
@@ -494,9 +478,7 @@ Feels like a broader lesson: if a product requires bravery or vulnerability upfr
 
 ---
 
----
-
-### Post 10: The Vision — Mend as Operational Scaffolding
+### Post 10: The Vision: Mend as Operational Scaffolding
 
 **Suggested subreddits:** r/startups, r/ProductManagement, r/managers
 
@@ -507,8 +489,6 @@ Feels like a broader lesson: if a product requires bravery or vulnerability upfr
 If two people walk away from a disagreement with a plain, functional working agreement (say, "we only communicate through tickets with a 24-hour turnaround"), that's a complete win. It doesn't have to end in forced apologies or everyone becoming friends. Interpersonal warmth is a nice byproduct sometimes, not the goal.
 
 What would it take for your org to treat calibrating a working relationship as normal sprint hygiene instead of something that only happens after things get bad enough to escalate?
-
----
 
 ---
 
