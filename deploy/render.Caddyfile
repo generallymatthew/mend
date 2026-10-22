@@ -1,14 +1,18 @@
-# Render deploy variant of ../Caddyfile: same path-prefix scheme (demo-app
-# at root, Thimble under /intake/, Seam under /manager/), but listens on
-# Render's injected $PORT instead of a fixed local port, and only proxies
-# the apps this deploy actually runs.
+# Render deploy variant of ../Caddyfile: same path-prefix scheme (Thimble
+# under /intake/, Seam under /manager/), but listens on Render's injected
+# $PORT instead of a fixed local port, and only proxies the apps this
+# deploy actually runs.
+#
+# The index ("/") serves manager-story.html -- the Seam pitch/story page
+# -- not the demo-app, since this deploy is currently fronting Seam
+# testers. demo-app is still reachable, just not at root; everything that
+# doesn't match an explicit handle below falls through to it.
 #
 # Repo-root static pages (about.html, story.html, testers.html, the Mend
 # Pitch/ demo assets they embed, etc.) are served directly from disk when
 # the request matches an existing file -- no per-page handle block needed
 # as more of these get added. Short aliases (/about, /testers, /story)
-# rewrite to their .html file first; everything else falls through to the
-# demo-app reverse proxy.
+# rewrite to their .html file first.
 
 :{$PORT} {
 	handle_path /intake/* {
@@ -24,6 +28,11 @@
 	}
 
 	root * .
+
+	handle / {
+		rewrite * /manager-story.html
+		file_server
+	}
 
 	handle /about {
 		rewrite * /about.html
