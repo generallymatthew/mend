@@ -78,7 +78,7 @@ Here's a common scenario in tech:
 
 Both are talented, well-intentioned, and acting completely rationally based on how their managers evaluate them.
 
-Yet when they interact, it feels personal. The designer assumes the engineer is a territorial gatekeeper with an unchecked ego. The engineer assumes the designer is reckless and sloppy.
+Yet for some reason, during this particular interaction, it feels personal. Maybe it's lack of sleep, or a bad day, or something else that has nothing to do with the actual disagreement. This isn't every person, and it isn't every interaction between them. Most of their day-to-day interactions are fine, but it happens often enough to be a real pattern. The designer starts assuming the engineer is a territorial gatekeeper with an unchecked ego. The engineer starts assuming the designer is reckless and sloppy.
 
 In organizational psychology, this is the **fundamental attribution error**: we judge our own behavior based on context and constraints, but we judge our colleagues' behavior based on perceived character flaws.[^3]
 
