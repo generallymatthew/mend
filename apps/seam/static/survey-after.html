@@ -134,9 +134,14 @@
 </div>
 
 <script>
-// Served at "/survey/after" directly off Seam -- no reverse-proxy base-path
-// stripping needed the way thimble's survey.html does, since this app
-// isn't run behind run_all.sh's Caddy proxy (see apps/seam/README.md).
+// Served at "/survey/post" standalone or "/manager/survey/post" behind
+// the shared Caddy proxy (Seam is wired into run_all.sh/render.Caddyfile
+// now -- the comment this replaced predates that). Strip both path
+// segments, not just the last one, to get back to the app's own root,
+// same BASE_PATH/apiPath approach as index.html and survey.html.
+const BASE_PATH = location.pathname.replace(/\/survey\/post\/?$/, '/');
+function apiPath(p) { return BASE_PATH.replace(/\/$/, '') + '/' + p.replace(/^\//, ''); }
+
 function wireScale(id) {
   let val = null;
   const buttons = document.querySelectorAll(`#${id} button`);
@@ -196,7 +201,7 @@ submitBtn.addEventListener('click', async () => {
     comments: document.getElementById('comments').value.trim(),
   };
   try {
-    const res = await fetch('/api/survey/post', {
+    const res = await fetch(apiPath('/api/survey/post'), {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload),
