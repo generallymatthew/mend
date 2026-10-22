@@ -88,7 +88,7 @@ If you want to resolve cross-functional friction, stop asking "why are they bein
 
 The moment you map the opposing metrics, the malice disappears.
 
-Metrics are just one flavor of this. The same pattern shows up anywhere two roles have different goals, different workloads, or processes that were bolted together instead of designed to fit, not just where there's a scoreboard involved. Decades of organizational research on conflict between departments backs this up: friction between groups is driven by how the organization structures their goals and interdependence, not by who happens to be in the role.[^8]
+Metrics are just one flavor of this. The same pattern shows up anywhere two roles have different goals, different workloads, or processes that were bolted together instead of designed to fit, not just where there's a scoreboard involved. A landmark 1969 study on interdepartmental conflict (Walton & Dutton, *Administrative Science Quarterly*) found the same thing at the organizational level: friction between departments tracks with differentiated goals and task interdependence, not with who happens to be in the role.[^8]
 
 Here's the part that surprises most managers: they default to the same personality read their reports do. And even on the rare occasion a manager does see the structural mismatch clearly, personally stepping in and settling it for the two people involved solves that one fight and quietly breaks something bigger. It teaches the team that disagreements get resolved by escalation, not by working it out between the people who actually understand the tradeoffs. A manager who mediates every low-stakes dispute ends up training their team to bring them every future one too.
 
