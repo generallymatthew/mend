@@ -65,11 +65,11 @@ That's the gap I'm building Mend to close.
 
 ---
 
-### Post 3: The Big Realization: Opposing Incentives Create Workplace Conflict
+### Post 3: The Big Realization: What You Get Blamed For Shapes How You Act
 
-**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always the result of structural incentives and opposing metrics colliding. The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
+**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always what each person gets praised or punished for at work, pulling them in opposite directions. The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
 
-**Most workplace conflicts are opposing KPIs pretending to be interpersonal drama.**
+**Most workplace conflicts are really about what each person gets blamed for, dressed up as interpersonal drama.**
 
 Here's a common scenario in tech:
 
@@ -256,14 +256,14 @@ Teams don't need another HR compliance policy. They need private operational sca
 
 ---
 
-### Post 3: The Big Realization: Opposing Incentives Create Workplace Conflict
+### Post 3: The Big Realization: What You Get Blamed For Shapes How You Act
 
-**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always the result of structural incentives and opposing metrics colliding. The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
+**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always what each person gets praised or punished for at work, pulling them in opposite directions. The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
 
 - "It took me years in tech to realize this: that coworker who makes your blood boil is probably just doing their job."
 - "Think about product designers and core platform engineers. A designer gets promoted for feature velocity and launching cool UI flows. But the platform engineer gets held accountable if there's a single sev-1 outage or latency regression."
 - "When the engineer blocks the designer's pull request, the designer thinks, 'They're territorial and have a massive ego.' And the engineer thinks, 'This designer is reckless and doesn't know what they're doing.' Neither person is malicious. Their performance reviews are set up to make them enemies."
-- "When you stop diagnosing personalities and start looking at incentive architecture, the personal resentment evaporates. You stop fighting a coworker and start solving a broken system."
+- "When you stop diagnosing personalities and start looking at what each person actually gets judged on, the personal resentment evaporates. You stop fighting a coworker and start solving a broken system."
 - "Here's the part almost nobody talks about: their manager can't fix this for them either. Managers read the same fight and see the same two personalities. And even when a manager does spot the real structural mismatch, stepping in and settling it themselves teaches the team one lesson: don't work it out, go get the manager. That's a bottleneck wearing a management title."
 - "The two people in the disagreement are the only ones who actually hold the information a manager doesn't have: what it's actually like to sit in each seat. So the fix has to come from them, not get handed down from above."
 
@@ -376,21 +376,21 @@ Anyone else notice this pattern? Feels like venting to friends is almost designe
 
 ---
 
-### Post 3: The Big Realization: Opposing Incentives Create Workplace Conflict
+### Post 3: The Big Realization: What You Get Blamed For Shapes How You Act
 
 **Suggested subreddits:** r/ExperiencedDevs, r/programming, r/ProductManagement, r/managers
 
-**Title:** That coworker who always blocks your work probably isn't the problem. Your incentives are.
+**Title:** That coworker who always blocks your work probably isn't the problem. What you're each getting judged on is.
 
 Took me years to get this: the coworker who makes your blood boil is usually just doing their job, as defined by whoever evaluates them.
 
-Classic example in tech: a designer gets rewarded for shipping fast and iterating. A platform engineer gets reamed for any regression or outage. So when the engineer blocks a PR, the designer reads it as ego and gatekeeping, and the engineer reads the designer as reckless. Neither read is right. Their actual incentives are just pointed in opposite directions.
+Classic example in tech: a designer gets rewarded for shipping fast and iterating. A platform engineer gets reamed for any regression or outage. So when the engineer blocks a PR, the designer reads it as ego and gatekeeping, and the engineer reads the designer as reckless. Neither read is right. They're just being judged on opposite things.
 
 This is basically the fundamental attribution error at a team level: we explain our own behavior by context, and other people's behavior by character. Once you start asking "what metric is this person actually being judged on" instead of "why are they being difficult," most of the personal resentment evaporates.
 
 And for the managers in here: you're not immune to this either. Most managers who get pulled into a dispute like this default to the same personality read as the two people fighting. Even when you do spot the real structural cause, fixing it for them trains your team to escalate instead of sort it out themselves. The people who actually hold the information you need, what each seat's pressure really feels like, are the two in the disagreement, not you.
 
-Anyone else have a cross-functional relationship that got better the second you figured out the other person's actual incentives? Or a time stepping back and letting two reports work it out themselves actually worked better than mediating it yourself?
+Anyone else have a cross-functional relationship that got better the second you figured out what the other person is actually being judged on? Or a time stepping back and letting two reports work it out themselves actually worked better than mediating it yourself?
 
 ---
 
