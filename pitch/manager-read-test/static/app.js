@@ -189,6 +189,7 @@ function showReadout(data) {
     </div>
     <span class="readout-tag">What this shows</span>
     <div>${data.archetype_blurb}</div>
+    <div class="readout-norm">${data.norm_note}</div>
     <div class="breakdown">
       ${rows
         .map((r) => {

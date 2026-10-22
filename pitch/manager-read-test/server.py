@@ -171,9 +171,14 @@ SCORE_SYSTEM_PROMPT = (
     "- mid: proposes a reasonable fix but still routes it through the manager as approver "
     "or mediator.\n"
     "- low: proposes the manager stepping in to judge, arbitrate, or extract an apology.\n\n"
-    "For each question, write one short plain-English note (one sentence, second person, no "
-    "em-dashes, no aphorism-style reversals) on why you gave that band, referencing what the "
-    "manager actually wrote.\n\n"
+    "For each question, write one short plain-English note (second person, no em-dashes, no "
+    "aphorism-style reversals), two sentences maximum. Structure it in two parts: first, one "
+    "sentence saying what the manager got right, naming the specific detail from their answer "
+    "or the thread (\"you're right that...\"); then one sentence reframing the gap as a "
+    "question, not a correction (\"could it be that what they were actually communicating "
+    "was...\"), pointing at the structural read they didn't land on. If the band is high, the "
+    "second sentence can note what to watch for next time instead of a gap. Keep both "
+    "sentences short enough that the full note fits in one or two lines.\n\n"
     "Output in exactly this format, nothing else:\n"
     "NOTE_WHAT: <note>\n"
     "NOTE_WHY: <note>\n"
@@ -197,6 +202,14 @@ ARCHETYPES = {
         "blurb": "You named the structural collision and handed the fix back to the people who can actually run it.",
     },
 }
+
+
+def _norm_note(bands: dict) -> str:
+    if bands["what"] == "low":
+        return "Most managers read this one as a personality clash first. It's the harder read to catch, not a sign you're worse at this than anyone else."
+    if bands["what"] == "mid":
+        return "You held both reads open instead of committing to the personality clash. Most managers don't get even that far."
+    return "You're ahead of where most managers land on this one. They tend to call it a personality clash first."
 
 
 def _archetype(bands: dict) -> str:
@@ -230,7 +243,7 @@ def score(req: ScoreRequest):
 
     response = client.messages.create(
         model=MODEL,
-        max_tokens=400,
+        max_tokens=700,
         system=SCORE_SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_prompt}],
     )
@@ -281,5 +294,6 @@ def score(req: ScoreRequest):
         "score": total,
         "archetype_label": archetype["label"],
         "archetype_blurb": archetype["blurb"],
+        "norm_note": _norm_note(bands),
         "breakdown": breakdown,
     }

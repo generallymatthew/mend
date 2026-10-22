@@ -389,6 +389,13 @@ body {
   margin-bottom: 10px;
 }
 
+.readout-norm {
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
 .breakdown {
   margin-top: 18px;
   padding-top: 14px;
