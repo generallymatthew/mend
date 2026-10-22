@@ -253,16 +253,19 @@
     align-items: center; justify-content: center; z-index: 20; padding: 20px;
   }
   #joint-video-overlay.open { display: flex; }
-  /* Single frame, not a card wrapping another card: the video's own content
-     (Mend Session Opening.dc.html) already draws its own cream-colored,
-     rounded, padded box around the illustrated scene. An outer white modal
-     card with its own padding/radius around THAT produced a visible
-     "box in a box" look (two nested rounded rectangles in slightly
-     different background tones, reported live). The video now fills this
-     frame edge-to-edge; the frame itself is the only visible box. */
+  /* No card of its own: the video's own content (Mend Session Opening.dc.html)
+     is a self-contained scene that already draws ITSELF as a rounded,
+     padded card on a page -- that's baked into its SVG artwork, not CSS,
+     confirmed by inspecting its rendered DOM (the "card" shape is part of
+     the drawing, there's no wrapper element to restyle). A Seam-side
+     border-radius/shadow around that previously created a second visible
+     rounded rectangle even once the background colors matched (reported
+     live, a real "box in a box" look). This wrapper is now deliberately
+     chromeless -- no radius, no shadow, no border -- so the artwork's own
+     card is the only shape visible; this div exists purely to size and
+     position the iframe plus the floating close button. */
   #joint-video-modal {
-    position: relative; width: 720px; max-width: 100%; border-radius: 20px;
-    overflow: hidden; box-shadow: 0 24px 60px rgba(23,55,46,0.25);
+    position: relative; width: 720px; max-width: 100%;
   }
   #joint-video-dismiss {
     position: absolute; top: 12px; right: 12px; z-index: 1;
