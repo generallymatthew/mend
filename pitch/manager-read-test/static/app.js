@@ -202,7 +202,7 @@ function showReadout(data) {
     </div>
     <div class="readout-cta">
       <div class="readout-cta-text">This is a diagnosis. Mend is the tool that helps your team actually fix the seam, without you in the room.</div>
-      <a class="cta-button cta-link" href="https://mend-mvp.onrender.com/manager/" target="_blank" rel="noopener">Try Mend for your team</a>
+      <a class="cta-button cta-link" href="https://mend-mvp.onrender.com/" target="_blank" rel="noopener">Try Mend for your team</a>
     </div>
   `;
   modalChat.appendChild(readoutEl);
