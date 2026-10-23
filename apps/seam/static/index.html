@@ -88,33 +88,14 @@
     display: none; align-items: center; justify-content: center;
     font-size: 15px; cursor: pointer; border: none;
   }
-  #plan-toggle, #meeting-plan-toggle {
+  #plan-toggle {
     display: none;
     font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--rail-border);
     border-radius: 999px; padding: 6px 14px; cursor: pointer;
     white-space: nowrap; flex-shrink: 0;
   }
-  #plan-toggle:hover, #meeting-plan-toggle:hover { background: var(--panel-bg); }
+  #plan-toggle:hover { background: var(--panel-bg); }
   .panel-scrim { display: none; }
-
-  /* Icon rail: switches between the three top-level sections (Conflict /
-     Written / Sync, per the 2026-10-20 IA decision -- labeled here as
-     Conflicts / Written / Meetings to match the mockups' wording). */
-  .rail {
-    width: 96px; flex: 0 0 auto; display: flex; flex-direction: column;
-    align-items: stretch; gap: 0; padding: 0;
-    border-right: 1px solid var(--border); background: var(--bg);
-  }
-  .rail-item {
-    width: 100%; height: 66px; border-radius: 0; border: none; background: none;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; cursor: pointer; color: var(--muted); font-weight: 700;
-  }
-  .rail-item svg { width: 22px; height: 22px; }
-  .rail-item span { font-size: 11px; font-weight: 700; color: inherit; letter-spacing: 0.01em; }
-  .rail-item.active { background: var(--ink); color: #F6F1E7; }
-  .rail-item:not(.active):hover { background: var(--panel-bg); color: var(--ink); }
-  .mobile-rail { display: none; }
 
   /* Sidebar: one shared column, section-specific content swapped inside */
   #sidebar {
@@ -135,10 +116,13 @@
   }
   .sidebar-new-btn {
     width: 22px; height: 22px; border-radius: 8px; border: none; font-size: 14px; line-height: 1;
-    cursor: pointer;
+    cursor: pointer; background: #E8F0E9; color: #5F8569;
   }
-  .sidebar-new-btn.conflicts { background: #E8F0E9; color: #5F8569; }
-  .sidebar-new-btn.meetings { background: #FBF3E2; color: #9C6B23; }
+  .convo-type-tag {
+    display: inline-flex; font-size: 10.5px; font-weight: 700; color: #5F8569;
+    background: #E8F0E9; border-radius: 999px; padding: 1px 8px; margin-top: 2px;
+  }
+  .convo-type-tag.pending { color: var(--faint); background: var(--panel-bg); font-weight: 600; }
 
   /* Help modal */
   #help-overlay {
@@ -159,7 +143,7 @@
     float: right; border: none; background: none; color: var(--faint);
     font-size: 18px; cursor: pointer; line-height: 1; margin-left: 12px;
   }
-  #case-list, #meeting-list, #written-list { flex: 1; overflow: auto; }
+  #convo-list { flex: 1; overflow: auto; }
   .item-row {
     padding: 10px 12px; margin: 0 8px 2px 8px;
     display: flex; flex-direction: column; gap: 3px;
@@ -178,17 +162,6 @@
     margin-top: auto; padding: 14px 20px; font-size: 11.5px;
     color: var(--faint); border-top: 1px solid var(--border);
   }
-  .written-static-row { padding: 10px 12px; margin: 0 8px; border-radius: 12px; display: flex; flex-direction: column; gap: 3px; }
-  .written-static-row.active { background: #E7EFEF; }
-  .written-static-row.active .name { color: #17372E; }
-  .written-static-row .name { font-size: 13px; font-weight: 600; }
-  .written-static-row .desc { font-size: 11px; color: #3E6B6B; }
-  .written-static-row.soon { opacity: .55; cursor: default; }
-  .written-static-row .soon-badge {
-    display: inline-flex; align-self: flex-start; font-size: 9.5px; color: var(--muted);
-    background: #EEF1EE; padding: 2px 7px; border-radius: 999px; margin-top: 2px;
-  }
-
   /* Section views: only the active one is shown */
   .section-view { display: none; flex: 1; min-width: 0; }
   .section-view.active { display: flex; }
@@ -397,44 +370,6 @@
     padding: 7px 11px; border-radius: 7px; max-width: 220px; line-height: 1.4;
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   }
-  .empty-state {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 40px; overflow: auto;
-  }
-  .empty-state .wrap { max-width: 440px; text-align: center; }
-  .empty-state .mark {
-    width: 44px; height: 44px; border-radius: 999px; background: var(--ink);
-    margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center;
-    color: #fff;
-  }
-  .empty-state .mark svg { width: 20px; height: 14px; }
-  .empty-state h1 { font-size: 18px; font-weight: 700; margin: 0 0 8px 0; }
-  .empty-state p.lede { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0 0 28px 0; }
-  .flow-steps {
-    display: flex; flex-direction: column; gap: 12px; text-align: left;
-    margin: 0 0 28px 0; padding: 18px 20px; background: var(--panel-bg);
-    border-radius: 12px;
-  }
-  .flow-step-item { display: flex; gap: 12px; align-items: baseline; }
-  .flow-step-item .n {
-    width: 18px; height: 18px; border-radius: 999px; background: #fff; border: 1px solid #CBDBD1;
-    color: var(--muted); font-size: 11px; font-weight: 600; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; margin-top: 1px;
-  }
-  .flow-step-item .t { font-size: 13px; line-height: 1.45; }
-  .flow-step-item .t b { font-weight: 600; }
-  .privacy-note {
-    font-size: 12px; color: var(--faint); line-height: 1.5; margin: 0 0 24px 0;
-  }
-  .empty-state-cta {
-    font-size: 14px; font-weight: 700; color: #17372E; background: var(--accent-pink);
-    border: none; border-radius: 999px; padding: 10px 22px; cursor: pointer;
-  }
-  .empty-state.returning .flow-steps, .empty-state.returning .privacy-note { display: none; }
-  .empty-state.returning h1 { font-size: 15px; font-weight: 600; color: var(--muted); }
-  .empty-state.returning .mark { display: none; }
-  .empty-state.returning p.lede { font-size: 13px; margin: -4px 0 24px 0; }
-
   .composer-row {
     padding: 16px 28px 24px 28px; border-top: 1px solid var(--border);
     display: flex; align-items: center; gap: 8px;
@@ -457,8 +392,30 @@
   }
   .mic-btn.recording { background: #E85D4A !important; color: #fff !important; }
   .mic-btn.conflicts-mic { background: #E8F0E9; color: #5F8569; }
-  .mic-btn.meetings-mic { background: #FBEFDC; color: #9C6B23; }
-  .mic-btn.written-mic { background: #E7EFEF; color: #3E6B6B; }
+
+  .intro { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
+  .intro .wrap { max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .intro-q { font-size: 20px; font-weight: 700; text-align: center; }
+  .intro-examples { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .intro-examples-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--faint); text-align: center; margin-bottom: 2px;
+  }
+  .intro-example {
+    border: 1px solid var(--border); border-radius: 12px; background: var(--bg);
+    padding: 10px 16px; font-size: 13px; color: var(--muted); font-style: italic;
+  }
+  .intro-note { font-size: 12px; color: var(--faint); text-align: center; line-height: 1.5; }
+
+  .bubble.disambig { display: flex; flex-direction: column; gap: 10px; }
+  .disambig-options { display: flex; flex-direction: column; gap: 6px; }
+  .disambig-options button {
+    font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+    border: 1px solid #E7D2D8; border-radius: 10px; background: #fff; color: var(--ink);
+    padding: 8px 12px;
+  }
+  .disambig-options button:hover { background: var(--accent-pink-bg); }
+  .disambig-options button:disabled { opacity: 0.5; cursor: default; }
   .send-btn {
     width: 36px; height: 36px; border-radius: 999px; background: var(--accent-pink);
     border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -526,25 +483,10 @@
   .strategy-point .t { font-size: 13.5px; line-height: 1.55; }
   .strategy-placeholder { font-size: 13px; color: var(--faint); font-style: italic; }
 
-  /* Written section (tone-check): same thread-col chat pattern as Conflicts
-     and Meetings, not a separate draft-box-plus-card layout. See
-     server.py's "Written (tone-check, chat)" section for why a session
-     only becomes a sidebar list item after its first reply. */
-  .written-hint { padding: 10px 28px 0 28px; font-size: 12.5px; color: var(--muted); flex-shrink: 0; line-height: 1.5; }
-  .written-hint strong { color: var(--ink); font-weight: 700; }
-  .sidebar-new-btn.written { background: #E7EFEF; color: #3E6B6B; }
-
-  /* Mobile: rail + section list become one off-canvas drawer; the
-     relevant side panel (plan / strategy) becomes the other. */
+  /* Mobile: the sidebar becomes an off-canvas drawer; the relevant side
+     panel (plan / strategy) becomes the other. */
   @media (max-width: 860px) {
     #app { position: relative; overflow: hidden; }
-    .rail { display: none; }
-    .mobile-rail {
-      display: flex; gap: 8px; padding: 12px 14px 4px 14px; border-bottom: 1px solid var(--border);
-    }
-    .mobile-rail .rail-item { width: 46px; height: 46px; border-radius: 14px; }
-    .mobile-rail .rail-item svg { width: 20px; height: 20px; }
-    .mobile-rail .rail-item span { display: none; }
 
     #sidebar {
       position: absolute; top: 0; bottom: 0; left: 0;
@@ -565,7 +507,7 @@
     .thread-col { width: 100%; }
 
     #sidebar-toggle { display: flex; }
-    #plan-toggle, #meeting-plan-toggle { display: inline-block; }
+    #plan-toggle { display: inline-block; }
 
     .panel-scrim.show {
       display: block; position: absolute; inset: 0;
@@ -595,74 +537,20 @@
   </div>
 </div>
 <div id="app">
-  <div class="rail">
-    <button class="rail-item rail-conflicts active" data-section="conflicts" aria-label="Conflicts">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-      <span>Conflicts</span>
-    </button>
-    <button class="rail-item rail-written" data-section="written" aria-label="Written communication">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><mask id="chk-d"><rect width="24" height="24" fill="#fff"></rect><path d="M8.5 12.3l2.3 2.3L16 9.3" stroke="#000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></mask><circle cx="12" cy="12" r="10" mask="url(#chk-d)"></circle></svg>
-      <span>Written</span>
-    </button>
-    <button class="rail-item rail-meetings" data-section="meetings" aria-label="Meetings">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><mask id="cmp-d"><rect width="24" height="24" fill="#fff"></rect><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="#000"></polygon></mask><circle cx="12" cy="12" r="10" mask="url(#cmp-d)"></circle></svg>
-      <span>Meetings</span>
-    </button>
-  </div>
-
   <div id="sidebar">
-    <div class="mobile-rail">
-      <button class="rail-item rail-conflicts active" data-section="conflicts" aria-label="Conflicts">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-      </button>
-      <button class="rail-item rail-written" data-section="written" aria-label="Written communication">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><mask id="chk-m"><rect width="24" height="24" fill="#fff"></rect><path d="M8.5 12.3l2.3 2.3L16 9.3" stroke="#000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"></path></mask><circle cx="12" cy="12" r="10" mask="url(#chk-m)"></circle></svg>
-      </button>
-      <button class="rail-item rail-meetings" data-section="meetings" aria-label="Meetings">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><mask id="cmp-m"><rect width="24" height="24" fill="#fff"></rect><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="#000"></polygon></mask><circle cx="12" cy="12" r="10" mask="url(#cmp-m)"></circle></svg>
-      </button>
-    </div>
-
-    <div class="sidebar-section active" id="sidebar-conflicts">
+    <div class="sidebar-section active">
       <div class="sidebar-subheader">
-        <span class="label">Conflicts</span>
-        <button class="sidebar-new-btn conflicts" id="new-case-btn" title="New case">+</button>
+        <span class="label">Conversations</span>
+        <button class="sidebar-new-btn" id="new-convo-btn" title="New conversation">+</button>
       </div>
-      <div id="case-list"></div>
+      <div id="convo-list"></div>
       <div class="sidebar-footer">Names stay out of this by default.</div>
-    </div>
-
-    <div class="sidebar-section" id="sidebar-meetings">
-      <div class="sidebar-subheader">
-        <span class="label">Meetings</span>
-        <button class="sidebar-new-btn meetings" id="new-meeting-btn" title="New meeting">+</button>
-      </div>
-      <div id="meeting-list"></div>
-      <div class="sidebar-footer">The strategy stays. The conversation that built it doesn't.</div>
-    </div>
-
-    <div class="sidebar-section" id="sidebar-written">
-      <div class="sidebar-subheader">
-        <span class="label">Written</span>
-        <button class="sidebar-new-btn written" id="new-written-btn" title="New draft">+</button>
-      </div>
-      <div id="written-list"></div>
-      <div class="written-static-row soon">
-        <span class="name">Slack announcement</span>
-        <span class="soon-badge">soon</span>
-      </div>
-      <div class="written-static-row soon">
-        <span class="name">Calibration write-up</span>
-        <span class="soon-badge">soon</span>
-      </div>
-      <div class="sidebar-footer">Each draft's back-and-forth isn't kept, just a short preview so you can find it again.</div>
     </div>
   </div>
 
   <div class="panel-scrim" id="panel-scrim"></div>
 
-  <!-- Conflicts -->
-  <div class="section-view active" id="conflicts-view">
+  <div class="section-view active">
     <div class="thread-col">
       <div class="thread-header" id="thread-header" style="display:none">
         <div class="name" id="thread-title"></div>
@@ -672,9 +560,21 @@
           <button id="close-case-btn">Close case</button>
         </div>
       </div>
+      <div class="intro" id="intro">
+        <div class="wrap">
+          <div class="intro-q">What do you want to discuss today?</div>
+          <div class="intro-examples">
+            <div class="intro-examples-label">Things people bring here</div>
+            <div class="intro-example">"Prep for a hard conversation with a direct report"</div>
+            <div class="intro-example">"Help me answer a message where the wording really matters"</div>
+            <div class="intro-example">"Two of my direct reports aren't getting along"</div>
+            <div class="intro-example">"Tell my manager something they won't want to hear"</div>
+          </div>
+          <div class="intro-note">Type anything, I'll work out what kind of help fits as we go.</div>
+        </div>
+      </div>
       <div class="messages" id="messages" style="display:none"></div>
-      <div class="empty-state" id="empty-state"></div>
-      <div class="composer-row" id="composer-row" style="display:none">
+      <div class="composer-row" id="composer-row">
         <div class="composer-pill">
           <textarea id="composer" rows="1" placeholder="Message"></textarea>
           <button class="mic-btn conflicts-mic" id="mic-btn" title="Hold to dictate">
@@ -702,33 +602,6 @@
         <div class="side-panel-footnote">Only these few lines stay. The conversation that led here is never kept.</div>
       </div>
     </div>
-  </div>
-
-  <!-- Meetings -->
-  <div class="section-view" id="meetings-view">
-    <div class="thread-col">
-      <div class="thread-header" id="meeting-thread-header" style="display:none">
-        <div>
-          <div class="name" id="meeting-thread-title"></div>
-        </div>
-        <div class="actions">
-          <button id="meeting-plan-toggle">Strategy</button>
-        </div>
-      </div>
-      <div class="messages" id="meeting-messages" style="display:none"></div>
-      <div class="empty-state" id="meeting-empty-state"></div>
-      <div class="composer-row" id="meeting-composer-row" style="display:none">
-        <div class="composer-pill">
-          <textarea id="meeting-composer" rows="1" placeholder="Message"></textarea>
-          <button class="mic-btn meetings-mic" id="meeting-mic-btn" title="Hold to dictate">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-          <button class="send-btn" id="meeting-send-btn" title="Send">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-          </button>
-        </div>
-      </div>
-    </div>
 
     <div class="side-panel" id="meeting-plan-panel" style="display:none">
       <div class="side-panel-inner">
@@ -739,28 +612,6 @@
         </div>
         <div id="strategy-points-wrap" style="flex:1; min-height:0; overflow:auto;"></div>
         <div class="side-panel-footnote">The strategy stays, so you can reopen it before the meeting. The chat that built it doesn't.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Written (tone-check) -->
-  <div class="section-view" id="written-view">
-    <div class="thread-col">
-      <div class="thread-header" id="written-thread-header">
-        <div class="name" id="written-thread-title">New draft</div>
-      </div>
-      <div class="written-hint" id="written-hint"><strong>Check how a message reads before you send it.</strong> Paste or dictate a draft -- an email, a Slack reply, feedback -- and get a quick, honest read plus a rewrite. Only a short preview is kept, not the back-and-forth.</div>
-      <div class="messages" id="written-messages" style="display:flex"></div>
-      <div class="composer-row" id="written-composer-row">
-        <div class="composer-pill">
-          <textarea id="written-composer" rows="1" placeholder="Paste or type a draft..."></textarea>
-          <button class="mic-btn written-mic" id="written-mic-btn" title="Hold to dictate">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M6 11a6 6 0 0 0 12 0M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-          <button class="send-btn" id="written-send-btn" title="Send">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -819,7 +670,7 @@
       </div>
       <div class="gate-body">
         <ol class="gate-steps">
-          <li><div><b>Use the app however you want.</b> <span>Try Conflicts, Written, or Meetings on a real situation from your team.</span></div></li>
+          <li><div><b>Use the app however you want.</b> <span>Try it on a real situation from your team -- Seam will work out what kind of help fits.</span></div></li>
           <li><div><b>This is a prototype.</b> <span>Some things are stubbed, and nothing is saved after your session ends.</span></div></li>
           <li><div><b>Then there's a short survey</b> <span>on the next tab, about how you handle conflict today.</span></div></li>
         </ol>
@@ -891,40 +742,6 @@
 // page (session.html, survey.html) would.
 const BASE_PATH = location.pathname.replace(/[^/]*$/, '');
 function apiPath(p) { return BASE_PATH.replace(/\/$/, '') + '/' + p.replace(/^\//, ''); }
-
-// ---------------------------------------------------------------------
-// Section switching
-// ---------------------------------------------------------------------
-let currentSection = "conflicts";
-let meetingsLoaded = false;
-let writtenLoaded = false;
-
-function showSection(name) {
-  currentSection = name;
-  document.querySelectorAll(".rail-item").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.section === name);
-  });
-  document.querySelectorAll(".sidebar-section").forEach((el) => {
-    el.classList.toggle("active", el.id === "sidebar-" + name);
-  });
-  document.querySelectorAll(".section-view").forEach((el) => {
-    el.classList.toggle("active", el.id === name + "-view");
-  });
-  closeSidebarOnMobile();
-  if (name === "meetings" && !meetingsLoaded) {
-    meetingsLoaded = true;
-    loadMeetings();
-  }
-  if (name === "written" && !writtenLoaded) {
-    writtenLoaded = true;
-    loadWrittenSessions();
-    createWrittenSession();
-  }
-}
-
-document.querySelectorAll(".rail-item").forEach((btn) => {
-  btn.addEventListener("click", () => showSection(btn.dataset.section));
-});
 
 function escapeHtml(s) {
   const d = document.createElement("div");
@@ -1081,126 +898,116 @@ function wirePushToTalk(btn, targetEl) {
 }
 
 // ---------------------------------------------------------------------
-// Conflicts (cases) -- unchanged behavior from the previous version
+// Unified conversations: one composer, classified on the fly into one of
+// three real backends (cases / meeting-sessions / written-sessions).
+// Nothing about those three backends changes -- this just decides which
+// one a given conversation belongs to, then talks to it directly.
 // ---------------------------------------------------------------------
-let currentCaseId = null;
-let cases = [];
+const TYPE_LABEL = { conflict: "Conflict", meeting: "Meeting", written: "Written" };
+const CREATE_PATH = { conflict: "/api/cases", meeting: "/api/meeting-sessions", written: "/api/written-sessions" };
+const GET_PATH = {
+  conflict: (id) => `/api/cases/${id}`,
+  meeting: (id) => `/api/meeting-sessions/${id}`,
+  written: (id) => `/api/written-sessions/${id}`,
+};
+const MESSAGE_PATH = {
+  conflict: (id) => `/api/cases/${id}/messages`,
+  meeting: (id) => `/api/meeting-sessions/${id}/messages`,
+  written: (id) => `/api/written-sessions/${id}/messages`,
+};
 
-async function loadCases() {
-  const res = await fetch(apiPath("/api/cases"));
-  cases = await res.json();
-  renderCaseList();
-  renderEmptyState();
+let conversations = []; // merged list of {id, type, title, preview, updated_at, status}
+let activeConvo = null; // {id, type} once a thread has resolved to a real session
+let pendingTurns = null; // array of not-yet-classified user turns, while activeConvo is null
+
+function conversationPreview(c) {
+  if (c.type === "conflict") return c.next_action || c.last_action || c.tension_summary || "Just opened";
+  if (c.type === "meeting") return c.goal_summary || "Just opened";
+  return c.preview || "";
 }
 
-function flowStepsHtml() {
-  return `
-    <div class="flow-steps">
-      <div class="flow-step-item"><div class="n">1</div><div class="t"><b>Unpack</b> what's actually going on, beyond the first impression.</div></div>
-      <div class="flow-step-item"><div class="n">2</div><div class="t"><b>Plan</b> the next concrete step together, not a canned tip list.</div></div>
-      <div class="flow-step-item"><div class="n">3</div><div class="t"><b>Act</b> on it off-app, then come back and report what happened.</div></div>
-      <div class="flow-step-item"><div class="n">4</div><div class="t">Loop back to planning if it's not resolved, or hand it off once both sides agree on the blocker.</div></div>
-    </div>
-  `;
+async function loadConversations() {
+  const [caseRows, meetingRows, writtenRows] = await Promise.all([
+    fetch(apiPath("/api/cases")).then((r) => r.json()),
+    fetch(apiPath("/api/meeting-sessions")).then((r) => r.json()),
+    fetch(apiPath("/api/written-sessions")).then((r) => r.json()),
+  ]);
+  conversations = [
+    ...caseRows.map((c) => ({ ...c, type: "conflict" })),
+    ...meetingRows.map((m) => ({ ...m, type: "meeting" })),
+    ...writtenRows.map((s) => ({ ...s, type: "written" })),
+  ].sort((a, b) => b.updated_at - a.updated_at);
+  renderConvoList();
 }
 
-function privacyNoteHtml() {
-  return `<p class="privacy-note">Names stay out of it by default: everyone besides you is referred to by role. This case's notes stay in your own private workspace, no transcript, nothing HR can pull into a file.</p>`;
-}
-
-function renderEmptyState() {
-  const el = document.getElementById("empty-state");
-  const hasCases = cases.length > 0;
-  el.className = "empty-state" + (hasCases ? " returning" : "");
-  el.innerHTML = `
-    <div class="wrap">
-      <div class="mark">${mendMarkSvg()}</div>
-      <h1>${hasCases ? "Pick a case on the left, or start a new one" : "Think through a conflict before you step into it"}</h1>
-      <p class="lede">Seam is a private space for you to work out what's going on with a direct report who's in conflict, with a peer or with someone on another team, and figure out what to actually do about it. Join the people back into a working relationship, not just paper over the friction.</p>
-      ${flowStepsHtml()}
-      ${privacyNoteHtml()}
-      <button class="empty-state-cta" id="empty-state-cta">${hasCases ? "Start a new case" : "Open your first case"}</button>
-    </div>
-  `;
-  document.getElementById("empty-state-cta").onclick = createCase;
-}
-
-function openHelp() {
-  const overlay = document.getElementById("help-overlay");
-  document.getElementById("help-modal-body").innerHTML = `
-    <p class="lede" style="margin:0 0 20px 0; font-size:13px; color:var(--muted); line-height:1.5;">A private space for you to work out what's going on with a direct report who's in conflict, with a peer or with someone on another team, and figure out what to actually do about it.</p>
-    ${flowStepsHtml()}
-    ${privacyNoteHtml()}
-  `;
-  overlay.classList.add("open");
-}
-
-function closeHelp() {
-  document.getElementById("help-overlay").classList.remove("open");
-}
-
-function renderCaseList() {
-  const list = document.getElementById("case-list");
+function renderConvoList() {
+  const list = document.getElementById("convo-list");
   list.innerHTML = "";
-  for (const c of cases) {
+  for (const c of conversations) {
     const row = document.createElement("div");
-    row.className = "item-row" + (c.id === currentCaseId ? " active" : "") + (c.status === "closed" ? " closed" : "");
-    const name = c.title || "New case";
-    const preview = c.next_action || c.last_action || c.tension_summary || "Just opened";
+    const isActive = activeConvo && activeConvo.id === c.id && activeConvo.type === c.type;
+    row.className = "item-row" + (isActive ? " active" : "") + (c.status === "closed" ? " closed" : "");
+    const name = c.title || "New conversation";
     row.innerHTML = `
       <div class="top"><div class="name">${escapeHtml(name)}</div><div class="time">${timeAgo(c.updated_at)}</div></div>
-      <div class="preview">${escapeHtml(preview)}</div>
+      <div class="preview">${escapeHtml(conversationPreview(c))}</div>
+      <div><span class="convo-type-tag">${TYPE_LABEL[c.type]}</span></div>
     `;
-    row.onclick = () => openCase(c.id);
+    row.onclick = () => openConvo(c.id, c.type);
     list.appendChild(row);
   }
 }
 
-async function createCase() {
-  const res = await fetch(apiPath("/api/cases"), { method: "POST" });
-  const c = await res.json();
-  cases.unshift(c);
-  renderCaseList();
-  await openCase(c.id, true);
+function showPanelsForType(type) {
+  document.getElementById("plan-panel").style.display = type === "conflict" ? "flex" : "none";
+  document.getElementById("meeting-plan-panel").style.display = type === "meeting" ? "flex" : "none";
+  document.getElementById("handoff-chip").style.display = type === "conflict" ? "inline-flex" : "none";
+  document.getElementById("close-case-btn").style.display = type === "conflict" ? "inline-block" : "none";
+  document.getElementById("plan-toggle").style.display = type === "written" ? "none" : "inline-block";
+  document.getElementById("plan-toggle").textContent = type === "meeting" ? "Strategy" : "Plan";
 }
 
-async function openCase(caseId, isNew) {
-  currentCaseId = caseId;
-  renderCaseList();
-  document.getElementById("empty-state").style.display = "none";
-  document.getElementById("thread-header").style.display = "flex";
-  document.getElementById("messages").style.display = "flex";
-  document.getElementById("composer-row").style.display = "flex";
-  document.getElementById("plan-panel").style.display = "flex";
-  closeSidebarOnMobile();
-
-  const res = await fetch(apiPath(`/api/cases/${caseId}`));
-  const data = await res.json();
-  renderThread(data);
-
-  if (isNew || data.messages.length === 0) {
-    const messagesEl = document.getElementById("messages");
-    const pending = appendBubble(messagesEl, "assistant", "...", true);
-    const r = await fetch(apiPath(`/api/cases/${caseId}/start`), { method: "POST" });
-    const body = await r.json();
-    pending.closest(".msg-row").remove();
-    appendBubble(messagesEl, "assistant", body.reply);
-    updateCaseFromResult(body.case);
-    if (body.plan) renderPlan(body.plan);
-  }
-}
-
-function renderThread(data) {
-  if (data.case.roster) roster = data.case.roster;
-  document.getElementById("thread-title").textContent = data.case.title || "New case";
+function newConversation() {
+  activeConvo = null;
+  pendingTurns = null;
+  roster = {};
+  document.getElementById("thread-header").style.display = "none";
+  document.getElementById("intro").style.display = "flex";
   const messagesEl = document.getElementById("messages");
+  messagesEl.style.display = "none";
   messagesEl.innerHTML = "";
-  for (const m of data.messages) {
-    appendBubble(messagesEl, m.role, m.content);
+  document.getElementById("plan-panel").style.display = "none";
+  document.getElementById("meeting-plan-panel").style.display = "none";
+  renderConvoList();
+  closeSidebarOnMobile();
+  document.getElementById("composer").focus();
+}
+
+async function openConvo(id, type) {
+  activeConvo = { id, type };
+  pendingTurns = null;
+  document.getElementById("intro").style.display = "none";
+  document.getElementById("thread-header").style.display = "flex";
+  const messagesEl = document.getElementById("messages");
+  messagesEl.style.display = "flex";
+  messagesEl.innerHTML = "";
+  showPanelsForType(type);
+  closeSidebarOnMobile();
+  renderConvoList();
+
+  const res = await fetch(apiPath(GET_PATH[type](id)));
+  const data = await res.json();
+  const obj = type === "conflict" ? data.case : data.session;
+  if (obj.roster) roster = obj.roster;
+  document.getElementById("thread-title").textContent = obj.title || "New conversation";
+  for (const m of data.messages) appendBubble(messagesEl, m.role, m.content);
+  if (type === "conflict") {
+    renderPlan(data.plan);
+    renderIncident(obj);
+  } else if (type === "meeting") {
+    renderMeetingGoal(obj);
+    renderStrategyPoints(obj);
   }
-  renderPlan(data.plan);
-  renderHandoffChip(data.case);
-  renderIncident(data.case);
 }
 
 function renderIncident(caseObj) {
@@ -1214,14 +1021,131 @@ function renderIncident(caseObj) {
   }
 }
 
-function renderHandoffChip(caseObj) {
-  // Always available once a case is open -- the manager's own call,
-  // not gated on anything Thimble has decided in the conversation.
+function renderMeetingGoal(session) {
+  const el = document.getElementById("meeting-goal-text");
+  if (session.goal_summary) {
+    el.textContent = session.goal_summary;
+    el.classList.remove("placeholder");
+  } else {
+    el.textContent = "Will be added here once it's clear.";
+    el.classList.add("placeholder");
+  }
+}
+
+function renderStrategyPoints(session) {
+  const wrap = document.getElementById("strategy-points-wrap");
+  if (!session.strategy_text) {
+    wrap.innerHTML = `<div class="strategy-placeholder">Not ready yet -- keep talking it through, the final strategy lands here.</div>`;
+    return;
+  }
+  const lines = session.strategy_text.split("\n").map((l) => l.trim()).filter(Boolean);
+  wrap.innerHTML = `<div class="strategy-points">${lines.map((l) => `
+    <div class="strategy-point"><span class="dot"></span><span class="t">${escapeHtml(l)}</span></div>
+  `).join("")}</div>`;
+}
+
+function renderPlan(steps) {
+  const container = document.getElementById("plan-steps");
+  container.innerHTML = "";
+  steps.forEach((s, i) => {
+    container.appendChild(renderStep(s, i));
+  });
+}
+
+function renderStep(s, index) {
+  const wrap = document.createElement("div");
+  wrap.className = "step" + (s.done ? " done" : "");
+
+  const label = document.createElement("div");
+  label.className = "step-label";
+  label.textContent = `Step ${index + 1}`;
+  if (s.added_by === "seam") {
+    const seamTag = document.createElement("span");
+    seamTag.className = "step-added-by";
+    seamTag.textContent = "added by Seam";
+    label.appendChild(seamTag);
+  }
+  wrap.appendChild(label);
+
+  const row = document.createElement("div");
+  row.className = "row";
+
+  const check = document.createElement("div");
+  check.className = "check";
+  check.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M4 12L9 17L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  check.onclick = async () => {
+    const res = await fetch(apiPath(`/api/cases/${activeConvo.id}/plan/${s.id}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: !s.done }),
+    });
+    renderPlan(await res.json());
+  };
+
+  const text = document.createElement("div");
+  text.className = "step-text";
+  text.contentEditable = "true";
+  text.textContent = s.text;
+  text.onblur = async () => {
+    if (text.textContent.trim() === s.text) return;
+    const res = await fetch(apiPath(`/api/cases/${activeConvo.id}/plan/${s.id}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text.textContent.trim() }),
+    });
+    renderPlan(await res.json());
+  };
+
+  row.appendChild(check);
+  row.appendChild(text);
+  wrap.appendChild(row);
+
+  const note = document.createElement("div");
+  note.className = "step-note";
+  note.contentEditable = "true";
+  note.dataset.placeholder = s.done ? "add a note on how it went" : "add a note when it's done";
+  note.textContent = s.note || "";
+  note.onblur = async () => {
+    if ((note.textContent.trim() || null) === s.note) return;
+    const res = await fetch(apiPath(`/api/cases/${activeConvo.id}/plan/${s.id}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: note.textContent.trim() }),
+    });
+    renderPlan(await res.json());
+  };
+  wrap.appendChild(note);
+
+  return wrap;
+}
+
+async function addStep() {
+  const input = document.getElementById("add-step-input");
+  const text = input.value.trim();
+  if (!text || !activeConvo || activeConvo.type !== "conflict") return;
+  input.value = "";
+  const res = await fetch(apiPath(`/api/cases/${activeConvo.id}/plan`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  renderPlan(await res.json());
+}
+
+async function closeCase() {
+  if (!activeConvo || activeConvo.type !== "conflict") return;
+  const res = await fetch(apiPath(`/api/cases/${activeConvo.id}`), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "closed" }),
+  });
+  const updated = await res.json();
+  applyConvoResult("conflict", { case: updated });
 }
 
 async function openHandoffModal() {
-  if (!currentCaseId) return;
-  const res = await fetch(apiPath(`/api/cases/${currentCaseId}/handoff`), { method: "POST" });
+  if (!activeConvo || activeConvo.type !== "conflict") return;
+  const res = await fetch(apiPath(`/api/cases/${activeConvo.id}/handoff`), { method: "POST" });
   const body = await res.json();
   const links = document.getElementById("handoff-links");
   links.innerHTML = `
@@ -1264,150 +1188,145 @@ document.getElementById("handoff-chip").onclick = openJointSessionVideoModal;
 document.getElementById("handoff-dismiss").onclick = () => document.getElementById("handoff-overlay").classList.remove("open");
 document.getElementById("joint-video-dismiss").onclick = closeJointSessionVideoModal;
 
-function updateCaseFromResult(updatedCase) {
-  if (updatedCase.roster) roster = updatedCase.roster;
-  const idx = cases.findIndex((c) => c.id === updatedCase.id);
-  if (idx >= 0) cases[idx] = updatedCase;
-  else cases.unshift(updatedCase);
-  cases.sort((a, b) => b.updated_at - a.updated_at);
-  renderCaseList();
-  document.getElementById("thread-title").textContent = updatedCase.title || "New case";
-  renderHandoffChip(updatedCase);
-  renderIncident(updatedCase);
+function applyConvoResult(type, body) {
+  const obj = type === "conflict" ? body.case : body.session;
+  if (obj.roster) roster = obj.roster;
+  const idx = conversations.findIndex((c) => c.id === obj.id && c.type === type);
+  const merged = { ...obj, type };
+  if (idx >= 0) conversations[idx] = merged;
+  else conversations.unshift(merged);
+  conversations.sort((a, b) => b.updated_at - a.updated_at);
+  renderConvoList();
+  document.getElementById("thread-title").textContent = obj.title || "New conversation";
+  if (type === "conflict") renderIncident(obj);
+  if (type === "conflict" && body.plan) renderPlan(body.plan);
+  if (type === "meeting") {
+    renderMeetingGoal(obj);
+    renderStrategyPoints(obj);
+  }
+}
+
+async function sendRealMessage(type, id, text) {
+  const res = await fetch(apiPath(MESSAGE_PATH[type](id)), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: text }),
+  });
+  return await res.json();
+}
+
+function showDisambiguation(messagesEl) {
+  const row = document.createElement("div");
+  row.className = "msg-row assistant";
+  row.innerHTML = avatarSvg();
+  const b = document.createElement("div");
+  b.className = "bubble assistant disambig";
+  b.innerHTML = `
+    <div>One thing first -- is this...</div>
+    <div class="disambig-options">
+      <button type="button" data-type="conflict">Something that happened with someone</button>
+      <button type="button" data-type="meeting">A meeting I'm prepping for</button>
+      <button type="button" data-type="written">A message I need to answer</button>
+    </div>
+  `;
+  b.querySelectorAll("button").forEach((btn) => {
+    btn.onclick = () => {
+      b.querySelectorAll("button").forEach((x) => (x.disabled = true));
+      resolveType(btn.dataset.type, messagesEl);
+    };
+  });
+  row.appendChild(b);
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+async function resolveType(type, messagesEl) {
+  const turns = pendingTurns;
+  pendingTurns = null;
+  const res = await fetch(apiPath(CREATE_PATH[type]), { method: "POST" });
+  const obj = await res.json();
+  activeConvo = { id: obj.id, type };
+  showPanelsForType(type);
+  document.getElementById("thread-title").textContent = obj.title || "New conversation";
+
+  for (const turn of turns) {
+    const pending = appendBubble(messagesEl, "assistant", "...", true);
+    const body = await sendRealMessage(type, obj.id, turn);
+    pending.closest(".msg-row").remove();
+    appendBubble(messagesEl, "assistant", body.reply);
+    applyConvoResult(type, body);
+  }
+  await loadConversations();
 }
 
 async function sendMessage() {
   const composer = document.getElementById("composer");
   const text = composer.value.trim();
-  if (!text || !currentCaseId) return;
+  if (!text) return;
   composer.value = "";
   composer.style.height = "auto";
+
+  document.getElementById("intro").style.display = "none";
   const messagesEl = document.getElementById("messages");
+  messagesEl.style.display = "flex";
   const userBubble = appendBubble(messagesEl, "user", text);
   document.getElementById("send-btn").disabled = true;
-  const pending = appendBubble(messagesEl, "assistant", "...", true);
+
   try {
-    const res = await fetch(apiPath(`/api/cases/${currentCaseId}/messages`), {
+    if (activeConvo) {
+      const pending = appendBubble(messagesEl, "assistant", "...", true);
+      const body = await sendRealMessage(activeConvo.type, activeConvo.id, text);
+      pending.closest(".msg-row").remove();
+      appendBubble(messagesEl, "assistant", body.reply);
+      applyConvoResult(activeConvo.type, body);
+      if (body.user_message_redacted && body.user_message_redacted !== text) {
+        renderBubbleText(userBubble, body.user_message_redacted);
+        const tags = userBubble.querySelectorAll(".employee-tag");
+        tags.forEach((t) => t.classList.add("just-redacted"));
+        setTimeout(() => tags.forEach((t) => t.classList.remove("just-redacted")), 700);
+      }
+      return;
+    }
+
+    if (!pendingTurns) pendingTurns = [];
+    pendingTurns.push(text);
+    const pending = appendBubble(messagesEl, "assistant", "...", true);
+    const res = await fetch(apiPath("/api/classify"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: text }),
+      body: JSON.stringify({ messages: pendingTurns }),
     });
-    const body = await res.json();
+    const { type } = await res.json();
     pending.closest(".msg-row").remove();
-    appendBubble(messagesEl, "assistant", body.reply);
-    updateCaseFromResult(body.case);
-    if (body.plan) renderPlan(body.plan);
-    if (body.user_message_redacted && body.user_message_redacted !== text) {
-      renderBubbleText(userBubble, body.user_message_redacted);
-      const tags = userBubble.querySelectorAll(".employee-tag");
-      tags.forEach((t) => t.classList.add("just-redacted"));
-      setTimeout(() => tags.forEach((t) => t.classList.remove("just-redacted")), 700);
+
+    if (type === "unsure") {
+      if (pendingTurns.length === 1) {
+        appendBubble(messagesEl, "assistant", "Can you say a bit more about what's going on?");
+      } else {
+        showDisambiguation(messagesEl);
+      }
+      return;
     }
+    await resolveType(type, messagesEl);
   } finally {
     document.getElementById("send-btn").disabled = false;
   }
 }
 
-async function closeCase() {
-  if (!currentCaseId) return;
-  const res = await fetch(apiPath(`/api/cases/${currentCaseId}`), {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status: "closed" }),
-  });
-  const updated = await res.json();
-  updateCaseFromResult(updated);
+function openHelp() {
+  const overlay = document.getElementById("help-overlay");
+  document.getElementById("help-modal-body").innerHTML = `
+    <p class="lede" style="margin:0 0 20px 0; font-size:13px; color:var(--muted); line-height:1.5;">A private space for you to work out what's going on with a direct report, a peer, a meeting you're walking into, or a message you need to answer -- and figure out what to actually do about it.</p>
+    <p class="lede" style="margin:0; font-size:13px; color:var(--muted); line-height:1.5;">Names stay out of it by default: everyone besides you is referred to by role. Nothing here becomes a transcript HR can pull into a file.</p>
+  `;
+  overlay.classList.add("open");
 }
 
-function renderPlan(steps) {
-  const container = document.getElementById("plan-steps");
-  container.innerHTML = "";
-  steps.forEach((s, i) => {
-    container.appendChild(renderStep(s, i));
-  });
+function closeHelp() {
+  document.getElementById("help-overlay").classList.remove("open");
 }
 
-function renderStep(s, index) {
-  const wrap = document.createElement("div");
-  wrap.className = "step" + (s.done ? " done" : "");
-
-  const label = document.createElement("div");
-  label.className = "step-label";
-  label.textContent = `Step ${index + 1}`;
-  if (s.added_by === "seam") {
-    const seamTag = document.createElement("span");
-    seamTag.className = "step-added-by";
-    seamTag.textContent = "added by Seam";
-    label.appendChild(seamTag);
-  }
-  wrap.appendChild(label);
-
-  const row = document.createElement("div");
-  row.className = "row";
-
-  const check = document.createElement("div");
-  check.className = "check";
-  check.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M4 12L9 17L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  check.onclick = async () => {
-    const res = await fetch(apiPath(`/api/cases/${currentCaseId}/plan/${s.id}`), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ done: !s.done }),
-    });
-    renderPlan(await res.json());
-  };
-
-  const text = document.createElement("div");
-  text.className = "step-text";
-  text.contentEditable = "true";
-  text.textContent = s.text;
-  text.onblur = async () => {
-    if (text.textContent.trim() === s.text) return;
-    const res = await fetch(apiPath(`/api/cases/${currentCaseId}/plan/${s.id}`), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: text.textContent.trim() }),
-    });
-    renderPlan(await res.json());
-  };
-
-  row.appendChild(check);
-  row.appendChild(text);
-  wrap.appendChild(row);
-
-  const note = document.createElement("div");
-  note.className = "step-note";
-  note.contentEditable = "true";
-  note.dataset.placeholder = s.done ? "add a note on how it went" : "add a note when it's done";
-  note.textContent = s.note || "";
-  note.onblur = async () => {
-    if ((note.textContent.trim() || null) === s.note) return;
-    const res = await fetch(apiPath(`/api/cases/${currentCaseId}/plan/${s.id}`), {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ note: note.textContent.trim() }),
-    });
-    renderPlan(await res.json());
-  };
-  wrap.appendChild(note);
-
-  return wrap;
-}
-
-async function addStep() {
-  const input = document.getElementById("add-step-input");
-  const text = input.value.trim();
-  if (!text || !currentCaseId) return;
-  input.value = "";
-  const res = await fetch(apiPath(`/api/cases/${currentCaseId}/plan`), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
-  renderPlan(await res.json());
-}
-
-document.getElementById("new-case-btn").onclick = createCase;
+document.getElementById("new-convo-btn").onclick = newConversation;
 document.getElementById("close-case-btn").onclick = closeCase;
 document.getElementById("send-btn").onclick = sendMessage;
 document.getElementById("add-step-btn").onclick = addStep;
@@ -1426,275 +1345,6 @@ composerEl.addEventListener("input", () => {
   composerEl.style.height = composerEl.scrollHeight + "px";
 });
 wirePushToTalk(document.getElementById("mic-btn"), composerEl);
-
-// ---------------------------------------------------------------------
-// Meetings (meeting strategy) -- mirrors Conflicts above, pointed at
-// /api/meeting-sessions instead of /api/cases. No plan_steps equivalent
-// exists for strategy_text (it's model-generated prose, split into lines
-// for display), so there's no "+add a point" affordance here.
-// ---------------------------------------------------------------------
-let currentMeetingId = null;
-let meetings = [];
-
-async function loadMeetings() {
-  const res = await fetch(apiPath("/api/meeting-sessions"));
-  meetings = await res.json();
-  renderMeetingList();
-  renderMeetingEmptyState();
-}
-
-function renderMeetingEmptyState() {
-  const el = document.getElementById("meeting-empty-state");
-  const has = meetings.length > 0;
-  el.className = "empty-state" + (has ? " returning" : "");
-  el.innerHTML = `
-    <div class="wrap">
-      <div class="mark">${mendMarkSvg()}</div>
-      <h1>${has ? "Pick a meeting on the left, or start a new one" : "Figure out your approach before you walk in"}</h1>
-      <p class="lede">Name what you actually want this meeting to achieve -- team cohesion, delivering hard news, a pep talk, whatever it is -- and work out the strategy, not just the agenda.</p>
-      <button class="empty-state-cta" id="meeting-empty-cta">${has ? "Start a new meeting" : "Plan your first meeting"}</button>
-    </div>
-  `;
-  document.getElementById("meeting-empty-cta").onclick = createMeeting;
-}
-
-function renderMeetingList() {
-  const list = document.getElementById("meeting-list");
-  list.innerHTML = "";
-  for (const m of meetings) {
-    const row = document.createElement("div");
-    row.className = "item-row" + (m.id === currentMeetingId ? " active" : "");
-    const name = m.title || "New meeting";
-    const preview = m.goal_summary || "Just opened";
-    row.innerHTML = `
-      <div class="top"><div class="name">${escapeHtml(name)}</div><div class="time">${timeAgo(m.updated_at)}</div></div>
-      <div class="preview">${escapeHtml(preview)}</div>
-    `;
-    row.onclick = () => openMeeting(m.id);
-    list.appendChild(row);
-  }
-}
-
-async function createMeeting() {
-  const res = await fetch(apiPath("/api/meeting-sessions"), { method: "POST" });
-  const m = await res.json();
-  meetings.unshift(m);
-  renderMeetingList();
-  await openMeeting(m.id, true);
-}
-
-async function openMeeting(meetingId, isNew) {
-  currentMeetingId = meetingId;
-  renderMeetingList();
-  document.getElementById("meeting-empty-state").style.display = "none";
-  document.getElementById("meeting-thread-header").style.display = "flex";
-  document.getElementById("meeting-messages").style.display = "flex";
-  document.getElementById("meeting-composer-row").style.display = "flex";
-  document.getElementById("meeting-plan-panel").style.display = "flex";
-  closeSidebarOnMobile();
-
-  const res = await fetch(apiPath(`/api/meeting-sessions/${meetingId}`));
-  const data = await res.json();
-  renderMeetingThread(data);
-
-  if (isNew) {
-    const messagesEl = document.getElementById("meeting-messages");
-    appendBubble(messagesEl, "assistant", "What's the meeting, and what do you actually want to walk away with?");
-  }
-}
-
-function renderMeetingThread(data) {
-  document.getElementById("meeting-thread-title").textContent = data.session.title || "New meeting";
-  const messagesEl = document.getElementById("meeting-messages");
-  messagesEl.innerHTML = "";
-  for (const m of data.messages) {
-    appendBubble(messagesEl, m.role, m.content);
-  }
-  updateMeetingFromResult(data.session);
-}
-
-function renderMeetingGoal(session) {
-  const el = document.getElementById("meeting-goal-text");
-  if (session.goal_summary) {
-    el.textContent = session.goal_summary;
-    el.classList.remove("placeholder");
-  } else {
-    el.textContent = "Will be added here once it's clear.";
-    el.classList.add("placeholder");
-  }
-}
-
-function renderStrategyPoints(session) {
-  const wrap = document.getElementById("strategy-points-wrap");
-  if (!session.strategy_text) {
-    wrap.innerHTML = `<div class="strategy-placeholder">Not ready yet -- keep talking it through, the final strategy lands here.</div>`;
-    return;
-  }
-  const lines = session.strategy_text.split("\n").map((l) => l.trim()).filter(Boolean);
-  wrap.innerHTML = `<div class="strategy-points">${lines.map((l) => `
-    <div class="strategy-point"><span class="dot"></span><span class="t">${escapeHtml(l)}</span></div>
-  `).join("")}</div>`;
-}
-
-function updateMeetingFromResult(updatedSession) {
-  const idx = meetings.findIndex((m) => m.id === updatedSession.id);
-  if (idx >= 0) meetings[idx] = updatedSession;
-  else meetings.unshift(updatedSession);
-  meetings.sort((a, b) => b.updated_at - a.updated_at);
-  renderMeetingList();
-  document.getElementById("meeting-thread-title").textContent = updatedSession.title || "New meeting";
-  renderMeetingGoal(updatedSession);
-  renderStrategyPoints(updatedSession);
-}
-
-async function sendMeetingMessage() {
-  const composer = document.getElementById("meeting-composer");
-  const text = composer.value.trim();
-  if (!text || !currentMeetingId) return;
-  composer.value = "";
-  composer.style.height = "auto";
-  const messagesEl = document.getElementById("meeting-messages");
-  appendBubble(messagesEl, "user", text);
-  document.getElementById("meeting-send-btn").disabled = true;
-  const pending = appendBubble(messagesEl, "assistant", "...", true);
-  try {
-    const res = await fetch(apiPath(`/api/meeting-sessions/${currentMeetingId}/messages`), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: text }),
-    });
-    const body = await res.json();
-    pending.closest(".msg-row").remove();
-    appendBubble(messagesEl, "assistant", body.reply);
-    updateMeetingFromResult(body.session);
-  } finally {
-    document.getElementById("meeting-send-btn").disabled = false;
-  }
-}
-
-document.getElementById("new-meeting-btn").onclick = createMeeting;
-document.getElementById("meeting-send-btn").onclick = sendMeetingMessage;
-const meetingComposerEl = document.getElementById("meeting-composer");
-meetingComposerEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendMeetingMessage();
-  }
-});
-meetingComposerEl.addEventListener("input", () => {
-  meetingComposerEl.style.height = "auto";
-  meetingComposerEl.style.height = meetingComposerEl.scrollHeight + "px";
-});
-wirePushToTalk(document.getElementById("meeting-mic-btn"), meetingComposerEl);
-
-// ---------------------------------------------------------------------
-// Written (tone-check) -- a chat thread like Conflicts/Meetings, except
-// entering the section always drops you into a brand-new blank thread
-// (createWrittenSession, called once from showSection) instead of
-// reopening whatever was open last. A session only shows up in the
-// sidebar list once it's gotten its first reply -- see server.py.
-// ---------------------------------------------------------------------
-let currentWrittenId = null;
-let writtenSessions = [];
-
-async function loadWrittenSessions() {
-  const res = await fetch(apiPath("/api/written-sessions"));
-  writtenSessions = await res.json();
-  renderWrittenList();
-}
-
-function renderWrittenList() {
-  const list = document.getElementById("written-list");
-  list.innerHTML = "";
-  for (const s of writtenSessions) {
-    const row = document.createElement("div");
-    row.className = "item-row" + (s.id === currentWrittenId ? " active" : "");
-    const name = s.title || "Draft";
-    const preview = s.preview || "";
-    row.innerHTML = `
-      <div class="top"><div class="name">${escapeHtml(name)}</div><div class="time">${timeAgo(s.updated_at)}</div></div>
-      <div class="preview">${escapeHtml(preview)}</div>
-    `;
-    row.onclick = () => openWrittenSession(s.id);
-    list.appendChild(row);
-  }
-}
-
-async function createWrittenSession() {
-  const res = await fetch(apiPath("/api/written-sessions"), { method: "POST" });
-  const s = await res.json();
-  currentWrittenId = s.id;
-  document.getElementById("written-thread-title").textContent = "New draft";
-  document.getElementById("written-messages").innerHTML = "";
-  document.getElementById("written-hint").style.display = "block";
-  renderWrittenList();
-  closeSidebarOnMobile();
-  document.getElementById("written-composer").focus();
-}
-
-async function openWrittenSession(sessionId) {
-  currentWrittenId = sessionId;
-  renderWrittenList();
-  closeSidebarOnMobile();
-  const res = await fetch(apiPath(`/api/written-sessions/${sessionId}`));
-  const data = await res.json();
-  document.getElementById("written-thread-title").textContent = data.session.title || "Draft";
-  const messagesEl = document.getElementById("written-messages");
-  messagesEl.innerHTML = "";
-  for (const m of data.messages) {
-    appendBubble(messagesEl, m.role, m.content);
-  }
-  document.getElementById("written-hint").style.display = data.messages.length ? "none" : "block";
-}
-
-async function sendWrittenMessage() {
-  const composer = document.getElementById("written-composer");
-  const text = composer.value.trim();
-  if (!text) return;
-  if (!currentWrittenId) await createWrittenSession();
-  composer.value = "";
-  composer.style.height = "auto";
-  const messagesEl = document.getElementById("written-messages");
-  document.getElementById("written-hint").style.display = "none";
-  appendBubble(messagesEl, "user", text);
-  document.getElementById("written-send-btn").disabled = true;
-  const pending = appendBubble(messagesEl, "assistant", "...", true);
-  try {
-    const res = await fetch(apiPath(`/api/written-sessions/${currentWrittenId}/messages`), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: text }),
-    });
-    const body = await res.json();
-    pending.closest(".msg-row").remove();
-    appendBubble(messagesEl, "assistant", body.reply);
-    document.getElementById("written-thread-title").textContent = body.session.title || "New draft";
-    if (body.session.preview) {
-      const idx = writtenSessions.findIndex((s) => s.id === body.session.id);
-      if (idx >= 0) writtenSessions[idx] = body.session;
-      else writtenSessions.unshift(body.session);
-      writtenSessions.sort((a, b) => b.updated_at - a.updated_at);
-      renderWrittenList();
-    }
-  } finally {
-    document.getElementById("written-send-btn").disabled = false;
-  }
-}
-
-document.getElementById("new-written-btn").onclick = createWrittenSession;
-document.getElementById("written-send-btn").onclick = sendWrittenMessage;
-const writtenComposerEl = document.getElementById("written-composer");
-writtenComposerEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendWrittenMessage();
-  }
-});
-writtenComposerEl.addEventListener("input", () => {
-  writtenComposerEl.style.height = "auto";
-  writtenComposerEl.style.height = writtenComposerEl.scrollHeight + "px";
-});
-wirePushToTalk(document.getElementById("written-mic-btn"), writtenComposerEl);
 
 // ---------------------------------------------------------------------
 // Help modal, mobile drawers
@@ -1716,7 +1366,7 @@ function isMobile() {
 }
 
 function activeSidePanel() {
-  return currentSection === "meetings" ? meetingPlanPanelEl : planPanelEl;
+  return activeConvo && activeConvo.type === "meeting" ? meetingPlanPanelEl : planPanelEl;
 }
 
 function updateScrim() {
@@ -1743,7 +1393,6 @@ function toggleSidePanel() {
 
 document.getElementById("sidebar-toggle").onclick = toggleSidebar;
 document.getElementById("plan-toggle").onclick = toggleSidePanel;
-document.getElementById("meeting-plan-toggle").onclick = toggleSidePanel;
 scrimEl.onclick = () => {
   sidebarEl.classList.add("closed");
   planPanelEl.classList.remove("open");
@@ -1846,7 +1495,8 @@ document.getElementById('gate-modal').addEventListener('submit', async (e) => {
   }
 });
 
-loadCases();
+newConversation();
+loadConversations();
 </script>
 </body>
 </html>
