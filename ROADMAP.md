@@ -31,7 +31,7 @@ Not phase-bound; apply to every phase's feature and pricing decisions.
 ## Phase 0 — Local prototypes (mostly done)
 
 - [x] Real hard-cut classifier (`apps/classifier/`), wired into `suture` (app-specific follow-up items: see Suture's roadmap)
-- [x] Real signup/invite backend (`demo-app`), direct and peer-suggested
+- [x] Real signup/invite backend (`spool`, née `demo-app`), direct and peer-suggested
 - [x] Unified local proxy (`run_all.sh` + `Caddyfile`)
 - [x] Brand identity applied everywhere (logo, Pink/Evergreen/Honey/Oat, Manrope)
 

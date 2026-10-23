@@ -31,13 +31,13 @@
   .wrap{max-width:760px; margin:0 auto; padding:48px 20px 60px;}
 
   /* ---- hero, same shape as about.html: avatar + speech bubble beside the pitch ---- */
-  .hero-badge{display:inline-flex; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent); background:var(--accent-soft); border:1px solid rgba(23,55,46,0.1); padding:6px 14px; border-radius:999px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:18px;}
+  .hero-badge{display:inline-flex; align-items:center; font-family:'Manrope',sans-serif; font-size:11px; color:var(--accent); background:var(--accent-soft); border:1px solid rgba(23,55,46,0.1); padding:6px 14px; border-radius:999px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:18px;}
   .hero{display:flex; align-items:center; gap:36px; margin-bottom:4px;}
   .hero-text{flex:1; min-width:0;}
   .hero-visual{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:12px;}
   .hero-avatar{position:relative; width:176px; height:176px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 50%, rgba(243,130,154,0.16) 0%, rgba(243,130,154,0.16) 45%, rgba(233,185,73,0) 72%);}
   .hero-avatar .core{width:92px; height:92px; border-radius:50%; background:var(--accent);}
-  .avatar-status{display:inline-flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); padding:5px 11px; border-radius:999px; white-space:nowrap;}
+  .avatar-status{display:inline-flex; align-items:center; gap:6px; font-family:'Manrope',sans-serif; font-size:10.5px; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); padding:5px 11px; border-radius:999px; white-space:nowrap;}
   .avatar-status .dot{width:6px; height:6px; border-radius:50%; background:#3D9B6E; flex-shrink:0;}
   .speech-bubble{position:absolute; top:6px; right:-6px; display:flex; align-items:center; gap:4px; background:#fff; border:1px solid var(--border); border-radius:14px; padding:9px 11px; box-shadow:0 6px 14px rgba(23,55,46,0.14);}
   .speech-bubble::after{content:''; position:absolute; bottom:-6px; left:16px; width:11px; height:11px; background:#fff; border-right:1px solid var(--border); border-bottom:1px solid var(--border); transform:rotate(45deg);}
@@ -86,7 +86,7 @@
   @media (max-width:600px){ .stat-band{grid-template-columns:1fr;} }
   .stat-tile{padding:24px 22px;}
   .stat-tile:first-child{background:var(--accent-soft);}
-  .stat-num{font-family:'IBM Plex Mono',monospace; font-size:2.2rem; font-weight:700; color:var(--accent); line-height:1;}
+  .stat-num{font-family:'Manrope',sans-serif; font-size:2.2rem; font-weight:700; color:var(--accent); line-height:1;}
   .stat-label{font-size:13px; font-weight:700; color:var(--ink); margin-top:8px;}
   .stat-d{font-size:12.5px; color:var(--ink-soft); margin-top:4px; line-height:1.5;}
 
@@ -133,7 +133,7 @@
   footer a{color:var(--ink-soft);}
 </style>
 </head>
-<body>
+<body><a id="mend-launchpad-badge" href="../../launchpad.html" target="_blank" rel="noopener" style="position:fixed;bottom:14px;right:14px;z-index:99999;font-family:'Manrope',-apple-system,sans-serif;font-size:11px;font-weight:600;color:#fff;background:#17372E;text-decoration:none;padding:6px 12px;border-radius:999px;opacity:.72;box-shadow:0 2px 6px rgba(0,0,0,.15);" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.72">&#8962; Launchpad</a>
 
 <header class="topnav">
   <div class="topnav-inner">

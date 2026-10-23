@@ -36,6 +36,15 @@ so future conversations can refer to them by name instead of description.
 - **Hem** — new idea: a cross-platform desktop writing assistant that helps
   you respond to/send messages and make your point without causing conflict,
   regardless of which app you're in.
+- **Spool** — the sign-up/invite entry point, where a visitor picks a flow
+  and gets routed into Thimble, Suture, or Seam. Named 2026-10-23 so
+  "demo app" stops leaking into user-facing labels; `apps/demo-app` was
+  renamed to `apps/spool` the same day (`git mv`, venv rebuilt, every
+  reference across `run_all.sh`, `deploy/start.sh`, `deploy/Dockerfile`,
+  `render.yaml`, `deploy/render.Caddyfile`, `README.md`, `ROADMAP.md`,
+  `LINKS.md`, `launchpad.html`, and the app's own + Thimble's `server.py`
+  comments updated — same scope as the 2026-10-21
+  `thimble`/`suture`/`seam`/`splice` folder rename).
 
 ---
 

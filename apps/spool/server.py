@@ -290,7 +290,7 @@ async def links_index():
     return FileResponse(ROOT / "static" / "links.html")
 
 
-# launchpad.html lives at the repo root, not under demo-app/static, like
+# launchpad.html lives at the repo root, not under spool/static, like
 # PITCH_DIR above -- it's the internal dev bookmark page /links replaced
 # for public use (see that commit), kept around for its own sake and now
 # given a route rather than a static mount so the rest of the repo root

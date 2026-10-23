@@ -30,30 +30,31 @@
 body{background:var(--paper); color:var(--ink); font-family:'Public Sans',system-ui,sans-serif; padding-inline:16px; padding-block:32px;}
 .wrap{max-width:640px; margin:0 auto; display:flex; flex-direction:column; gap:24px;}
 .top{display:flex; flex-direction:column; gap:8px;}
-.eyebrow{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase; display:flex; justify-content:space-between;}
+.eyebrow{font-family:'Manrope',sans-serif; font-size:12px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase; display:flex; justify-content:space-between;}
 .bar{height:4px; border-radius:2px; background:var(--accent-soft); overflow:hidden;}
 .bar-fill{height:100%; background:var(--accent); border-radius:2px; transition:width .25s ease;}
 .card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:40px 32px; min-height:180px; display:flex; align-items:center; justify-content:center; text-align:center;}
 .quote{font-family:'Fraunces',Georgia,serif; font-weight:500; font-size:22px; line-height:1.5; color:var(--ink);}
 .buttons{display:flex; gap:10px; flex-wrap:wrap;}
 button.judge{flex:1 1 110px; padding:14px 10px; border-radius:10px; font-family:'Public Sans',sans-serif; font-weight:600; font-size:14px; cursor:pointer; border:1.5px solid var(--border); background:var(--card); color:var(--ink); transition:border-color .15s, background .15s;}
-button.judge .hint{display:block; font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:10px; color:var(--ink-soft); margin-top:4px; letter-spacing:.03em;}
+button.judge .hint{display:block; font-family:'Manrope',sans-serif; font-weight:400; font-size:10px; color:var(--ink-soft); margin-top:4px; letter-spacing:.03em;}
 button.judge.ok:hover{border-color:var(--accent); background:var(--accent-soft);}
 button.judge.bad:hover{border-color:var(--danger); background:var(--danger-soft);}
 button.judge.unsure:hover{border-color:var(--warn); background:var(--warn-soft);}
 .meta-row{display:flex; align-items:center; justify-content:space-between;}
-.back-link{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); background:none; border:none; cursor:pointer; padding:4px 0;}
+.back-link{font-family:'Manrope',sans-serif; font-size:12px; color:var(--ink-soft); background:none; border:none; cursor:pointer; padding:4px 0;}
 .back-link:hover{color:var(--accent);}
 .back-link:disabled{opacity:.35; cursor:default;}
-.tally{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);}
+.tally{font-family:'Manrope',sans-serif; font-size:12px; color:var(--ink-soft);}
 .done .quote{font-size:20px;}
 .stat-row{display:flex; gap:16px; justify-content:center; margin-top:8px;}
 .stat{text-align:center;}
-.stat .n{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:500; color:var(--accent);}
+.stat .n{font-family:'Manrope',sans-serif; font-size:26px; font-weight:500; color:var(--accent);}
 .stat .n.bad{color:var(--danger);}
 .stat .l{font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em;}
-.edited-flag{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent); margin-top:10px;}
+.edited-flag{font-family:'Manrope',sans-serif; font-size:11px; color:var(--accent); margin-top:10px;}
 </style>
+<a id="mend-launchpad-badge" href="http://localhost:8000/launchpad.html" target="_blank" rel="noopener" style="position:fixed;bottom:14px;right:14px;z-index:99999;font-family:'Manrope',-apple-system,sans-serif;font-size:11px;font-weight:600;color:#fff;background:#17372E;text-decoration:none;padding:6px 12px;border-radius:999px;opacity:.72;box-shadow:0 2px 6px rgba(0,0,0,.15);" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.72">&#8962; Launchpad</a>
 
 <div class="wrap">
   <div class="top">
@@ -137,7 +138,7 @@ function renderDone(ok, unsure, bad){
     if (said !== it.autoFlag) mismatches++;
   }
   els.quoteText.innerHTML =
-    'Review complete.<br><span style="font-family:\'IBM Plex Mono\',monospace;font-size:13px;color:var(--ink-soft);display:block;margin-top:14px;">' +
+    'Review complete.<br><span style="font-family:\'Manrope\',sans-serif;font-size:13px;color:var(--ink-soft);display:block;margin-top:14px;">' +
     'Disagreed with the draft labels on ' + mismatches + ' of ' + decided + ' decided (' + unsure + ' marked not sure).</span>';
   els.buttons.style.display = 'none';
 }

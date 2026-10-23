@@ -1,4 +1,4 @@
-# Render blueprint for the MVP test deploy: demo-app + Thimble behind
+# Render blueprint for the MVP test deploy: Spool + Thimble behind
 # Caddy, one container, mirroring run_all.sh's path-prefix scheme for local
 # dev (see Caddyfile's own "production note"). Deploy: connect this repo in
 # the Render dashboard -> New -> Blueprint, or `render blueprint launch`.

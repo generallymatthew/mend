@@ -8,7 +8,7 @@ Every testable URL in one place, split by **Local** (needs something running on 
 ./run_all.sh
 ```
 
-Run from the repo root (needs `caddy` — see the root `README.md`). Puts demo-app, thimble, suture, and post-session-app (all under `apps/`) behind one port, `:8080`, with the same path prefixes Render uses live (`/intake/`, `/joint/`, `/post/`) — so a local URL and its live equivalent below differ only in the host, nothing else. `joint-session-audio` is opt-in (needs `livekit-server` and its own agent worker — see that app's own README) and is skipped automatically if that setup hasn't been done. `seam` (Seam) and `splice` (Splice) aren't wired into this proxy yet — run them standalone.
+Run from the repo root (needs `caddy` — see the root `README.md`). Puts spool, thimble, suture, and post-session-app (all under `apps/`) behind one port, `:8080`, with the same path prefixes Render uses live (`/intake/`, `/joint/`, `/post/`) — so a local URL and its live equivalent below differ only in the host, nothing else. `joint-session-audio` is opt-in (needs `livekit-server` and its own agent worker — see that app's own README) and is skipped automatically if that setup hasn't been done. `seam` (Seam) and `splice` (Splice) aren't wired into this proxy yet — run them standalone.
 
 Docs and standalone HTML files (Roadmap, Status, product spec, pitch page, design handoffs) need a plain file server instead, from the repo root:
 
@@ -20,15 +20,15 @@ python3 -m http.server 8000
 
 | Page | Local | Live |
 |---|---|---|
-| Demo hub | [localhost:8080/](http://localhost:8080/) | [mend-mvp.onrender.com/](https://mend-mvp.onrender.com/) |
-| Intake | [localhost:8080/intake/](http://localhost:8080/intake/) | [mend-mvp.onrender.com/intake/](https://mend-mvp.onrender.com/intake/) |
+| Spool | [localhost:8080/](http://localhost:8080/) | [mend-mvp.onrender.com/](https://mend-mvp.onrender.com/) |
+| Thimble | [localhost:8080/intake/](http://localhost:8080/intake/) | [mend-mvp.onrender.com/intake/](https://mend-mvp.onrender.com/intake/) |
 | Joint session · Employee A | [localhost:8080/joint/?code=links&role=a](http://localhost:8080/joint/?code=links&role=a) | — not deployed |
 | Joint session · Employee B | [localhost:8080/joint/?code=links&role=b](http://localhost:8080/joint/?code=links&role=b) | — not deployed |
 | Post-session check-in | [localhost:8080/post/](http://localhost:8080/post/) | — not deployed |
 | Joint session · audio (opt-in, needs LiveKit) | [localhost:8080/joint-audio/](http://localhost:8080/joint-audio/) | — not deployed |
 | About (why this matters) | [localhost:8080/about](http://localhost:8080/about) or [localhost:8000/about.html](http://localhost:8000/about.html) | [mend-mvp.onrender.com/about](https://mend-mvp.onrender.com/about) |
 
-Only demo-app + thimble are in the live Render deploy (`render.yaml`/`deploy/start.sh`) — everything else above only exists locally. Open both Employee A and Employee B links (two tabs, or send B to someone else) for a real two-person joint session.
+Only spool + thimble are in the live Render deploy (`render.yaml`/`deploy/start.sh`) — everything else above only exists locally. Open both Employee A and Employee B links (two tabs, or send B to someone else) for a real two-person joint session.
 
 ## QA / internal tools
 
@@ -46,7 +46,7 @@ Only demo-app + thimble are in the live Render deploy (`render.yaml`/`deploy/sta
 | Pitch page | [localhost:8000/Mend Pitch/Mend Pitch v2.dc.html](<http://localhost:8000/Mend Pitch/Mend Pitch v2.dc.html>) | [mend-mvp.onrender.com/pitch](https://mend-mvp.onrender.com/pitch) |
 | Roadmap | [localhost:8000/ROADMAP.md](http://localhost:8000/ROADMAP.md) | — local only |
 | Status | [localhost:8000/STATUS.md](http://localhost:8000/STATUS.md) | — local only |
-| Public links page (demo-app's own, not this file) | — | [mend-mvp.onrender.com/links](https://mend-mvp.onrender.com/links) |
+| Public links page (Spool's own, not this file) | — | [mend-mvp.onrender.com/links](https://mend-mvp.onrender.com/links) |
 
 ## Design handoffs
 

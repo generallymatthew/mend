@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Render start command: runs demo-app + Thimble + Seam + manager-read-test
+# Render start command: runs Spool + Thimble + Seam + manager-read-test
 # (unmodified) behind
 # Caddy on Render's injected $PORT. Mirrors ../run_all.sh's shape for
 # local dev, trimmed to the apps this deploy sends to testers, and using
@@ -31,7 +31,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-start_app demo-app      apps/demo-app              8423
+start_app spool         apps/spool                 8423
 start_app thimble       apps/thimble               8420
 start_app seam          apps/seam                  8460
 start_app manager-test  pitch/manager-read-test    8481

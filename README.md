@@ -21,7 +21,7 @@ Local FastAPI apps, all under `apps/`, each its own venv and `.env` (see each `R
 
 | App | Port | What it tests |
 |---|---|---|
-| `apps/demo-app/` | 8423 | Sign-up + anonymous-invite UX, links through the three below in order |
+| `apps/spool/` | 8423 | Sign-up + anonymous-invite UX, links through the three below in order |
 | `apps/thimble/` | 8420 | Private processing conversation, text + voice memo. Covers both the employee-conflict path and the manager-coaching path (a manager rehearsing a hard conversation with a direct report) — the latter used to be a separate `manager-coaching-app`, since removed as redundant once it was folded into this app's own system prompt |
 | `apps/suture/` | 8421 | The joint session, two real participants (each connects with their own role link) |
 | `apps/post-session-app/` | 8422 | Post-session follow-up, with a scenario picker since it doesn't chain from a real joint session |
@@ -30,9 +30,9 @@ Local FastAPI apps, all under `apps/`, each its own venv and `.env` (see each `R
 | `apps/splice/` | — | Live group consensus-building over a real Zoom call (companion panel via the Zoom Apps SDK): shared room, chat, proposals, voting, Thimble as a visible named participant. Opposite trust model from the apps above — no safety floor, no confidentiality, driving an explicit visible group decision instead. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
 | `apps/classifier/` | — | Fine-tuned toxic-bert model for the real-time hard-cut tier of the joint session; not a web app, see its own `README.md`. |
 
-**Run the core four at once:** `./run_all.sh` from the repo root starts `demo-app`, `thimble`, `suture`, and `post-session-app` (each in its own venv) plus a local Caddy reverse proxy, and puts the whole walkthrough behind one address: **http://localhost:8080/**. Requires `caddy` (`brew install caddy`) and each app's own venv/dependencies already set up per its `README.md`. Ctrl-C stops everything together. `seam` and `splice` aren't part of this walkthrough yet — run them standalone.
+**Run the core four at once:** `./run_all.sh` from the repo root starts `spool`, `thimble`, `suture`, and `post-session-app` (each in its own venv) plus a local Caddy reverse proxy, and puts the whole walkthrough behind one address: **http://localhost:8080/**. Requires `caddy` (`brew install caddy`) and each app's own venv/dependencies already set up per its `README.md`. Ctrl-C stops everything together. `seam` and `splice` aren't part of this walkthrough yet — run them standalone.
 
-Prefer running one app in isolation to debug it (e.g. while iterating on its system prompt)? Each app still works standalone on its own port from the table above — just note that cross-app links (demo-app's buttons, the "continue" banners) point at the proxy's paths (`/intake/`, `/joint/`, `/post/`) and only resolve correctly when browsing through `run_all.sh`'s `:8080`, not when an app is opened directly on its own port.
+Prefer running one app in isolation to debug it (e.g. while iterating on its system prompt)? Each app still works standalone on its own port from the table above — just note that cross-app links (Spool's buttons, the "continue" banners) point at the proxy's paths (`/intake/`, `/joint/`, `/post/`) and only resolve correctly when browsing through `run_all.sh`'s `:8080`, not when an app is opened directly on its own port.
 
 `thimble` and `suture` each show a "continue" banner once the facilitator's own signal says the next step is ready — you don't have to guess when to move on. None of these run in GitHub Pages; they need a local server and your own Anthropic API key.
 

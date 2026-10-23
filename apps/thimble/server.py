@@ -131,7 +131,7 @@ client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 # The live deploy had no wall at all in front of these paid LLM/voice
 # endpoints -- anyone with the URL could run up the API bill, scraped or
 # not. A real per-customer login is out of scope for a blind-tester
-# prototype; one shared passcode, same trust level as demo-app's
+# prototype; one shared passcode, same trust level as Spool's
 # ORG_ACCESS_CODE, is enough to keep this off random crawlers/bots while
 # staying a one-time step for an invited tester. Unset by default so local
 # dev keeps working with zero setup.
