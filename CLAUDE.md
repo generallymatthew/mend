@@ -3,11 +3,12 @@
 ## Git remotes
 
 GitHub account restored (2026-10-14). `origin`
-(`github.com/generallymatthew/mend`) is the default push target again.
+(`github.com/generallymatthew/mend`) is the only remote and the live
+deploy source.
 
 - `git push` with no remote specified means push to `origin`. Just do it.
-- `gitlab` (`git@gitlab.com:generallymatthew-group/mend.git`) remains
-  available as a second remote if ever needed, but is no longer default.
+- `gitlab` was retired as a remote on 2026-10-23 (no longer in use) and
+  removed from the repo. Don't re-add it or push to it.
 - Never ask which remote to use.
 
 ---

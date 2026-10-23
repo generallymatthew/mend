@@ -83,5 +83,5 @@ YouTube videos on workplace conflict / conflict resolution, kept for reference a
 
 ## Repositories
 
-- GitHub (`origin`, primary push target as of 2026-10-21): `github.com/generallymatthew/mend` — account restored 2026-10-14; `git push` with no remote means `origin`, just do it (see root `CLAUDE.md`).
-- GitLab: `git@gitlab.com:generallymatthew-group/mend.git` — no longer the default; kept as a second remote only.
+- GitHub (`origin`, only remote and live deploy source): `github.com/generallymatthew/mend` — account restored 2026-10-14; `git push` with no remote means `origin`, just do it (see root `CLAUDE.md`).
+- GitLab: `git@gitlab.com:generallymatthew-group/mend.git` — retired as a remote on 2026-10-23, no longer in use.

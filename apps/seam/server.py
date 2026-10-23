@@ -94,6 +94,14 @@ SYSTEM_PROMPT = load_system_prompt(SYSTEM_PROMPT_FILE)
 TONE_CHECK_SYSTEM_PROMPT = load_system_prompt(TONE_CHECK_SYSTEM_PROMPT_FILE)
 MEETING_STRATEGY_SYSTEM_PROMPT = load_system_prompt(MEETING_STRATEGY_SYSTEM_PROMPT_FILE)
 
+# A router, not a facilitator persona, so it stays inline here rather than
+# in its own reviewable prompt file like the three above.
+CLASSIFY_SYSTEM_PROMPT = """Decide which one of three kinds of help the manager is asking for, from what they've said so far. Reply with exactly one lowercase word, nothing else:
+conflict -- tension or friction with a direct report, a peer, or another team.
+meeting -- preparing strategy or approach for a meeting they're walking into.
+written -- help answering or drafting a specific message, email, or reply.
+unsure -- genuinely can't tell yet from what they've said."""
+
 # In-memory conversation text per case id -- a prototype, not a persistence
 # layer. See module docstring: only the anchor + plan (below, in SQLite)
 # survive a restart.
@@ -364,6 +372,34 @@ async def no_cache_static(request: Request, call_next):
     if request.url.path in ("/", "/survey", "/survey/post") or request.url.path.startswith("/static/"):
         response.headers["Cache-Control"] = "no-store"
     return response
+
+
+class ClassifyRequest(BaseModel):
+    messages: list[str]
+
+
+@app.post("/api/classify")
+async def classify(body: ClassifyRequest):
+    """Stateless router for the unified composer: given the manager's
+    pending opening turn(s), before any real case/meeting/written session
+    exists yet, decide which of the three it is. Never touches CONVERSATIONS
+    or the DB -- the caller creates the real session itself once it has a
+    concrete answer and replays these same turns into it for real."""
+    if client is None:
+        return {"type": "unsure"}
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=10,
+            system=CLASSIFY_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": "\n\n".join(body.messages)}],
+        )
+    except Exception:
+        return {"type": "unsure"}
+    raw = "".join(block.text for block in response.content if block.type == "text").strip().lower()
+    if raw not in ("conflict", "meeting", "written"):
+        return {"type": "unsure"}
+    return {"type": raw}
 
 
 @app.get("/api/cases")
