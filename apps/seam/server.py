@@ -45,6 +45,7 @@ from pydantic import BaseModel
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
 SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-case-plan-system-prompt.md"
+COACHING_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-manager-coaching-system-prompt.md"
 TONE_CHECK_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-tone-check-system-prompt.md"
 MEETING_STRATEGY_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-meeting-strategy-system-prompt.md"
 DB_FILE = ROOT / "cases.db"
@@ -91,13 +92,22 @@ def load_system_prompt(path: Path) -> str:
 
 
 SYSTEM_PROMPT = load_system_prompt(SYSTEM_PROMPT_FILE)
+COACHING_SYSTEM_PROMPT = load_system_prompt(COACHING_SYSTEM_PROMPT_FILE)
 TONE_CHECK_SYSTEM_PROMPT = load_system_prompt(TONE_CHECK_SYSTEM_PROMPT_FILE)
 MEETING_STRATEGY_SYSTEM_PROMPT = load_system_prompt(MEETING_STRATEGY_SYSTEM_PROMPT_FILE)
 
+# Which system prompt a "cases" row's conversation uses, keyed by its kind
+# column -- "conflict" rows (adjacent dispute, case-plan prompt, can offer a
+# peer hand-off) and "coaching" rows (manager rehearsing a conversation with
+# their own report, manager-coaching prompt, never a hand-off) share the same
+# table/endpoints/control-block schema, they just load different personas.
+CASE_SYSTEM_PROMPTS = {"conflict": SYSTEM_PROMPT, "coaching": COACHING_SYSTEM_PROMPT}
+
 # A router, not a facilitator persona, so it stays inline here rather than
-# in its own reviewable prompt file like the three above.
-CLASSIFY_SYSTEM_PROMPT = """Decide which one of three kinds of help the manager is asking for, from what they've said so far. Reply with exactly one lowercase word, nothing else:
-conflict -- tension or friction with a direct report, a peer, or another team.
+# in its own reviewable prompt file like the ones above.
+CLASSIFY_SYSTEM_PROMPT = """Decide which one of four kinds of help the manager is asking for, from what they've said so far. Reply with exactly one lowercase word, nothing else:
+conflict -- tension or friction involving their direct report and someone else (a peer, another team, or another of their reports) -- the manager is adjudicating or thinking through a dispute between other people, not delivering feedback themselves.
+coaching -- the manager preparing for or rehearsing a hard performance or conduct conversation THEY need to have with their own direct report -- they themselves are about to deliver the difficult feedback, not mediate between others.
 meeting -- preparing strategy or approach for a meeting they're walking into.
 written -- help answering or drafting a specific message, email, or reply.
 unsure -- genuinely can't tell yet from what they've said."""
@@ -179,6 +189,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS cases (
                 id TEXT PRIMARY KEY,
                 status TEXT NOT NULL DEFAULT 'open',
+                kind TEXT NOT NULL DEFAULT 'conflict',
                 stage TEXT,
                 title TEXT,
                 tension_summary TEXT,
@@ -194,6 +205,8 @@ def init_db():
             )
         """)
         existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(cases)")}
+        if "kind" not in existing_cols:
+            conn.execute("ALTER TABLE cases ADD COLUMN kind TEXT NOT NULL DEFAULT 'conflict'")
         if "handoff_ready" not in existing_cols:
             conn.execute("ALTER TABLE cases ADD COLUMN handoff_ready INTEGER NOT NULL DEFAULT 0")
         if "handoff_code" not in existing_cols:
@@ -248,6 +261,7 @@ def case_row_to_dict(row: sqlite3.Row) -> dict:
     return {
         "id": row["id"],
         "status": row["status"],
+        "kind": row["kind"],
         "stage": row["stage"],
         "title": row["title"],
         "tension_summary": row["tension_summary"],
@@ -390,14 +404,19 @@ async def classify(body: ClassifyRequest):
     try:
         response = client.messages.create(
             model=MODEL,
-            max_tokens=10,
+            # Not just "conflict"/"meeting"/"written"/"unsure" worth of
+            # tokens -- claude-sonnet-5 emits a thinking block ahead of the
+            # one-word answer, and 10 tokens was consumed entirely by that
+            # preamble, leaving no text block at all (every call silently
+            # fell through to "unsure" below, regardless of input).
+            max_tokens=300,
             system=CLASSIFY_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": "\n\n".join(body.messages)}],
         )
     except Exception:
         return {"type": "unsure"}
     raw = "".join(block.text for block in response.content if block.type == "text").strip().lower()
-    if raw not in ("conflict", "meeting", "written"):
+    if raw not in ("conflict", "coaching", "meeting", "written"):
         return {"type": "unsure"}
     return {"type": raw}
 
@@ -412,14 +431,20 @@ async def list_cases():
 DEFAULT_PLAN_STEPS = ["Action item goes here", "Action item goes here"]
 
 
+class CaseCreate(BaseModel):
+    kind: str = "conflict"
+
+
 @app.post("/api/cases")
-async def create_case():
+async def create_case(body: CaseCreate = CaseCreate()):
+    if body.kind not in CASE_SYSTEM_PROMPTS:
+        return JSONResponse({"error": f"kind must be one of {sorted(CASE_SYSTEM_PROMPTS)}"}, status_code=400)
     now = time.time()
     case_id = str(uuid.uuid4())
     with db() as conn:
         conn.execute(
-            "INSERT INTO cases (id, status, stage, created_at, updated_at) VALUES (?, 'open', NULL, ?, ?)",
-            (case_id, now, now),
+            "INSERT INTO cases (id, status, kind, stage, created_at, updated_at) VALUES (?, 'open', ?, NULL, ?, ?)",
+            (case_id, body.kind, now, now),
         )
         for position, text in enumerate(DEFAULT_PLAN_STEPS):
             conn.execute(
@@ -503,11 +528,13 @@ def seed_context_message(case: dict, plan: list[dict]) -> str | None:
     )
 
 
-def facilitator_reply(case_id: str, conn: sqlite3.Connection) -> dict:
+def facilitator_reply(case_id: str, conn: sqlite3.Connection, kind: str = "conflict") -> dict:
     """Assumes the latest turn just appended to CONVERSATIONS[case_id] is the
     user's. On failure, rolls that turn back off so the conversation always
     ends on an assistant turn (Anthropic's API rejects consecutive same-role
-    turns)."""
+    turns). `kind` selects which of CASE_SYSTEM_PROMPTS drives this case's
+    conversation -- same control-block schema either way, see
+    CASE_SYSTEM_PROMPTS' own comment."""
     conversation = CONVERSATIONS[case_id]
     if client is None:
         conversation.pop()
@@ -517,7 +544,7 @@ def facilitator_reply(case_id: str, conn: sqlite3.Connection) -> dict:
         response = client.messages.create(
             model=MODEL,
             max_tokens=4096,
-            system=SYSTEM_PROMPT,
+            system=CASE_SYSTEM_PROMPTS.get(kind, SYSTEM_PROMPT),
             messages=visible_history,
         )
     except Exception as e:
@@ -580,7 +607,7 @@ async def post_message(case_id: str, body: Message):
                 })
 
         CONVERSATIONS[case_id].append({"role": "user", "content": body.content, "hidden": False})
-        result = facilitator_reply(case_id, conn)
+        result = facilitator_reply(case_id, conn, case["kind"])
         case = get_case(conn, case_id)
         case["roster"] = roster_for_case(case_id)
         plan = get_plan_steps(conn, case_id)
@@ -603,6 +630,8 @@ async def create_handoff(case_id: str):
         case = get_case(conn, case_id)
         if case is None:
             return JSONResponse({"error": "no such case"}, status_code=404)
+        if case["kind"] != "conflict":
+            return JSONResponse({"error": "hand-off only applies to conflict cases"}, status_code=400)
         code = case["handoff_code"]
         if not code:
             code = secrets.token_urlsafe(8)
@@ -640,7 +669,7 @@ async def start_case(case_id: str):
             "content": "(The manager just opened this case. Begin with your opening line.)",
             "hidden": True,
         })
-        result = facilitator_reply(case_id, conn)
+        result = facilitator_reply(case_id, conn, case["kind"])
         case = get_case(conn, case_id)
         case["roster"] = roster_for_case(case_id)
         plan = get_plan_steps(conn, case_id)

@@ -349,19 +349,21 @@
   }
   .msg-row { display: flex; gap: 11px; align-items: flex-end; }
   .msg-row.user { justify-content: flex-end; }
+  /* Thimble's real avatar shape/colors, ported from design-mockups/
+     MeetingVoice.dc.html (the source this file's own palette comment
+     above points to) -- not a hand-approximated blob. Same wobble
+     keyframes, same thin mouth proportions, just scaled down to chat-
+     row size. */
+  @keyframes avatar-wobble { 0%, 100% { border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%; } 50% { border-radius: 48% 52% 50% 50% / 55% 55% 45% 45%; } }
   .avatar { position: relative; width: 28px; height: 28px; flex: 0 0 auto; }
-  .avatar .shadow {
-    position: absolute; left: 50%; top: 92%; width: 70%; height: 7px; transform: translateX(-50%);
-    background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,0.3) 0%, rgba(23,55,46,0.15) 55%, rgba(23,55,46,0) 100%);
-    border-radius: 50%;
-  }
   .avatar .blob {
     position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%;
-    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), var(--accent-pink);
+    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 55%), var(--accent-pink);
+    animation: avatar-wobble 3.6s ease-in-out infinite;
   }
   .avatar .mouth {
-    position: absolute; left: 50%; top: 58%; width: 9px; height: 3px; transform: translate(-50%,-50%);
-    background: var(--bg); border-radius: 999px;
+    position: absolute; left: 50%; top: 60%; width: 4px; height: 2.4px; transform: translate(-50%,-50%);
+    background: var(--bg); border-radius: 50%;
   }
   .bubble {
     max-width: 480px; border-radius: 20px; padding: 12px 16px;
@@ -659,7 +661,7 @@
 <div id="handoff-overlay">
   <div id="handoff-modal">
     <div class="lede-row">
-      <div class="avatar" style="width:30px;height:30px;"><div class="shadow"></div><div class="blob"></div><div class="mouth"></div></div>
+      <div class="avatar" style="width:30px;height:30px;"><div class="blob"></div><div class="mouth"></div></div>
       <div>
         <div class="title">Ready to bring them together?</div>
         <div class="desc">They'll land somewhere new, just the two of them. No notes, no names, nothing carries over.</div>
@@ -789,7 +791,7 @@ function mendMarkSvg() {
 }
 
 function avatarSvg() {
-  return `<div class="avatar"><div class="shadow"></div><div class="blob"></div><div class="mouth"></div></div>`;
+  return `<div class="avatar"><div class="blob"></div><div class="mouth"></div></div>`;
 }
 
 // ---------------------------------------------------------------------
@@ -930,15 +932,25 @@ function wirePushToTalk(btn, targetEl) {
 // Nothing about those three backends changes -- this just decides which
 // one a given conversation belongs to, then talks to it directly.
 // ---------------------------------------------------------------------
-const TYPE_LABEL = { conflict: "Conflict", meeting: "Meeting", written: "Written" };
-const CREATE_PATH = { conflict: "/api/cases", meeting: "/api/meeting-sessions", written: "/api/written-sessions" };
+// "coaching" shares the "conflict" type's backend wholesale (same cases
+// table/endpoints, same control-block schema -- see CASE_SYSTEM_PROMPTS in
+// server.py) and most of its UI treatment below (plan panel, incident
+// summary, close button); it just never gets a hand-off/peer-session offer
+// (see showPanelsForType), and POSTs a {kind} body on creation so the
+// backend picks the right persona (see CREATE_PATH's special-case in
+// resolveType).
+const CASE_LIKE_TYPES = ["conflict", "coaching"];
+const TYPE_LABEL = { conflict: "Conflict", coaching: "Coaching", meeting: "Meeting", written: "Written" };
+const CREATE_PATH = { conflict: "/api/cases", coaching: "/api/cases", meeting: "/api/meeting-sessions", written: "/api/written-sessions" };
 const GET_PATH = {
   conflict: (id) => `/api/cases/${id}`,
+  coaching: (id) => `/api/cases/${id}`,
   meeting: (id) => `/api/meeting-sessions/${id}`,
   written: (id) => `/api/written-sessions/${id}`,
 };
 const MESSAGE_PATH = {
   conflict: (id) => `/api/cases/${id}/messages`,
+  coaching: (id) => `/api/cases/${id}/messages`,
   meeting: (id) => `/api/meeting-sessions/${id}/messages`,
   written: (id) => `/api/written-sessions/${id}/messages`,
 };
@@ -948,7 +960,7 @@ let activeConvo = null; // {id, type} once a thread has resolved to a real sessi
 let pendingTurns = null; // array of not-yet-classified user turns, while activeConvo is null
 
 function conversationPreview(c) {
-  if (c.type === "conflict") return c.next_action || c.last_action || c.tension_summary || "Just opened";
+  if (CASE_LIKE_TYPES.includes(c.type)) return c.next_action || c.last_action || c.tension_summary || "Just opened";
   if (c.type === "meeting") return c.goal_summary || "Just opened";
   return c.preview || "";
 }
@@ -960,7 +972,7 @@ async function loadConversations() {
     fetch(apiPath("/api/written-sessions")).then((r) => r.json()),
   ]);
   conversations = [
-    ...caseRows.map((c) => ({ ...c, type: "conflict" })),
+    ...caseRows.map((c) => ({ ...c, type: c.kind === "coaching" ? "coaching" : "conflict" })),
     ...meetingRows.map((m) => ({ ...m, type: "meeting" })),
     ...writtenRows.map((s) => ({ ...s, type: "written" })),
   ].sort((a, b) => b.updated_at - a.updated_at);
@@ -986,10 +998,12 @@ function renderConvoList() {
 }
 
 function showPanelsForType(type) {
-  document.getElementById("plan-panel").style.display = type === "conflict" ? "flex" : "none";
+  document.getElementById("plan-panel").style.display = CASE_LIKE_TYPES.includes(type) ? "flex" : "none";
   document.getElementById("meeting-plan-panel").style.display = type === "meeting" ? "flex" : "none";
+  // Hand-off/peer session is conflict-only: coaching never leads to one (the
+  // direct report is never brought into Mend for this track).
   document.getElementById("handoff-chip").style.display = type === "conflict" ? "inline-flex" : "none";
-  document.getElementById("close-case-btn").style.display = type === "conflict" ? "inline-block" : "none";
+  document.getElementById("close-case-btn").style.display = CASE_LIKE_TYPES.includes(type) ? "inline-block" : "none";
   document.getElementById("plan-toggle").style.display = type === "written" ? "none" : "inline-block";
   document.getElementById("plan-toggle").textContent = type === "meeting" ? "Strategy" : "Plan";
 }
@@ -1024,11 +1038,11 @@ async function openConvo(id, type) {
 
   const res = await fetch(apiPath(GET_PATH[type](id)));
   const data = await res.json();
-  const obj = type === "conflict" ? data.case : data.session;
+  const obj = CASE_LIKE_TYPES.includes(type) ? data.case : data.session;
   if (obj.roster) roster = obj.roster;
   document.getElementById("thread-title").textContent = obj.title || "New conversation";
   for (const m of data.messages) appendBubble(messagesEl, m.role, m.content);
-  if (type === "conflict") {
+  if (CASE_LIKE_TYPES.includes(type)) {
     renderPlan(data.plan);
     renderIncident(obj);
   } else if (type === "meeting") {
@@ -1149,7 +1163,7 @@ function renderStep(s, index) {
 async function addStep() {
   const input = document.getElementById("add-step-input");
   const text = input.value.trim();
-  if (!text || !activeConvo || activeConvo.type !== "conflict") return;
+  if (!text || !activeConvo || !CASE_LIKE_TYPES.includes(activeConvo.type)) return;
   input.value = "";
   const res = await fetch(apiPath(`/api/cases/${activeConvo.id}/plan`), {
     method: "POST",
@@ -1160,14 +1174,14 @@ async function addStep() {
 }
 
 async function closeCase() {
-  if (!activeConvo || activeConvo.type !== "conflict") return;
+  if (!activeConvo || !CASE_LIKE_TYPES.includes(activeConvo.type)) return;
   const res = await fetch(apiPath(`/api/cases/${activeConvo.id}`), {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status: "closed" }),
   });
   const updated = await res.json();
-  applyConvoResult("conflict", { case: updated });
+  applyConvoResult(activeConvo.type, { case: updated });
 }
 
 async function openHandoffModal() {
@@ -1216,7 +1230,7 @@ document.getElementById("handoff-dismiss").onclick = () => document.getElementBy
 document.getElementById("joint-video-dismiss").onclick = closeJointSessionVideoModal;
 
 function applyConvoResult(type, body) {
-  const obj = type === "conflict" ? body.case : body.session;
+  const obj = CASE_LIKE_TYPES.includes(type) ? body.case : body.session;
   if (obj.roster) roster = obj.roster;
   const idx = conversations.findIndex((c) => c.id === obj.id && c.type === type);
   const merged = { ...obj, type };
@@ -1225,8 +1239,8 @@ function applyConvoResult(type, body) {
   conversations.sort((a, b) => b.updated_at - a.updated_at);
   renderConvoList();
   document.getElementById("thread-title").textContent = obj.title || "New conversation";
-  if (type === "conflict") renderIncident(obj);
-  if (type === "conflict" && body.plan) renderPlan(body.plan);
+  if (CASE_LIKE_TYPES.includes(type)) renderIncident(obj);
+  if (CASE_LIKE_TYPES.includes(type) && body.plan) renderPlan(body.plan);
   if (type === "meeting") {
     renderMeetingGoal(obj);
     renderStrategyPoints(obj);
@@ -1252,6 +1266,7 @@ function showDisambiguation(messagesEl) {
     <div>One thing first -- is this...</div>
     <div class="disambig-options">
       <button type="button" data-type="conflict">Something that happened with someone</button>
+      <button type="button" data-type="coaching">Prepping to talk to one of my own reports</button>
       <button type="button" data-type="meeting">A meeting I'm prepping for</button>
       <button type="button" data-type="written">A message I need to answer</button>
     </div>
@@ -1270,7 +1285,15 @@ function showDisambiguation(messagesEl) {
 async function resolveType(type, messagesEl) {
   const turns = pendingTurns;
   pendingTurns = null;
-  const res = await fetch(apiPath(CREATE_PATH[type]), { method: "POST" });
+  // "conflict"/"coaching" share one endpoint (/api/cases) but need a {kind}
+  // body so the backend picks the right persona; meeting/written take no
+  // creation body at all.
+  const fetchOpts = { method: "POST" };
+  if (CASE_LIKE_TYPES.includes(type)) {
+    fetchOpts.headers = { "Content-Type": "application/json" };
+    fetchOpts.body = JSON.stringify({ kind: type });
+  }
+  const res = await fetch(apiPath(CREATE_PATH[type]), fetchOpts);
   const obj = await res.json();
   activeConvo = { id: obj.id, type };
   showPanelsForType(type);
