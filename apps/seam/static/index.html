@@ -25,6 +25,7 @@
     --bg: #FAFBFA;
     --app-bg: #FFFFFF;
     --sidebar-bg: #EEF2EE;
+    --chat-bg: #F7F9F7;
     --panel-bg: #E7ECE7;
     --border: #CBD3CD;
     --rail-border: #B9C4BC;
@@ -166,7 +167,12 @@
     border-radius: 10px; cursor: pointer;
     border-left: 3px solid transparent;
   }
-  .item-row.active { background: var(--accent-pink-active); border-left-color: var(--ink); padding-left: 9px; }
+  .item-row:not(.active):hover { background: var(--panel-bg); }
+  .item-row.active {
+    background: var(--app-bg); border-left-color: var(--ink);
+    margin-left: 0; margin-right: 0; padding-left: 17px; padding-right: 20px;
+    border-radius: 0;
+  }
   .item-row .top { display: flex; justify-content: space-between; gap: 8px; }
   .item-row .name { font-size: 13px; font-weight: 600; }
   .item-row .time { font-size: 11px; color: var(--muted); white-space: nowrap; }
@@ -180,7 +186,7 @@
   .section-view.active { display: flex; }
 
   /* Thread (shared look for conflicts + meetings) */
-  .thread-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+  .thread-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--chat-bg); }
   .thread-header {
     padding: 18px 28px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -391,7 +397,7 @@
   .composer-row {
     padding: 16px 28px 24px 28px; border-top: 1px solid var(--border);
     display: flex; align-items: center; gap: 8px;
-    background: var(--bg);
+    background: var(--chat-bg);
   }
   .composer-pill {
     flex: 1; display: flex; align-items: center; gap: 8px;
@@ -443,7 +449,7 @@
   /* Side panel: plan (conflicts) / strategy points (meetings) */
   .side-panel {
     width: 250px; min-width: 210px; border-left: 1px solid var(--border);
-    background: var(--panel-bg); display: flex; flex-direction: column; padding: 20px 18px;
+    background: var(--app-bg); display: flex; flex-direction: column; padding: 20px 18px;
   }
   .side-panel-inner {
     flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; overflow: auto;
@@ -558,7 +564,7 @@
   </div>
   <div class="top-nav-actions">
     <button id="install-btn" title="Install Seam as an app">Install app</button>
-    <a id="feedback-link" href="survey/post" title="Done testing? Leave feedback">Feedback</a>
+    <a id="feedback-link" href="survey/post" title="Done testing? Leave feedback">Give feedback</a>
     <button id="help-btn" title="How this works">?</button>
     <button class="privacy-chip" id="privacy-chip" type="button" aria-describedby="privacy-tooltip" aria-label="Anonymity enforced">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
