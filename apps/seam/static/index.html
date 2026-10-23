@@ -24,13 +24,15 @@
     --ink: #17372E;
     --bg: #FAFBFA;
     --app-bg: #FFFFFF;
-    --panel-bg: #F1F4F1;
-    --border: #E7EBE8;
-    --rail-border: #D7DED9;
-    --muted: #6B7A73;
-    --faint: #9AA6A0;
+    --sidebar-bg: #EEF2EE;
+    --panel-bg: #E7ECE7;
+    --border: #CBD3CD;
+    --rail-border: #B9C4BC;
+    --muted: #52605A;
+    --faint: #83928B;
     --accent-pink: #F3829A;
     --accent-pink-bg: #FCEEF0;
+    --accent-pink-active: #F9D9E1;
   }
   * { box-sizing: border-box; }
   body {
@@ -102,7 +104,7 @@
     width: 240px;
     min-width: 200px;
     border-right: 1px solid var(--border);
-    background: var(--bg);
+    background: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
   }
@@ -145,11 +147,12 @@
   }
   #convo-list { flex: 1; overflow: auto; }
   .item-row {
-    padding: 10px 12px; margin: 0 8px 2px 8px;
+    padding: 10px 12px 10px 10px; margin: 0 8px 2px 8px;
     display: flex; flex-direction: column; gap: 3px;
-    border-radius: 12px; cursor: pointer;
+    border-radius: 10px; cursor: pointer;
+    border-left: 3px solid transparent;
   }
-  .item-row.active { background: var(--accent-pink-bg); }
+  .item-row.active { background: var(--accent-pink-active); border-left-color: var(--ink); padding-left: 9px; }
   .item-row .top { display: flex; justify-content: space-between; gap: 8px; }
   .item-row .name { font-size: 13px; font-weight: 600; }
   .item-row .time { font-size: 11px; color: var(--muted); white-space: nowrap; }
@@ -405,7 +408,6 @@
     border: 1px solid var(--border); border-radius: 12px; background: var(--bg);
     padding: 10px 16px; font-size: 13px; color: var(--muted); font-style: italic;
   }
-  .intro-note { font-size: 12px; color: var(--faint); text-align: center; line-height: 1.5; }
 
   .bubble.disambig { display: flex; flex-direction: column; gap: 10px; }
   .disambig-options { display: flex; flex-direction: column; gap: 6px; }
@@ -516,7 +518,7 @@
   }
 </style>
 </head>
-<body>
+<body><a id="mend-launchpad-badge" href="http://localhost:8000/launchpad.html" target="_blank" rel="noopener" style="position:fixed;bottom:14px;right:14px;z-index:99999;font-family:'Manrope',-apple-system,sans-serif;font-size:11px;font-weight:600;color:#fff;background:#17372E;text-decoration:none;padding:6px 12px;border-radius:999px;opacity:.72;box-shadow:0 2px 6px rgba(0,0,0,.15);" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.72">&#8962; Launchpad</a>
 <div class="top-nav">
   <div class="top-bar-brand">
     <button id="sidebar-toggle" title="Menu">
@@ -570,7 +572,6 @@
             <div class="intro-example">"Two of my direct reports aren't getting along"</div>
             <div class="intro-example">"Tell my manager something they won't want to hear"</div>
           </div>
-          <div class="intro-note">Type anything, I'll work out what kind of help fits as we go.</div>
         </div>
       </div>
       <div class="messages" id="messages" style="display:none"></div>
