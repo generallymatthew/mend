@@ -86,7 +86,7 @@ Both are talented, well-intentioned, and acting completely rationally based on h
 
 This doesn't happen every time these two interact. It shows up when the stakes are higher than usual, a tight deadline, a high-visibility launch, extra pressure from above, and that pressure is what makes the designer assume the engineer is a territorial gatekeeper with an ego, and the engineer assume the designer is reckless and sloppy.
 
-In organizational psychology, this is the **fundamental attribution error**: we judge our own behavior based on context and constraints, but we judge our colleagues' behavior based on perceived character flaws. (Lee Ross, "The Intuitive Psychologist and His Shortcomings," 1977: https://explore.psychsafety.com/n/ross-1977/)
+In organizational psychology, this is the **actor-observer asymmetry**: we judge our own behavior based on context and constraints, but we judge our colleagues' behavior based on perceived character flaws. (Jones & Nisbett, "The Actor and the Observer: Divergent Perceptions of the Causes of Behavior," 1971; the related, single-directional Fundamental Attribution Error is Lee Ross, "The Intuitive Psychologist and His Shortcomings," 1977: https://explore.psychsafety.com/n/ross-1977/)
 
 Most of what reads as ego or unprofessionalism in a coworker is them reacting to pressure you can't see: a deadline, understaffing, a bad week, pressure from their own manager.
 
@@ -423,7 +423,7 @@ Took me years to get this: the coworker who makes your blood boil is usually jus
 
 Classic example in tech: a designer gets rewarded for shipping fast and iterating. A platform engineer gets reamed for any regression or outage. So when the engineer blocks a PR, the designer reads it as ego and gatekeeping, and the engineer reads the designer as reckless. Neither read is right. They're just being judged on opposite things.
 
-This is basically the fundamental attribution error at a team level: we explain our own behavior by context, and other people's behavior by character. Once you start asking "what metric is this person actually being judged on" instead of "why are they being difficult," most of the personal resentment evaporates.
+This is basically the actor-observer asymmetry at a team level: we explain our own behavior by context, and other people's behavior by character. Once you start asking "what metric is this person actually being judged on" instead of "why are they being difficult," most of the personal resentment evaporates.
 
 Zoom out and this holds generally: most of what gets read as ego or a lack of professionalism in a coworker is them reacting to pressure nobody else can see, a deadline, understaffing, a bad week, pressure coming down from their own manager.
 
@@ -555,7 +555,7 @@ Every citation now lives inline in the post text itself (name, year, and a direc
 
 **2. Conflict taxonomy and post-resolution coding (task vs. relationship conflict).** Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (Administrative Science Quarterly, 1995). https://doi.org/10.2307/2393638
 
-**3. The fundamental attribution error.** Lee Ross, *"The Intuitive Psychologist and His Shortcomings: Distortions in the Attribution Process"* (Advances in Experimental Social Psychology, 1977). https://explore.psychsafety.com/n/ross-1977/
+**3. The actor-observer asymmetry.** Edward E. Jones & Richard E. Nisbett, *"The Actor and the Observer: Divergent Perceptions of the Causes of Behavior"* (General Learning Press, 1971). Related to, but distinct from, the single-directional Fundamental Attribution Error: Lee Ross, *"The Intuitive Psychologist and His Shortcomings: Distortions in the Attribution Process"* (Advances in Experimental Social Psychology, 1977). https://explore.psychsafety.com/n/ross-1977/
 
 **4. Autonomous commitment vs. controlled compliance.** Edward L. Deci & Richard M. Ryan, *"The 'What' and 'Why' of Goal Pursuits: Human Needs and the Self-Determination of Behavior"* (Psychological Inquiry, 2000). https://doi.org/10.1207/S15327965PLI1104_01
 

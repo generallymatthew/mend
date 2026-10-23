@@ -12,8 +12,8 @@ When publishing these posts or defending the data against peer skepticism (e.g.,
 2. **Conflict Taxonomy & Post-Resolution Coding (Task vs. Relationship Conflict):**
    * **Citation:** Dr. Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (*Administrative Science Quarterly*), with follow-up studies alongside Dr. Kristin Behfar.
    * **Key Finding:** While participants enter disputes attributing 50%–70% of conflict to relationship/interpersonal clashes, over 80% of durable post-resolution agreements are classified as task, process, or structural fixes (clarifying handoffs, SLAs, and metrics).
-3. **The Fundamental Attribution Error:**
-   * **Citation:** Lee Ross (1977), *"The Intuitive Psychologist and His Shortcomings: Distortions in the Attribution Process"* (*Advances in Experimental Social Psychology*, Stanford University).
+3. **The Actor-Observer Asymmetry:**
+   * **Citation:** Edward E. Jones & Richard E. Nisbett (1971), *"The Actor and the Observer: Divergent Perceptions of the Causes of Behavior"* (General Learning Press); related to, but distinct from, Lee Ross's single-directional Fundamental Attribution Error (1977).
    * **Key Finding:** The systematic cognitive bias where individuals explain others' negative behaviors via internal character flaws or ego, while explaining their own behaviors via external, situational constraints.
 4. **Autonomous Commitment vs. Controlled Compliance:**
    * **Citation:** Edward L. Deci & Richard M. Ryan (2000), *"The 'What' and 'Why' of Goal Pursuits: Human Needs and the Self-Determination of Behavior"* (*Psychological Inquiry*).

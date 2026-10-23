@@ -135,24 +135,6 @@
   .modal-card p.lead-line{font-size:13.5px; color:var(--ink-soft); font-style:italic; margin:22px 0 0; padding-top:18px; border-top:1px solid var(--border);}
   @media (max-width:600px){ .modal-card{padding:28px 20px 24px;} }
 
-  /* Tester-modal: shown on page load, embeds seam-testers.html (same
-     directory, static file) so a visitor testing Seam reads the intro
-     before ever seeing the story page underneath. Dismissing it just
-     closes the overlay -- the story is already fully rendered behind it. */
-  .tester-modal-card{max-width:860px; width:100%; padding:0; overflow:hidden; display:flex; flex-direction:column; max-height:min(820px, calc(100vh - 64px));}
-  .tester-modal-head{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:22px 24px 18px; border-bottom:1px solid var(--border); background:var(--card);}
-  .tester-modal-head .kicker{margin:0 0 6px;}
-  .tester-modal-head h2{font-family:'Fraunces',Georgia,serif; font-size:1.25rem; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em; color:var(--ink);}
-  .tester-modal-head p{font-size:13px; color:var(--ink-soft); margin:0; max-width:48ch;}
-  .tester-modal-close{flex-shrink:0; width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--paper); color:var(--ink-soft); font-size:16px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .tester-modal-close:hover{color:var(--ink); border-color:var(--ink-soft);}
-  .tester-modal-body{flex:1; min-height:0; background:var(--paper);}
-  .tester-modal-body iframe{display:block; width:100%; height:100%; min-height:480px; border:0;}
-  .tester-modal-foot{padding:14px 24px; border-top:1px solid var(--border); background:var(--card); text-align:center;}
-  .tester-modal-foot button{appearance:none; border:none; background:none; font-family:inherit; font-size:13px; font-weight:700; color:var(--accent); cursor:pointer; padding:4px;}
-  .tester-modal-foot button:hover{text-decoration:underline;}
-  @media (max-width:600px){ .tester-modal-card{max-height:calc(100vh - 32px);} .tester-modal-head{padding:18px 18px 14px;} .tester-modal-foot{padding:12px 18px;} }
-
   .builder-note{margin-top:48px; background:var(--card); border:1px solid var(--border); border-left:3px solid var(--honey); border-radius:16px; padding:28px 28px 24px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
   .builder-note .kicker{margin-bottom:10px;}
   .builder-note .section-headline{margin-top:0;}
@@ -530,25 +512,6 @@
   </footer>
 </div>
 
-<div class="modal-overlay open" id="testerModal">
-  <div class="modal-card tester-modal-card" role="dialog" aria-modal="true" aria-labelledby="testerModalTitle">
-    <div class="tester-modal-head">
-      <div>
-        <p class="kicker" style="margin:0 0 6px;">Before you read on</p>
-        <h2 id="testerModalTitle">If you're here to test Seam, read this first</h2>
-        <p>What Seam is, how to go through the test, and what's intentionally left out of this build. Dismiss it when you're ready to read the rest of the manager story.</p>
-      </div>
-      <button type="button" class="tester-modal-close" id="testerModalClose" aria-label="Close">&times;</button>
-    </div>
-    <div class="tester-modal-body" id="testerModalBody">
-      <iframe id="testerModalFrame" src="seam-testers.html" title="Before you test Seam"></iframe>
-    </div>
-    <div class="tester-modal-foot">
-      <button type="button" id="testerModalSkip">Dismiss and read the manager story &rarr;</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="researchModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="researchTitle">
     <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('researchModal').classList.remove('open')">&times;</button>
@@ -568,23 +531,6 @@
   // backdrop-click handler inlined on the overlay itself.
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape') document.getElementById('researchModal').classList.remove('open');
-  });
-})();
-</script>
-<script>
-(function(){
-  // Tester modal: open by default in markup (no flash-of-hidden-content
-  // wait on JS), embeds seam-testers.html, a static same-origin file, so
-  // no reachability probing is needed, just load it and let the visitor
-  // dismiss it into the manager story page rendered underneath.
-  var overlay = document.getElementById('testerModal');
-  if (!overlay) return;
-  function close(){ overlay.classList.remove('open'); }
-  document.getElementById('testerModalClose').addEventListener('click', close);
-  document.getElementById('testerModalSkip').addEventListener('click', close);
-  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape' && overlay.classList.contains('open')) close();
   });
 })();
 </script>

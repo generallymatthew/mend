@@ -306,7 +306,17 @@
     box-shadow: 0 24px 60px rgba(23,55,46,0.32); display: flex; flex-direction: column;
     overflow: hidden;
   }
-  #gate-modal .gate-head { padding: 26px 28px 18px; border-bottom: 1px solid var(--border); }
+  #gate-modal .gate-tabs { display: flex; gap: 4px; padding: 16px 28px 0; }
+  #gate-modal .gate-tab {
+    flex: 1; font: inherit; font-weight: 700; font-size: 12.5px; color: var(--muted);
+    background: var(--panel-bg); border: none; border-radius: 999px 999px 0 0;
+    padding: 10px 14px 9px; cursor: pointer;
+  }
+  #gate-modal .gate-tab.sel { background: var(--app-bg); color: var(--ink); }
+  #gate-modal .gate-pane[hidden] { display: none; }
+  #gate-modal .gate-head { padding: 22px 28px 18px; border-bottom: 1px solid var(--border); }
+  #gate-modal .gate-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  #gate-modal .gate-brand .brand-name { font-size: 15px; font-weight: 800; color: var(--ink); }
   #gate-modal .gate-tag {
     display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .04em;
     text-transform: uppercase; color: #B9872C; background: #FBF2DC;
@@ -315,12 +325,15 @@
   #gate-modal h1 { margin: 0 0 8px; font-size: 20px; font-weight: 800; color: var(--ink); line-height: 1.25; }
   #gate-modal .gate-sub { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
   #gate-modal .gate-body { padding: 20px 28px; }
-  #gate-modal .gate-section-label {
-    font-size: 12px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase;
-    color: var(--faint); margin-bottom: 10px;
+  #gate-modal .gate-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; counter-reset: step; }
+  #gate-modal .gate-steps > li { counter-increment: step; display: flex; gap: 12px; align-items: flex-start; }
+  #gate-modal .gate-steps > li::before {
+    content: counter(step); flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--ink); color: #fff; font-weight: 800; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
   }
-  #gate-modal ul { margin: 0 0 20px; padding-left: 18px; font-size: 13px; color: var(--ink); line-height: 1.6; }
-  #gate-modal .gate-divider { height: 1px; background: var(--border); margin: 0 0 20px; }
+  #gate-modal .gate-steps b { display: block; font-size: 14px; color: var(--ink); font-weight: 700; }
+  #gate-modal .gate-steps span { font-size: 13px; color: var(--muted); line-height: 1.5; }
   #gate-modal .gate-q { margin-bottom: 16px; }
   #gate-modal .gate-q:last-child { margin-bottom: 0; }
   #gate-modal .gate-q-label { font-weight: 700; font-size: 12.5px; margin-bottom: 8px; color: var(--ink); }
@@ -790,63 +803,72 @@
 
 <div id="gate-overlay">
   <form id="gate-modal">
-    <div class="gate-head">
-      <span class="gate-tag">Before you test Seam</span>
-      <h1>Two quick things first</h1>
-      <p class="gate-sub">A short read, then four questions about how you handle conflict today. Under 2 minutes.</p>
+    <div class="gate-tabs" role="tablist">
+      <button type="button" class="gate-tab sel" id="gate-tab-intro" data-tab="intro">What to test</button>
+      <button type="button" class="gate-tab" id="gate-tab-survey" data-tab="survey">Quick survey</button>
     </div>
-    <div class="gate-body">
-      <div class="gate-section-label">What this build is</div>
-      <ul>
-        <li>Seam is a prototype &mdash; some things are stubbed, not a finished product.</li>
-        <li>Try Conflicts, Written, or Meetings on a real situation from your team.</li>
-        <li>Nothing is saved after your session ends.</li>
-      </ul>
-      <div class="gate-divider"></div>
-      <div class="gate-section-label">Before you dive in</div>
 
-      <div class="gate-q">
-        <div class="gate-q-label">How often does conflict come up on your team?</div>
-        <div class="choice-row" data-radio="conflict_frequency">
-          <label class="choice"><input type="radio" name="conflict_frequency" value="rarely">Rarely</label>
-          <label class="choice"><input type="radio" name="conflict_frequency" value="occasionally">Occasionally</label>
-          <label class="choice"><input type="radio" name="conflict_frequency" value="regularly">Regularly</label>
-          <label class="choice"><input type="radio" name="conflict_frequency" value="constantly">Constantly</label>
+    <div class="gate-pane" data-pane="intro">
+      <div class="gate-head">
+        <div class="gate-brand">
+          <svg class="mend-mark" width="22" height="16" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+          <span class="brand-name">Mend</span>
         </div>
+        <h1>Welcome, and thank you</h1>
+        <p class="gate-sub">We really appreciate you taking the time to test Seam.</p>
       </div>
-
-      <div class="gate-q">
-        <div class="gate-q-label">When something comes up, what do you usually do first?</div>
-        <div class="choice-row" data-radio="first_move">
-          <label class="choice"><input type="radio" name="first_move" value="talk_direct">Talk to them directly</label>
-          <label class="choice"><input type="radio" name="first_move" value="loop_in_hr_or_manager">Loop in HR/manager</label>
-          <label class="choice"><input type="radio" name="first_move" value="wait_and_see">Wait and see</label>
-          <label class="choice"><input type="radio" name="first_move" value="other">Something else</label>
-        </div>
+      <div class="gate-body">
+        <ol class="gate-steps">
+          <li><div><b>Use the app however you want.</b> <span>Try Conflicts, Written, or Meetings on a real situation from your team.</span></div></li>
+          <li><div><b>This is a prototype.</b> <span>Some things are stubbed, and nothing is saved after your session ends.</span></div></li>
+          <li><div><b>Then there's a short survey</b> <span>on the next tab, about how you handle conflict today.</span></div></li>
+        </ol>
       </div>
-
-      <div class="gate-q">
-        <div class="gate-q-label">Do you feel judged on how you handle it?</div>
-        <div class="choice-row" data-radio="feels_judged">
-          <label class="choice"><input type="radio" name="feels_judged" value="yes">Yes</label>
-          <label class="choice"><input type="radio" name="feels_judged" value="somewhat">Somewhat</label>
-          <label class="choice"><input type="radio" name="feels_judged" value="no">No</label>
-        </div>
+      <div class="gate-foot">
+        <button type="button" class="gate-submit" id="gate-continue">Continue to survey &rarr;</button>
       </div>
-
-      <div class="gate-q">
-        <div class="gate-q-label">Has that ever made you avoid addressing something?</div>
-        <div class="choice-row" data-radio="avoided_due_to_pressure">
-          <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="yes">Yes</label>
-          <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="sometimes">Sometimes</label>
-          <label class="choice"><input type="radio" name="avoided_due_to_pressure" value="no">No</label>
-        </div>
-      </div>
-
-      <div class="gate-error" id="gate-error">Pick an answer for "how often does conflict come up" to continue.</div>
     </div>
-    <div class="gate-foot">
-      <button type="submit" class="gate-submit" id="gate-submit">Start testing Seam &rarr;</button>
+
+    <div class="gate-pane" data-pane="survey" hidden>
+      <div class="gate-head">
+        <h1>A few quick questions</h1>
+        <p class="gate-sub">How you handle conflict today. Under a minute.</p>
+      </div>
+      <div class="gate-body">
+        <div class="gate-q">
+          <div class="gate-q-label">How often does conflict come up on your team?</div>
+          <div class="choice-row" data-radio="conflict_frequency">
+            <label class="choice"><input type="radio" name="conflict_frequency" value="rarely">Rarely</label>
+            <label class="choice"><input type="radio" name="conflict_frequency" value="occasionally">Occasionally</label>
+            <label class="choice"><input type="radio" name="conflict_frequency" value="regularly">Regularly</label>
+            <label class="choice"><input type="radio" name="conflict_frequency" value="constantly">Constantly</label>
+          </div>
+        </div>
+
+        <div class="gate-q">
+          <div class="gate-q-label">When something comes up, what do you usually do first?</div>
+          <div class="choice-row" data-radio="first_move">
+            <label class="choice"><input type="radio" name="first_move" value="talk_direct">Talk to them directly</label>
+            <label class="choice"><input type="radio" name="first_move" value="loop_in_hr_or_manager">Loop in HR/manager</label>
+            <label class="choice"><input type="radio" name="first_move" value="wait_and_see">Wait and see</label>
+            <label class="choice"><input type="radio" name="first_move" value="other">Something else</label>
+          </div>
+        </div>
+
+        <div class="gate-q">
+          <div class="gate-q-label">Do you feel judged on how you handle it?</div>
+          <div class="choice-row" data-radio="feels_judged">
+            <label class="choice"><input type="radio" name="feels_judged" value="yes">Yes</label>
+            <label class="choice"><input type="radio" name="feels_judged" value="somewhat">Somewhat</label>
+            <label class="choice"><input type="radio" name="feels_judged" value="no">No</label>
+          </div>
+        </div>
+
+        <div class="gate-error" id="gate-error">Pick an answer for "how often does conflict come up" to continue.</div>
+      </div>
+      <div class="gate-foot">
+        <button type="submit" class="gate-submit" id="gate-submit">Start testing Seam &rarr;</button>
+      </div>
     </div>
   </form>
 </div>
@@ -1759,10 +1781,26 @@ window.addEventListener("appinstalled", () => {
 
 // ---------------------------------------------------------------------
 // Pre-use tester gate (see #gate-overlay CSS comment above for why this
-// lives in the app instead of a separate survey page). Same choice-row +
-// data-radio wiring pattern as static/survey.html, trimmed to 4 fields;
-// posts to the same /api/survey endpoint that page uses.
+// lives in the app instead of a separate survey page). Two tabs in one
+// form so the instructions and the survey don't read as one long wall --
+// "intro" first, "survey" reachable via its tab or the Continue button.
+// Same choice-row + data-radio wiring pattern as static/survey.html,
+// trimmed to 3 fields; posts to the same /api/survey endpoint that page
+// uses.
 // ---------------------------------------------------------------------
+function gateShowTab(name) {
+  document.querySelectorAll('#gate-modal .gate-pane').forEach((pane) => {
+    pane.hidden = pane.dataset.pane !== name;
+  });
+  document.querySelectorAll('#gate-modal .gate-tab').forEach((tab) => {
+    tab.classList.toggle('sel', tab.dataset.tab === name);
+  });
+}
+document.querySelectorAll('#gate-modal .gate-tab').forEach((tab) => {
+  tab.addEventListener('click', () => gateShowTab(tab.dataset.tab));
+});
+document.getElementById('gate-continue').addEventListener('click', () => gateShowTab('survey'));
+
 document.querySelectorAll('#gate-modal [data-radio]').forEach((row) => {
   row.querySelectorAll('.choice').forEach((label) => {
     const input = label.querySelector('input');
@@ -1795,7 +1833,6 @@ document.getElementById('gate-modal').addEventListener('submit', async (e) => {
         conflict_frequency: conflictFrequency,
         first_move: gateRadio('first_move'),
         feels_judged: gateRadio('feels_judged'),
-        avoided_due_to_pressure: gateRadio('avoided_due_to_pressure'),
       }),
     });
     if (!res.ok) throw new Error('survey submit failed');

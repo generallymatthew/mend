@@ -1112,7 +1112,7 @@ SURVEY_POST_FILE = ROOT / "survey_responses_post.jsonl"
 SURVEY_POST_WORKSHEET_TITLE = "Seam Post-Use"
 SURVEY_POST_SHEET_HEADER = [
     "Timestamp", "Overall (1-5)", "Read felt right", "Changed approach",
-    "Plan panel value", "Would use for real case", "Issues", "Comments",
+    "Plan panel value", "Would use for real case", "Issues", "Comments", "Email",
 ]
 _sheet_post = None
 _sheet_post_init_failed = False
@@ -1173,12 +1173,14 @@ async def submit_survey_post(request: Request):
         return JSONResponse({"error": "issues must be a list"}, status_code=400)
     issues = [str(i)[:40] for i in issues_raw][:10]
     comments = str(data.get("comments") or "")[:4000]
+    email = str(data.get("email") or "")[:200]
     record = {
         "ts": time.time(),
         "overall_rating": overall_rating,
         **radios,
         "issues": issues,
         "comments": comments,
+        "email": email,
     }
     sheet = get_survey_post_sheet()
     if sheet is not None:
@@ -1194,6 +1196,7 @@ async def submit_survey_post(request: Request):
                     radios["would_use_real_case"] or "",
                     ", ".join(issues),
                     comments,
+                    email,
                 ],
                 table_range=f"A1:{chr(ord('A') + len(SURVEY_POST_SHEET_HEADER) - 1)}1",
             )

@@ -54,8 +54,10 @@ brand them as incompetent, high-maintenance, or a "culture risk."
 
 ### C. Asynchronous attribution traps
 
-Under the Fundamental Attribution Error (Ross, 1977), people explain their
-own actions situationally but read others' actions as proof of character.
+Under the actor-observer asymmetry (Jones & Nisbett, 1971; related to but
+distinct from Ross's single-directional Fundamental Attribution Error,
+1977), people explain their own actions situationally but read others'
+actions as proof of character.
 In remote setups you never see a coworker's physical context (firefighting
 an outage, a family emergency) — you only get a curt message ("Doesn't
 work. Redo.") — and in that vacuum, the recipient assumes arrogance or

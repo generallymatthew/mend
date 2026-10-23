@@ -100,7 +100,7 @@ Both are talented, well-intentioned, and acting completely rationally based on h
 
 Yet when they interact, it feels personal[cite: 3, 4]. The designer assumes the engineer is a territorial gatekeeper with an unchecked ego[cite: 3, 6]. The engineer assumes the designer is reckless and sloppy[cite: 4].
 
-In organizational psychology, this is the **Fundamental Attribution Error**: we judge our own behavior based on context and constraints, but we judge our colleagues based on perceived character flaws[cite: 4, 6].
+In organizational psychology, this is the **actor-observer asymmetry**: we judge our own behavior based on context and constraints, but we judge our colleagues based on perceived character flaws[cite: 4, 6].
 
 If you want to resolve cross-functional friction, stop asking: *"Why are they being so difficult?"*[cite: 3, 4]  
 Start asking: *"What metric does their boss chew them out for if it slips?"*[cite: 3, 4]

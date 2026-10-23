@@ -32,6 +32,7 @@
   .choice.sel{border-color:var(--accent); background:var(--accent-soft);}
   .choice input{accent-color:var(--accent); flex-shrink:0;}
   textarea{width:100%; resize:vertical; min-height:80px; border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
+  input[type=email]{width:100%; border:1.5px solid var(--border); border-radius:12px; padding:11px 14px; font:inherit; font-size:14.5px; background:var(--paper); color:var(--ink);}
   .submit-row{display:flex; justify-content:flex-end; margin-top:6px;}
   button.primary{border:1.5px solid var(--accent); background:var(--accent); color:#fff; border-radius:999px; padding:13px 26px; font:inherit; font-weight:700; font-size:15px; cursor:pointer;}
   button.primary:disabled{opacity:.5; cursor:default;}
@@ -120,6 +121,12 @@
       <textarea id="comments" placeholder="Optional. What worked, what didn't, what you'd change"></textarea>
     </div>
 
+    <div class="card">
+      <div class="q-label">Willing to talk through your feedback with us directly?</div>
+      <div class="q-hint">Optional. Leave your email if so.</div>
+      <input type="email" id="email" placeholder="you@company.com">
+    </div>
+
     <div class="submit-row">
       <button type="button" class="primary" id="submitBtn">Submit feedback</button>
     </div>
@@ -199,6 +206,7 @@ submitBtn.addEventListener('click', async () => {
     would_use_real_case: getRadio('would_use_real_case'),
     issues,
     comments: document.getElementById('comments').value.trim(),
+    email: document.getElementById('email').value.trim(),
   };
   try {
     const res = await fetch(apiPath('/api/survey/post'), {
