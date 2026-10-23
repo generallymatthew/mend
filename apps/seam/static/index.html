@@ -57,13 +57,27 @@
   .top-bar-brand { display: flex; align-items: center; gap: 9px; }
   .top-bar-brand .mend-mark { display: block; flex-shrink: 0; }
   .top-bar-brand .brand-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-  .top-bar-brand .by-mend { font-size: 10px; color: var(--faint); letter-spacing: .03em; margin-left: -3px; }
   .privacy-chip {
+    position: relative;
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 12px; letter-spacing: 0.02em; color: var(--ink);
-    background: #17372E14; border-radius: 999px; padding: 8px 14px 8px 10px;
+    background: #17372E14; border: none; font-family: inherit; cursor: pointer;
+    border-radius: 999px; padding: 8px 14px 8px 10px;
   }
   .privacy-chip svg { flex-shrink: 0; color: var(--ink); }
+  .privacy-tooltip {
+    position: absolute; top: calc(100% + 8px); right: 0; z-index: 40;
+    width: 220px; background: #211F1C; color: #fff; font-size: 12px; font-weight: 400;
+    letter-spacing: normal; text-align: left; line-height: 1.45;
+    padding: 10px 12px; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    opacity: 0; visibility: hidden; transition: opacity .12s ease;
+    pointer-events: none;
+  }
+  .privacy-chip:hover .privacy-tooltip,
+  .privacy-chip:focus-visible .privacy-tooltip,
+  .privacy-tooltip.show {
+    opacity: 1; visibility: visible;
+  }
   .top-nav-actions { display: flex; align-items: center; gap: 8px; }
   #install-btn {
     display: none; align-items: center; gap: 6px;
@@ -161,10 +175,6 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .item-row.closed { opacity: 0.55; }
-  .sidebar-footer {
-    margin-top: auto; padding: 14px 20px; font-size: 11.5px;
-    color: var(--faint); border-top: 1px solid var(--border);
-  }
   /* Section views: only the active one is shown */
   .section-view { display: none; flex: 1; min-width: 0; }
   .section-view.active { display: flex; }
@@ -526,16 +536,16 @@
     </button>
     <svg class="mend-mark" width="24" height="17" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
     <span class="brand-name">Seam</span>
-    <span class="by-mend">by mend</span>
-    <span class="privacy-chip">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-      Anonymity enforced
-    </span>
   </div>
   <div class="top-nav-actions">
     <button id="install-btn" title="Install Seam as an app">Install app</button>
     <a id="feedback-link" href="survey/post" title="Done testing? Leave feedback">Feedback</a>
     <button id="help-btn" title="How this works">?</button>
+    <button class="privacy-chip" id="privacy-chip" type="button" aria-describedby="privacy-tooltip">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+      Anonymity enforced
+      <span class="privacy-tooltip" id="privacy-tooltip" role="tooltip">Names stay out of this by default: everyone besides you is referred to by role, not by name.</span>
+    </button>
   </div>
 </div>
 <div id="app">
@@ -546,7 +556,6 @@
         <button class="sidebar-new-btn" id="new-convo-btn" title="New conversation">+</button>
       </div>
       <div id="convo-list"></div>
-      <div class="sidebar-footer">Names stay out of this by default.</div>
     </div>
   </div>
 
@@ -1354,6 +1363,16 @@ document.getElementById("help-btn").onclick = openHelp;
 document.querySelector("#help-modal .close-help").onclick = closeHelp;
 document.getElementById("help-overlay").addEventListener("click", (e) => {
   if (e.target.id === "help-overlay") closeHelp();
+});
+
+// Anonymity pill: hover shows the tooltip on desktop (CSS); tap toggles it
+// here, since touch devices have no hover state.
+document.getElementById("privacy-chip").addEventListener("click", (e) => {
+  e.stopPropagation();
+  document.getElementById("privacy-tooltip").classList.toggle("show");
+});
+document.addEventListener("click", () => {
+  document.getElementById("privacy-tooltip").classList.remove("show");
 });
 
 const MOBILE_QUERY = "(max-width: 860px)";
