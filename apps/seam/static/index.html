@@ -185,7 +185,10 @@
     padding: 18px 28px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
-  .thread-header .name { font-size: 15px; font-weight: 700; min-width: 0; }
+  .thread-header .name {
+    font-size: 15px; font-weight: 700; flex: 1 1 auto; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .thread-header .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
   #close-case-btn {
     font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--rail-border);
@@ -526,6 +529,20 @@
       background: rgba(23,41,30,0.32); z-index: 25;
     }
   }
+
+  @media (max-width: 480px) {
+    .top-nav { padding: 10px 12px; gap: 8px; }
+    .top-bar-brand .brand-name { font-size: 18px; }
+    .top-nav-actions { gap: 6px; }
+    #feedback-link { padding: 7px 10px; }
+    .privacy-chip-label { display: none; }
+    .privacy-chip { padding: 8px; }
+    .privacy-tooltip { right: -8px; width: 200px; }
+
+    .thread-header { flex-wrap: wrap; row-gap: 10px; padding: 14px 16px; }
+    .thread-header .name { flex-basis: 100%; }
+    .thread-header .actions { flex-wrap: wrap; row-gap: 8px; }
+  }
 </style>
 </head>
 <body>
@@ -541,9 +558,9 @@
     <button id="install-btn" title="Install Seam as an app">Install app</button>
     <a id="feedback-link" href="survey/post" title="Done testing? Leave feedback">Feedback</a>
     <button id="help-btn" title="How this works">?</button>
-    <button class="privacy-chip" id="privacy-chip" type="button" aria-describedby="privacy-tooltip">
+    <button class="privacy-chip" id="privacy-chip" type="button" aria-describedby="privacy-tooltip" aria-label="Anonymity enforced">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
-      Anonymity enforced
+      <span class="privacy-chip-label">Anonymity enforced</span>
       <span class="privacy-tooltip" id="privacy-tooltip" role="tooltip">Names stay out of this by default: everyone besides you is referred to by role, not by name.</span>
     </button>
   </div>
