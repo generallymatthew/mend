@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Thimble gradient color-play</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --border:#DDD4C0; --accent-soft:#EAF0EC;}
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); font-family:'Manrope',-apple-system,sans-serif; color:var(--ink); padding:28px;}
+  .grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; max-width:1200px; margin:0 auto;}
+  .card{background:#fff; border:1px solid var(--border); border-radius:16px; padding:0 0 22px; overflow:hidden;}
+  .stage{height:260px; display:flex; align-items:center; justify-content:center; background:var(--accent-soft); position:relative;}
+  .halo{position:absolute; width:230px; height:230px; border-radius:50%; background:radial-gradient(circle, rgba(243,130,154,.14), rgba(243,130,154,0) 70%);}
+  /* same silhouette as thimble-states.html DOME_RADIUS -- only playing with fill */
+  .ball{position:relative; width:140px; height:140px; border-radius:50% 50% 50% 50% / 68% 68% 28% 28%;
+    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));}
+  .mouth{position:absolute; left:50%; bottom:26%; transform:translateX(-50%); width:24px; height:6px; border-radius:999px; background:rgba(246,241,231,.75);}
+  .label-row{display:flex; align-items:center; gap:10px; padding:16px 18px 6px;}
+  .letter{width:24px; height:24px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;}
+  h3{font-size:16px; margin:0; font-weight:800;}
+  .tag{margin:0 18px 8px; display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; background:var(--accent-soft); padding:4px 10px; border-radius:999px; color:var(--ink);}
+  p{font-size:12.5px; line-height:1.5; color:var(--ink-soft); margin:0 18px;}
+
+  /* A: Aurora blob -- teal/mint pool over pink base, origin pulled out to the
+     dome's own top-left perimeter (not an inset point) so the blob reads as
+     light arriving from off-frame, not a glow sitting inside the dome. */
+  .ballA{background:
+    radial-gradient(circle at 2% 4%, rgba(163,207,224,.95) 0%, rgba(163,207,224,.45) 26%, rgba(163,207,224,0) 58%),
+    radial-gradient(circle at 10% 10%, rgba(255,255,255,.5), rgba(255,255,255,0) 34%),
+    #F3829A;}
+
+  /* B: Diagonal duotone -- teal band widened so it actually reads as teal,
+     not just a sliver at the corner before the pink takes over. */
+  .ballB{background: linear-gradient(142deg, #A3CFE0 0%, #b0ded1 16%, #b0ded1 34%, #F3B3A6 68%, #F3829A 100%);}
+
+  /* C: Mint sheen v2 -- same mint-tinted highlight, but with real depth added:
+     a brighter, tighter specular dot (not just a soft wash) plus a darkened
+     pool on the opposite rim so the surface reads as curved, not flat-washed. */
+  .ballC{background:
+    radial-gradient(circle at 32% 22%, rgba(220,255,245,.95) 0%, rgba(220,255,245,0) 16%),
+    radial-gradient(circle at 34% 26%, rgba(176,222,209,.7) 0%, rgba(176,222,209,0) 36%),
+    radial-gradient(circle at 66% 80%, rgba(150,30,60,.5), rgba(150,30,60,0) 58%),
+    #F3829A;
+  box-shadow:
+    inset -14px -16px 20px -10px rgba(150,30,60,.35),
+    inset 10px 12px 18px -10px rgba(255,255,255,.4);}
+
+  /* D: Iridescent sweep -- conic hint of teal/mint/pink, closest to "oil slick" */
+  .ballD{background:
+    radial-gradient(circle at 70% 78%, rgba(150,30,60,.35), rgba(150,30,60,0) 55%),
+    conic-gradient(from 200deg at 38% 32%, #A3CFE0, #b0ded1 20%, #F3B3A6 45%, #F3829A 75%, #A3CFE0 100%);
+    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12)) blur(.2px);}
+
+  /* E: Teal top cap -- a distinct teal pool capping the dome, pink everywhere else (two-zone, not blended) */
+  .ballE{background:
+    radial-gradient(circle at 38% 20%, #b0ded1 0%, #b0ded1 20%, rgba(176,222,209,0) 46%),
+    radial-gradient(circle at 36% 28%, rgba(255,255,255,.5), rgba(255,255,255,0) 40%),
+    #F3829A;}
+
+  /* F: Dusk gradient -- deep teal rim darkening into pink, no white highlight at all */
+  .ballF{background: radial-gradient(circle at 42% 34%, #F3B3A6 0%, #F3829A 40%, #7FA8B8 100%);}
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballA"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">A</div><h3>Aurora Blob</h3></div>
+      <div class="tag">teal pool, origin at top-left perimeter</div>
+      <p>Closest match to the reference clip: a soft teal/mint pool with its origin pulled out to the dome's own top-left edge, rather than floating inside the surface. Reads like light arriving from off-frame.</p>
+    </div>
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballB"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">B</div><h3>Diagonal Duotone</h3></div>
+      <div class="tag">teal-to-pink, corner to corner</div>
+      <p>A full diagonal blend, teal in one corner and pink in the other with a warm band between. Teal band widened so it actually registers as a color, not a sliver that gets lost at the edge.</p>
+    </div>
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballC"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">C</div><h3>Mint Sheen</h3></div>
+      <div class="tag">tighter mint highlight + rim shadow for depth</div>
+      <p>v2: a brighter, tighter mint specular dot instead of a soft wash, plus a darkened pool on the opposite rim. Reads as a curved, lit surface now instead of a flat pink fill with a faint tint.</p>
+    </div>
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballD"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">D</div><h3>Iridescent Sweep</h3></div>
+      <div class="tag">conic teal/mint/pink, oil-slick</div>
+      <p>A conic sweep so the hue shifts as you go around the rim -- teal, mint, pink, back to teal. The most "alive" looking option, but also the busiest; worth checking in motion before committing.</p>
+    </div>
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballE"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">E</div><h3>Teal Top Cap</h3></div>
+      <div class="tag">distinct teal zone, not blended</div>
+      <p>A separate teal pool capping the top of the dome like a little hat, rather than blending into the pink. Two-zone instead of a gradient -- simpler to reason about, might read as flatter in motion.</p>
+    </div>
+    <div class="card">
+      <div class="stage"><div class="halo"></div><div class="ball ballF"><div class="mouth"></div></div></div>
+      <div class="label-row"><div class="letter">F</div><h3>Dusk</h3></div>
+      <div class="tag">teal rim darkening, no white highlight</div>
+      <p>No bright highlight at all -- the dome goes from a warm pink center to a muted teal/slate at the rim, like dusk light. Quietest of the six, closest in spirit to the brand's current flat language.</p>
+    </div>
+  </div>
+</body>
+</html>

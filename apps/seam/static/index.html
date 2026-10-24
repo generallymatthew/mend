@@ -429,18 +429,16 @@
   .intro .wrap { position: relative; max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
   .welcome-row { display: flex; align-items: flex-end; gap: 14px; }
   .welcome-row .bubble { text-align: left; }
-  /* First-run walkthrough: a dismissible card, not an in-flow row -- it
-     sits over the empty state (.intro-q + .intro-examples below, and the
-     plain settled #welcome-row underneath it), which stays fully rendered,
+  /* First-run walkthrough: a dismissible card that sits over the empty
+     state (.intro-q + .intro-examples, the only things below it -- there
+     is no permanent welcome row of any kind) which stays fully rendered,
      completely untouched, the whole time -- so closing the card (the X) or
      finishing the last step reveals today's ordinary empty state exactly
      as it already was, nothing to restore. inset:0 fills exactly the box
      its sibling content already occupies in normal flow (.wrap sizes
      itself off those, not off this -- this is the only absolutely-
-     positioned child), so the card's height tracks however tall the
-     welcome row + empty state actually are. Every size/color rule below is
-     scoped to .onboard-card specifically, not the bare .welcome-row, so
-     none of it leaks into the permanent post-onboarding empty state. */
+     positioned child), so the card's height tracks however tall the empty
+     state actually is. */
   .onboard-card {
     position: absolute; inset: 0; z-index: 5;
     background: var(--app-bg); border-radius: 20px;
@@ -681,10 +679,6 @@
               <div class="onboard-dots" id="onboard-dots"></div>
               <button type="button" class="onboard-next" id="onboard-next">Next</button>
             </div>
-          </div>
-          <div class="welcome-row" id="welcome-row">
-            <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
-            <div class="bubble assistant" id="welcome-bubble">Welcome to Seam. This is where we'll work out what's actually going on, and what to do about it.</div>
           </div>
           <div class="intro-q">What do you want to discuss today?</div>
           <div class="intro-examples">

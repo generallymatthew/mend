@@ -192,11 +192,13 @@
      the underlying polygon math checked out smooth (no jump between
      frames), so a residual flicker report is more likely this kind of
      compositing/anti-aliasing shimmer than the shape itself jumping. */
-  /* "Matte Shade" fill -- ambient rim darkening toward the edges, no specular
-     dot, picked over three other gradient options (see design_handoffs
-     comparisons) for staying closer to the flat brand mark's friendly feel
-     while still reading as a lit 3D form. */
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; will-change:clip-path;}
+  /* "Four-Color Bloom" fill -- all 4 state colors live at fixed corners,
+     JS-painted every frame (see the THIMBLE_BLOOM_ constants and
+     updateThimbleMotion) as background-image/background-color/box-shadow
+     together, not a CSS transition -- a background transition here would
+     fight the per-frame repaint. The gradient-image default below is only
+     what shows before the first animation frame paints its own. */
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background-image:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%); background-color:#FF8CA3; overflow:hidden; transition:border-radius .6s ease; will-change:clip-path;}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease;}
   /* Thinking-state "brain orbit": 3 translucent dots (pink/mint/blue,
@@ -488,7 +490,6 @@
   .chat-input-row{max-width:720px; margin:0 auto; display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--border); border-radius:18px; padding:8px 8px 8px 16px;}
   .chat-input-row textarea{flex:1; min-width:0; border:none; outline:none; resize:none; overflow-y:auto; max-height:160px; font:inherit; font-size:15px; line-height:1.5; color:var(--ink); background:transparent; padding:6px 0;}
   .chat-input-row .send-btn{height:44px; padding:0 20px; border-radius:12px; flex-shrink:0;}
-  .chat-hint{max-width:720px; margin:8px auto 0; font-size:12px; opacity:.55; text-align:center;}
   @media (max-width: 760px){
     .ui-tab{font-size:12px; padding:0 11px;}
     /* Dots rotated vertical (markup above) read the same as the standard
@@ -880,7 +881,7 @@
   .confirm-modal-ok:hover{background:#0e241e;}
 </style>
 </head>
-<body><a id="mend-launchpad-badge" href="http://localhost:8000/launchpad.html" target="_blank" rel="noopener" style="position:fixed;bottom:14px;right:14px;z-index:99999;font-family:'Manrope',-apple-system,sans-serif;font-size:11px;font-weight:600;color:#fff;background:#17372E;text-decoration:none;padding:6px 12px;border-radius:999px;opacity:.72;box-shadow:0 2px 6px rgba(0,0,0,.15);" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.72">&#8962; Launchpad</a>
+<body>
 <div class="app-loading-overlay" id="appLoadingOverlay">
   <div class="app-loading-dots"><span></span><span></span><span></span></div>
   <div class="app-loading-text">Connecting to Thimble&hellip;</div>
@@ -1178,7 +1179,6 @@
           </div>
           <button id="chatSendBtn" class="primary send-btn">Send</button>
         </div>
-        <div class="chat-hint">Enter to send &middot; Shift+Enter for a new line</div>
       </div>
     </div>
   </div>
@@ -2495,6 +2495,45 @@ function thimbleHexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
   return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
 }
+// "Four-Color Bloom" fill -- all 4 state colors (idle-blue, listening-teal,
+// thinking-honey, talking-pink) stay visible at fixed home corners all the
+// time; a state change only shifts each color's *weight* (how big its blob
+// is and how much it contributes to the blended base fill), not which
+// colors exist. Active state gets 46%, its two neighbors in the cycle get
+// 20% each, the opposite state gets 14% (smallest, never zero) -- see
+// THIMBLE_BLOOM_WEIGHTS below. ready/hearing borrow idle/listening's own
+// weights (same color family, see THIMBLE_COLORS above); paused gets an
+// even 25% split across all four, reading as the one neutral/settled state
+// instead of introducing a 5th color. Tried out side by side against a
+// single-moving-blob fill in apps/thimble/static/thimble-gradient-states-
+// demo.html before porting here, per explicit request.
+const THIMBLE_BLOOM_ORDER = ['idle', 'listening', 'thinking', 'talking'];
+const THIMBLE_BLOOM_COLOR = {idle: '#A3CFE0', listening: '#b0ded1', thinking: '#E9B949', talking: '#F3829A'};
+const THIMBLE_BLOOM_RGB = Object.fromEntries(THIMBLE_BLOOM_ORDER.map(k => [k, thimbleHexToRgb(THIMBLE_BLOOM_COLOR[k])]));
+// Fixed "home" position for each color's blob + where the specular dot/rim
+// shadow anchor while that color is the active one.
+const THIMBLE_BLOOM_POS = {
+  idle:      {hx: 15, hy: 15},
+  listening: {hx: 85, hy: 15},
+  thinking:  {hx: 80, hy: 85},
+  talking:   {hx: 20, hy: 85},
+};
+const THIMBLE_BLOOM_WEIGHTS = {
+  idle:      {idle: .46, listening: .20, thinking: .14, talking: .20},
+  ready:     {idle: .46, listening: .20, thinking: .14, talking: .20},
+  hearing:   {idle: .20, listening: .46, thinking: .20, talking: .14},
+  listening: {idle: .20, listening: .46, thinking: .20, talking: .14},
+  thinking:  {idle: .14, listening: .20, thinking: .46, talking: .20},
+  talking:   {idle: .20, listening: .14, thinking: .20, talking: .46},
+  paused:    {idle: .25, listening: .25, thinking: .25, talking: .25},
+};
+// Which THIMBLE_BLOOM_POS corner the specular dot/rim shadow follow for a
+// given avatarState -- idle/ready/hearing/paused all read off idle's own
+// corner (gentle, resting) rather than each needing their own entry.
+const THIMBLE_BLOOM_ACTIVE_POS = {
+  idle: 'idle', ready: 'idle', hearing: 'listening', listening: 'listening',
+  thinking: 'thinking', talking: 'talking', paused: 'idle',
+};
 // Thinking-state brain-orbit dots: tight radius relative to their own size
 // (so they overlap) and a brisk angular speed, tuned live in a side-by-side
 // design review before porting here -- see updateThimbleMotion's
@@ -2525,6 +2564,7 @@ function thimbleInstance(prefix, size) {
     dotC: document.getElementById(prefix + 'DotC'),
     renderedState: null, mouthLevel: 0, geo: 0, lvl: 0,
     wobblePhase: 0, breathePhase: 0, lastT: null,
+    bloomCurrent: null, bloomTarget: null,
   };
 }
 
@@ -2764,21 +2804,17 @@ function applyThimbleState(inst, state) {
       ? 'thimble-idle-shadow 2.6s ease-in-out infinite'
       : 'none';
   }
-  // Per-state color (see THIMBLE_COLORS) -- set as a target here, not
-  // painted directly. updateThimbleMotion's color lerp below eases
-  // inst.body's backgroundColor toward it every frame, same per-frame
-  // smoothing convention as inst.lvl, instead of relying on a CSS
-  // background transition (unreliable switching in and out of an inline
-  // override -- reported live as reading like a hard cut, not a fade).
-  // The radial-gradient highlight itself stays in the stylesheet's
-  // background-image, untouched by any of this -- only backgroundColor
-  // is JS-driven.
-  const targetHex = THIMBLE_COLORS[state] || THIMBLE_COLORS.talking;
-  inst.colorTargetRGB = thimbleHexToRgb(targetHex);
-  if (!inst.colorRGB) {
-    inst.colorRGB = {...inst.colorTargetRGB};
-    inst.body.style.backgroundColor = targetHex;
-  }
+  // Per-state color weights (see THIMBLE_BLOOM_WEIGHTS) -- set as a target
+  // here, not painted directly. updateThimbleMotion's bloom lerp below
+  // eases every weight toward it every frame, same per-frame smoothing
+  // convention as inst.lvl, instead of relying on a CSS background
+  // transition (unreliable switching in and out of an inline override --
+  // reported live as reading like a hard cut, not a fade, back when this
+  // was a single-target color). THIMBLE_COLORS itself is no longer painted
+  // directly -- the bloom's own blended base takes over that job, see
+  // THIMBLE_BLOOM_COLOR.
+  inst.bloomTarget = THIMBLE_BLOOM_WEIGHTS[state] || THIMBLE_BLOOM_WEIGHTS.listening;
+  if (!inst.bloomCurrent) inst.bloomCurrent = {...inst.bloomTarget};
   const talking = state === 'talking';
   inst.rippleA.hidden = !talking;
   // Brain-orbit dots: only visible while thinking (see updateThimbleMotion's
@@ -2828,18 +2864,38 @@ function updateThimbleMotion(inst, now, level, listening) {
   // can't produce one huge catch-up jump instead.
   const dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
   inst.lastT = now;
-  // Color lerp toward inst.colorTargetRGB (set in applyThimbleState above),
-  // every frame regardless of state -- an exponential ease so a fast
-  // double state-change (e.g. listening -> thinking -> talking) still
-  // reads as one continuous color shift, not a snap-stutter-snap. Runs
-  // unconditionally, including paused/idle, so a color change is never
-  // left stranded mid-fade if the state stops animating right after.
-  if (inst.colorRGB) {
-    const colorRate = 1 - Math.pow(0.000001, dt); // ~.2s to settle -- explicit ask for a much quicker state-color transition than the old ~.6s
-    inst.colorRGB.r += (inst.colorTargetRGB.r - inst.colorRGB.r) * colorRate;
-    inst.colorRGB.g += (inst.colorTargetRGB.g - inst.colorRGB.g) * colorRate;
-    inst.colorRGB.b += (inst.colorTargetRGB.b - inst.colorRGB.b) * colorRate;
-    inst.body.style.backgroundColor = `rgb(${Math.round(inst.colorRGB.r)}, ${Math.round(inst.colorRGB.g)}, ${Math.round(inst.colorRGB.b)})`;
+  // Bloom weight lerp toward inst.bloomTarget (set in applyThimbleState
+  // above), every frame regardless of state -- an exponential ease so a
+  // fast double state-change (e.g. listening -> thinking -> talking) still
+  // reads as one continuous shift, not a snap-stutter-snap. Runs
+  // unconditionally, including paused/idle, so a change is never left
+  // stranded mid-fade if the state stops animating right after.
+  const colorRate = 1 - Math.pow(0.000001, dt); // ~.2s to settle -- explicit ask for a much quicker state-color transition than the old ~.6s
+  if (inst.bloomCurrent) {
+    const cur = inst.bloomCurrent, tgt = inst.bloomTarget;
+    let r = 0, g = 0, b = 0;
+    THIMBLE_BLOOM_ORDER.forEach(k => {
+      cur[k] += (tgt[k] - cur[k]) * colorRate;
+      const c = THIMBLE_BLOOM_RGB[k];
+      r += c.r * cur[k]; g += c.g * cur[k]; b += c.b * cur[k];
+    });
+    inst.body.style.backgroundColor = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+    const blobs = THIMBLE_BLOOM_ORDER.map(k => {
+      const w = cur[k], c = THIMBLE_BLOOM_RGB[k], pos = THIMBLE_BLOOM_POS[k];
+      const radius = (16 + w * 110).toFixed(1);
+      const alpha = Math.min(1, 0.3 + w * 1.1).toFixed(2);
+      return `radial-gradient(circle at ${pos.hx}% ${pos.hy}%, rgba(${c.r},${c.g},${c.b},${alpha}) 0%, transparent ${radius}%)`;
+    }).join(',');
+    // Specular dot + inset rim shadow anchor to whichever color is "active"
+    // for this avatarState (see THIMBLE_BLOOM_ACTIVE_POS) -- the light
+    // visibly follows the dominant color, reading its position off the
+    // bloom's own fixed corners.
+    const ap = THIMBLE_BLOOM_POS[THIMBLE_BLOOM_ACTIVE_POS[avatarState] || 'idle'];
+    const sx = ap.hx < 50 ? -15 : 15, sy = ap.hy < 50 ? -17 : 17;
+    inst.body.style.backgroundImage =
+      `radial-gradient(circle at ${ap.hx}% ${ap.hy}%, rgba(255,255,255,.7) 0%, transparent 16%),` + blobs;
+    inst.body.style.boxShadow =
+      `inset ${sx}px ${sy}px 20px -10px rgba(0,0,0,.22), inset ${(-0.7 * sx).toFixed(1)}px ${(-0.7 * sy).toFixed(1)}px 18px -10px rgba(255,255,255,.35)`;
   }
   const speaking = avatarState === 'talking';
   const thinkingState = avatarState === 'thinking';
