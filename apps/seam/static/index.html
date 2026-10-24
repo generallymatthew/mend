@@ -335,6 +335,8 @@
   }
   #gate-modal .gate-steps b { display: block; font-size: 14px; color: var(--ink); font-weight: 700; }
   #gate-modal .gate-steps span { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  #gate-modal .gate-try-examples { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  #gate-modal .gate-try-examples .intro-example { padding: 8px 12px; font-size: 12.5px; }
   #gate-modal .gate-q { margin-bottom: 16px; }
   #gate-modal .gate-q:last-child { margin-bottom: 0; }
   #gate-modal .gate-q-label { font-weight: 700; font-size: 12.5px; margin-bottom: 8px; color: var(--ink); }
@@ -745,7 +747,16 @@
       </div>
       <div class="gate-body">
         <ol class="gate-steps">
-          <li><div><b>Use the app however you want.</b> <span>Try it on a real situation from your team -- Seam will work out what kind of help fits.</span></div></li>
+          <li>
+            <div>
+              <b>A few things to test.</b> <span>Bring Seam a real situation from your team -- it'll work out what kind of help fits. A few examples:</span>
+              <div class="gate-try-examples">
+                <div class="intro-example">"Prep for a hard conversation with a direct report"</div>
+                <div class="intro-example">"Two of your direct reports aren't getting along"</div>
+                <div class="intro-example">"Help answering a message where the wording really matters"</div>
+              </div>
+            </div>
+          </li>
           <li><div><b>This is a prototype.</b> <span>Some things are stubbed, and nothing is saved after your session ends.</span></div></li>
           <li><div><b>Then there's a short survey</b> <span>on the next tab, about how you handle conflict today.</span></div></li>
         </ol>
@@ -832,10 +843,19 @@
   const dotsEl = document.getElementById('onboard-dots');
   const nextBtn = document.getElementById('onboard-next');
   const skipBtn = document.getElementById('onboard-skip');
+  // The empty-state "What do you want to discuss today?" prompt + example
+  // cards are for after the walkthrough, not during it -- showing them
+  // alongside Thimble's own intro lines (which cover similar ground, see
+  // SEAM_INTRO_LINES[1]) read as cluttered and redundant. Hidden only while
+  // onboarding is active, restored once it finishes or is skipped.
+  const introQ = document.querySelector('.intro-q');
+  const introExamples = document.querySelector('.intro-examples');
 
   let step = 0;
   row.classList.add('onboard');
   foot.style.display = 'flex';
+  if (introQ) introQ.style.display = 'none';
+  if (introExamples) introExamples.style.display = 'none';
   SEAM_INTRO_LINES.forEach((_, i) => {
     const d = document.createElement('div');
     d.className = 'dot' + (i === 0 ? ' active' : '');
@@ -852,6 +872,8 @@
     row.classList.remove('onboard');
     foot.style.display = 'none';
     bubble.textContent = SEAM_INTRO_LINES[0];
+    if (introQ) introQ.style.display = '';
+    if (introExamples) introExamples.style.display = '';
   }
   nextBtn.addEventListener('click', () => {
     if (step === SEAM_INTRO_LINES.length - 1) { finish(); return; }
@@ -1705,6 +1727,15 @@ document.getElementById('gate-modal').addEventListener('submit', async (e) => {
   const submitBtn = document.getElementById('gate-submit');
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting…';
+  // A hung fetch (e.g. a sleeping Render free-tier instance waking up) used
+  // to leave the button stuck on "Submitting..." forever with no feedback
+  // and no way to retry -- reported live as "can't get past the modal."
+  // Timing the request out and always re-enabling the button in the catch
+  // path (including this new timeout case) means there's always a way
+  // forward, even against a slow or unresponsive server.
+  const timeoutMs = 12000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(apiPath('/api/survey'), {
       method: 'POST',
@@ -1714,15 +1745,20 @@ document.getElementById('gate-modal').addEventListener('submit', async (e) => {
         first_move: gateRadio('first_move'),
         feels_judged: gateRadio('feels_judged'),
       }),
+      signal: controller.signal,
     });
     if (!res.ok) throw new Error('survey submit failed');
     localStorage.setItem('seam_gate_completed', '1');
     document.getElementById('gate-overlay').classList.remove('open');
   } catch (err) {
-    errorEl.textContent = "Couldn't submit that, try again.";
+    errorEl.textContent = err.name === 'AbortError'
+      ? "That's taking a while to respond. Try again?"
+      : "Couldn't submit that, try again.";
     errorEl.classList.add('show');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Start testing Seam →';
+  } finally {
+    clearTimeout(timeoutId);
   }
 });
 
