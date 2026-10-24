@@ -426,11 +426,11 @@
   .mic-btn.conflicts-mic { background: #E8F0E9; color: #5F8569; }
 
   .intro { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
-  .intro .wrap { max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .intro .wrap { position: relative; max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
   .welcome-row { display: flex; align-items: flex-end; gap: 14px; }
   .welcome-row .bubble { text-align: left; }
-  /* Thimble reads as a real presence for this one first-run moment, sized
-     to match the thimble app's own call-stage avatar (apps/thimble/static/
+  /* Thimble reads as a real presence for this first-run moment, sized to
+     match the thimble app's own call-stage avatar (apps/thimble/static/
      session.html's .thimble-avatar, 150px) -- not the 28px scale shared by
      every ordinary chat-row avatar elsewhere in Seam, which this rule
      intentionally doesn't touch. .blob already fills its parent via
@@ -439,25 +439,55 @@
      avatar box as the 28px default). */
   .welcome-row .avatar { width: 150px; height: 150px; }
   .welcome-row .avatar .mouth { width: 21px; height: 13px; }
-  /* First-run only: Thimble walks a brand-new manager through what Seam is
-     for before settling into the plain "Welcome to Seam" line every other
-     visit shows. White + a soft shadow (not the usual --accent-pink-bg flat
-     fill) so this one moment reads as a distinct, elevated intro beat rather
-     than blending into the ordinary chat bubbles it otherwise matches
-     exactly -- same pinched-corner shape (20px 20px 20px 5px), same avatar,
-     same bottom alignment (align-items:flex-end already puts the bubble's
-     bottom level with the mouth, the thing explicitly asked for). Gated on
-     localStorage so it only ever plays once per browser, same pattern as
-     #gate-overlay's own seam_gate_completed flag. */
-  .welcome-row.onboard .bubble {
+  /* "Four-Color Bloom" fill -- the real thimble app's own current avatar
+     style (apps/thimble/static/session.html, ported 2026-10-24: idle,
+     listening, thinking and talking each own a fixed corner, blended by
+     weight). This is a frozen, CSS-only snapshot of that system's *idle*
+     weights (session.html's own THIMBLE_BLOOM_WEIGHTS.idle), not the live
+     per-frame JS engine -- this avatar never changes state, so there's
+     nothing for a state-driven engine to actually do here. Formula: each
+     blob's radius is 16+w*110%, alpha is min(1,.3+w*1.1), specular dot +
+     inset rim shadow anchor to the idle corner (top-left) -- same math,
+     just evaluated once instead of every frame. */
+  .welcome-row .avatar .blob {
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%),
+      radial-gradient(circle at 15% 15%, rgba(163,207,224,.81) 0%, transparent 66.6%),
+      radial-gradient(circle at 85% 15%, rgba(176,222,209,.52) 0%, transparent 38%),
+      radial-gradient(circle at 80% 85%, rgba(233,185,73,.45) 0%, transparent 31.4%),
+      radial-gradient(circle at 20% 85%, rgba(243,130,154,.52) 0%, transparent 38%);
+    background-color: rgb(191,192,186);
+    box-shadow: inset -15px -17px 20px -10px rgba(0,0,0,.22), inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
+  }
+  /* First-run walkthrough: a dismissible card, not an in-flow row -- it
+     sits over the empty state (.intro-q + .intro-examples below, and the
+     plain settled .welcome-row underneath it), which stays fully rendered
+     the whole time so closing the card (the X) or finishing the last step
+     reveals today's ordinary empty state instantly, nothing to restore.
+     inset:0 fills exactly the box its sibling content already occupies in
+     normal flow (.wrap sizes itself off those, not off this -- this is
+     the only absolutely-positioned child), so the card's height tracks
+     however tall the welcome row + empty state actually are. */
+  .onboard-card {
+    position: absolute; inset: 0; z-index: 5;
+    background: var(--app-bg); border-radius: 20px;
+    box-shadow: 0 20px 48px rgba(23,55,46,.2);
+    padding: 28px 24px 24px; display: flex; flex-direction: column; justify-content: center; gap: 20px;
+  }
+  .onboard-card .welcome-row .bubble {
     background: #fff; box-shadow: 0 8px 12px rgba(23,55,46,.16), 0 2px 4px rgba(23,55,46,.12);
     transition: opacity .15s ease;
   }
-  .onboard-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; margin-top: -4px; }
-  .onboard-dots { display: flex; gap: 6px; }
+  .onboard-close {
+    position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border-radius: 50%;
+    border: none; background: var(--panel-bg); color: var(--muted); font-size: 18px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .onboard-close:hover { background: var(--accent-soft); }
+  .onboard-foot { display: flex; align-items: center; justify-content: flex-end; gap: 14px; width: 100%; }
+  .onboard-dots { display: flex; gap: 6px; margin-right: auto; }
   .onboard-dots .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
   .onboard-dots .dot.active { background: var(--ink); width: 16px; border-radius: 3px; transition: width .2s ease; }
-  .onboard-skip { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted); background: none; border: none; cursor: pointer; padding: 6px 2px; }
   .onboard-next { font: inherit; font-weight: 700; font-size: 12.5px; color: #fff; background: var(--ink); border: none; border-radius: 999px; padding: 8px 16px; cursor: pointer; }
   .intro-q { font-size: 20px; font-weight: 700; text-align: center; }
   .intro-examples { display: flex; flex-direction: column; gap: 8px; width: 100%; }
@@ -639,16 +669,20 @@
       </div>
       <div class="intro" id="intro">
         <div class="wrap">
+          <div class="onboard-card" id="onboard-card" style="display:none">
+            <button type="button" class="onboard-close" id="onboard-close" aria-label="Close">&times;</button>
+            <div class="welcome-row">
+              <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
+              <div class="bubble assistant" id="onboard-bubble"></div>
+            </div>
+            <div class="onboard-foot">
+              <div class="onboard-dots" id="onboard-dots"></div>
+              <button type="button" class="onboard-next" id="onboard-next">Next</button>
+            </div>
+          </div>
           <div class="welcome-row" id="welcome-row">
             <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
             <div class="bubble assistant" id="welcome-bubble">Welcome to Seam. This is where we'll work out what's actually going on, and what to do about it.</div>
-          </div>
-          <div class="onboard-foot" id="onboard-foot" style="display:none">
-            <div class="onboard-dots" id="onboard-dots"></div>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <button type="button" class="onboard-skip" id="onboard-skip">Skip</button>
-              <button type="button" class="onboard-next" id="onboard-next">Next</button>
-            </div>
           </div>
           <div class="intro-q">What do you want to discuss today?</div>
           <div class="intro-examples">
@@ -830,13 +864,16 @@
 
 <script>
 // First-run walkthrough: Thimble steps a brand-new manager through what
-// Seam is for before settling into the plain "Welcome to Seam" line
-// (already in the HTML as #welcome-bubble's default text) every later visit
-// shows. Gated on its own localStorage flag -- separate from
-// seam_gate_completed above, which is the tester consent/survey gate, not
-// this -- so returning managers never see it replay. A seen manager costs
-// nothing here: the function returns immediately and the static HTML text
-// is all that ever renders.
+// Seam is for, on a dismissible card that floats over the empty state
+// (the plain "Welcome to Seam" row + "What do you want to discuss today?"
+// + the example prompts) rather than replacing or hiding it -- that content
+// is never touched by this script, so closing the card (the X) or finishing
+// the last step just reveals today's ordinary empty state underneath,
+// already there, nothing to restore. Gated on its own localStorage flag --
+// separate from seam_gate_completed above, which is the tester consent/
+// survey gate, not this -- so returning managers never see it replay. A
+// seen manager costs nothing here: the function returns immediately and
+// the card (display:none in the HTML) never shows at all.
 (function () {
   const SEAM_INTRO_LINES = [
     "Welcome to Seam. This is where we'll work out what's actually going on, and what to do about it.",
@@ -847,25 +884,14 @@
 
   if (localStorage.getItem('seam_thimble_intro_seen')) return;
 
-  const row = document.getElementById('welcome-row');
-  const bubble = document.getElementById('welcome-bubble');
-  const foot = document.getElementById('onboard-foot');
+  const card = document.getElementById('onboard-card');
+  const bubble = document.getElementById('onboard-bubble');
   const dotsEl = document.getElementById('onboard-dots');
   const nextBtn = document.getElementById('onboard-next');
-  const skipBtn = document.getElementById('onboard-skip');
-  // The empty-state "What do you want to discuss today?" prompt + example
-  // cards are for after the walkthrough, not during it -- showing them
-  // alongside Thimble's own intro lines (which cover similar ground, see
-  // SEAM_INTRO_LINES[1]) read as cluttered and redundant. Hidden only while
-  // onboarding is active, restored once it finishes or is skipped.
-  const introQ = document.querySelector('.intro-q');
-  const introExamples = document.querySelector('.intro-examples');
+  const closeBtn = document.getElementById('onboard-close');
 
   let step = 0;
-  row.classList.add('onboard');
-  foot.style.display = 'flex';
-  if (introQ) introQ.style.display = 'none';
-  if (introExamples) introExamples.style.display = 'none';
+  card.style.display = 'flex';
   SEAM_INTRO_LINES.forEach((_, i) => {
     const d = document.createElement('div');
     d.className = 'dot' + (i === 0 ? ' active' : '');
@@ -879,18 +905,14 @@
   }
   function finish() {
     localStorage.setItem('seam_thimble_intro_seen', '1');
-    row.classList.remove('onboard');
-    foot.style.display = 'none';
-    bubble.textContent = SEAM_INTRO_LINES[0];
-    if (introQ) introQ.style.display = '';
-    if (introExamples) introExamples.style.display = '';
+    card.style.display = 'none';
   }
   nextBtn.addEventListener('click', () => {
     if (step === SEAM_INTRO_LINES.length - 1) { finish(); return; }
     step += 1;
     render();
   });
-  skipBtn.addEventListener('click', finish);
+  closeBtn.addEventListener('click', finish);
   render();
 })();
 </script>
