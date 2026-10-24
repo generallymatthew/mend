@@ -427,8 +427,18 @@
 
   .intro { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
   .intro .wrap { max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-  .welcome-row { display: flex; align-items: flex-end; gap: 11px; }
+  .welcome-row { display: flex; align-items: flex-end; gap: 14px; }
   .welcome-row .bubble { text-align: left; }
+  /* Thimble reads as a real presence for this one first-run moment, sized
+     to match the thimble app's own call-stage avatar (apps/thimble/static/
+     session.html's .thimble-avatar, 150px) -- not the 28px scale shared by
+     every ordinary chat-row avatar elsewhere in Seam, which this rule
+     intentionally doesn't touch. .blob already fills its parent via
+     inset:0, so only the avatar box and the mouth's own fixed px size need
+     scaling here (mouth kept at the same ~14%/8.5% proportion of the
+     avatar box as the 28px default). */
+  .welcome-row .avatar { width: 150px; height: 150px; }
+  .welcome-row .avatar .mouth { width: 21px; height: 13px; }
   /* First-run only: Thimble walks a brand-new manager through what Seam is
      for before settling into the plain "Welcome to Seam" line every other
      visit shows. White + a soft shadow (not the usual --accent-pink-bg flat
