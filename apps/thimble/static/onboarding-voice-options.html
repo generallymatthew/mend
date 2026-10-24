@@ -1,0 +1,286 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Thimble onboarding — voice-caption options</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --border:#DDD4C0; --accent-soft:#EAF0EC; --accent:#17372E;}
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); font-family:'Manrope',-apple-system,sans-serif; color:var(--ink); padding:28px;}
+  h1{font-size:20px; font-weight:800; margin:0 0 4px;}
+  .sub{font-size:13px; color:var(--ink-soft); margin:0 0 28px; max-width:680px; line-height:1.5;}
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; max-width:1320px; margin:0 auto;}
+  @media (max-width:1100px){ .grid{grid-template-columns:1fr;} }
+  .card{background:#fff; border:1px solid var(--border); border-radius:16px; overflow:hidden; display:flex; flex-direction:column;}
+  .stage{height:420px; position:relative; background:var(--accent-soft); overflow:hidden;}
+  .label-row{display:flex; align-items:center; gap:10px; padding:16px 18px 6px;}
+  .letter{width:24px; height:24px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;}
+  h3{font-size:15px; margin:0; font-weight:800;}
+  .tag{margin:0 18px 10px; display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; background:var(--accent-soft); padding:3px 9px; border-radius:999px; color:var(--ink);}
+  .note{font-size:12.5px; line-height:1.5; color:var(--ink-soft); margin:0 18px 18px;}
+
+  /* ---- Shared avatar engine, ported from static/thimble-3d-talking.html / session.html ---- */
+  .thimble-avatar{position:relative; width:108px; height:108px; flex-shrink:0;
+    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; animation:thimble-ripple 1.6s ease-out infinite;}
+  .thimble-ripple.b{animation-delay:.8s;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; overflow:hidden; transition:border-radius .6s ease; will-change:clip-path;
+    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #F3829A;}
+  .thimble-mouth{position:absolute; left:50%; top:63%; transform:translate(-50%,-50%); background:#F6F1E7; border-radius:50%; box-sizing:border-box; transition:width .35s ease, height .35s ease;}
+  @keyframes thimble-ripple{0%{transform:scale(1); opacity:.28;} 100%{transform:scale(1.3); opacity:0;}}
+
+  .dots{display:flex; gap:6px; justify-content:center; margin-top:14px;}
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--border);}
+  .dot.active{background:var(--ink); width:16px; border-radius:3px; transition:width .25s ease;}
+
+  .skip{position:absolute; top:14px; right:14px; font-size:12px; font-weight:700; color:var(--ink-soft); background:none; border:none; cursor:default; font-family:inherit;}
+  .next-row{display:flex; justify-content:center; margin-top:16px;}
+  .next-btn{font:inherit; font-weight:700; font-size:13px; padding:8px 18px; border-radius:999px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); cursor:default;}
+
+  /* ---- Option A: no drawn arrow/tail at all. apps/seam/static/index.html's
+     own chat bubbles (.bubble.assistant, line 384) already solve "which way
+     does this bubble point" without one -- border-radius: 20px 20px 20px 5px,
+     one corner pinched tight instead of round. Reusing that exact recipe
+     here (same radius, same --accent-pink-bg fill) instead of inventing a
+     comic-book pointer the product doesn't otherwise use. Thimble sits
+     lower-left, the bubble upper-right, its pinched bottom-left corner
+     aimed back at the avatar -- same diagonal composition as the sketch,
+     direction read from the corner itself, nothing extra bolted on. ---- */
+  .optA{display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:26px;}
+  .optA-scene{position:relative; width:100%; max-width:300px; display:flex; align-items:flex-end; justify-content:space-between; gap:16px;}
+  .optA-scene .thimble-avatar{width:88px; height:88px; flex-shrink:0;}
+  /* Bottom edge of the bubble (where the pinched corner is) sits level with
+     Thimble's mouth, not the top of its head: avatar is 88px tall with the
+     mouth centered at 63% down from its top (see .thimble-mouth), so from
+     the avatar's own bottom (= the scene's bottom, both are flex-end) the
+     mouth sits 88*(1-.63) =~ 32.6px up -- margin-bottom here matches that
+     exactly, independent of how tall the bubble's text makes it. The 16px
+     row gap (see .optA-scene) still keeps the bubble from ever touching the
+     avatar's body. */
+  .bubble-col{align-self:flex-end; margin-bottom:32.6px; max-width:190px;}
+  .speech-bubble{background:#fff; border-radius:20px 20px 20px 5px;
+    padding:11px 15px; font-size:13px; font-weight:500; line-height:1.45; color:var(--ink); text-align:left;
+    filter: drop-shadow(0 8px 12px rgba(23,55,46,.16)) drop-shadow(0 2px 4px rgba(23,55,46,.12));
+    opacity:0; transition:opacity .2s ease;}
+  .speech-bubble.on{opacity:1;}
+  .optA-foot{display:flex; flex-direction:column; align-items:center; margin-top:20px;}
+
+  /* ---- Option B: chat-feed reveal, bubbles stacking like real messages ---- */
+  .optB{display:flex; flex-direction:column; height:100%;}
+  .optB-head{display:flex; align-items:center; gap:10px; padding:16px 18px 10px;}
+  .optB .thimble-avatar{width:40px; height:40px;}
+  .optB-head .name{font-weight:800; font-size:13px;}
+  .optB-feed{flex:1; overflow:hidden; padding:0 18px; display:flex; flex-direction:column; gap:8px; justify-content:flex-end;}
+  .bubble{background:#fff; border:1px solid var(--border); border-radius:14px 14px 14px 4px; padding:9px 13px; font-size:13px; line-height:1.45; max-width:86%; opacity:0; transform:translateY(6px); transition:opacity .3s ease, transform .3s ease;}
+  .bubble.on{opacity:1; transform:translateY(0);}
+  .optB-foot{padding:14px 18px 18px;}
+
+  /* ---- Option C: spotlight tour over a dimmed real-app mock ---- */
+  .optC{position:relative; height:100%;}
+  .mock{position:absolute; inset:0; padding:16px; filter:blur(.2px);}
+  .mock-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .mock-brand{font-weight:800; font-size:13px;}
+  .mock-chip{font-size:10px; font-weight:700; background:#fff; border:1px solid var(--border); border-radius:999px; padding:3px 9px;}
+  .mock-q{font-size:13px; font-weight:700; margin-bottom:8px;}
+  .mock-ex{background:#fff; border:1px solid var(--border); border-radius:10px; padding:8px 11px; font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;}
+  .scrim{position:absolute; inset:0; background:rgba(23,55,46,.42); opacity:0; transition:opacity .3s ease;}
+  .scrim.on{opacity:1;}
+  .spot{position:absolute; border-radius:12px; box-shadow:0 0 0 4000px rgba(23,55,46,.42); opacity:0; transition:all .4s ease;}
+  .spot.on{opacity:1;}
+  .callout{position:absolute; background:#fff; border-radius:12px; padding:10px 13px; font-size:12.5px; line-height:1.45; max-width:220px; box-shadow:0 10px 24px rgba(23,55,46,.2); opacity:0; transition:opacity .3s ease, transform .3s ease; z-index:3;}
+  .callout.on{opacity:1;}
+  .callout .mini-avatar{width:22px; height:22px; border-radius:50%; background:#F3829A; display:inline-block; vertical-align:middle; margin-right:6px;}
+</style>
+</head>
+<body>
+
+<h1>Manager onboarding — Thimble talks you through it</h1>
+<p class="sub">Three directions for a first-run animation where Thimble explains what Seam is for and what it can help with. All three reuse the real avatar (ripple, dome wobble, mouth tracking a simulated level) and the same four lines of script — only the layout and interaction model differ. Each auto-plays on a loop here; nothing is wired up yet.</p>
+
+<div class="grid">
+
+  <!-- OPTION A -->
+  <div class="card">
+    <div class="stage">
+      <button class="skip">Skip</button>
+      <div class="optA">
+        <div class="optA-scene">
+          <div class="thimble-avatar" id="avA">
+            <div class="thimble-ripple"></div><div class="thimble-ripple b"></div>
+            <div class="thimble-ring"><div class="thimble-body"><div class="thimble-mouth"></div></div></div>
+          </div>
+          <div class="bubble-col">
+            <div class="speech-bubble" id="bubbleA"><span id="capA"></span></div>
+          </div>
+        </div>
+        <div class="optA-foot">
+          <div class="dots" id="dotsA"></div>
+          <div class="next-row"><div class="next-btn">Next</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="label-row"><div class="letter">A</div><h3>Caption walkthrough</h3></div>
+    <div class="tag">same bubble shape apps/seam already ships</div>
+    <p class="note">No drawn arrow. Reuses the real .bubble.assistant recipe from apps/seam/static/index.html (line 384) -- border-radius 20px 20px 20px 5px, one pinched corner instead of a round one -- which already reads as "pointing" without a triangle bolted on. Thimble lower-left, bubble upper-right, pinched corner aimed back at it.</p>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="card">
+    <div class="stage">
+      <button class="skip">Skip</button>
+      <div class="optB">
+        <div class="optB-head">
+          <div class="thimble-avatar" id="avB">
+            <div class="thimble-ripple"></div><div class="thimble-ripple b"></div>
+            <div class="thimble-ring"><div class="thimble-body"><div class="thimble-mouth"></div></div></div>
+          </div>
+          <div class="name">Thimble</div>
+        </div>
+        <div class="optB-feed" id="feedB"></div>
+        <div class="optB-foot"><div class="next-btn" style="width:100%; text-align:center; box-sizing:border-box;">Got it</div></div>
+      </div>
+    </div>
+    <div class="label-row"><div class="letter">B</div><h3>Chat-feed reveal</h3></div>
+    <div class="tag">bubbles stack like real messages</div>
+    <p class="note">Thimble "sends" each line as a message bubble, same shape as a real coaching reply, stacking upward like an actual conversation. Teaches the interaction model directly: this is what talking to Thimble looks like, not a separate slideshow mode. More motion to tune (timing between bubbles) than A.</p>
+  </div>
+
+  <!-- OPTION C -->
+  <div class="card">
+    <div class="stage">
+      <div class="optC">
+        <div class="mock">
+          <div class="mock-top"><div class="mock-brand">Seam</div><div class="mock-chip">Anonymity enforced</div></div>
+          <div class="mock-q" id="mockQ">What do you want to discuss today?</div>
+          <div class="mock-ex" id="mockEx1">"Prep for a hard conversation with a direct report"</div>
+          <div class="mock-ex" id="mockEx2">"Two of my direct reports aren't getting along"</div>
+          <div class="mock-ex" id="mockEx3">"Tell my manager something they won't want to hear"</div>
+        </div>
+        <div class="scrim" id="scrimC"></div>
+        <div class="spot" id="spotC"></div>
+        <div class="callout" id="calloutC"><span class="mini-avatar"></span><span id="calloutTxt"></span></div>
+      </div>
+    </div>
+    <div class="label-row"><div class="letter">C</div><h3>Spotlight tour</h3></div>
+    <div class="tag">points at the real screen underneath</div>
+    <p class="note">Thimble shrinks to a corner and a dimmed copy of the actual manager screen sits behind, with a spotlight + callout moving to the privacy chip, then the example prompts, as it talks. Teaches the real UI in place instead of describing it abstractly — most build effort (needs the real screen's layout kept in sync) but the best "here's where that lives" payoff.</p>
+  </div>
+
+</div>
+
+<script>
+// ---- shared script content ----
+const LINES = [
+  "Hi, I'm Thimble. I'm the one you'll actually be talking to in here.",
+  "Bring me the stuff that's hard to say out loud — prepping for a hard conversation, wording a message that really matters, two reports who aren't getting along.",
+  "Nothing you tell me goes to HR or your own manager. No names, by default, for anyone but you.",
+  "Type to me, or hold the mic and just talk. Either way, I'll answer."
+];
+
+// ---- avatar engine (trimmed port of thimble-3d-talking.html) ----
+function domeWobbleRadius(domeFactor, lvl){
+  const capY = 50 + (18 + 4*lvl) * domeFactor;
+  const rimY = 50 - (22 + 4*lvl) * domeFactor;
+  return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+}
+function makeAvatar(id, size){
+  const el = document.getElementById(id);
+  const ring = el.querySelector('.thimble-ring');
+  const body = el.querySelector('.thimble-body');
+  const mouth = el.querySelector('.thimble-mouth');
+  mouth.style.width = (0.19*size*0.55) + 'px';
+  return {ring, body, mouth, size, lvl:0, mouthLevel:0, phase: Math.random()*10};
+}
+const avatars = [makeAvatar('avA',88), makeAvatar('avB',40)];
+function tickAvatars(now){
+  avatars.forEach(inst => {
+    const t = now/1000 + inst.phase;
+    const envelope = Math.max(0, Math.sin(t*0.6));
+    const chatter = 0.5 + 0.5*Math.sin(t*7)*Math.sin(t*2.3);
+    const level = Math.max(0, Math.min(1, envelope*chatter));
+    const breathe = 1 + 0.035*(1 - Math.cos((2*Math.PI*(now/1000))/2.2));
+    inst.ring.style.transform = `scale(${breathe.toFixed(4)})`;
+    inst.lvl += (level - inst.lvl)*0.45;
+    const wobblePeriod = 1.6;
+    const domePhase = ((now/1000) % wobblePeriod)/wobblePeriod;
+    const domeFactor = (1 + Math.cos(domePhase*2*Math.PI))/2;
+    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+    const rate = level > inst.mouthLevel ? 0.7 : 0.25;
+    inst.mouthLevel += (level - inst.mouthLevel)*rate;
+    const maxH = 0.19*inst.size*0.7*0.55;
+    inst.mouth.style.height = Math.min(inst.size*(0.03+0.22*inst.mouthLevel), maxH) + 'px';
+  });
+  requestAnimationFrame(tickAvatars);
+}
+requestAnimationFrame(tickAvatars);
+
+// ---- Option A: slide loop ----
+const capA = document.getElementById('capA');
+const bubbleA = document.getElementById('bubbleA');
+const dotsA = document.getElementById('dotsA');
+LINES.forEach((_,i)=>{ const d=document.createElement('div'); d.className='dot'+(i===0?' active':''); dotsA.appendChild(d); });
+let stepA = 0;
+
+function showA(i){
+  bubbleA.classList.remove('on');
+  setTimeout(()=>{
+    capA.textContent = LINES[i];
+    bubbleA.classList.add('on');
+  }, 200);
+  [...dotsA.children].forEach((d,j)=>d.classList.toggle('active', j===i));
+}
+showA(0);
+setInterval(()=>{ stepA = (stepA+1)%LINES.length; showA(stepA); }, 3400);
+
+// ---- Option B: feed loop ----
+const feedB = document.getElementById('feedB');
+let stepB = 0;
+function pushB(){
+  if (stepB === 0) feedB.innerHTML = '';
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.textContent = LINES[stepB];
+  feedB.appendChild(b);
+  requestAnimationFrame(()=>b.classList.add('on'));
+  while (feedB.children.length > 3) feedB.removeChild(feedB.firstChild);
+  stepB = (stepB+1) % LINES.length;
+}
+pushB();
+setInterval(pushB, 3400);
+
+// ---- Option C: spotlight tour loop ----
+const scrimC = document.getElementById('scrimC');
+const spotC = document.getElementById('spotC');
+const calloutC = document.getElementById('calloutC');
+const calloutTxt = document.getElementById('calloutTxt');
+const STEPS_C = [
+  {target: null, text: "Hi, I'm Thimble — I live right here in Seam."},
+  {target: '.mock-chip', text: "Nothing you tell me goes to HR or your manager. No names by default."},
+  {target: '#mockEx1', text: "Bring me a hard conversation you're prepping for..."},
+  {target: '#mockEx2', text: "...or two reports who aren't getting along."},
+];
+let stepC = 0;
+function showC(i){
+  const s = STEPS_C[i];
+  scrimC.classList.toggle('on', !!s.target);
+  calloutTxt.textContent = s.text;
+  if (!s.target){ spotC.classList.remove('on'); calloutC.style.top='40%'; calloutC.style.left='28px'; calloutC.classList.add('on'); return; }
+  const stage = document.querySelector('.optC');
+  const stageBox = stage.getBoundingClientRect();
+  const elBox = document.querySelector(s.target).getBoundingClientRect();
+  const top = elBox.top - stageBox.top, left = elBox.left - stageBox.left;
+  spotC.style.top = (top-4)+'px'; spotC.style.left = (left-4)+'px';
+  spotC.style.width = (elBox.width+8)+'px'; spotC.style.height = (elBox.height+8)+'px';
+  spotC.classList.add('on');
+  calloutC.style.top = (top+elBox.height+10)+'px';
+  calloutC.style.left = Math.min(left, stageBox.width-236)+'px';
+  calloutC.classList.add('on');
+}
+calloutC.classList.remove('on');
+setTimeout(()=>showC(0), 300);
+setInterval(()=>{ stepC=(stepC+1)%STEPS_C.length; calloutC.classList.remove('on'); setTimeout(()=>showC(stepC),250); }, 3400);
+</script>
+</body>
+</html>

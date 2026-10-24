@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Thimble speech bubble — placement + tail options</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --border:#DDD4C0; --accent-soft:#EAF0EC;}
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); font-family:'Manrope',-apple-system,sans-serif; color:var(--ink); padding:28px;}
+  h1{font-size:20px; font-weight:800; margin:0 0 4px;}
+  .sub{font-size:13px; color:var(--ink-soft); margin:0 0 26px; max-width:680px; line-height:1.5;}
+  .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; max-width:1320px; margin:0 auto;}
+  @media (max-width:1000px){ .grid{grid-template-columns:repeat(2,1fr);} }
+  .card{background:#fff; border:1px solid var(--border); border-radius:14px; overflow:hidden;}
+  .stage{height:260px; position:relative; background:var(--accent-soft);}
+  .letter-row{display:flex; align-items:center; gap:8px; padding:12px 14px 4px;}
+  .letter{width:22px; height:22px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;}
+  h3{font-size:13px; margin:0; font-weight:800;}
+  .note{font-size:11.5px; line-height:1.45; color:var(--ink-soft); margin:0 14px 14px;}
+
+  .head{position:absolute; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #F3829A;
+    filter: drop-shadow(0 6px 10px rgba(23,55,46,.14));}
+  .mouth{position:absolute; left:50%; top:63%; transform:translate(-50%,-50%); width:10px; height:4px; background:#F6F1E7; border-radius:50%;}
+  .bub{position:absolute; background:#fff; border-radius:9px; padding:9px 12px; font-size:12px; font-weight:500; line-height:1.4; box-shadow:0 5px 12px rgba(23,55,46,.14); max-width:140px;}
+  svg.tail{position:absolute; inset:0; overflow:visible;}
+  svg.tail polygon{fill:#fff;}
+</style>
+</head>
+<body>
+
+<h1>Bubble placement + tail -- four options</h1>
+<p class="sub">Just placement and the tail this time, isolated from everything else (same head, same bubble copy). Pick a letter, or point at whichever parts of different letters look right and I'll combine them.</p>
+
+<div class="grid">
+
+  <div class="card">
+    <div class="stage">
+      <div class="head" id="h1" style="width:96px; height:96px; left:40%; bottom:14px;"><div class="mouth"></div></div>
+      <div class="bub" id="b1" style="top:16px; left:50%; transform:translateX(-50%);">Hi, I'm Thimble.</div>
+      <svg class="tail"><polygon id="t1"></polygon></svg>
+    </div>
+    <div class="letter-row"><div class="letter">A</div><h3>Directly above, centered</h3></div>
+    <div class="note">Bubble centered right above the head, tail pointing straight down into the top of it.</div>
+  </div>
+
+  <div class="card">
+    <div class="stage">
+      <div class="head" id="h2" style="width:96px; height:96px; left:16px; bottom:14px;"><div class="mouth"></div></div>
+      <div class="bub" id="b2" style="top:40px; right:20px;">Hi, I'm Thimble.</div>
+      <svg class="tail"><polygon id="t2"></polygon></svg>
+    </div>
+    <div class="letter-row"><div class="letter">B</div><h3>Upper-right, close</h3></div>
+    <div class="note">Bubble pulled in tight next to the head (small gap), short tail -- reads as one connected unit rather than two separate things.</div>
+  </div>
+
+  <div class="card">
+    <div class="stage">
+      <div class="head" id="h3" style="width:96px; height:96px; left:16px; top:50%; margin-top:-48px;"><div class="mouth"></div></div>
+      <div class="bub" id="b3" style="top:50%; right:40px; transform:translateY(-50%);">Hi, I'm Thimble.</div>
+      <svg class="tail"><polygon id="t3"></polygon></svg>
+    </div>
+    <div class="letter-row"><div class="letter">C</div><h3>Level with the head, to the side</h3></div>
+    <div class="note">Bubble sits at the same height as the head, not above it -- tail points sideways into it, like a chat tooltip.</div>
+  </div>
+
+  <div class="card">
+    <div class="stage">
+      <div class="head" id="h4" style="width:110px; height:110px; left:14px; bottom:10px;"><div class="mouth"></div></div>
+      <div class="bub" id="b4" style="top:14px; right:14px; max-width:160px;">Hi, I'm Thimble.</div>
+      <svg class="tail"><polygon id="t4"></polygon></svg>
+    </div>
+    <div class="letter-row"><div class="letter">D</div><h3>Bigger head, bubble touching</h3></div>
+    <div class="note">A bigger head and the bubble's own corner actually resting right against it (no gap at all before the tail even starts).</div>
+  </div>
+
+</div>
+
+<script>
+function drawTail(headId, bubId, tailId, basePick){
+  const stage = document.getElementById(headId).closest('.stage');
+  const stageBox = stage.getBoundingClientRect();
+  const headBox = document.getElementById(headId).getBoundingClientRect();
+  const bubBox = document.getElementById(bubId).getBoundingClientRect();
+  const cx = headBox.left + headBox.width/2 - stageBox.left;
+  const cy = headBox.top + headBox.height/2 - stageBox.top;
+  const r = headBox.width/2;
+  const pts = basePick(bubBox, stageBox);
+  function onCircle(px,py){
+    const dx=px-cx, dy=py-cy, d=Math.hypot(dx,dy)||1;
+    return [cx+dx/d*r, cy+dy/d*r];
+  }
+  const [tx,ty] = onCircle((pts[0][0]+pts[1][0])/2, (pts[0][1]+pts[1][1])/2);
+  const poly = document.getElementById(tailId);
+  poly.setAttribute('points', `${pts[0][0]},${pts[0][1]} ${pts[1][0]},${pts[1][1]} ${tx.toFixed(1)},${ty.toFixed(1)}`);
+}
+
+// A: tail base along bubble's bottom-center, pointing straight down
+drawTail('h1','b1','t1', (b,s)=>{
+  const y = b.bottom - s.top;
+  const cx = b.left + b.width/2 - s.left;
+  return [[cx-10,y],[cx+10,y]];
+});
+// B: tail base along bubble's bottom-left, pointing down-left (short)
+drawTail('h2','b2','t2', (b,s)=>{
+  const y = b.bottom - s.top;
+  const x = b.left - s.left + 14;
+  return [[x,y],[x+18,y]];
+});
+// C: tail base along bubble's left edge, pointing left -- wide short wedge
+// (base nearly as wide as it is long) rather than a thin spike, matching
+// the sketch's stubby triangle proportion.
+drawTail('h3','b3','t3', (b,s)=>{
+  const x = b.left - s.left;
+  const cy = b.top + b.height/2 - s.top;
+  return [[x,cy-15],[x,cy+15]];
+});
+// D: tail base along bubble's bottom-left corner, very short
+drawTail('h4','b4','t4', (b,s)=>{
+  const y = b.bottom - s.top;
+  const x = b.left - s.left + 10;
+  return [[x,y],[x+14,y]];
+});
+</script>
+</body>
+</html>

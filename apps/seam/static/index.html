@@ -196,6 +196,10 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .thread-header .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  #closed-badge {
+    font-size: 11.5px; font-weight: 700; color: var(--muted); background: var(--panel-bg);
+    border-radius: 999px; padding: 4px 11px; flex-shrink: 0;
+  }
   #close-case-btn {
     font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--rail-border);
     border-radius: 999px; padding: 6px 14px; cursor: pointer;
@@ -209,7 +213,7 @@
      manager's call -- always available on an open case, not gated on
      anything Thimble has or hasn't said in the conversation. */
   #handoff-chip {
-    display: inline-flex; align-items: center; gap: 6px; background: var(--accent-pink-bg); color: #8c0d28;
+    display: inline-flex; align-items: center; gap: 6px; background: var(--accent-pink-bg); color: var(--ink);
     border: none; border-radius: 999px; padding: 6px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer;
   }
   #handoff-overlay {
@@ -275,8 +279,10 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
   #joint-video-dismiss:hover { background: rgba(23,55,46,0.75); }
+  /* Height is set in JS, not via aspect-ratio -- see the sizeJointVideoFrame
+     comment below for why a plain 16/9 box isn't the right target here. */
   #joint-video-frame {
-    position: relative; width: 100%; aspect-ratio: 16/9; background: #fbfaf7;
+    position: relative; width: 100%; background: #fbfaf7;
   }
   #joint-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
@@ -419,6 +425,28 @@
 
   .intro { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
   .intro .wrap { max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .welcome-row { display: flex; align-items: flex-end; gap: 11px; }
+  .welcome-row .bubble { text-align: left; }
+  /* First-run only: Thimble walks a brand-new manager through what Seam is
+     for before settling into the plain "Welcome to Seam" line every other
+     visit shows. White + a soft shadow (not the usual --accent-pink-bg flat
+     fill) so this one moment reads as a distinct, elevated intro beat rather
+     than blending into the ordinary chat bubbles it otherwise matches
+     exactly -- same pinched-corner shape (20px 20px 20px 5px), same avatar,
+     same bottom alignment (align-items:flex-end already puts the bubble's
+     bottom level with the mouth, the thing explicitly asked for). Gated on
+     localStorage so it only ever plays once per browser, same pattern as
+     #gate-overlay's own seam_gate_completed flag. */
+  .welcome-row.onboard .bubble {
+    background: #fff; box-shadow: 0 8px 12px rgba(23,55,46,.16), 0 2px 4px rgba(23,55,46,.12);
+    transition: opacity .15s ease;
+  }
+  .onboard-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; margin-top: -4px; }
+  .onboard-dots { display: flex; gap: 6px; }
+  .onboard-dots .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .onboard-dots .dot.active { background: var(--ink); width: 16px; border-radius: 3px; transition: width .2s ease; }
+  .onboard-skip { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted); background: none; border: none; cursor: pointer; padding: 6px 2px; }
+  .onboard-next { font: inherit; font-weight: 700; font-size: 12.5px; color: #fff; background: var(--ink); border: none; border-radius: 999px; padding: 8px 16px; cursor: pointer; }
   .intro-q { font-size: 20px; font-weight: 700; text-align: center; }
   .intro-examples { display: flex; flex-direction: column; gap: 8px; width: 100%; }
   .intro-examples-label {
@@ -590,6 +618,7 @@
     <div class="thread-col">
       <div class="thread-header" id="thread-header" style="display:none">
         <div class="name" id="thread-title"></div>
+        <span class="closed-badge" id="closed-badge" style="display:none">Closed</span>
         <div class="actions">
           <button id="handoff-chip" title="Peer session">Create peer session</button>
           <button id="plan-toggle">Plan</button>
@@ -598,6 +627,17 @@
       </div>
       <div class="intro" id="intro">
         <div class="wrap">
+          <div class="welcome-row" id="welcome-row">
+            <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
+            <div class="bubble assistant" id="welcome-bubble">Welcome to Seam. This is where we'll work out what's actually going on, and what to do about it.</div>
+          </div>
+          <div class="onboard-foot" id="onboard-foot" style="display:none">
+            <div class="onboard-dots" id="onboard-dots"></div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <button type="button" class="onboard-skip" id="onboard-skip">Skip</button>
+              <button type="button" class="onboard-next" id="onboard-next">Next</button>
+            </div>
+          </div>
           <div class="intro-q">What do you want to discuss today?</div>
           <div class="intro-examples">
             <div class="intro-examples-label">Things people bring here</div>
@@ -682,7 +722,7 @@
   <div id="joint-video-modal">
     <button id="joint-video-dismiss" aria-label="Close">&times;</button>
     <div id="joint-video-frame">
-      <iframe data-src-rel="/pitch-assets/Mend%20Session%20Opening.dc.html" loading="lazy" title="Mend Session Opening" allow="autoplay"></iframe>
+      <iframe data-src-rel="/pitch-assets/Mend%20Manager%20Handoff.dc.html" loading="lazy" title="Mend Manager Handoff" allow="autoplay"></iframe>
     </div>
   </div>
 </div>
@@ -765,6 +805,62 @@
   if (!localStorage.getItem('seam_gate_completed')) {
     document.getElementById('gate-overlay').classList.add('open');
   }
+</script>
+
+<script>
+// First-run walkthrough: Thimble steps a brand-new manager through what
+// Seam is for before settling into the plain "Welcome to Seam" line
+// (already in the HTML as #welcome-bubble's default text) every later visit
+// shows. Gated on its own localStorage flag -- separate from
+// seam_gate_completed above, which is the tester consent/survey gate, not
+// this -- so returning managers never see it replay. A seen manager costs
+// nothing here: the function returns immediately and the static HTML text
+// is all that ever renders.
+(function () {
+  const SEAM_INTRO_LINES = [
+    "Welcome to Seam. This is where we'll work out what's actually going on, and what to do about it.",
+    "Bring me a hard conversation you're prepping for, a message where the wording really matters, two reports who aren't getting along — that kind of thing.",
+    "Names stay out of it by default. Everyone besides you is referred to by role, not by name.",
+    "Type to me, or hold the mic and just talk. I'll answer either way."
+  ];
+
+  if (localStorage.getItem('seam_thimble_intro_seen')) return;
+
+  const row = document.getElementById('welcome-row');
+  const bubble = document.getElementById('welcome-bubble');
+  const foot = document.getElementById('onboard-foot');
+  const dotsEl = document.getElementById('onboard-dots');
+  const nextBtn = document.getElementById('onboard-next');
+  const skipBtn = document.getElementById('onboard-skip');
+
+  let step = 0;
+  row.classList.add('onboard');
+  foot.style.display = 'flex';
+  SEAM_INTRO_LINES.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    dotsEl.appendChild(d);
+  });
+
+  function render() {
+    bubble.textContent = SEAM_INTRO_LINES[step];
+    [...dotsEl.children].forEach((d, i) => d.classList.toggle('active', i === step));
+    nextBtn.textContent = step === SEAM_INTRO_LINES.length - 1 ? 'Got it' : 'Next';
+  }
+  function finish() {
+    localStorage.setItem('seam_thimble_intro_seen', '1');
+    row.classList.remove('onboard');
+    foot.style.display = 'none';
+    bubble.textContent = SEAM_INTRO_LINES[0];
+  }
+  nextBtn.addEventListener('click', () => {
+    if (step === SEAM_INTRO_LINES.length - 1) { finish(); return; }
+    step += 1;
+    render();
+  });
+  skipBtn.addEventListener('click', finish);
+  render();
+})();
 </script>
 
 <script>
@@ -1003,15 +1099,44 @@ function renderConvoList() {
   }
 }
 
+// A panel being "applicable" (right conversation type) and "open" (user
+// hasn't collapsed it) are separate things. Below the mobile breakpoint,
+// visibility comes from the .open class via CSS transform, so the panel
+// stays display:flex and just slides off-canvas. At desktop widths there's
+// no such CSS, so .open has to drive display directly or the Plan/Strategy
+// toggle button has nothing to do.
+function setPanelApplicable(panelEl, applicable) {
+  if (!applicable) {
+    panelEl.classList.remove("open");
+    panelEl.style.display = "none";
+    return;
+  }
+  panelEl.classList.add("open");
+  panelEl.style.display = "flex";
+}
+
 function showPanelsForType(type) {
-  document.getElementById("plan-panel").style.display = CASE_LIKE_TYPES.includes(type) ? "flex" : "none";
-  document.getElementById("meeting-plan-panel").style.display = type === "meeting" ? "flex" : "none";
+  document.getElementById("closed-badge").style.display = "none";
+  setPanelApplicable(document.getElementById("plan-panel"), CASE_LIKE_TYPES.includes(type));
+  setPanelApplicable(document.getElementById("meeting-plan-panel"), type === "meeting");
   // Hand-off/peer session is conflict-only: coaching never leads to one (the
   // direct report is never brought into Mend for this track).
   document.getElementById("handoff-chip").style.display = type === "conflict" ? "inline-flex" : "none";
   document.getElementById("close-case-btn").style.display = CASE_LIKE_TYPES.includes(type) ? "inline-block" : "none";
   document.getElementById("plan-toggle").style.display = type === "written" ? "none" : "inline-block";
   document.getElementById("plan-toggle").textContent = type === "meeting" ? "Strategy" : "Plan";
+}
+
+// A case/coaching thread that's closed is read-only: no new peer session,
+// no closing it again. The plan stays visible (and the toggle to view it),
+// just nothing left to action.
+function applyCaseStatus(caseObj) {
+  const isClosed = caseObj.status === "closed";
+  document.getElementById("closed-badge").style.display = isClosed ? "inline-flex" : "none";
+  if (isClosed) {
+    document.getElementById("handoff-chip").style.display = "none";
+    document.getElementById("close-case-btn").style.display = "none";
+  }
 }
 
 function newConversation() {
@@ -1023,8 +1148,8 @@ function newConversation() {
   const messagesEl = document.getElementById("messages");
   messagesEl.style.display = "none";
   messagesEl.innerHTML = "";
-  document.getElementById("plan-panel").style.display = "none";
-  document.getElementById("meeting-plan-panel").style.display = "none";
+  setPanelApplicable(document.getElementById("plan-panel"), false);
+  setPanelApplicable(document.getElementById("meeting-plan-panel"), false);
   renderConvoList();
   closeSidebarOnMobile();
   document.getElementById("composer").focus();
@@ -1051,6 +1176,7 @@ async function openConvo(id, type) {
   if (CASE_LIKE_TYPES.includes(type)) {
     renderPlan(data.plan);
     renderIncident(obj);
+    applyCaseStatus(obj);
   } else if (type === "meeting") {
     renderMeetingGoal(obj);
     renderStrategyPoints(obj);
@@ -1224,11 +1350,44 @@ function closeJointSessionVideoModal() {
   frame.src = src;
 }
 
+// The dc-runtime fits its canvas with
+//   scale = min(clientWidth / 1920, (clientHeight - 44) / 1080)
+// where 44px is a hardcoded reservation for its own transport bar --
+// hardcoded even though that bar is hidden above, so a plain 16/9 box
+// always loses to the height term and the canvas (and with it, the video)
+// letterboxes on every side instead of filling the width. Making the
+// frame exactly 44px taller than 16/9 cancels that reservation out:
+// (width*9/16 + 44 - 44) / 1080 reduces to exactly width/1920, the same
+// as the width term, so the canvas fills the full width with no side
+// gaps. (A ~44px blank strip is still eaten vertically -- that part of
+// the reservation can't be clawed back without patching the shared
+// engine other pitch videos still use.)
+function sizeJointVideoFrame() {
+  const el = document.getElementById("joint-video-frame");
+  el.style.height = (el.clientWidth * (9 / 16) + 44) + "px";
+}
+new ResizeObserver(sizeJointVideoFrame).observe(document.getElementById("joint-video-frame"));
+
 // iframe src is set here (not inline in the markup) so it goes through
 // apiPath too -- same path-prefix concern as every /api/ fetch above.
 (function () {
   const frame = document.querySelector("#joint-video-frame iframe");
   frame.src = apiPath(frame.dataset.srcRel);
+  // The dc-runtime's own transport bar ([data-omelette-chrome]) always
+  // renders below the composition canvas, shrinking the canvas to leave
+  // room for it -- that's why the video looked smaller than the modal.
+  // That attribute exists specifically to be hidden by a host that embeds
+  // the page (same contract the authoring tool uses); same-origin here,
+  // so inject the hide on every load instead of patching the shared
+  // animations-v3.jsx engine that other pitch videos still rely on.
+  frame.addEventListener("load", () => {
+    const doc = frame.contentDocument;
+    if (!doc || doc.getElementById("seam-hide-chrome")) return;
+    const style = doc.createElement("style");
+    style.id = "seam-hide-chrome";
+    style.textContent = "[data-omelette-chrome] { display: none !important; }";
+    doc.head.appendChild(style);
+  });
 })();
 
 document.getElementById("handoff-chip").onclick = openJointSessionVideoModal;
@@ -1245,7 +1404,10 @@ function applyConvoResult(type, body) {
   conversations.sort((a, b) => b.updated_at - a.updated_at);
   renderConvoList();
   document.getElementById("thread-title").textContent = obj.title || "New conversation";
-  if (CASE_LIKE_TYPES.includes(type)) renderIncident(obj);
+  if (CASE_LIKE_TYPES.includes(type)) {
+    renderIncident(obj);
+    applyCaseStatus(obj);
+  }
   if (CASE_LIKE_TYPES.includes(type) && body.plan) renderPlan(body.plan);
   if (type === "meeting") {
     renderMeetingGoal(obj);
@@ -1452,7 +1614,10 @@ function closeSidebarOnMobile() {
 }
 
 function toggleSidePanel() {
-  activeSidePanel().classList.toggle("open");
+  const panel = activeSidePanel();
+  const nowOpen = !panel.classList.contains("open");
+  panel.classList.toggle("open", nowOpen);
+  if (!isMobile()) panel.style.display = nowOpen ? "flex" : "none";
   sidebarEl.classList.add("closed");
   updateScrim();
 }
