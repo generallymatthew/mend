@@ -429,16 +429,33 @@
   .intro .wrap { position: relative; max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
   .welcome-row { display: flex; align-items: flex-end; gap: 14px; }
   .welcome-row .bubble { text-align: left; }
-  /* Thimble reads as a real presence for this first-run moment, sized to
-     match the thimble app's own call-stage avatar (apps/thimble/static/
-     session.html's .thimble-avatar, 150px) -- not the 28px scale shared by
-     every ordinary chat-row avatar elsewhere in Seam, which this rule
-     intentionally doesn't touch. .blob already fills its parent via
-     inset:0, so only the avatar box and the mouth's own fixed px size need
-     scaling here (mouth kept at the same ~14%/8.5% proportion of the
-     avatar box as the 28px default). */
-  .welcome-row .avatar { width: 150px; height: 150px; }
-  .welcome-row .avatar .mouth { width: 21px; height: 13px; }
+  /* First-run walkthrough: a dismissible card, not an in-flow row -- it
+     sits over the empty state (.intro-q + .intro-examples below, and the
+     plain settled #welcome-row underneath it), which stays fully rendered,
+     completely untouched, the whole time -- so closing the card (the X) or
+     finishing the last step reveals today's ordinary empty state exactly
+     as it already was, nothing to restore. inset:0 fills exactly the box
+     its sibling content already occupies in normal flow (.wrap sizes
+     itself off those, not off this -- this is the only absolutely-
+     positioned child), so the card's height tracks however tall the
+     welcome row + empty state actually are. Every size/color rule below is
+     scoped to .onboard-card specifically, not the bare .welcome-row, so
+     none of it leaks into the permanent post-onboarding empty state. */
+  .onboard-card {
+    position: absolute; inset: 0; z-index: 5;
+    background: var(--app-bg); border-radius: 20px;
+    box-shadow: 0 20px 48px rgba(23,55,46,.2);
+    padding: 28px 24px 24px; display: flex; flex-direction: column; justify-content: center; gap: 20px;
+  }
+  /* Thimble reads as a real presence for this first-run moment only, sized
+     to match the thimble app's own call-stage avatar (apps/thimble/static/
+     session.html's .thimble-avatar, 150px) -- not the 28px scale the
+     permanent empty-state avatar keeps (see the scoping note above).
+     .blob already fills its parent via inset:0, so only the avatar box and
+     the mouth's own fixed px size need scaling here (mouth kept at the
+     same ~14%/8.5% proportion of the avatar box as the 28px default). */
+  .onboard-card .avatar { width: 150px; height: 150px; }
+  .onboard-card .avatar .mouth { width: 21px; height: 13px; }
   /* "Four-Color Bloom" fill -- the real thimble app's own current avatar
      style (apps/thimble/static/session.html, ported 2026-10-24: idle,
      listening, thinking and talking each own a fixed corner, blended by
@@ -449,7 +466,7 @@
      blob's radius is 16+w*110%, alpha is min(1,.3+w*1.1), specular dot +
      inset rim shadow anchor to the idle corner (top-left) -- same math,
      just evaluated once instead of every frame. */
-  .welcome-row .avatar .blob {
+  .onboard-card .avatar .blob {
     background-image:
       radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%),
       radial-gradient(circle at 15% 15%, rgba(163,207,224,.81) 0%, transparent 66.6%),
@@ -459,22 +476,7 @@
     background-color: rgb(191,192,186);
     box-shadow: inset -15px -17px 20px -10px rgba(0,0,0,.22), inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
   }
-  /* First-run walkthrough: a dismissible card, not an in-flow row -- it
-     sits over the empty state (.intro-q + .intro-examples below, and the
-     plain settled .welcome-row underneath it), which stays fully rendered
-     the whole time so closing the card (the X) or finishing the last step
-     reveals today's ordinary empty state instantly, nothing to restore.
-     inset:0 fills exactly the box its sibling content already occupies in
-     normal flow (.wrap sizes itself off those, not off this -- this is
-     the only absolutely-positioned child), so the card's height tracks
-     however tall the welcome row + empty state actually are. */
-  .onboard-card {
-    position: absolute; inset: 0; z-index: 5;
-    background: var(--app-bg); border-radius: 20px;
-    box-shadow: 0 20px 48px rgba(23,55,46,.2);
-    padding: 28px 24px 24px; display: flex; flex-direction: column; justify-content: center; gap: 20px;
-  }
-  .onboard-card .welcome-row .bubble {
+  .onboard-card .bubble {
     background: #fff; box-shadow: 0 8px 12px rgba(23,55,46,.16), 0 2px 4px rgba(23,55,46,.12);
     transition: opacity .15s ease;
   }
