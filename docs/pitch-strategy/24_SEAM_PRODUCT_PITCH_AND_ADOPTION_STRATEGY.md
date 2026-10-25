@@ -190,6 +190,37 @@ credibly build this because they'd be suspected of exactly that). External
 copy needs to land on "understand what's actually driving this person's
 behavior," not "learn to get what you want out of people."
 
+**2026-10-25 addendum, a second candidate frame**: rather than a
+skill/mastery line, a rehearsal/pressure-test line — the insight that all
+five of §2's adoption reasons (self-interest, cascade, teach-to-fish,
+asking-your-boss-reads-as-weakness, disclosure-reflects-on-you) describe a
+moment *before* something happens, not after. That's closer to "get a
+second opinion before a hard call" than "conflict resolution" or
+"coaching," and it sidesteps the manipulation-training risk above
+entirely since it's not about reading people, just about preparing before
+something that matters.
+
+- Favorite so far: **"The communications that matter deserve a second
+  look."** Broader than confrontation specifically (covers the hard
+  1-on-1, the Slack message, the update to your boss); "that matter"
+  keeps it scoped to real stakes, not every trivial message.
+- Rehearsal-metaphor alternative: **"Great speakers rehearse before they
+  take the stage."** Ties the "even the best still prepare" sentiment
+  directly to communication (the actual thing Seam helps with), avoids
+  sports metaphors (male-coded, and a word like "dunking" carries a
+  making-someone-look-bad connotation that fights the trust positioning)
+  in favor of a performing-arts/craft frame.
+
+**Open question, not resolved**: whether the embarrassment-gap problem
+this rehearsal framing is meant to defeat is actually symmetric across
+genders. The framing may do more work for men (for whom "this is soft,
+not real work" is a bigger barrier) than for women (who are more often
+already expected to own the people-side of management, and for whom
+visibly using a "get better at reading people" tool could read as
+confirming a stereotype rather than as diligence). Not tested, flagged for
+a real read with managers of both genders before leaning on this framing
+externally.
+
 ## 4. Two user segments, likely incompatible first-five-minutes experiences
 
 If Seam's primary adopters are (a) people who already care about being
