@@ -50,9 +50,6 @@
   @media (max-width:980px){ .cols{column-count:2;} }
   @media (max-width:620px){ .cols{column-count:1;} }
 
-  .howto summary{cursor:pointer; font-weight:700; color:var(--ink-soft); list-style:none; font-size:12px;}
-  .howto summary::-webkit-details-marker{display:none;}
-  .howto .body{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-top:8px; line-height:1.6; color:var(--ink-soft); font-size:12px;}
   code{font-family:'Manrope',sans-serif; background:var(--accent-soft); padding:1px 5px; border-radius:4px; font-size:12px; color:var(--ink);}
 
   footer{margin-top:10px; font-size:11px; color:var(--ink-soft); line-height:1.5; border-top:1px solid var(--border); padding-top:12px;}
@@ -65,22 +62,14 @@
     <h1>Mend launchpad</h1>
     <span style="font-size:11.5px; font-weight:700; color:var(--ink-soft);" data-link-count>9 categories</span>
   </div>
-  <p style="font-size:12px; color:var(--ink-soft); margin:0 0 14px; line-height:1.5;">Internal draft, pre-legal review — not linked from the public landing page.</p>
-
-  <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px;">
-    <a class="row" href="mend-todo-list.html" target="_blank" style="flex:1; display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--ink); color:var(--paper); text-decoration:none; font-weight:700; font-size:13.5px; border-radius:9px; padding:10px 15px; border-bottom:none;">
-      <span>To-do list</span>
-      <span class="tag" style="color:var(--paper); opacity:.75;">local</span>
-    </a>
-    <details class="howto">
-      <summary>How to run this ▾</summary>
-      <div class="body">
-        Serve the whole <code>Mend/</code> folder: <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/launchpad.html</code> &mdash; local document links need a real server, not <code>file://</code>. Local product links need <code>./run_all.sh</code> running separately (repo root, needs <code>caddy</code> &mdash; see root <code>README.md</code>); it puts the core apps behind <code>:8080</code>. Every other page in the repo carries a small "&#8962; Launchpad" badge back to this page.
-      </div>
-    </details>
-  </div>
+  <p style="font-size:12px; color:var(--ink-soft); margin:0 0 18px; line-height:1.5;">Internal draft, pre-legal review — not linked from the public landing page.</p>
 
   <div class="cols">
+
+    <!-- To-do list -->
+    <div class="card">
+      <a class="row" href="mend-todo-list.html" target="_blank" style="font-weight:700;">To-do list <span class="tag">local</span></a>
+    </div>
 
     <!-- Project status -->
     <div class="card">
