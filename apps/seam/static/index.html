@@ -425,25 +425,26 @@
   .mic-btn.recording { background: #E85D4A !important; color: #fff !important; }
   .mic-btn.conflicts-mic { background: #E8F0E9; color: #5F8569; }
 
-  .intro { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
-  .intro .wrap { position: relative; max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .intro { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
+  .intro .wrap { max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
   .welcome-row { display: flex; align-items: flex-end; gap: 14px; }
   .welcome-row .bubble { text-align: left; }
-  /* First-run walkthrough: a dismissible card that sits over the empty
-     state (.intro-q + .intro-examples, the only things below it -- there
-     is no permanent welcome row of any kind) which stays fully rendered,
-     completely untouched, the whole time -- so closing the card (the X) or
-     finishing the last step reveals today's ordinary empty state exactly
-     as it already was, nothing to restore. inset:0 fills exactly the box
-     its sibling content already occupies in normal flow (.wrap sizes
-     itself off those, not off this -- this is the only absolutely-
-     positioned child), so the card's height tracks however tall the empty
-     state actually is. */
+  /* First-run walkthrough: a dismissible card that fills most of the
+     available .intro area (not sized to .wrap's own tight content box --
+     reported live as "too small," needs real room for Thimble to actually
+     explain the app) and floats *over* the empty state underneath it
+     (.wrap -- .intro-q + .intro-examples, no permanent welcome row of any
+     kind), which stays fully rendered, completely untouched, the whole
+     time -- so closing the card (the X) or finishing the last step reveals
+     today's ordinary empty state exactly as it already was, nothing to
+     restore. Centered independently of .wrap (left:50%/translateX, not
+     inset:0) since it's now a much bigger box than .wrap ever is. */
   .onboard-card {
-    position: absolute; inset: 0; z-index: 5;
-    background: var(--app-bg); border-radius: 20px;
+    position: absolute; top: 24px; bottom: 24px; left: 50%; transform: translateX(-50%);
+    width: min(760px, calc(100% - 48px)); z-index: 5;
+    background: var(--app-bg); border-radius: 24px;
     box-shadow: 0 20px 48px rgba(23,55,46,.2);
-    padding: 28px 24px 24px; display: flex; flex-direction: column; justify-content: center; gap: 20px;
+    padding: 40px 36px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 28px;
   }
   /* Thimble reads as a real presence for this first-run moment only, sized
      to match the thimble app's own call-stage avatar (apps/thimble/static/
@@ -454,6 +455,12 @@
      same ~14%/8.5% proportion of the avatar box as the 28px default). */
   .onboard-card .avatar { width: 150px; height: 150px; }
   .onboard-card .avatar .mouth { width: 21px; height: 13px; }
+  /* Crude "talking" cue -- no real TTS exists in Seam yet (apps/seam/
+     server.py explicitly defers voice to the thimble app's own pattern),
+     so this is a mouth-flap keyframe toggled on/off around the typewriter
+     reveal below, not driven by an actual audio amplitude. */
+  @keyframes onboard-mouth-talk { 0%, 100% { transform: translate(-50%,-50%) scaleY(1); } 50% { transform: translate(-50%,-50%) scaleY(.35); } }
+  .onboard-card .avatar.talking .mouth { animation: onboard-mouth-talk .32s ease-in-out infinite; }
   /* "Four-Color Bloom" fill -- the real thimble app's own current avatar
      style (apps/thimble/static/session.html, ported 2026-10-24: idle,
      listening, thinking and talking each own a fixed corner, blended by
@@ -668,18 +675,18 @@
         </div>
       </div>
       <div class="intro" id="intro">
-        <div class="wrap">
-          <div class="onboard-card" id="onboard-card" style="display:none">
-            <button type="button" class="onboard-close" id="onboard-close" aria-label="Close">&times;</button>
-            <div class="welcome-row">
-              <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
-              <div class="bubble assistant" id="onboard-bubble"></div>
-            </div>
-            <div class="onboard-foot">
-              <div class="onboard-dots" id="onboard-dots"></div>
-              <button type="button" class="onboard-next" id="onboard-next">Next</button>
-            </div>
+        <div class="onboard-card" id="onboard-card" style="display:none">
+          <button type="button" class="onboard-close" id="onboard-close" aria-label="Close">&times;</button>
+          <div class="welcome-row">
+            <div class="avatar" id="onboard-avatar"><div class="blob"></div><div class="mouth"></div></div>
+            <div class="bubble assistant" id="onboard-bubble"></div>
           </div>
+          <div class="onboard-foot">
+            <div class="onboard-dots" id="onboard-dots"></div>
+            <button type="button" class="onboard-next" id="onboard-next">Next</button>
+          </div>
+        </div>
+        <div class="wrap">
           <div class="intro-q">What do you want to discuss today?</div>
           <div class="intro-examples">
             <div class="intro-examples-label">Things people bring here</div>
@@ -881,12 +888,14 @@
   if (localStorage.getItem('seam_thimble_intro_seen')) return;
 
   const card = document.getElementById('onboard-card');
+  const avatarEl = document.getElementById('onboard-avatar');
   const bubble = document.getElementById('onboard-bubble');
   const dotsEl = document.getElementById('onboard-dots');
   const nextBtn = document.getElementById('onboard-next');
   const closeBtn = document.getElementById('onboard-close');
 
   let step = 0;
+  let typeTimer = null;
   card.style.display = 'flex';
   SEAM_INTRO_LINES.forEach((_, i) => {
     const d = document.createElement('div');
@@ -894,12 +903,33 @@
     dotsEl.appendChild(d);
   });
 
+  // Live-transcription effect: reveals each line character by character
+  // (a crude stand-in for real speech, since Seam has no TTS yet -- see
+  // the .talking CSS comment) with the mouth flapping while it types,
+  // instead of the full line appearing instantly.
+  function typeLine(text) {
+    clearInterval(typeTimer);
+    bubble.textContent = '';
+    avatarEl.classList.add('talking');
+    let i = 0;
+    typeTimer = setInterval(() => {
+      i += 1;
+      bubble.textContent = text.slice(0, i);
+      if (i >= text.length) {
+        clearInterval(typeTimer);
+        typeTimer = null;
+        avatarEl.classList.remove('talking');
+      }
+    }, 22);
+  }
   function render() {
-    bubble.textContent = SEAM_INTRO_LINES[step];
+    typeLine(SEAM_INTRO_LINES[step]);
     [...dotsEl.children].forEach((d, i) => d.classList.toggle('active', i === step));
     nextBtn.textContent = step === SEAM_INTRO_LINES.length - 1 ? 'Got it' : 'Next';
   }
   function finish() {
+    clearInterval(typeTimer);
+    avatarEl.classList.remove('talking');
     localStorage.setItem('seam_thimble_intro_seen', '1');
     card.style.display = 'none';
   }
