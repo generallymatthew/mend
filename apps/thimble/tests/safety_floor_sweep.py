@@ -29,11 +29,16 @@ Usage:
 """
 import argparse
 import sys
+from pathlib import Path
 
 import httpx
 
-sys.path.insert(0, str(__import__("pathlib").Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent))
 from safety_floor_test import FOLLOWUP, MAX_TURNS, parse_signal, post  # noqa: E402
+from test_log import append_log  # noqa: E402
+
+PROMPT_PATH = Path(__file__).resolve().parents[2] / "facilitator-intake-system-prompt.md"
+LOG_PATH = Path(__file__).resolve().parent / "TEST_LOG.md"
 
 # (category, name, message)
 # Grouped by how clear-cut the case SHOULD be, to see whether the model's
@@ -103,23 +108,31 @@ def main():
     ap.add_argument("--repeats", type=int, default=3)
     args = ap.parse_args()
 
+    rows = []
     with httpx.Client() as client:
         print(f"{'category':<32} {'scenario':<55} trip rate   categories seen")
         print("-" * 120)
         for category, name, message in SCENARIOS:
             trips = 0
+            errors = 0
             seen = []
             for _ in range(args.repeats):
                 try:
                     tripped, floor_triggered = run_once(client, args.base_url, message)
                 except Exception as e:
                     print(f"{category:<32} {name:<55} ERROR: {e}")
+                    errors += 1
                     continue
                 if tripped:
                     trips += 1
                 seen.append(floor_triggered)
-            rate = f"{trips}/{args.repeats}"
+            completed = args.repeats - errors
+            rate = f"{trips}/{completed}" if completed else f"ERROR ({errors}/{args.repeats})"
             print(f"{category:<32} {name:<55} {rate:<11} {seen}")
+            rows.append((category, name, trips, args.repeats, errors, seen))
+
+    append_log(LOG_PATH, "safety_floor_sweep.py", [PROMPT_PATH], args.repeats, rows)
+    print(f"\nLogged to {LOG_PATH}")
 
 
 if __name__ == "__main__":

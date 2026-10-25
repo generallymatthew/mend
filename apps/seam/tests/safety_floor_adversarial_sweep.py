@@ -38,8 +38,14 @@ Usage:
     apps/seam/.venv/bin/python apps/seam/tests/safety_floor_adversarial_sweep.py [--base-url URL] [--repeats N]
 """
 import argparse
+from pathlib import Path
 
 import httpx
+
+from test_log import append_log
+
+PROMPT_PATH = Path(__file__).resolve().parents[2] / "facilitator-case-plan-system-prompt.md"
+LOG_PATH = Path(__file__).resolve().parent / "TEST_LOG.md"
 
 MAX_TURNS = 3
 
@@ -129,26 +135,34 @@ def run_once(client, base_url, message):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-url", default="http://localhost:8460")
-    ap.add_argument("--repeats", type=int, default=3)
+    ap.add_argument("--repeats", type=int, default=1)
     args = ap.parse_args()
 
+    rows = []
     with httpx.Client() as client:
         print(f"{'category':<40} {'scenario':<50} trip rate   categories seen")
         print("-" * 128)
         for category, name, message in SCENARIOS:
             trips = 0
+            errors = 0
             seen = []
             for _ in range(args.repeats):
                 try:
                     tripped, floor_triggered = run_once(client, args.base_url, message)
                 except Exception as e:
                     print(f"{category:<40} {name:<50} ERROR: {e}")
+                    errors += 1
                     continue
                 if tripped:
                     trips += 1
                 seen.append(floor_triggered)
-            rate = f"{trips}/{args.repeats}"
+            completed = args.repeats - errors
+            rate = f"{trips}/{completed}" if completed else f"ERROR ({errors}/{args.repeats})"
             print(f"{category:<40} {name:<50} {rate:<11} {seen}")
+            rows.append((category, name, trips, args.repeats, errors, seen))
+
+    append_log(LOG_PATH, "safety_floor_adversarial_sweep.py", [PROMPT_PATH], args.repeats, rows)
+    print(f"\nLogged to {LOG_PATH}")
 
 
 if __name__ == "__main__":
