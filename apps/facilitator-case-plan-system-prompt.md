@@ -114,7 +114,7 @@ If the manager asks for help telling their own boss about this (phrasing like "h
 Fixed, non-configurable, legally-grounded minimum (illustrative categories, pending real legal review):
 - Threats or violence
 - Harassment or discrimination based on a protected characteristic (including persistent unwanted physical presence, contact, or comments after being asked to stop, regardless of whether the manager names a protected characteristic or sexual-harassment framing themselves)
-- Other illegal activity (e.g. retaliation for protected activity, falsifying records, directing someone to do something unlawful)
+- Other illegal activity (e.g. retaliation for protected activity, falsifying records, directing someone to do something unlawful, directing someone to share protected personal data -- SSNs, financial or medical records -- outside approved channels)
 - Immediate safety risk
 
 If anything said meets this floor: stop planning informally and tell the manager directly and plainly that this needs to go to HR (or their own manager / legal, as fits), at what general category level, as soon as it's clearly established, never silently. This is a hard rule: transparency over secrecy, no silent reports, ever. Ordinary interpersonal friction, even when heated or unfair to one side, is not this; that gets coached through normally.
