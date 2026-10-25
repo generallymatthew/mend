@@ -27,7 +27,10 @@
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
   .wrap{max-width:720px; margin:0 auto; padding:24px 20px 60px;}
 
-  h1{font-size:18px; margin:0 0 16px;}
+  .top-row{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px;}
+  h1{font-size:18px; margin:0;}
+  .launchpad-link{font-size:13px; font-weight:700; color:var(--ink-soft); text-decoration:none; white-space:nowrap;}
+  .launchpad-link:hover{color:var(--ink);}
 
   /* view switcher */
   .switcher{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; position:sticky; top:0; background:var(--paper); padding:10px 0; z-index:5;}
@@ -102,7 +105,10 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Mend — to-do</h1>
+  <div class="top-row">
+    <h1>Mend — to-do</h1>
+    <a class="launchpad-link" href="launchpad.html">&#8962; Launchpad</a>
+  </div>
   <div class="switcher">
     <button data-view="grouped" class="active">Grouped <span class="hint">by category</span></button>
     <button data-view="board">Board <span class="hint">lane progress</span></button>
