@@ -119,7 +119,12 @@
     width: 240px;
     min-width: 200px;
     border-right: 1px solid var(--border);
-    background: var(--sidebar-bg);
+    background:
+      radial-gradient(circle at 15% 12%, rgba(163,207,224,.24) 0%, transparent 46%),
+      radial-gradient(circle at 88% 15%, rgba(176,222,209,.16) 0%, transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(233,185,73,.16) 0%, transparent 42%),
+      radial-gradient(circle at 12% 92%, rgba(243,130,154,.18) 0%, transparent 42%),
+      var(--sidebar-bg);
     display: flex;
     flex-direction: column;
   }
@@ -386,6 +391,20 @@
   .bubble.assistant { background: var(--accent-pink-bg); border-radius: 20px 20px 20px 5px; }
   .bubble.user { background: var(--ink); color: #fff; border-radius: 20px 20px 5px 20px; }
   .bubble.pending { opacity: 0.5; }
+  /* Close case: the thread dissolves in place to signal nothing lingers --
+     closing only flips a status flag server-side, it doesn't delete the
+     messages, so this is purely a motion cue, not real erasure. */
+  #messages.dissolving .msg-row {
+    animation: case-dissolve 1.1s ease forwards;
+  }
+  @keyframes case-dissolve {
+    0% { opacity: 1; filter: blur(0px); transform: scale(1); }
+    55% { opacity: 0.5; filter: blur(4px); transform: scale(1.015); }
+    100% { opacity: 0; filter: blur(10px); transform: scale(1.03); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #messages.dissolving .msg-row { animation: none; opacity: 0; transition: opacity 0.3s ease; }
+  }
   .employee-tag {
     display: inline-block; background: #211F1C; color: #fff; border-radius: 4px;
     padding: 1px 7px; font-weight: 600; font-size: 0.92em; cursor: pointer;
@@ -484,6 +503,13 @@
   .onboard-card .bubble {
     background: #fff; box-shadow: 0 8px 12px rgba(23,55,46,.16), 0 2px 4px rgba(23,55,46,.12);
     transition: opacity .15s ease;
+    /* .welcome-row bottom-aligns the row, which lines the bubble's bottom
+       edge (where the pinched 5px corner sits) up with the AVATAR's
+       bottom -- but the mouth sits at top:60% of the 150px avatar, 60px
+       above that bottom. Pull the bubble up by that same 60px so the
+       pinched corner actually lands level with the mouth instead of the
+       avatar's chin. */
+    margin-bottom: 60px;
   }
   .onboard-close {
     position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border-radius: 50%;
@@ -896,6 +922,7 @@
 
   let step = 0;
   let typeTimer = null;
+  let advanceTimer = null;
   card.style.display = 'flex';
   SEAM_INTRO_LINES.forEach((_, i) => {
     const d = document.createElement('div');
@@ -903,11 +930,13 @@
     dotsEl.appendChild(d);
   });
 
-  // Live-transcription effect: reveals each line character by character
-  // (a crude stand-in for real speech, since Seam has no TTS yet -- see
-  // the .talking CSS comment) with the mouth flapping while it types,
-  // instead of the full line appearing instantly.
-  function typeLine(text) {
+  // Plays itself start to finish -- no clicking required. Next/dots are
+  // just a fast-forward and a progress readout, not the way the walkthrough
+  // is meant to be driven. Live-transcription effect: reveals each line
+  // character by character (a crude stand-in for real speech, since Seam
+  // has no TTS yet -- see the .talking CSS comment) with the mouth flapping
+  // while it types, then a brief pause before the next line starts itself.
+  function typeLine(text, onDone) {
     clearInterval(typeTimer);
     bubble.textContent = '';
     avatarEl.classList.add('talking');
@@ -919,16 +948,24 @@
         clearInterval(typeTimer);
         typeTimer = null;
         avatarEl.classList.remove('talking');
+        if (onDone) onDone();
       }
     }, 22);
   }
   function render() {
-    typeLine(SEAM_INTRO_LINES[step]);
+    clearTimeout(advanceTimer);
     [...dotsEl.children].forEach((d, i) => d.classList.toggle('active', i === step));
-    nextBtn.textContent = step === SEAM_INTRO_LINES.length - 1 ? 'Got it' : 'Next';
+    nextBtn.textContent = step === SEAM_INTRO_LINES.length - 1 ? 'Got it' : 'Skip ahead';
+    typeLine(SEAM_INTRO_LINES[step], () => {
+      advanceTimer = setTimeout(() => {
+        if (step === SEAM_INTRO_LINES.length - 1) finish();
+        else { step += 1; render(); }
+      }, 2200);
+    });
   }
   function finish() {
     clearInterval(typeTimer);
+    clearTimeout(advanceTimer);
     avatarEl.classList.remove('talking');
     localStorage.setItem('seam_thimble_intro_seen', '1');
     card.style.display = 'none';
@@ -1387,13 +1424,23 @@ async function addStep() {
 
 async function closeCase() {
   if (!activeConvo || !CASE_LIKE_TYPES.includes(activeConvo.type)) return;
-  const res = await fetch(apiPath(`/api/cases/${activeConvo.id}`), {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status: "closed" }),
-  });
-  const updated = await res.json();
-  applyConvoResult(activeConvo.type, { case: updated });
+  const messagesEl = document.getElementById("messages");
+  const closeBtn = document.getElementById("close-case-btn");
+  closeBtn.disabled = true;
+  messagesEl.classList.add("dissolving");
+  try {
+    const res = await fetch(apiPath(`/api/cases/${activeConvo.id}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "closed" }),
+    });
+    const updated = await res.json();
+    applyConvoResult(activeConvo.type, { case: updated });
+  } catch (e) {
+    messagesEl.classList.remove("dissolving");
+    closeBtn.disabled = false;
+    throw e;
+  }
 }
 
 async function openHandoffModal() {
