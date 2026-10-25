@@ -448,6 +448,13 @@
   .intro .wrap { max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
   .welcome-row { display: flex; align-items: flex-end; gap: 14px; }
   .welcome-row .bubble { text-align: left; }
+  /* Onboarding card centers this row's column (align-items:center), and
+     the row's own width was shrink-to-fit -- so as each line's text
+     changed the bubble's width, the whole avatar+bubble pair re-centered
+     and the avatar visibly slid sideways between lines. Pinning the row
+     to the card's full content width keeps the avatar's x position fixed
+     once, with only the bubble growing/shrinking to its right. */
+  .onboard-card .welcome-row { width: 100%; }
   /* First-run walkthrough: a dismissible card that fills most of the
      available .intro area (not sized to .wrap's own tight content box --
      reported live as "too small," needs real room for Thimble to actually
