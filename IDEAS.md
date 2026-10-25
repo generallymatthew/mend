@@ -94,6 +94,29 @@ reconciliation is a 100% successful outcome.
 - Why not active: overlaps with existing privacy/confidential-computing
   story already tracked in ROADMAP.md Phase 3; fold in when that's drafted.
 
+### Community-as-leverage mechanism (never stated as copy)
+Helping people resolve conflict builds a sense of community within a
+workplace, and that community is itself leverage when bargaining with
+management. Today, team-vs-team friction is frequently a deliberate release
+valve — it keeps conflict running between employees instead of between
+employees and management, which protects management from a unified
+workforce. A tool that actually resolves interpersonal and inter-team
+conflict removes that release valve: people stop burning energy fighting
+each other and start noticing the actual source of institutional
+dysfunction. This is the mechanism behind "find solidarity" in
+[[project_mend_core_philosophy]] (memory) — not just a value statement, but
+how the employee version builds real bargaining power over time, team by
+team, without ever being pitched as an organizing tool. Deliberately never
+stated in copy, no pitch deck, no landing page — implied entirely by the
+seriousness of the no-trace promise and Thimble's employee's-best-interests
+POV.
+- Source: `MARKET_STRATEGY.md` (2026-10-24 strategy note, folded in here)
+- Where it could plug in: nowhere in visible copy — this stays purely
+  behavioral, in how Thimble responds, not in how the product is described.
+- Why not active: not a feature, a worldview constraint on how existing
+  features behave; flagged here so it isn't rediscovered and accidentally
+  turned into a marketing angle.
+
 ---
 
 ## Facilitator design
@@ -331,9 +354,54 @@ deployed app matches the published prompt.
   which is itself blocked on the hosting/remote situation already tracked
   in ROADMAP Phase 3.
 
+### Standing self-advocacy advice: raises and presenting your own work
+Every employee using the tool should always be able to get advice on how to
+ask for a raise and how to show their value when presenting — a standing
+capability, not a one-off feature request. Consistent with the product's
+broader worldview (see [[project_mend_core_philosophy]], memory): helping
+people advocate for themselves individually feeds the same muscle as
+advocating for themselves collectively.
+- Source: `MARKET_STRATEGY.md` (2026-10-24 strategy note, folded in here)
+- Where it could plug in: Thimble's standing system-prompt capabilities,
+  available any time, not gated behind an active conflict session.
+- Why not active: not yet scoped as a concrete feature, just a standing
+  intent to carry into whichever prompt/feature work touches this.
+
+### Audio-only rehearsal feedback (watch me present and critique delivery)
+Floated idea: Mend listens to a rehearsal presentation and gives feedback on
+delivery — pace, filler words, tone, pauses, confidence. Deliberately
+audio-only, not video: most people present from their own computer anyway,
+so the eye-contact/body-language signal video would add is already weak
+(webcam angle, glare, half a face), and audio-only is a smaller build with a
+smaller privacy footprint (process and return feedback, no need to keep the
+recording).
+- Source: `MARKET_STRATEGY.md` (2026-10-24 strategy note, folded in here)
+- Where it could plug in: a rehearsal/practice mode alongside the standing
+  self-advocacy advice above, or Seam's manager-rehearsal path.
+- Why not active: today's video mode (Tavus) is outbound only — the avatar
+  speaking to the user, not inbound analysis of the user's own
+  camera/screen. Doing this for real means a new capture + multimodal
+  review pipeline with its own privacy design, not a toggle on what
+  exists. Parked, not committed.
+
 ---
 
 ## Business model
+
+### Two products, one engine — institution-facing tool funds the consumer tool
+The business-model framing behind the EPLI/EAP distribution work: an
+institution-facing tool (satisfies what an insurer/broker/EAP vendor wants
+to see — documented reporting mechanism, safety-floor escalation, risk-
+control credit eligibility) and a consumer tool (employee + manager
+versions of the same engine), where the employee version is the core
+product and can subsidize the manager version so access isn't gated by who
+pays. Full writeup, comparables, and channel analysis moved to
+`docs/pitch-strategy/28_GTM_EPLI_EAP_AND_ADJACENT_DISTRIBUTION.md`.
+- Source: `MARKET_STRATEGY.md` (2026-10-24 strategy note, superseded by
+  doc 28 above — kept here only as an index pointer)
+- Why not active: subsidy mechanics (flat % of revenue into a manager-
+  access pool vs. per-seat matching vs. something else) still unresolved;
+  see doc 28's open questions.
 
 ### Remote conflict statistics as cost-of-inaction / credibility backing
 A research pass on how workplace conflict actually plays out on fully
