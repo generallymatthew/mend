@@ -2,13 +2,26 @@
 
 A confidential, AI-facilitated conflict resolution tool for workplace teams. See `product-spec.html` for the full elevator pitch and mission, `STATUS.md` for what's recently happened, and `ROADMAP.md` for the phase-level view of what's next.
 
+## App names
+
+Working names for the apps in the shipped codebase, so references to them can use a name instead of a description:
+
+- **Thimble** — the solo conflict-resolution app overall (intake → joint session), the main focus so far. Maps to `apps/thimble` + `apps/suture`/`apps/joint-session-audio`.
+- **Suture** — the two-person facilitated conversation itself, inside Thimble (the live joint session specifically, not the intake step before it).
+- **Seam** — the manager app: solo coaching/practice for a manager preparing for or rehearsing a hard conversation with a direct report, or a case-management space for a manager working through conflict between two members of their team. Maps to `apps/seam`. The standalone `manager-coaching-app` prototype that used to cover the rehearsal half of this was removed as redundant; that path is folded into Thimble's own system prompt instead (see `facilitator-intake-system-prompt.md`).
+- **Spool** — the sign-up/invite entry point, where a visitor picks a flow and gets routed into Thimble, Suture, or Seam. Maps to `apps/spool` (renamed from `apps/demo-app` on 2026-10-23).
+- **Splice** — live group consensus-building over a real Zoom call. Maps to `apps/splice`.
+- **Swatch**, **Loom**, **Hem** — not yet built; see `IDEAS.md` for the concepts.
+
+Note the naming layers don't collapse to one meaning: Seam is the user-facing app, Thimble is also the AI persona discovered inside the app (not just the app name), and Mend is the company name, currently invisible to users since there's no LLC or revenue yet.
+
 ## What's here
 
 Top level is split into: live site files (this README, `product-spec.html`, `about.html`/`story.html`/`testers.html`/`launchpad.html`/`index.html`, `Mend Pitch/`, `CNAME` — all served directly by GitHub Pages at `pitch.trymend.solutions`, so none of these move into a subfolder), the rolling project docs (`STATUS.md`, `ROADMAP.md`, `IDEAS.md`, `CLAUDE.md`, `LINKS.md`), local dev infra (`run_all.sh`, `Caddyfile`, `deploy/`, `render.yaml`), and two subfolders that hold everything else:
 
 - **`apps/`** — every local FastAPI prototype, plus the `facilitator-*-system-prompt.md` files and `joint-session-architecture.md` they're built from (kept as siblings of the apps so each app's own `../facilitator-*.md` references still resolve). See [Local prototypes](#local-prototypes) below for what's runnable and what each one tests.
 - **`pitch/`** — everything pitch/marketing-adjacent that *isn't* part of the live site: `Social media/`, `cf-prompts/`, `pitch-scripts/`, `microsite/`, `archive/` (old pitch exports + a couple of not-yet-reviewed scratch files), `design_handoffs/` (design-reference implementations handed off for porting into the real apps — Thimble avatar motion, the Mend Sessions UI pass + brand kit).
-- **`IDEAS.md`** — a dumping ground for ideas worth capturing but not worth working on yet (positioning angles, adjacent markets, feature concepts, the seven app-codename concepts), each tagged with where it could plug in and why it's not active.
+- **`IDEAS.md`** — a dumping ground for ideas worth capturing but not worth working on yet (positioning angles, adjacent markets, feature concepts, the still-unbuilt app concepts), each tagged with where it could plug in and why it's not active.
 
 ## Live version
 

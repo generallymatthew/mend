@@ -9,42 +9,12 @@ Every entry also names its source file so the original writeup can be found.
 
 ---
 
-## App codenames
+## App names
 
-Working names for the apps discussed in this doc and in the shipped codebase,
-so future conversations can refer to them by name instead of description.
-
-- **Thimble** — the solo conflict-resolution app overall (intake → joint
-  session), the main focus so far. Maps to `thimble` +
-  `suture`/`joint-session-audio`.
-- **Suture** — the two-person facilitated conversation itself, inside Thimble
-  (the live joint session specifically, not the intake step before it).
-- **Seam** — the manager app: solo coaching/practice for a manager preparing
-  for or rehearsing a hard conversation with a direct report, or a
-  case-management space for a manager working through conflict between two
-  members of their team. Maps to `seam` (product-facing name also
-  "Seam" as of 2026-10-17). The standalone `manager-coaching-app` prototype
-  that used to cover the rehearsal half of this was removed as redundant —
-  that path is folded into `thimble`/Thimble's own system prompt instead
-  (see `facilitator-intake-system-prompt.md`).
-- **Swatch** — a UX collaboration tool for designers who don't know each
-  other well. See full writeup below.
-- **Loom** — new idea: the async sprint-retro tool. See "Pattern-only
-  project retro" below, which is this idea.
-- **Splice** — new idea: a consensus-builder for loose groups struggling to
-  agree on something, as a Zoom plugin.
-- **Hem** — new idea: a cross-platform desktop writing assistant that helps
-  you respond to/send messages and make your point without causing conflict,
-  regardless of which app you're in.
-- **Spool** — the sign-up/invite entry point, where a visitor picks a flow
-  and gets routed into Thimble, Suture, or Seam. Named 2026-10-23 so
-  "demo app" stops leaking into user-facing labels; `apps/demo-app` was
-  renamed to `apps/spool` the same day (`git mv`, venv rebuilt, every
-  reference across `run_all.sh`, `deploy/start.sh`, `deploy/Dockerfile`,
-  `render.yaml`, `deploy/render.Caddyfile`, `README.md`, `ROADMAP.md`,
-  `LINKS.md`, `launchpad.html`, and the app's own + Thimble's `server.py`
-  comments updated — same scope as the 2026-10-21
-  `thimble`/`suture`/`seam`/`splice` folder rename).
+Moved to the top-level `README.md` ("App names" section) — these are shipped,
+working names now, not raw ideas. `Swatch`, `Loom`, and `Hem` are still
+unbuilt-idea concepts; their full writeups are below under their own
+headings.
 
 ---
 

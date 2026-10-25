@@ -3,7 +3,7 @@
 Structural, phase-level view — what needs to be true before the next phase starts. For the rolling "what happened recently" log, see `STATUS.md` instead; this file changes rarely, that one changes often. Check a box when the item is actually done and verified, not just attempted. For raw, not-yet-committed ideas (not phase-level work), see `IDEAS.md` instead.
 
 This file now covers only cross-app and repo-level work. Each of the seven
-app codenames (see `IDEAS.md`'s "App codenames" section) has its own
+app names (see `README.md`'s "App names" section) has its own
 phase-level checklist, living in that app's folder:
 
 - [Thimble](apps/thimble/thimble-product-roadmap.md) — solo intake, the

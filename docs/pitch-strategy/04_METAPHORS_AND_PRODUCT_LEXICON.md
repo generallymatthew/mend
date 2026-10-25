@@ -53,7 +53,7 @@ codenamed **Darn** (solo conflict-resolution: intake -> joint session) is
 now **Thimble** — same name as the facilitator persona, zero translation
 layer: you open Thimble and you talk to Thimble. Darn itself stays reserved
 for an action/mode name (e.g. "run a quick darn on this draft"), not a
-product or persona identity. See `IDEAS.md`'s "App codenames" section for
+product or persona identity. See `README.md`'s "App names" section for
 the updated app-name list.
 
 ## Garment metaphor: mending the clothes, not the body
