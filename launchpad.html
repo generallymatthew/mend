@@ -9,238 +9,248 @@
 <style>
   :root{
     --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
-    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --pink:#F3829A; --pink-soft:#FCEEF0; --pink-ink:#A8405A;
+    --sage:#5F8569; --sage-soft:#E7EEE9;
+    --honey:#FBF2DC; --honey-ink:#8A6A1F;
     --warn:#8C3B2E; --warn-soft:#F3E4DF;
   }
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
-  .wrap{max-width:980px; margin:0 auto; padding:26px 18px 50px;}
+  .wrap{max-width:1200px; margin:0 auto; padding:26px 20px 50px;}
+  a{color:var(--ink);}
 
-  h1{font-size:1.3rem; margin:0 0 14px;}
+  h1{font-size:21px; margin:0; font-weight:800; letter-spacing:-.01em;}
 
-  details.howto{margin:0 0 20px; font-size:12.5px;}
-  details.howto summary{cursor:pointer; color:var(--ink-soft); list-style:none; display:flex; align-items:center; gap:5px;}
-  details.howto summary::-webkit-details-marker{display:none;}
-  details.howto summary::before{content:'▸'; font-size:10px; transition:transform .15s;}
-  details.howto[open] summary::before{transform:rotate(90deg);}
-  details.howto .body{background:var(--card); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:8px; line-height:1.6; color:var(--ink-soft);}
-  details.howto code{font-family:'Manrope',sans-serif; background:var(--accent-soft); padding:1px 5px; border-radius:4px; font-size:12px; color:var(--ink);}
+  .row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:5px 0; border-bottom:1px solid rgba(23,55,46,.11); text-decoration:none; color:var(--ink); font-size:12.5px; font-weight:600; line-height:1.3;}
+  .row:last-child{border-bottom:none;}
+  .tag{font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; flex-shrink:0; padding-top:1px; color:var(--ink-soft);}
+  .row.unavailable{opacity:.45; pointer-events:none;}
+  .row.down .tag{color:var(--warn);}
 
-  .cols{column-count:2; column-gap:22px;}
-  @media (max-width:760px){ .cols{column-count:1;} }
+  .dot{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px; vertical-align:middle;}
 
-  details.cat{border-bottom:1px solid var(--border); padding:4px 0; break-inside:avoid-column; display:inline-block; width:100%;}
-  details.cat summary{cursor:pointer; list-style:none; display:flex; align-items:center; gap:7px; padding:9px 2px; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink);}
-  details.cat summary::-webkit-details-marker{display:none;}
-  details.cat summary::before{content:'▸'; font-size:11px; color:var(--ink-soft); transition:transform .15s; width:10px; flex-shrink:0;}
-  details.cat[open] summary::before{transform:rotate(90deg);}
-  details.cat .items{display:flex; flex-direction:column; gap:7px; padding:4px 2px 14px 17px;}
+  .cat{cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:0 0 9px; margin-bottom:8px; border-bottom:1px solid var(--border); font-size:13.5px; font-weight:800; text-transform:uppercase; letter-spacing:.045em;}
+  .cat::-webkit-details-marker{display:none;}
+  .cat .arrow{font-size:10px; margin-right:6px; display:inline-block; transition:transform .15s;}
+  details[open] > .cat .arrow{transform:rotate(90deg);}
+  .cat .count{font-weight:700; text-transform:none; letter-spacing:0; font-size:11px;}
 
-  .group{margin:12px 0 2px; padding-left:10px; border-left:2px solid var(--border);}
-  .group .gname{font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft);}
-  .group .gdesc{font-size:11.5px; color:var(--ink-soft); margin:2px 0 6px; line-height:1.4;}
-  .rows{display:flex; flex-direction:column; gap:5px;}
-  a.row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 9px; border-radius:7px; background:var(--accent-soft); text-decoration:none; color:var(--ink); font-size:12.5px;}
-  a.row:hover{background:var(--border);}
-  a.row .label{font-weight:600;}
-  a.row .tag{font-family:'Manrope',sans-serif; font-size:10px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); white-space:nowrap; flex-shrink:0;}
-  a.row.single{background:none; border:1px solid var(--border); padding:6px 9px;}
-  a.row.single:hover{background:var(--accent-soft);}
-  a.row.unavailable{opacity:.4; pointer-events:none;}
-  a.row.down .tag{background:var(--warn-soft); color:var(--warn); padding:2px 6px; border-radius:5px;}
+  .subpanel{border-radius:9px; padding:9px 11px 10px; margin-top:10px;}
+  .subpanel:first-of-type{margin-top:4px;}
+  .sub{cursor:pointer; list-style:none; display:flex; align-items:baseline; gap:6px; font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.035em; margin-bottom:2px;}
+  .sub::-webkit-details-marker{display:none;}
+  .sub .arrow{font-size:9px; display:inline-block; transition:transform .15s;}
+  details[open] > .sub .arrow{transform:rotate(90deg);}
+  .sub-desc{font-size:10.5px; color:var(--ink-soft); margin:1px 0 5px; line-height:1.4;}
 
-  footer{margin-top:24px; font-size:11.5px; color:var(--ink-soft); line-height:1.5;}
+  .card{break-inside:avoid-column; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 15px; margin-bottom:14px; display:inline-block; width:100%;}
+
+  .cols{column-count:3; column-gap:16px;}
+  @media (max-width:980px){ .cols{column-count:2;} }
+  @media (max-width:620px){ .cols{column-count:1;} }
+
+  .howto summary{cursor:pointer; font-weight:700; color:var(--ink-soft); list-style:none; font-size:12px;}
+  .howto summary::-webkit-details-marker{display:none;}
+  .howto .body{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-top:8px; line-height:1.6; color:var(--ink-soft); font-size:12px;}
+  code{font-family:'Manrope',sans-serif; background:var(--accent-soft); padding:1px 5px; border-radius:4px; font-size:12px; color:var(--ink);}
+
+  footer{margin-top:10px; font-size:11px; color:var(--ink-soft); line-height:1.5; border-top:1px solid var(--border); padding-top:12px;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Mend launchpad</h1>
 
-  <a class="row single" href="mend-todo-list.html" target="_blank" style="margin-bottom:16px;"><span class="label">To-do list</span><span class="tag">local</span></a>
+  <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:4px;">
+    <h1>Mend launchpad</h1>
+    <span style="font-size:11.5px; font-weight:700; color:var(--ink-soft);" data-link-count>9 categories</span>
+  </div>
+  <p style="font-size:12px; color:var(--ink-soft); margin:0 0 14px; line-height:1.5;">Internal draft, pre-legal review — not linked from the public landing page.</p>
 
-  <details class="howto">
-    <summary>How to run this (click to expand)</summary>
-    <div class="body">
-      Serve the whole <code>Mend/</code> folder: <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/launchpad.html</code> &mdash; local document links need a real server, not <code>file://</code>. Local product links need <code>./run_all.sh</code> running separately (repo root, needs <code>caddy</code> &mdash; see root <code>README.md</code>); it puts the core apps behind <code>:8080</code>. Every other page in the repo now carries a small "&#8962; Launchpad" badge (bottom-right) back to this page &mdash; pages under <code>apps/</code> point it at <code>http://localhost:8000/launchpad.html</code> since those are served by their own app server, not this one.
-    </div>
-  </details>
+  <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px;">
+    <a class="row" href="mend-todo-list.html" target="_blank" style="flex:1; display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--ink); color:var(--paper); text-decoration:none; font-weight:700; font-size:13.5px; border-radius:9px; padding:10px 15px; border-bottom:none;">
+      <span>To-do list</span>
+      <span class="tag" style="color:var(--paper); opacity:.75;">local</span>
+    </a>
+    <details class="howto">
+      <summary>How to run this ▾</summary>
+      <div class="body">
+        Serve the whole <code>Mend/</code> folder: <code>python3 -m http.server 8000</code>, then open <code>http://localhost:8000/launchpad.html</code> &mdash; local document links need a real server, not <code>file://</code>. Local product links need <code>./run_all.sh</code> running separately (repo root, needs <code>caddy</code> &mdash; see root <code>README.md</code>); it puts the core apps behind <code>:8080</code>. Every other page in the repo carries a small "&#8962; Launchpad" badge back to this page.
+      </div>
+    </details>
+  </div>
 
   <div class="cols">
 
-  <details class="cat" open>
-    <summary>Project status</summary>
-    <div class="items">
-      <a class="row single" href="ROADMAP.md" target="_blank"><span class="label">Roadmap</span><span class="tag">local</span></a>
-      <a class="row single" href="STATUS.md" target="_blank"><span class="label">Status</span><span class="tag">local</span></a>
+    <!-- Project status -->
+    <div class="card">
+      <details open>
+        <summary class="cat"><span><span class="dot" style="background:var(--ink);"></span><span class="arrow">▸</span>Project status</span><span class="count" style="color:var(--ink-soft);">2</span></summary>
+        <a class="row" href="ROADMAP.md" target="_blank">Roadmap <span class="tag">local</span></a>
+        <a class="row" href="STATUS.md" target="_blank">Status <span class="tag">local</span></a>
+      </details>
     </div>
-  </details>
 
-  <details class="cat" open>
-    <summary>Product</summary>
-    <div class="items">
-      <a class="row single" href="about.html" target="_blank"><span class="label">Why this matters (start here)</span><span class="tag">local</span></a>
+    <!-- Product -->
+    <div class="card">
+      <details open>
+        <summary class="cat"><span><span class="dot" style="background:var(--sage);"></span><span class="arrow">▸</span>Product</span><span class="count" style="color:var(--sage);">26</span></summary>
 
-      <div class="group">
-        <div class="gname">Seam (manager app)</div>
-        <div class="gdesc">Solo coaching/case-management for a manager prepping for or working through conflict</div>
-        <div class="rows">
-          <a class="row" href="http://localhost:8080/manager/" target="_blank" rel="noopener"><span class="label">Local</span><span class="tag">:8080</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/manager/" target="_blank" rel="noopener"><span class="label">Live</span><span class="tag">render</span></a>
-          <a class="row" href="seam-testers.html" target="_blank"><span class="label">Seam testers &mdash; local</span><span class="tag">local</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/seam-testers.html" target="_blank" rel="noopener"><span class="label">Seam testers &mdash; live</span><span class="tag">render</span></a>
-          <a class="row" href="http://localhost:8080/manager/survey" target="_blank" rel="noopener"><span class="label">Survey &mdash; local</span><span class="tag">:8080</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/manager/survey" target="_blank" rel="noopener"><span class="label">Survey &mdash; live</span><span class="tag">render</span></a>
-          <a class="row" href="http://localhost:8080/manager/survey/post" target="_blank" rel="noopener"><span class="label">Survey (after) &mdash; local</span><span class="tag">:8080</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/manager/survey/post" target="_blank" rel="noopener"><span class="label">Survey (after) &mdash; live</span><span class="tag">render</span></a>
-          <a class="row" href="apps/seam/App.dc.html" target="_blank"><span class="label">App shell</span><span class="tag">mockup</span></a>
-          <a class="row" href="apps/seam/design-mockups/CasePlan.dc.html" target="_blank"><span class="label">Case plan</span><span class="tag">mockup</span></a>
-          <a class="row" href="apps/seam/design-mockups/MeetingStrategy.dc.html" target="_blank"><span class="label">Meeting strategy</span><span class="tag">mockup</span></a>
-          <a class="row" href="apps/seam/design-mockups/MeetingVoice.dc.html" target="_blank"><span class="label">Meeting voice</span><span class="tag">mockup</span></a>
-          <a class="row" href="apps/seam/design-mockups/SutureHandoff.dc.html" target="_blank"><span class="label">Suture handoff</span><span class="tag">mockup</span></a>
-          <a class="row" href="apps/seam/design-mockups/ToneCheck.dc.html" target="_blank"><span class="label">Tone check</span><span class="tag">mockup</span></a>
-          <a class="row" href="http://localhost:8481/" target="_blank" rel="noopener"><span class="label">Read the thread (hook) &mdash; local</span><span class="tag">:8481</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/manager-test/" target="_blank" rel="noopener"><span class="label">Read the thread (hook) &mdash; live</span><span class="tag">render</span></a>
-        </div>
-      </div>
+        <a class="row" href="about.html" target="_blank" style="font-weight:700;">Why this matters (start here) <span class="tag">local</span></a>
 
-      <div class="group">
-        <div class="gname">Spool</div>
-        <div class="gdesc">Sign-up + invite flow (demo hub) &mdash; links through the apps below</div>
-        <div class="rows">
-          <a class="row" href="http://localhost:8080/" target="_blank" rel="noopener"><span class="label">Local</span><span class="tag">:8080</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/" target="_blank" rel="noopener"><span class="label">Live</span><span class="tag">render</span></a>
-        </div>
-      </div>
+        <details open class="subpanel" style="background:var(--sage-soft);">
+          <summary class="sub" style="color:var(--sage);"><span class="arrow">▸</span>Seam · manager app</summary>
+          <div class="sub-desc">Solo coaching/case-management for a manager prepping for or working through conflict</div>
+          <a class="row" href="http://localhost:8080/manager/" target="_blank" rel="noopener">Local <span class="tag">:8080</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/manager/" target="_blank" rel="noopener">Live <span class="tag" style="color:var(--sage);">render</span></a>
+          <a class="row" href="seam-testers.html" target="_blank">Seam testers — local <span class="tag">local</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/seam-testers.html" target="_blank" rel="noopener">Seam testers — live <span class="tag" style="color:var(--sage);">render</span></a>
+          <a class="row" href="http://localhost:8080/manager/survey" target="_blank" rel="noopener">Survey — local <span class="tag">:8080</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/manager/survey" target="_blank" rel="noopener">Survey — live <span class="tag" style="color:var(--sage);">render</span></a>
+          <a class="row" href="http://localhost:8080/manager/survey/post" target="_blank" rel="noopener">Survey (after) — local <span class="tag">:8080</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/manager/survey/post" target="_blank" rel="noopener">Survey (after) — live <span class="tag" style="color:var(--sage);">render</span></a>
+          <a class="row" href="apps/seam/App.dc.html" target="_blank">App shell <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+          <a class="row" href="apps/seam/design-mockups/CasePlan.dc.html" target="_blank">Case plan <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+          <a class="row" href="apps/seam/design-mockups/MeetingStrategy.dc.html" target="_blank">Meeting strategy <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+          <a class="row" href="apps/seam/design-mockups/MeetingVoice.dc.html" target="_blank">Meeting voice <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+          <a class="row" href="apps/seam/design-mockups/SutureHandoff.dc.html" target="_blank">Suture handoff <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+          <a class="row" href="apps/seam/design-mockups/ToneCheck.dc.html" target="_blank">Tone check <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+          <a class="row" href="http://localhost:8481/" target="_blank" rel="noopener">Read the thread (hook) — local <span class="tag">:8481</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/manager-test/" target="_blank" rel="noopener">Read the thread (hook) — live <span class="tag" style="color:var(--sage);">render</span></a>
+        </details>
 
-      <div class="group">
-        <div class="gname">Thimble</div>
-        <div class="gdesc">Private 1:1 consultation with the facilitator</div>
-        <div class="rows">
-          <a class="row" href="http://localhost:8080/intake/" target="_blank" rel="noopener"><span class="label">Local</span><span class="tag">:8080</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/intake/" target="_blank" rel="noopener"><span class="label">Live</span><span class="tag">render</span></a>
-          <a class="row" href="http://localhost:8480/" target="_blank" rel="noopener"><span class="label">Read the room (hook) &mdash; local</span><span class="tag">:8480</span></a>
-          <a class="row single unavailable" href="#"><span class="label">Read the room (hook) &mdash; live</span><span class="tag">not deployed</span></a>
-        </div>
-      </div>
+        <details open class="subpanel" style="background:var(--sage-soft);">
+          <summary class="sub" style="color:var(--sage);"><span class="arrow">▸</span>Spool</summary>
+          <div class="sub-desc">Sign-up + invite flow (demo hub) — links through the apps below</div>
+          <a class="row" href="http://localhost:8080/" target="_blank" rel="noopener">Local <span class="tag">:8080</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/" target="_blank" rel="noopener">Live <span class="tag" style="color:var(--sage);">render</span></a>
+        </details>
 
-      <div class="group">
-        <div class="gname">Suture</div>
-        <div class="gdesc">The live two-person facilitated conversation, inside Thimble</div>
-        <div class="rows">
-          <a class="row" href="http://localhost:8080/joint/?code=launchpad&amp;role=a" target="_blank" rel="noopener"><span class="label">Employee A</span><span class="tag">:8080 local only</span></a>
-          <a class="row" href="http://localhost:8080/joint/?code=launchpad&amp;role=b" target="_blank" rel="noopener"><span class="label">Employee B</span><span class="tag">:8080 local only</span></a>
-          <a class="row" href="http://localhost:8080/post/" target="_blank" rel="noopener"><span class="label">Post-session check-in</span><span class="tag">:8080 local only</span></a>
-          <a class="row" href="apps/suture/static/index.html" target="_blank"><span class="label">Raw file</span><span class="tag">local file</span></a>
-          <a class="row" href="apps/joint-session-audio/static/index.html" target="_blank"><span class="label">Audio variant</span><span class="tag">local file</span></a>
-        </div>
-      </div>
+        <details open class="subpanel" style="background:var(--sage-soft);">
+          <summary class="sub" style="color:var(--sage);"><span class="arrow">▸</span>Thimble</summary>
+          <div class="sub-desc">Private 1:1 consultation with the facilitator</div>
+          <a class="row" href="http://localhost:8080/intake/" target="_blank" rel="noopener">Local <span class="tag">:8080</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/intake/" target="_blank" rel="noopener">Live <span class="tag" style="color:var(--sage);">render</span></a>
+          <a class="row" href="http://localhost:8480/" target="_blank" rel="noopener">Read the room (hook) — local <span class="tag">:8480</span></a>
+          <a class="row unavailable" href="#">Read the room (hook) — live <span class="tag" style="color:var(--warn);">not deployed</span></a>
+        </details>
 
-      <a class="row single" href="apps/spool/static/links.html" target="_blank"><span class="label">Mend links page</span><span class="tag">local file</span></a>
+        <details open class="subpanel" style="background:var(--sage-soft);">
+          <summary class="sub" style="color:var(--sage);"><span class="arrow">▸</span>Suture</summary>
+          <div class="sub-desc">The live two-person facilitated conversation, inside Thimble</div>
+          <a class="row" href="http://localhost:8080/joint/?code=launchpad&amp;role=a" target="_blank" rel="noopener">Employee A <span class="tag">:8080 local only</span></a>
+          <a class="row" href="http://localhost:8080/joint/?code=launchpad&amp;role=b" target="_blank" rel="noopener">Employee B <span class="tag">:8080 local only</span></a>
+          <a class="row" href="http://localhost:8080/post/" target="_blank" rel="noopener">Post-session check-in <span class="tag">:8080 local only</span></a>
+          <a class="row" href="apps/suture/static/index.html" target="_blank">Raw file <span class="tag">local file</span></a>
+          <a class="row" href="apps/joint-session-audio/static/index.html" target="_blank">Audio variant <span class="tag">local file</span></a>
+        </details>
+
+        <a class="row" href="apps/spool/static/links.html" target="_blank" style="margin-top:4px;">Mend links page <span class="tag">local file</span></a>
+      </details>
     </div>
-  </details>
 
-  <details class="cat">
-    <summary>Documents</summary>
-    <div class="items">
-      <a class="row single" href="index.html" target="_blank"><span class="label">Home</span><span class="tag">local</span></a>
-      <a class="row single" href="story.html" target="_blank"><span class="label">Story</span><span class="tag">local</span></a>
-      <a class="row single" href="testers.html" target="_blank"><span class="label">Testers</span><span class="tag">local</span></a>
-      <a class="row single" href="employee-deck.html" target="_blank"><span class="label">Employee deck</span><span class="tag">local</span></a>
-      <a class="row single" href="manager-story.html" target="_blank"><span class="label">Manager story</span><span class="tag">local</span></a>
+    <!-- Documents -->
+    <div class="card">
+      <details open>
+        <summary class="cat"><span><span class="dot" style="background:var(--pink);"></span><span class="arrow">▸</span>Documents</span><span class="count" style="color:var(--pink-ink);">9</span></summary>
 
-      <div class="group">
-        <div class="gname">Product spec</div>
-        <div class="gdesc">Full buyer-facing spec, all sections</div>
-        <div class="rows">
-          <a class="row" href="product-spec.html" target="_blank"><span class="label">Local file</span><span class="tag">local</span></a>
-          <a class="row" href="https://claude.ai/artifact/PRQ4kwizN721tXCAf6ACpt" target="_blank" rel="noopener"><span class="label">Hosted (kept in sync)</span><span class="tag">claude.ai</span></a>
-        </div>
-      </div>
+        <a class="row" href="index.html" target="_blank">Home <span class="tag">local</span></a>
+        <a class="row" href="story.html" target="_blank">Story <span class="tag">local</span></a>
+        <a class="row" href="testers.html" target="_blank">Testers <span class="tag">local</span></a>
+        <a class="row" href="employee-deck.html" target="_blank">Employee deck <span class="tag">local</span></a>
+        <a class="row" href="manager-story.html" target="_blank">Manager story <span class="tag">local</span></a>
 
-      <div class="group">
-        <div class="gname">Pitch page</div>
-        <div class="gdesc">Narrative walkthrough + animations</div>
-        <div class="rows">
-          <a class="row" href="Mend%20Pitch/Mend%20Pitch%20v2.dc.html" target="_blank"><span class="label">Local</span><span class="tag">local</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/pitch" target="_blank" rel="noopener"><span class="label">Live</span><span class="tag">render</span></a>
-        </div>
-      </div>
+        <details open class="subpanel" style="background:var(--pink-soft);">
+          <summary class="sub" style="color:var(--pink-ink);"><span class="arrow">▸</span>Product spec</summary>
+          <div class="sub-desc">Full buyer-facing spec, all sections</div>
+          <a class="row" href="product-spec.html" target="_blank">Local file <span class="tag">local</span></a>
+          <a class="row" href="https://claude.ai/artifact/PRQ4kwizN721tXCAf6ACpt" target="_blank" rel="noopener">Hosted (kept in sync) <span class="tag" style="color:var(--pink-ink);">claude.ai</span></a>
+        </details>
 
-      <a class="row single" href="Mend%20Pitch/Mend%20Session%20Opening.dc.html" target="_blank"><span class="label">Pitch video &mdash; session opening</span><span class="tag">local</span></a>
-      <a class="row single" href="Mend%20Pitch/Mend%20Workflow%20Video.dc.html" target="_blank"><span class="label">Pitch video &mdash; workflow</span><span class="tag">local</span></a>
+        <details open class="subpanel" style="background:var(--pink-soft);">
+          <summary class="sub" style="color:var(--pink-ink);"><span class="arrow">▸</span>Pitch page</summary>
+          <div class="sub-desc">Narrative walkthrough + animations</div>
+          <a class="row" href="Mend%20Pitch/Mend%20Pitch%20v2.dc.html" target="_blank">Local <span class="tag">local</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/pitch" target="_blank" rel="noopener">Live <span class="tag" style="color:var(--sage);">render</span></a>
+        </details>
+
+        <a class="row" href="Mend%20Pitch/Mend%20Session%20Opening.dc.html" target="_blank" style="margin-top:4px;">Pitch video — session opening <span class="tag">local</span></a>
+        <a class="row" href="Mend%20Pitch/Mend%20Workflow%20Video.dc.html" target="_blank">Pitch video — workflow <span class="tag">local</span></a>
+      </details>
     </div>
-  </details>
 
-  <details class="cat">
-    <summary>Pitch microsite</summary>
-    <div class="items">
-      <a class="row single" href="pitch/microsite/index.html" target="_blank"><span class="label">Home</span><span class="tag">local</span></a>
-      <a class="row single" href="pitch/microsite/philosophy.html" target="_blank"><span class="label">Philosophy</span><span class="tag">local</span></a>
-      <a class="row single" href="pitch/microsite/architecture.html" target="_blank"><span class="label">Architecture</span><span class="tag">local</span></a>
-      <a class="row single" href="pitch/microsite/stack.html" target="_blank"><span class="label">Tech stack</span><span class="tag">local</span></a>
-      <a class="row single" href="pitch/microsite/videos.html" target="_blank"><span class="label">Videos</span><span class="tag">local</span></a>
+    <!-- Pitch microsite -->
+    <div class="card">
+      <details open>
+        <summary class="cat"><span><span class="dot" style="background:var(--honey-ink);"></span><span class="arrow">▸</span>Pitch microsite</span><span class="count" style="color:var(--honey-ink);">5</span></summary>
+        <a class="row" href="pitch/microsite/index.html" target="_blank">Home <span class="tag">local</span></a>
+        <a class="row" href="pitch/microsite/philosophy.html" target="_blank">Philosophy <span class="tag">local</span></a>
+        <a class="row" href="pitch/microsite/architecture.html" target="_blank">Architecture <span class="tag">local</span></a>
+        <a class="row" href="pitch/microsite/stack.html" target="_blank">Tech stack <span class="tag">local</span></a>
+        <a class="row" href="pitch/microsite/videos.html" target="_blank">Videos <span class="tag">local</span></a>
+      </details>
     </div>
-  </details>
 
-  <details class="cat">
-    <summary>QA / internal tools</summary>
-    <div class="items">
-      <div class="group">
-        <div class="gname">Thimble states</div>
-        <div class="gdesc">Every avatar state running live side by side &mdash; no mic or real call needed</div>
-        <div class="rows">
-          <a class="row" href="http://localhost:8080/intake/static/thimble-states.html" target="_blank" rel="noopener"><span class="label">Local</span><span class="tag">:8080</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/intake/static/thimble-states.html" target="_blank" rel="noopener"><span class="label">Live</span><span class="tag">render</span></a>
-        </div>
-      </div>
-      <a class="row single" href="apps/classifier/data/review_page.html" target="_blank"><span class="label">Classifier &mdash; phrase review tool</span><span class="tag">local file</span></a>
-    </div>
-  </details>
+    <!-- QA / internal tools -->
+    <div class="card">
+      <details open>
+        <summary class="cat"><span><span class="dot" style="background:var(--ink-soft);"></span><span class="arrow">▸</span>QA / internal tools</span><span class="count" style="color:var(--ink-soft);">3</span></summary>
 
-  <details class="cat">
-    <summary>App static pages (raw files)</summary>
-    <div class="items">
-      <a class="row single" href="apps/thimble/static/session.html" target="_blank"><span class="label">Thimble &mdash; session</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/thimble/static/survey.html" target="_blank"><span class="label">Thimble &mdash; survey</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/thimble/static/gate.html" target="_blank"><span class="label">Thimble &mdash; gate</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/thimble/static/conversation_history.html" target="_blank"><span class="label">Thimble &mdash; conversation history</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/thimble/static/listening-options.html" target="_blank"><span class="label">Thimble &mdash; listening options</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/thimble/static/thimble-3d-options.html" target="_blank"><span class="label">Thimble &mdash; 3D options</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/thimble/static/thimble-3d-talking.html" target="_blank"><span class="label">Thimble &mdash; 3D talking</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/thimble/static/voice-transcript-split.html" target="_blank"><span class="label">Thimble &mdash; voice/transcript split</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/splice/static/index.html" target="_blank"><span class="label">Splice &mdash; index</span><span class="tag">local file</span></a>
-      <a class="row single" href="apps/splice/static/zoom-panel.html" target="_blank"><span class="label">Splice &mdash; zoom panel</span><span class="tag">local file</span></a>
+        <details open class="subpanel" style="background:var(--accent-soft);">
+          <summary class="sub" style="color:var(--ink-soft);"><span class="arrow">▸</span>Thimble states</summary>
+          <div class="sub-desc">Every avatar state running live side by side — no mic or real call needed</div>
+          <a class="row" href="http://localhost:8080/intake/static/thimble-states.html" target="_blank" rel="noopener">Local <span class="tag">:8080</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/intake/static/thimble-states.html" target="_blank" rel="noopener">Live <span class="tag" style="color:var(--sage);">render</span></a>
+        </details>
+        <a class="row" href="apps/classifier/data/review_page.html" target="_blank" style="margin-top:4px;">Classifier — phrase review tool <span class="tag">local file</span></a>
+      </details>
     </div>
-  </details>
 
-  <details class="cat">
-    <summary>Design mockups</summary>
-    <div class="items">
-      <a class="row single" href="pitch/design_handoffs/mend_sessions/Mend%20Intake.dc.html" target="_blank"><span class="label">Design handoff &mdash; Thimble</span><span class="tag">mockup</span></a>
-      <a class="row single" href="pitch/design_handoffs/mend_sessions/Mend%20Joint%20Session.dc.html" target="_blank"><span class="label">Design handoff &mdash; Joint session</span><span class="tag">mockup</span></a>
-      <a class="row single" href="pitch/design_handoffs/mend_sessions/mend-brand-kit/brand-guide.html" target="_blank"><span class="label">Brand guide</span><span class="tag">reference</span></a>
-      <a class="row single" href="pitch/design_handoffs/simple_agent_presence/Simple%20Agent.dc.html" target="_blank"><span class="label">Simple agent presence</span><span class="tag">mockup</span></a>
+    <!-- App static pages -->
+    <div class="card">
+      <details>
+        <summary class="cat"><span><span class="dot" style="background:var(--border);"></span><span class="arrow">▸</span>App static pages (raw files)</span><span class="count" style="color:var(--ink-soft);">10</span></summary>
+        <a class="row" href="apps/thimble/static/session.html" target="_blank">Thimble — session <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/survey.html" target="_blank">Thimble — survey <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/gate.html" target="_blank">Thimble — gate <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/conversation_history.html" target="_blank">Thimble — conversation history <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/listening-options.html" target="_blank">Thimble — listening options <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/thimble-3d-options.html" target="_blank">Thimble — 3D options <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/thimble-3d-talking.html" target="_blank">Thimble — 3D talking <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/voice-transcript-split.html" target="_blank">Thimble — voice/transcript split <span class="tag">local file</span></a>
+        <a class="row" href="apps/splice/static/index.html" target="_blank">Splice — index <span class="tag">local file</span></a>
+        <a class="row" href="apps/splice/static/zoom-panel.html" target="_blank">Splice — zoom panel <span class="tag">local file</span></a>
+      </details>
     </div>
-  </details>
 
-  <details class="cat">
-    <summary>Hosted (always available, no server needed)</summary>
-    <div class="items">
-      <a class="row single" href="https://claude.ai/artifact/3PmW3kE6ejoq4B8XxS9rH1" target="_blank" rel="noopener"><span class="label">Workflow diagram</span><span class="tag">claude.ai</span></a>
+    <!-- Design mockups -->
+    <div class="card">
+      <details>
+        <summary class="cat"><span><span class="dot" style="background:var(--honey-ink);"></span><span class="arrow">▸</span>Design mockups</span><span class="count" style="color:var(--honey-ink);">4</span></summary>
+        <a class="row" href="pitch/design_handoffs/mend_sessions/Mend%20Intake.dc.html" target="_blank">Design handoff — Thimble <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+        <a class="row" href="pitch/design_handoffs/mend_sessions/Mend%20Joint%20Session.dc.html" target="_blank">Design handoff — Joint session <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+        <a class="row" href="pitch/design_handoffs/mend_sessions/mend-brand-kit/brand-guide.html" target="_blank">Brand guide <span class="tag">reference</span></a>
+        <a class="row" href="pitch/design_handoffs/simple_agent_presence/Simple%20Agent.dc.html" target="_blank">Simple agent presence <span class="tag" style="color:var(--honey-ink);">mockup</span></a>
+      </details>
     </div>
-  </details>
 
-  <details class="cat">
-    <summary>External</summary>
-    <div class="items">
-      <a class="row single down" href="https://generallymatthew.github.io/mend/" target="_blank" rel="noopener"><span class="label">GitHub Pages &mdash; public landing</span><span class="tag">down: account suspended</span></a>
+    <!-- Hosted + External -->
+    <div class="card">
+      <details open>
+        <summary class="cat"><span><span class="dot" style="background:var(--sage);"></span><span class="arrow">▸</span>Hosted</span><span class="count" style="color:var(--sage);">1</span></summary>
+        <a class="row" href="https://claude.ai/artifact/3PmW3kE6ejoq4B8XxS9rH1" target="_blank" rel="noopener">Workflow diagram <span class="tag" style="color:var(--pink-ink);">claude.ai</span></a>
+      </details>
+
+      <details open style="margin-top:12px; border-top:1px solid var(--border); padding-top:10px;">
+        <summary class="cat"><span><span class="dot" style="background:var(--warn);"></span><span class="arrow">▸</span>External</span><span class="count" style="color:var(--warn);">1</span></summary>
+        <a class="row down" href="https://generallymatthew.github.io/mend/" target="_blank" rel="noopener">GitHub Pages — public landing <span class="tag">down: account suspended</span></a>
+      </details>
     </div>
-  </details>
 
   </div>
 
   <footer>
-    Internal draft, pre-legal review. Not linked from <code>index.html</code> (the public Pages landing) &mdash; just a bookmark for testing. Open/closed state of each category is remembered per browser. "App static pages" and "Design mockups" link to raw files on disk, not necessarily the actual served route &mdash; use the Product section above for the real proxied URLs where one exists.
+    Internal draft, pre-legal review. Not linked from <code>index.html</code> (the public Pages landing) &mdash; just a bookmark for testing. Open/closed state of each category and sub-group is remembered per browser. "App static pages" and "Design mockups" link to raw files on disk, not necessarily the actual served route &mdash; use the Product section above for the real proxied URLs where one exists.
   </footer>
 </div>
 <script>
