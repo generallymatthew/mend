@@ -28,6 +28,24 @@ Decided 2026-10-24 as a live direction (see [[project_epli_distribution_route]])
 
 **Next step**: a broker conversation (Marsh, HUB, Gallagher, or a regional EPLI broker) is still the fastest way to learn what risk-control credit language carriers currently recognize, before spending more time on comparables or legal review.
 
+## How EPLI vendor inclusion actually works (researched 2026-10-25)
+
+There is no single "EPLI certification" to pursue — no exam, no accreditation body, no public standard. What exists is carrier-by-carrier, and each carrier's program works differently:
+
+- **Chubb** runs the most concrete, documented model: its Employment Practices Liability Loss Prevention Program maintains a directory of **120+ pre-approved employment services vendors** (employment law firms, HR/risk-management consulting firms, labor-economist statistical firms). Policyholders who use a listed vendor for preventive services get **reimbursed 50% of the cost, up to 10% of their EPL premium**. Source: Chubb's own EPL Loss Prevention Program overview (PDF) and its [EPL Consultant Directory](https://www.chubb.com/us-en/business-insurance/epl-consultant-directory.html) page. Critically, **the inclusion process for a new vendor isn't published anywhere public** — the directory page only describes the program from the customer's side (download an Excel list of approved vendors); there's no vendor-facing "apply here" form or stated criteria. Getting onto that list is a relationship managed internally by Chubb's EPL/risk-engineering team.
+- **Travelers** leans more toward carrier-built-and-owned tooling rather than crediting external vendors: Risk Management Plus+ Online (their own training/content portal) and an EPL Help Line staffed by an outside law firm (Jackson Lewis, same firm Chubb's hotline uses). No public evidence of a comparable external-vendor reimbursement program.
+- **Hiscox** bundles its own Risk Academy training free with every policy — again carrier-built, not third-party-credited.
+- No equivalent public documentation was found yet for AIG, CNA, Hartford, Beazley, or Zurich's EPL programs; worth a follow-up pass once a broker conversation is scheduled, rather than more open-web searching (these programs aren't well indexed).
+
+**What this means practically**: there's no self-serve application to fill out. The real path is a business-development motion, not a compliance checklist:
+
+1. **Talk to an EPLI broker first, not a carrier directly.** Brokers (Marsh, HUB, Gallagher, Lockton, or a regional EPLI specialist) already have relationships with each carrier's risk-control/loss-prevention team and know which carriers currently run a vendor-reimbursement program like Chubb's versus which build everything in-house. Ask specifically: *"Which of your EPLI markets maintain a pre-approved vendor directory with a reimbursement credit, and who runs that program?"*
+2. **Ask to see the actual vendor directory** (e.g. Chubb's downloadable Excel list) through a broker or an existing Chubb EPL policyholder contact, to see what a real listing looks like — what's named, how vendors are categorized, whether software tools (vs. law firms/consultants) appear at all today.
+3. **Prepare a one-page "qualifying control" pitch** before any carrier conversation: what Mend does, how it maps to EPL policy coverage (documented harassment-reporting mechanism + non-configurable safety-floor escalation), and the proposed credit structure — flat, not scaled to incident rate (see the hard constraint above). Carriers and brokers will ask for this before any program conversation goes further.
+4. **Get real employment counsel involved before claiming "approved" or "qualifying" anywhere.** This is already flagged in `ROADMAP.md` Phase 1 ("Real employment counsel engaged") — any language implying insurer endorsement needs legal review first, separate from the GTM motion itself.
+
+**A separate, genuinely certifiable track worth distinguishing from the above**: state-mandated harassment-training laws (e.g. California SB 1343) have real, auditable vendor/trainer requirements — interactive content (not passive video), trainer-led or trainer-supported, written questions answered within 2 business days, records retained 2+ years. This isn't an insurance credit and doesn't touch EPLI at all, but it's a concrete, checklist-style compliance bar Mend could pursue independently (faster and more self-serve than any carrier relationship) if it wants to market a training-adjacent surface as "SB 1343-compliant." Worth scoping as its own smaller workstream, not conflated with the EPLI carrier-relationship track above.
+
 ## Channel 2 — EAP (Employee Assistance Programs)
 
 Not yet explored in prior sessions — new as of this doc. EAPs are a structurally different but adjacent opportunity:
