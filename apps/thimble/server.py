@@ -139,7 +139,7 @@ TESTER_ACCESS_CODE = os.environ.get("TESTER_ACCESS_CODE", "")
 ACCESS_COOKIE = "mend_access"
 # The gate page and its own submit endpoint must stay reachable with no
 # cookie yet, or nobody could ever pass the gate in the first place.
-ACCESS_EXEMPT_PATHS = {"/gate", "/api/access"}
+ACCESS_EXEMPT_PATHS = {"/gate", "/api/access", "/sw.js"}
 
 
 @app.middleware("http")
@@ -1777,6 +1777,15 @@ async def index():
     # static/index.html retired to static/_archive/ -- session.html (served
     # below at /session too) is the one live front end now.
     return FileResponse(ROOT / "static" / "session.html")
+
+
+@app.get("/sw.js")
+async def service_worker():
+    # Served at root, not /static/sw.js, so its default scope covers the
+    # whole origin (same reasoning as Seam's identical route).
+    return FileResponse(
+        ROOT / "static" / "sw.js", media_type="application/javascript"
+    )
 
 
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")

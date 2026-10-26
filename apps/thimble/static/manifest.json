@@ -1,0 +1,15 @@
+{
+  "name": "Thimble, by Mend",
+  "short_name": "Thimble",
+  "description": "Private voice session with Thimble, Mend's listening AI.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#D9EDE7",
+  "theme_color": "#17372E",
+  "icons": [
+    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
