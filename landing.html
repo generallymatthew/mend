@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mend</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#17372E; --paper:#F6F1E7; --card:#FFFFFF;
+    --pink:#F3829A; --pink-ink:#8c0d28; --pink-soft:#FBE9ED;
+    --sage-soft:#EEF7F4; --sage-ink:#214f42;
+    --border:rgba(23,55,46,.12);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',system-ui,sans-serif;}
+
+  .wrap{min-height:100vh; display:flex; flex-direction:column; align-items:center;}
+
+  header{width:100%; max-width:1040px; padding:48px 32px 8px; display:flex; align-items:center; gap:14px;}
+  header svg{width:40px; height:28px; flex-shrink:0;}
+  header .word{font-size:23px; font-weight:800; letter-spacing:-.05em;}
+
+  main{flex:1; width:100%; max-width:1040px; padding:40px 32px 64px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+
+  h1{font-size:34px; font-weight:800; letter-spacing:-.015em; margin:0 0 10px; line-height:1.15;}
+  @media (min-width:640px){ h1{font-size:42px;} }
+  p.lede{font-size:15px; font-weight:500; line-height:1.55; color:var(--ink); opacity:.75; max-width:460px; margin:0 0 44px;}
+
+  .choices{display:flex; flex-direction:column; gap:18px; width:100%; max-width:720px;}
+  @media (min-width:640px){ .choices{flex-direction:row;} }
+
+  .choice{flex:1; background:var(--card); border:1px solid var(--border); border-radius:22px; padding:30px 26px; text-align:left; text-decoration:none; color:var(--ink); box-shadow:0 1px 2px rgba(46,43,37,.14); transition:box-shadow .15s, transform .15s;}
+  .choice:hover{box-shadow:0 12px 32px rgba(46,43,37,.18); transform:translateY(-2px);}
+
+  .choice .kicker{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin:0 0 12px; display:inline-flex; align-items:center; padding:5px 13px; border-radius:999px;}
+  .choice.seam .kicker{background:var(--sage-soft); color:var(--sage-ink);}
+  .choice.thimble .kicker{background:var(--pink-soft); color:var(--pink-ink);}
+
+  .choice h2{font-size:21px; font-weight:800; letter-spacing:-.01em; margin:0 0 8px;}
+  .choice p{font-size:13.5px; font-weight:500; line-height:1.5; opacity:.75; margin:0 0 20px;}
+
+  .choice .go{font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:6px;}
+  .choice.seam .go{color:var(--sage-ink);}
+  .choice.thimble .go{color:var(--pink-ink);}
+  .choice .go .arrow{transition:transform .15s;}
+  .choice:hover .go .arrow{transform:translateX(3px);}
+
+  footer{width:100%; max-width:1040px; padding:0 32px 36px; font-size:11.5px; color:var(--ink); opacity:.5; text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <svg viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#F3829A"/></svg>
+    <span class="word">mend</span>
+  </header>
+
+  <main>
+    <h1>Two ways into Mend</h1>
+    <p class="lede">Pick the app you need. Seam is for managers working a case on their own. Thimble is the live, facilitated conversation.</p>
+
+    <div class="choices">
+      <a class="choice seam" href="https://mend-mvp.onrender.com/manager/" target="_blank" rel="noopener">
+        <span class="kicker">Seam</span>
+        <h2>Manager app</h2>
+        <p>Solo coaching and case management for a manager preparing for or working through a conflict.</p>
+        <span class="go">Open Seam <span class="arrow">&rarr;</span></span>
+      </a>
+
+      <a class="choice thimble" href="https://mend-mvp.onrender.com/intake/" target="_blank" rel="noopener">
+        <span class="kicker">Thimble</span>
+        <h2>Facilitator app</h2>
+        <p>A private 1:1 consultation with the AI facilitator, ahead of a joint conversation.</p>
+        <span class="go">Open Thimble <span class="arrow">&rarr;</span></span>
+      </a>
+    </div>
+  </main>
+
+  <footer>mend</footer>
+</div>
+</body>
+</html>

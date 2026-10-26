@@ -104,13 +104,13 @@ In direct response to the founder wanting "a fucking marketing pitch" that says 
 
 *(For the website, LinkedIn, Blind, or Substack -- bold, plain-spoken, and unfiltered)*
 
-> **We didn't build Mend for your HR department. But we are damn well going to make them pay for it.**
+> **We didn't build Mend for your HR department. But we are going to make them pay for it.**
 >
 > Most B2B software is built on an ugly premise: bleed workers dry, monitor every keystroke, and turn messy human reality into an HR ticket.
 >
-> We think that's broken. The real equity of any company isn't the corporate rubric or the middle management layer -- it's the actual human beings shipping the work.
+> We think that's broken. The real equity of any company isn't the tech stack or the business strategy-- it's the actual human beings shipping the work, and if you disagree then mend is not for you.
 >
-> So from our core code to our prompt engineering, Mend is built 100% in service of the worker:
+From our core code to our prompt engineering, Mend is built 100% in service of the worker:
 >
 > - **Hardware-enforced zero-trace**: It runs strictly in volatile memory. Zero dossiers, zero transcripts, zero manager visibility. Nothing to subpoena, nothing to hold against you at promotion time.
 > - **Zero tone-policing**: We don't force you into therapy-speak or corporate buzzwords. You get a private space to drop the filter, curse, vent, and figure out what's actually happening off the record.
