@@ -3,16 +3,15 @@
 # $PORT instead of a fixed local port, and only proxies the apps this
 # deploy actually runs.
 #
-# The index ("/") serves manager-story.html -- the Seam pitch/story page
-# -- not Spool, since this deploy is currently fronting Seam
-# testers. Spool is still reachable, just not at root; everything that
-# doesn't match an explicit handle below falls through to it.
+# The index ("/") serves index.html -- the real Thimble/Seam landing page
+# -- not Spool. Spool is still reachable, just not at root; everything
+# that doesn't match an explicit handle below falls through to it.
 #
 # Repo-root static pages (about.html, story.html, testers.html, the Mend
 # Pitch/ demo assets they embed, etc.) are served directly from disk when
 # the request matches an existing file -- no per-page handle block needed
-# as more of these get added. Short aliases (/about, /testers, /story)
-# rewrite to their .html file first.
+# as more of these get added. Short aliases (/about, /testers, /story,
+# /manager-story) rewrite to their .html file first.
 
 :{$PORT} {
 	handle_path /intake/* {
@@ -29,11 +28,6 @@
 
 	root * .
 
-	handle / {
-		rewrite * /manager-story.html
-		file_server
-	}
-
 	handle /about {
 		rewrite * /about.html
 		file_server
@@ -46,6 +40,11 @@
 
 	handle /story {
 		rewrite * /story.html
+		file_server
+	}
+
+	handle /manager-story {
+		rewrite * /manager-story.html
 		file_server
 	}
 
