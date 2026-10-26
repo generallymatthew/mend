@@ -28,6 +28,11 @@
 
 	root * .
 
+	handle / {
+		rewrite * /index.html
+		file_server
+	}
+
 	handle /about {
 		rewrite * /about.html
 		file_server
