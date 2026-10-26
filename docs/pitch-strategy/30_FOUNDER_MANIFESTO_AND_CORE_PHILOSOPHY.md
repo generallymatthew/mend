@@ -98,11 +98,58 @@ Directly connected statement from the founder: **"I don't care that Mend helps c
 
 ## 6. Two manifesto drafts (worker-facing and buyer-facing)
 
-In direct response to the founder wanting "a fucking marketing pitch" that says Mend wasn't built for HR but will make HR pay for it because it functionally helps the workplace and the people who are the real equity of the company, two full draft pieces of copy were produced in-conversation (useful raw material, not finished copy -- note the house style rule against aphorism-style headlines, see `feedback_no_aphorism_headlines` memory, which should be applied before any of this language ships):
+In direct response to the founder wanting "a fucking marketing pitch" that says Mend wasn't built for HR but will make HR pay for it because it functionally helps the workplace and the people who are the real equity of the company, two full draft pieces of copy were produced in-conversation. Reproduced here in full, verbatim, since these are the two audience-facing pitches the founder specifically wanted preserved. **Note:** both drafts use reversal-style lines ("we didn't build X for Y, but...") that conflict with the house style rule against aphorism/reversal headlines (see `feedback_no_aphorism_headlines` memory) -- treat as raw material to rework, not ship-ready copy.
 
-**Draft 1 -- worker-facing manifesto** (for website/LinkedIn/Substack, bold and plain-spoken): opens with "We didn't build Mend for your HR department. But we are damn well going to make them pay for it," lays out the corporate premise as bleed-workers/monitor-everything, names Mend's counter-premise (core code and prompt engineering built 100% in service of the worker), lists hardware-enforced zero-trace / zero tone-policing / giving power back as the three proof points, and closes on the irony that progressive HR leaders actually want this because surveillance kills honesty and psychological safety reduces wasted sprint time -- "We back the worker. Your company picks up the tab."
+### Draft 1 -- worker-facing manifesto
 
-**Draft 2 -- plain-spoken HR/buyer pitch** (for a CPO/VP People/founder who hates corporate BS): contrasts the typical HR pitch (dashboards, surveillance, case files) with Mend's engineering stance (confidential hardware memory, no dossier, no managerial triage sessions), states the trade-off plainly ("you can have surveillance, or you can have honest resolution -- you cannot have both"), cites the focus-leak and turnover cost, and closes with a direct ask for a short call.
+*(For the website, LinkedIn, Blind, or Substack -- bold, plain-spoken, and unfiltered)*
+
+> **We didn't build Mend for your HR department. But we are damn well going to make them pay for it.**
+>
+> Most B2B software is built on an ugly premise: bleed workers dry, monitor every keystroke, and turn messy human reality into an HR ticket.
+>
+> We think that's broken. The real equity of any company isn't the corporate rubric or the middle management layer -- it's the actual human beings shipping the work.
+>
+> So from our core code to our prompt engineering, Mend is built 100% in service of the worker:
+>
+> - **Hardware-enforced zero-trace**: It runs strictly in volatile memory. Zero dossiers, zero transcripts, zero manager visibility. Nothing to subpoena, nothing to hold against you at promotion time.
+> - **Zero tone-policing**: We don't force you into therapy-speak or corporate buzzwords. You get a private space to drop the filter, curse, vent, and figure out what's actually happening off the record.
+> - **Giving power back**: We don't ask an executive "adult" to referee your life. We give you the map to handle tension yourself, on your own terms.
+>
+> And here's the ultimate irony: progressive HR leaders actually want this.
+>
+> Smart leaders know surveillance kills honesty. They know that when employees have real psychological safety, petty fights stop eating 3 hours of sprint time a week. They pay for Mend because giving workers real agency is the only thing that actually works.
+>
+> **We back the worker. Your company picks up the tab.**
+
+### Draft 2 -- plain-spoken HR/buyer pitch
+
+*(For the CPO, VP of People, or forward-thinking founder who hates corporate BS)*
+
+> **Subject: Why we built an employee-first tool that HR pays for**
+>
+> Hi [First Name],
+>
+> When most tech companies pitch HR, they promise dashboards, surveillance, and case files.
+>
+> We took the opposite approach with Mend. We engineered it entirely on the side of the employee.
+>
+> It runs in confidential hardware memory (zero logs, zero transcripts). We don't give you a dossier on who was petty on Slack, and we don't force employees to sit in awkward managerial triage sessions.
+>
+> That sounds counterintuitive for enterprise software, but you already know why it's necessary:
+>
+> **You can have surveillance, or you can have honest resolution. You cannot have both.**
+>
+> The moment an employee feels watched, they entrench, posture, and litigate. Friction festers in backchannels, burning ~2.8 hours per person every week and driving expensive mid-level turnover.
+>
+> By giving employees an unmonitored sanctuary to untangle structural friction autonomously, two things happen:
+>
+> 1. Your people get their sanity and focus back without fearing a career hit.
+> 2. Your team reclaims 3-5 hours a week of informal dispute refereeing, while our hardcoded safety floor still catches genuine legal risks.
+>
+> You get the outcome -- a resilient, focused workforce -- without having to police the process.
+>
+> Up for a quick 7-minute look at how we deflect the "missing middle" of peer conflict?
 
 Named reasons this contrast lands:
 
