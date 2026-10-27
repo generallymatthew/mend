@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; ideas</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Mend brand kit: Oat surface, Evergreen ink, Pink mark/fills only
+     (text-safe step is pink-700 #8c0d28), Honey as a highlight fill.
+     Manrope 800 for headings/wordmark, pill radius for buttons/tags,
+     soft ink-tinted shadows, no aphorism headlines. */
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:rgba(23,55,46,0.14); --accent:#17372E;
+    --accent-soft:#eef7f4; --pink:#F3829A; --pink-text:#8c0d28; --pink-soft:#fbe9ed;
+    --honey:#E9B949; --honey-soft:#FBF2DC; --neutral-soft:#eee7db;
+    --shadow-sm:0 1px 2px rgba(46,43,37,0.14); --shadow-md:0 3px 10px rgba(46,43,37,0.14);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  a{color:var(--pink-text);} a:hover{color:#660a1d;}
+  .layout{max-width:1120px; margin:0 auto; padding:0 20px 100px; display:flex; gap:40px; align-items:flex-start;}
+
+  .page-header{max-width:1120px; margin:0 auto; padding:36px 20px 0;}
+  .brand-row{display:flex; align-items:center; gap:9px; margin-bottom:10px;}
+  .mark{width:26px; height:19px; flex-shrink:0;}
+  .wordmark{font-size:1.05rem; font-weight:800; letter-spacing:-0.05em;}
+  .page-tag{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); margin-left:2px; letter-spacing:0;}
+  h1{font-size:2rem; line-height:1.15; letter-spacing:-0.015em; margin:10px 0 8px; font-weight:800;}
+  .sub{color:var(--ink-soft); font-size:14.5px; max-width:640px; margin:0 0 26px;}
+  .sub a{font-weight:600;}
+
+  .toc{position:sticky; top:24px; flex:0 0 230px; display:flex; flex-direction:column; gap:4px;}
+  .toc-actions{display:flex; gap:8px; margin-bottom:14px;}
+  .toc-btn{font-family:inherit; font-size:11.5px; font-weight:700; color:var(--ink-soft); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer;}
+  .toc-btn:hover{border-color:var(--ink-soft); color:var(--ink);}
+  .toc-link{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--ink-soft); text-decoration:none; padding:8px 10px; border-radius:10px; border-left:2px solid transparent;}
+  .toc-link:hover{background:var(--accent-soft); color:var(--ink);}
+  .toc-link.current{border-left-color:var(--pink); color:var(--ink); background:var(--accent-soft);}
+  .toc-link .toc-step{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--muted); width:16px; flex-shrink:0;}
+  .toc-count{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--muted); margin-left:auto;}
+  @media (max-width:860px){
+    .layout{flex-direction:column;}
+    .toc{position:static; flex:none; width:100%; flex-direction:row; flex-wrap:wrap; gap:6px;}
+    .toc-actions{margin-bottom:0; margin-left:auto;}
+    .toc-link{padding:6px 11px; border-left:none; border:1px solid var(--border); background:var(--card);}
+    .toc-link.current{border-color:var(--pink);}
+  }
+
+  main{flex:1; min-width:0;}
+
+  details.category{background:transparent; margin-bottom:14px; scroll-margin-top:20px;}
+  details.category > summary{list-style:none; cursor:pointer; display:flex; align-items:baseline; gap:10px; padding:14px 0; border-bottom:1px solid var(--border);}
+  details.category > summary::-webkit-details-marker{display:none;}
+  details.category > summary .chev{font-size:11px; color:var(--muted); transition:transform .18s ease; flex-shrink:0; width:12px;}
+  details.category[open] > summary .chev{transform:rotate(90deg);}
+  details.category > summary .step-num{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); flex-shrink:0;}
+  details.category > summary h2{font-size:13px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:0;}
+  details.category > summary .cat-count{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); margin-left:auto;}
+  .cat-body{padding:16px 2px 6px;}
+  .cat-note{font-size:13px; color:var(--muted); margin:0 0 16px;}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px 20px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
+  .card h3{font-size:15px; font-weight:800; margin:0 0 8px; letter-spacing:-0.005em;}
+  .card p{font-size:13.5px; color:var(--ink-soft); margin:0 0 10px;}
+  .card p:last-of-type{margin-bottom:0;}
+  .card ul{margin:0 0 10px; padding-left:17px;}
+  .card ul:last-of-type{margin-bottom:0;}
+  .card li{font-size:13.5px; color:var(--ink-soft); margin-bottom:5px;}
+  .card li:last-child{margin-bottom:0;}
+  .card li::marker{color:var(--pink); font-size:12px;}
+  .card li b{color:var(--ink);}
+  .bullet-lead{font-size:13.5px; color:var(--ink-soft); margin:0 0 6px; font-weight:700;}
+  .card ul + .meta-row, .card ul + .fit{margin-top:4px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;}
+  .tag{font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:4px 11px; border-radius:999px; white-space:nowrap; font-weight:500;}
+  .tag.status-live{background:var(--accent-soft); color:#214f42;}
+  .tag.status-decided{background:var(--honey-soft); color:#7A5A12;}
+  .tag.status-parked{background:var(--neutral-soft); color:var(--ink-soft);}
+  .tag.status-rejected{background:var(--pink-soft); color:#660a1d;}
+  .fit{font-size:12px; color:var(--muted); border-top:1px solid var(--border); margin-top:12px; padding-top:10px;}
+  .fit b{color:var(--ink-soft); font-weight:700;}
+  .flag{font-weight:600; font-size:0.85em; color:var(--muted);}
+
+  .rank-table{width:100%; border-collapse:collapse; font-size:13px; margin-top:4px;}
+  .rank-table th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); padding:6px 10px; border-bottom:1px solid var(--border);}
+  .rank-table td{padding:10px 10px; border-bottom:1px solid var(--border); color:var(--ink-soft); vertical-align:top;}
+  .rank-table td.num{font-family:'IBM Plex Mono',monospace; color:var(--muted);}
+  .rank-table td b{color:var(--ink);}
+
+  .gap-card{border-style:dashed; background:var(--neutral-soft); box-shadow:none;}
+
+  footer{margin-top:40px; font-size:12px; color:var(--muted); border-top:1px solid var(--border); padding-top:18px;}
+  footer code{font-family:'IBM Plex Mono',monospace; background:var(--neutral-soft); padding:1px 6px; border-radius:6px;}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="brand-row">
+    <svg class="mark" viewBox="0 0 871 616" xmlns="http://www.w3.org/2000/svg"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z" fill="#F3829A"/></svg>
+    <span class="wordmark">mend</span>
+    <span class="page-tag">/ ideas</span>
+  </div>
+  <h1>Everything on the table</h1>
+  <p class="sub">One place for every idea that's come up across all the Mend conversations, organized along the actual build pipeline &mdash; discovery through social. This is a dumping ground, not a roadmap: nothing here ships until it's tagged "decided" or "live" and moved to <code>ROADMAP.md</code>. Source of truth stays <a href="https://github.com/generallymatthew/mend/blob/main/IDEAS.md">IDEAS.md</a> and project memory; this page is the browsable version.</p>
+</div>
+
+<div class="layout">
+
+  <nav class="toc" id="toc">
+    <div class="toc-actions">
+      <button class="toc-btn" id="expand-all">Expand all</button>
+      <button class="toc-btn" id="collapse-all">Collapse all</button>
+    </div>
+    <a class="toc-link" data-target="discovery" href="#discovery"><span class="toc-step">01</span>Discovery <span class="toc-count">5</span></a>
+    <a class="toc-link" data-target="framing" href="#framing"><span class="toc-step">02</span>Problem framing <span class="toc-count">5</span></a>
+    <a class="toc-link" data-target="ideation" href="#ideation"><span class="toc-step">03</span>Ideation <span class="toc-count">14</span></a>
+    <a class="toc-link" data-target="prototype" href="#prototype"><span class="toc-step">04</span>Prototype <span class="toc-count">2</span></a>
+    <a class="toc-link" data-target="testing" href="#testing"><span class="toc-step">05</span>User testing &amp; hypotheses <span class="toc-count">2</span></a>
+    <a class="toc-link" data-target="gtm" href="#gtm"><span class="toc-step">06</span>Go-to-market strategy <span class="toc-count">6</span></a>
+    <a class="toc-link" data-target="decks" href="#decks"><span class="toc-step">07</span>Pitch decks <span class="toc-count">2</span></a>
+    <a class="toc-link" data-target="social" href="#social"><span class="toc-step">08</span>Social media <span class="toc-count">5</span></a>
+    <a class="toc-link" data-target="brand" href="#brand"><span class="toc-step">09</span>Brand identity <span class="toc-count">5</span></a>
+    <a class="toc-link" data-target="talks" href="#talks"><span class="toc-step">10</span>Talks &amp; presentations <span class="toc-count">5</span></a>
+  </nav>
+
+  <main>
+
+  <!-- ===================== 01 DISCOVERY ===================== -->
+  <details class="category" id="discovery" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">01</span><h2>Discovery</h2><span class="cat-count">5</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">Research gathered before (or to support) any product decision &mdash; the raw evidence base, including the academic conflict theory that backs the pitch. Consolidated here from material that was previously scattered across Ideation and Problem framing.</p>
+
+    <div class="card">
+      <h3>Remote conflict statistics</h3>
+      <ul>
+        <li>~80% of remote knowledge workers report conflict</li>
+        <li>2.8 hrs/week baseline drag from unresolved conflict (CPP Inc., 2008 global human capital report, 5,000 employees across 9 countries)</li>
+        <li>The "Silent Cold War": camera-off, delayed PR reviews, terse replies</li>
+        <li>49&ndash;55%+ of employees blame "ego" at intake, while 80%+ of real root causes are structural (KPI collisions, network siloing)</li>
+        <li>Formal HR escalation sees only 3&ndash;10% voluntary adoption remotely</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> the cost-of-inaction case in the pitch decks, and reinforces the "structural, not personal" framing. <b>Status:</b> the 3&ndash;10% self-referral figure specifically is unverified (attribution to "Edmondson/Lee" could not be confirmed) &mdash; use only the qualitative claim until a real source is found; the 2.8 hrs/week and 49&ndash;55% figures are sourced to CPP Inc., 2008.</div>
+    </div>
+
+    <div class="card">
+      <h3>Biological/environmental framing for why people dysregulate</h3>
+      <p class="bullet-lead">A causal chain:</p>
+      <ul>
+        <li>Evolutionary status-threat detection &rarr;</li>
+        <li>Polyvagal shift (ventral vagal &rarr; sympathetic/dorsal vagal) &rarr;</li>
+        <li>The audience effect &mdash; disagreement in front of others becomes face-saving, not problem-solving &rarr;</li>
+        <li>Environmental load &mdash; poor ventilation, Zoom gaze mechanics, sensory fatigue</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> "why this isn't a character flaw" explainer for skeptical users or HR buyers; background grounding for facilitator prompts.</div>
+    </div>
+
+    <div class="card">
+      <h3>Structural, not personal: the attribution research</h3>
+      <ul>
+        <li><b>Actor-observer asymmetry</b> &mdash; we explain our own behavior by context, but explain colleagues' behavior by character (Jones &amp; Nisbett, 1971)</li>
+        <li><b>Fundamental Attribution Error</b> &mdash; the related, single-directional version: we default to a character explanation for someone else's behavior even when situational pressure is the real cause (Lee Ross, 1977)</li>
+        <li><b>Interdepartmental conflict as structural, not personal</b> &mdash; friction tracks with differentiated goals and task interdependence between roles, not who's in the role (Walton &amp; Dutton, "The Management of Interdepartmental Conflict," <i>Administrative Science Quarterly</i>, 1969)</li>
+        <li>Together, this is the research backbone under "the problem is institutions, not people" and the designer/engineer opposing-KPIs example used across the pitch and social content</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> backs the core-philosophy card in Problem framing, and Posts 3/4 of the social media narrative arc.</div>
+    </div>
+
+    <div class="card">
+      <h3>Self-healing squads (Tuckman + Jehn + IKEA effect)</h3>
+      <ul>
+        <li>Teams can't reach "Performing" without passing through "Storming" (Tuckman's stages of group development)</li>
+        <li>Task conflict (debating architecture, scope, priorities) is a sign of a high-performing team, not dysfunction &mdash; it's what catches groupthink before launch; the real failure mode is relationship conflict, and teams that lack a neutral way to process task debate let it curdle into resentment (Karen Jehn, <i>Administrative Science Quarterly</i>, 1995)</li>
+        <li>Agreements peers negotiate themselves see 80&ndash;85% adherence vs. passive compliance when imposed &mdash; psychological ownership of a solution you helped build (the "IKEA effect," Norton, Mochon &amp; Ariely, 2012)</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> a leadership/engineering-manager pitch variant, distinct from the HR-buyer pitch decks (see Pitch decks).</div>
+    </div>
+
+    <div class="card">
+      <h3>Autonomy, surveillance &amp; honesty: the research behind the trust moat</h3>
+      <ul>
+        <li><b>Controlled compliance vs. autonomous commitment</b> &mdash; outcomes imposed by an authority produce surface agreement, not real buy-in, because the people affected weren't the ones who shaped the fix (Deci &amp; Ryan, "Self-Determination Theory," <i>Psychological Inquiry</i>, 2000)</li>
+        <li><b>Surface acting</b> &mdash; faking a feeling you don't have is linked to burnout; processing the feeling first (not just masking it) doesn't carry the same cost (Hochschild, <i>The Managed Heart</i>, 1983; Grandey, <i>Journal of Occupational Health Psychology</i>, 2000)</li>
+        <li><b>Electronic performance monitoring</b> &mdash; linked to higher worker stress with no real evidence it improves performance (Ravid et al., meta-analysis of 94 samples / ~23,461 workers, <i>Personnel Psychology</i>, 2023)</li>
+        <li><b>Institutional betrayal</b> &mdash; harm caused specifically by the institution someone depends on and trusts, distinct from harm caused by an individual (Smith &amp; Freyd, <i>American Psychologist</i>, 2014)</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> backs the trust moat and "no managerial surveillance" cards in Problem framing, and the professionalism-as-human-maturity reframe (surface acting specifically).</div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 02 PROBLEM FRAMING ===================== -->
+  <details class="category" id="framing" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">02</span><h2>Problem framing</h2><span class="cat-count">5</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">The load-bearing beliefs everything else gets checked against &mdash; what Mend is actually for, and why no one else can build it.</p>
+
+    <div class="card">
+      <h3>The problem is institutions, not people</h3>
+      <ul>
+        <li>Mend's purpose is not to make an employee able to bear more corporate pain</li>
+        <li>It's to help people see that the problem isn't them, it's the institution &mdash; conflict is just how institutional dysfunction manifests</li>
+        <li>Rules out any framing that reads as "cope better" or "build your resilience," which puts the burden of adaptation on the individual &mdash; the opposite of what Mend is for</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-decided">decided, foundational</span></div>
+    </div>
+
+    <div class="card">
+      <h3>The trust moat</h3>
+      <ul>
+        <li>Big tech / HR-suite incumbents (Microsoft, Workday, Slack, Google) structurally cannot build this</li>
+        <li>If they did, employees would assume surveillance &mdash; their business model is compliance and eDiscovery, their IT controls hold the tenant keys</li>
+        <li>Admitting fault in a dispute tool built by an employer-paid vendor feels like confessing into an HR audit trail</li>
+        <li>Mend's zero-trace, ephemeral-memory architecture is the opposite of big tech's data-retention DNA &mdash; that neutrality has to stay architectural, not just marketing copy</li>
+      </ul>
+      <div class="fit"><b>How to apply:</b> any new feature gets checked against whether it compromises the zero-trace / no-surveillance promise &mdash; that promise <i>is</i> the moat. <b>Research backing:</b> see "Autonomy, surveillance &amp; honesty" in Discovery.</div>
+    </div>
+
+    <div class="card">
+      <h3>Professionalism as human maturity, not human erasure</h3>
+      <ul>
+        <li>Corporate culture uses "be professional" to mean suppress emotion and act as an interchangeable cog</li>
+        <li>Suppressed emotion doesn't disappear &mdash; it leaks out as passive-aggression, gossip, burnout</li>
+        <li>Mend's counter-frame: real professionalism is human maturity &mdash; acknowledging biological limits and stress responses, not erasing them</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> pitch deck opener, landing page hero copy, sales narrative. <b>Status:</b> needs distilling into a few lines that survive an HR buyer, not the full essay. <b>Research backing:</b> surface acting, see Discovery.</div>
+    </div>
+
+    <div class="card">
+      <h3>"No managerial surveillance, no scar tissue"</h3>
+      <ul>
+        <li>Explicit promise: no HR files, no performance-review penalty from using Mend</li>
+        <li>Friendship isn't the goal &mdash; clean functional boundaries without forced reconciliation counts as a 100% successful outcome</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> trust/privacy section of the pitch, onboarding copy explaining what Mend does <i>not</i> do. <b>Research backing:</b> controlled compliance &amp; institutional betrayal, see Discovery.</div>
+    </div>
+
+    <div class="card">
+      <h3>Community-as-leverage (never stated as copy)</h3>
+      <ul>
+        <li>Resolving interpersonal and inter-team conflict builds community within a workplace, and that community is leverage when bargaining with management</li>
+        <li>Team-vs-team friction is often a deliberate release valve &mdash; it keeps conflict running between employees instead of between employees and management, protecting management from a unified workforce</li>
+        <li>A tool that actually resolves that friction removes the release valve</li>
+        <li>Deliberately never stated anywhere in copy &mdash; stays purely behavioral, in how Thimble responds, never pitched as an organizing tool</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-parked">behavioral constraint, not copy</span></div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 03 IDEATION ===================== -->
+  <details class="category" id="ideation" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">03</span><h2>Ideation</h2><span class="cat-count">14</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">Feature, copy, facilitator-behavior, and new-product concepts &mdash; raw material, not commitments.</p>
+
+    <div class="card">
+      <h3>Corporate-buzzword translation table</h3>
+      <ul>
+        <li>A side-by-side table translating corporate euphemisms into plain human language</li>
+        <li>Example: "executing an operational action plan" &rarr; "figuring out how we work together without driving each other crazy"</li>
+        <li>Could be a literal UI element or just a product-copy style guide</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> copy style guide; could double as a landing-page interactive widget.</div>
+    </div>
+
+    <div class="card">
+      <h3>Social friction as a third, distinct category</h3>
+      <ul>
+        <li>Alongside task friction (what's being built) and process friction (how execution happens), name social friction explicitly</li>
+        <li>Examples: sarcasm, camera-off freeze-outs, exclusion from casual chatter</li>
+        <li>Pretending only "the work" is discussable is what lets social friction fester into backchannel politics</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> Thimble's classification taxonomy / facilitator system prompts.</div>
+    </div>
+
+    <div class="card">
+      <h3>Concrete in-meeting circuit breakers</h3>
+      <ul>
+        <li>"Write, don't speak" &mdash; transcribing the other person's words buys 10&ndash;15 seconds and signals engagement</li>
+        <li>The covert physiological sigh &mdash; double inhale through the nose, slow exhale through the mouth</li>
+        <li>Counter sharp comments with operational questions ("walk me through the dependency you're worried about") instead of defensiveness</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> manager-coaching path or Seam, or live in-session nudges. <b>Status:</b> needs UX design for when/how to surface a tip without being annoying.</div>
+    </div>
+
+    <div class="card">
+      <h3>The 4-step constructive collaboration arc</h3>
+      <ul>
+        <li><b>Observable Data</b> &mdash; cite verifiable facts without adjectives</li>
+        <li><b>Workflow Impact</b> &mdash; describe downstream delivery risk, not hurt feelings</li>
+        <li><b>Structural Curiosity</b> &mdash; ask about the other person's constraints</li>
+        <li><b>Co-Authored SLA</b> &mdash; land on explicit turnaround times/channels instead of a vague "we'll get along" promise</li>
+      </ul>
+      <div class="fit"><b>Status:</b> would be a meaningful rewrite of facilitator prompt design &mdash; needs its own pass.</div>
+    </div>
+
+    <div class="card">
+      <h3>The Watcher &mdash; a second supervisor LLM auditing every reply</h3>
+      <ul>
+        <li>A deterministic (temp=0) second model scores every facilitator reply against 5 categories: safety floor, hallucination, bias asymmetry, out-of-scope advice, unfiltered toxicity</li>
+        <li>Non-safety-floor failures trigger a silent regeneration the user never sees</li>
+        <li>Heavier than the any-of-k voting approach actually shipped (see Prototype)</li>
+      </ul>
+      <div class="fit"><b>Status:</b> doubles inference calls per turn &mdash; needs a decision on whether live voting already covers this well enough.</div>
+    </div>
+
+    <div class="card">
+      <h3>Publish the system prompt with a verifiable attestation</h3>
+      <ul>
+        <li>Publish Thimble's real <code>facilitator-*-system-prompt.md</code> files publicly for trust</li>
+        <li>Backed by a SHA-256 manifest checked into the repo</li>
+        <li>Plus a future read-only <code>/api/v1/attestation</code> endpoint that hashes the files the running server actually loaded, so a buyer or employee can verify the deployed app matches the published prompt</li>
+      </ul>
+      <div class="fit"><b>Status:</b> blocked on deciding which repo mirrors the prompt publicly, itself blocked on the hosting/remote situation.</div>
+    </div>
+
+    <div class="card">
+      <h3>Ambient Dual-Track Intake &mdash; "Vent" vs. "Mend" doors</h3>
+      <ul>
+        <li>Replace the explicit mode-selection buttons at the entry point with two framed doors</li>
+        <li>Door A, "Vent" &mdash; acute emotional agitation</li>
+        <li>Door B, "Mend" &mdash; operational de-escalation/meeting prep</li>
+        <li>A softer, metaphor-driven front door instead of a feature picker</li>
+      </ul>
+      <div class="fit"><b>Status:</b> UX experiment, not a functional gap &mdash; current buttons already work.</div>
+    </div>
+
+    <div class="card">
+      <h3>Live continuous video-parity guarantee</h3>
+      <ul>
+        <li>Extends the shipped one-time "double opt-in" video rule into a live, continuous guarantee</li>
+        <li>If either participant's camera drops mid-session, both are symmetrically and immediately dropped to voice+avatar together</li>
+        <li>Neutral non-blaming framing; the facilitator is never told which transport mode is active</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-parked">blocked on audio/video merge</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Loom &mdash; pattern-only project retro</h3>
+      <ul>
+        <li>Interview each person on a team separately after a project wraps, let them be fully honest</li>
+        <li>Distill answers across the group into recurring structural <i>patterns</i> &mdash; never individual names or call-outs</li>
+        <li>Naming names in a shared report makes people vulnerable to blame, which suppresses honesty</li>
+      </ul>
+      <div class="fit"><b>Status:</b> unscoped &mdash; no interview flow, no distillation logic, and no decision yet on the minimum group size before "patterns" stop being traceable back to an individual.</div>
+    </div>
+
+    <div class="card">
+      <h3>Swatch &mdash; preflight collaboration for designers who don't know each other</h3>
+      <ul>
+        <li>Not conflict resolution, preflight &mdash; two or more designers paired on a shared problem</li>
+        <li>A 6-step loop: warm-up &rarr; heads-down solo work &rarr; Thimble-facilitated presenting (ordered question queue) &rarr; Thimble keeps the presenter talking if the queue runs dry &rarr; consensus &rarr; repeat</li>
+        <li>Runs as a companion panel over a real Zoom call, not its own video UI</li>
+      </ul>
+      <div class="fit"><b>Status:</b> workflow spec and UI mockups exist only in a private design artifact &mdash; no code written yet.</div>
+    </div>
+
+    <div class="card">
+      <h3>Hem &mdash; cross-platform writing assistant for calm communication</h3>
+      <ul>
+        <li>A desktop app invoked from any other app (highlight text, bring it in)</li>
+        <li>Helps rewrite a message so it makes the point without causing conflict, regardless of platform</li>
+      </ul>
+      <div class="fit"><b>Status:</b> brand new, unscoped. Ranked weakest of the app concepts &mdash; every major platform already ships tone/rewrite AI natively.</div>
+    </div>
+
+    <div class="card">
+      <h3>App concept strength ranking (2026-10-17)</h3>
+      <p>Ranked by market pull first, then defensibility/moat, then mechanism novelty, then build feasibility. Suture and Splice sit in the same live-facilitation family but are deliberately not the same engine at different headcounts &mdash; opposite trust models.</p>
+      <table class="rank-table">
+        <tr><th>#</th><th>App</th><th>Why</th></tr>
+        <tr><td class="num">1</td><td><b>Seam</b></td><td>Real buyer with budget, no invite-friction, solid moat.</td></tr>
+        <tr><td class="num">2</td><td><b>Thimble</b></td><td>Soft buyer economics but decent moat; built and tester-validated.</td></tr>
+        <tr><td class="num">3</td><td><b>Suture</b></td><td>Weakest adoption pull, strongest moat &mdash; two-safety-floor live facilitation is hard to replicate.</td></tr>
+        <tr><td class="num">4</td><td><b>Loom</b></td><td>Real recurring pull (every team does retros), furthest from built.</td></tr>
+        <tr><td class="num">5</td><td><b>Swatch</b></td><td>Narrower buyer, moat unproven, Figma could ship this natively.</td></tr>
+        <tr><td class="num">6</td><td><b>Splice</b></td><td>No named buyer, competes with Zoom/Otter/Read AI's own live-meeting AI.</td></tr>
+        <tr><td class="num">7</td><td><b>Hem</b></td><td>Broadest appeal, essentially no defensible position.</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Open question: disclose safety-floor screening upfront, or only reactively?</h3>
+      <ul>
+        <li>Should Thimble state up front that it's screening conversations for safety-floor triggers?</li>
+        <li>Or only surface that boundary reactively when something actually crosses it?</li>
+        <li>Current lean is "disclose upfront, briefly," but it's marked open, not decided</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-parked">open question</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Rejected: automatic names-only HR notification on safety-floor trip</h3>
+      <ul>
+        <li>An early, simpler, non-consent escalation design: when the safety floor trips, HR gets an email naming only the two parties, stating that harassment was "potentially detected"</li>
+        <li>No category, no severity, no consent flow</li>
+        <li>Conflicts with the consented, anonymized, token-based escalation design already in the roadmap &mdash; flagged so it isn't rediscovered and built by accident</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-rejected">superseded by roadmap design</span></div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 04 PROTOTYPE ===================== -->
+  <details class="category" id="prototype" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">04</span><h2>Prototype</h2><span class="cat-count">2</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">Things that exist as running code, not just a writeup.</p>
+
+    <div class="card">
+      <h3>Any-of-k safety-floor voting</h3>
+      <ul>
+        <li>Self-consistency voting for ambiguous safety-floor cases (harassment/threats/illegal-activity/safety-risk)</li>
+        <li>Gated on the facilitator's own <code>screen_result: "uncertain"</code> signal</li>
+        <li>Uses an any-of-k (OR) rule rather than majority &mdash; a missed real disclosure is worse than a false alarm, so the rule trades precision for recall on purpose</li>
+        <li>Two real bugs surfaced only by running it live against the real server: a gating condition that fired on nearly every turn until a genuine "uncertain" option was added to the schema, and a flag-counting bug that undercounted until "uncertain" votes (not just a hard floor_met) were counted as flags</li>
+        <li>Catch rate on a known ambiguous case went from 1/10 to ~60% after both fixes</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-live">built &amp; live in server.py</span></div>
+      <div class="fit"><b>Guarded by:</b> a regression test locking in a &ge;30% minimum catch rate.</div>
+    </div>
+
+    <div class="card">
+      <h3>Personal-AI benchmark audit tool</h3>
+      <ul>
+        <li><code>thimble/tests/benchmark_audit.py</code> &mdash; a blind-judged, single cold message benchmark</li>
+        <li>Compares raw Claude (no system prompt), ChatGPT, and Mend's facilitator</li>
+        <li>Built and run clean</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-live">built, first run complete</span></div>
+      <div class="fit"><b>See also:</b> the result this produced, under User testing &amp; hypotheses below.</div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 05 USER TESTING & HYPOTHESIS VALIDATION ===================== -->
+  <details class="category" id="testing" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">05</span><h2>User testing &amp; hypothesis validation</h2><span class="cat-count">2</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">What real tester feedback and benchmark runs actually said back, including when it disagreed with the pitch.</p>
+
+    <div class="card">
+      <h3>"Do you want to feel good, or do you want to solve this?"</h3>
+      <ul>
+        <li>Direct answer to the sharpest piece of tester feedback so far (six former-colleague designers)</li>
+        <li>A personal LLM is an echo chamber for one person &mdash; it only hears one side, is tuned to validate</li>
+        <li>Leaves the user with a self-drafted script plus 100% of the vulnerability of the real confrontation</li>
+        <li>Correction worth keeping: most employees will never voluntarily invite a peer into a joint session, so solo intake isn't an on-ramp to the "real" feature &mdash; for most users it IS the product, and this argument has to land solo</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> landing-page objection handling, onboarding copy for the solo flow. <b>Status:</b> argument validated by testers, not yet shipped as copy.</div>
+    </div>
+
+    <div class="card">
+      <h3>Multi-turn rerun of the benchmark audit</h3>
+      <ul>
+        <li>First real benchmark result was NOT what the pitch argument predicted</li>
+        <li>Raw Claude with no system prompt outscored both Mend and ChatGPT on a single-turn rubric</li>
+        <li>Because Mend's facilitator is deliberately paced for multi-turn conversation (ask a grounding question before delivering), which reads as "no deliverable" on a one-shot score</li>
+        <li>Next step: feed each system's turn-1 reply back as a synthetic follow-up and score the final turn instead, to see whether the gap closes once Mend actually reaches its deliverable phase</li>
+      </ul>
+      <div class="fit"><b>Status:</b> blocked on writing up the single-turn result honestly first, and source-verifying the underlying research citations (CPP stat, Jehn framing) before any of this goes near a buyer.</div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 06 GO-TO-MARKET STRATEGY ===================== -->
+  <details class="category" id="gtm" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">06</span><h2>Go-to-market strategy</h2><span class="cat-count">6</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">How Mend gets paid, and how it reaches buyers.</p>
+
+    <div class="card">
+      <h3>The pricing moat</h3>
+      <ul>
+        <li>Price deliberately low &mdash; roughly $7k&ndash;9k/year per ~100-person org, or ~$10&ndash;15 per episodic "truce ticket"</li>
+        <li>Total addressable spend per company stays too small to interest an enterprise sales force</li>
+        <li>Margins stay high anyway (~95&ndash;98%)</li>
+        <li>Anchor the price against the cost of friction (2.8 hrs/week lost, $30&ndash;60k+ resignation cost), not the cost of code</li>
+      </ul>
+      <div class="fit"><b>How to apply:</b> don't suggest enterprise-tier pricing or features that assume large deal sizes.</div>
+    </div>
+
+    <div class="card">
+      <h3>Two products, one engine</h3>
+      <ul>
+        <li>An institution-facing tool: documented reporting mechanism, safety-floor escalation, risk-control credit eligibility</li>
+        <li>A consumer tool: employee + manager versions of the same engine</li>
+        <li>The employee version is the core product and can subsidize the manager version so access isn't gated by who pays</li>
+      </ul>
+      <div class="fit"><b>Status:</b> subsidy mechanics (flat % of revenue into an access pool vs. per-seat matching vs. something else) still unresolved.</div>
+    </div>
+
+    <div class="card">
+      <h3>EPLI as a distribution route <span class="flag">&mdash; decided</span></h3>
+      <ul>
+        <li>Position Mend as a qualifying risk-control for Employment Practices Liability Insurance underwriters</li>
+        <li>Same mechanism as a fire alarm lowering home insurance, or a documented harassment hotline earning credits with carriers like Chubb, Hiscox, Travelers, Beazley</li>
+        <li><b>The one guardrail that matters:</b> any broker/carrier deal must be a flat credit for having the safety-floor system in place, never a credit that scales with incident rate &mdash; a variable credit would give Mend a financial reason to undercount harassment, which breaks the trust moat</li>
+        <li>Scope later widened to EAP, PEOs, and HR/benefits SaaS marketplaces under the same guardrail</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-decided">decided 2026-10-24</span></div>
+      <div class="fit"><b>Next step:</b> talk to an EPLI broker (Marsh, HUB, Gallagher, or regional) about what risk-control credit language carriers actually recognize.</div>
+    </div>
+
+    <div class="card">
+      <h3>Adjacent-market pivots: co-parenting and episodic/informal groups</h3>
+      <ul>
+        <li>High-conflict co-parenting (court-mandated): $12&ndash;18/mo split between parents, final agreements exported as court-admissible PDFs &mdash; a real departure from the zero-trace, no-transcript model</li>
+        <li>Episodic/informal groups (roommates, bands, sports teams): a "truce ticket" ($10&ndash;15 flat per incident) or a group season pass ($29&ndash;79/yr)</li>
+      </ul>
+      <div class="fit"><b>Status:</b> distraction risk before the core workplace MVP finishes testing; co-parenting conflicts with the "no transcript, ever" privacy promise and would need its own trust story.</div>
+    </div>
+
+    <div class="card">
+      <h3>Aggregate org-level usage dashboard for HR/execs</h3>
+      <ul>
+        <li>A reporting view showing only anonymized aggregate stats</li>
+        <li>Example: "14 peer misalignments resolved this month, ~112 hours of focus recaptured"</li>
+        <li>Deliberately never per-person &mdash; reinforces adoption without breaking confidentiality</li>
+      </ul>
+      <div class="fit"><b>Status:</b> premature &mdash; no real pilot customer yet to design this against.</div>
+    </div>
+
+    <div class="card">
+      <h3>Cultural-adoption copy kit</h3>
+      <ul>
+        <li>An onboarding memo template</li>
+        <li>A low-stakes peer-invite message</li>
+        <li>A post-session reinforcement screen ("Alignment reached... saved an estimated 6 hours...")</li>
+      </ul>
+      <div class="fit"><b>Status:</b> tied to go-to-market timing &mdash; writing this before a pilot cohort exists would be guessing at tone with no feedback loop.</div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 07 PITCH DECKS ===================== -->
+  <details class="category" id="decks" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">07</span><h2>Pitch decks</h2><span class="cat-count">2</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">Who the deck is for, and what it's not about.</p>
+
+    <div class="card">
+      <h3>Two pitch decks, not one <span class="flag">&mdash; decided</span></h3>
+      <ul>
+        <li><b>Employee deck</b> &mdash; the "buffer-loss" story: personal, you used to have a PM/manager catching things before they hit senior leadership, that buffer is thinning, Mend is the private catch you no longer have</li>
+        <li><b>Manager deck</b> &mdash; the "consolidation" story: team risk, judgment work that used to spread across a bigger team now sits on fewer people, misreads are costlier with no buffer, pitch is about surfacing friction before it becomes attrition, not personal insecurity</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-decided">decided 2026-10-21</span></div>
+      <div class="fit"><b>Draws on:</b> the professionalism reframe (deck opener, see Problem framing) and self-healing squads (leadership variant, see Ideation).</div>
+    </div>
+
+    <div class="card">
+      <h3>OSS maintainer conflict <span class="flag">&mdash; rejected as deck focus</span></h3>
+      <ul>
+        <li>Open-source projects where a team can't reach consensus, but the conflict is intellectual, not personal</li>
+        <li>Explicitly rejected as the deck's focus (2026-10-21): "the pitch deck should not be focused on the oss concept"</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-rejected">rejected 2026-10-21</span></div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 08 SOCIAL MEDIA ===================== -->
+  <details class="category" id="social" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">08</span><h2>Social media</h2><span class="cat-count">5</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">Two content drafts and a real distribution plan live in <code>pitch/Social media/</code> &mdash; more built out than it first looked.</p>
+
+    <div class="card">
+      <h3>Posting cadence &amp; channels <span class="flag">&mdash; in progress</span></h3>
+      <ul>
+        <li>Two content streams run alongside the build: a daily "what I'm working on / what I learned" build-log post (LinkedIn + TikTok, started 2026-10-19, framed as "Day 1 of following along")</li>
+        <li>Plus the 10-part workplace-conflict narrative series, posted 2 parts/week across LinkedIn, TikTok, and a staggered Reddit post</li>
+        <li>Both double as job-search positioning, not just product marketing</li>
+      </ul>
+      <div class="fit"><b>Source:</b> <code>STATUS.md</code> 2026-10-16 entry; full plan in <code>Task-manager/projects/2-mend.md</code> (outside this repo).</div>
+    </div>
+
+    <div class="card">
+      <h3>10-part LinkedIn/TikTok narrative arc</h3>
+      <p class="bullet-lead">The arc, post by post:</p>
+      <ul>
+        <li>1. The Origin &mdash; a designer, not a diplomat, building an AI for workplace conflict</li>
+        <li>2. The Validation Trap &mdash; why good friends make bad career counselors</li>
+        <li>3. The Big Realization &mdash; systems, not personalities (actor-observer asymmetry)</li>
+        <li>4. The 55% Myth &mdash; how corporations shift the blame onto "ego"</li>
+        <li>5. Friction as Kinetic Energy &mdash; de-stigmatizing disagreement (Jehn's task conflict)</li>
+        <li>6. The False Binary &mdash; redefining "professionalism" as human maturity</li>
+        <li>7. The Core Bet &mdash; outcomes over surveillance</li>
+        <li>8. The Architecture &mdash; the dissolving suture (zero-trace, volatile memory)</li>
+        <li>9. Meeting People Where They Are &mdash; the solo-first door (The Spool)</li>
+        <li>10. The Vision &mdash; Mend as operational scaffolding, retiring "conflict resolution"</li>
+      </ul>
+      <div class="fit"><b>Two drafts exist:</b> <code>Mend-Social-Content.md</code> is the sourced, fact-checked version (every claim cited inline, one stat flagged and removed as unverifiable); <code>social-media-new.md</code> is an earlier, punchier but unsourced pass with full TikTok scripts + LinkedIn mini-essays per post. Use the sourced file as the one to post from.</div>
+    </div>
+
+    <div class="card">
+      <h3>Reddit distribution plan, per post</h3>
+      <p>Each of the 10 posts has its own Reddit-native rewrite (observation/discussion framing, not marketing copy) and a suggested subreddit set:</p>
+      <table class="rank-table">
+        <tr><th>Post</th><th>Suggested subreddits</th></tr>
+        <tr><td class="num">1</td><td>r/managers, r/humanresources, r/ExperiencedDevs, r/cscareerquestions</td></tr>
+        <tr><td class="num">2</td><td>r/managers, r/careerguidance, r/work, r/ExperiencedDevs</td></tr>
+        <tr><td class="num">3</td><td>r/ExperiencedDevs, r/programming, r/ProductManagement, r/managers</td></tr>
+        <tr><td class="num">4</td><td>r/humanresources, r/managers, r/antiwork</td></tr>
+        <tr><td class="num">5</td><td>r/managers, r/ExperiencedDevs, r/agile, r/ProductManagement</td></tr>
+        <tr><td class="num">6</td><td>r/careerguidance, r/managers, r/antiwork, r/work</td></tr>
+        <tr><td class="num">7</td><td>r/managers, r/humanresources, r/ExperiencedDevs</td></tr>
+        <tr><td class="num">8</td><td>r/privacy, r/SideProject, r/startups, r/ExperiencedDevs</td></tr>
+        <tr><td class="num">9</td><td>r/SideProject, r/startups, r/UXDesign, r/ProductManagement</td></tr>
+        <tr><td class="num">10</td><td>r/startups, r/ProductManagement, r/managers</td></tr>
+      </table>
+      <p class="bullet-lead" style="margin-top:12px;">Reddit posting notes:</p>
+      <ul>
+        <li>Most of these subreddits ban self-promotion or direct product links &mdash; posts stand on their own as discussion/insight pieces, with Mend named only where the post is explicitly about building it (Posts 1, 8, 9)</li>
+        <li>Check each subreddit's rules before posting; be ready to drop the Mend mention entirely if a mod flags it</li>
+        <li>Don't cross-post the same text to multiple subs same-day &mdash; reword the title and opening line per sub, and stagger the schedule</li>
+        <li>End with a genuine question &mdash; Reddit engagement comes from the comments, not the post itself</li>
+      </ul>
+      <div class="fit"><b>Source:</b> <code>pitch/Social media/Mend-Social-Content.md</code>, "Part 3: Reddit Posts" and "Reddit posting notes."</div>
+    </div>
+
+    <div class="card">
+      <h3>Manager-outreach channels (separate track)</h3>
+      <ul>
+        <li>Where managers specifically go when something blows up: Reddit (r/ExperiencedDevs, r/techmanagers, r/ProductManagement, r/sysadmin), Blind, and Slack/Discord communities &mdash; Rands Leadership Slack, LeadDev, Product Collective, Indie Hackers</li>
+        <li>Planned action: find 5&ndash;10 live venting threads on Reddit/Blind/these communities and answer them for real, with the tool mentioned as a footer, not the pitch</li>
+        <li>To-do list also tracks a Rands Leadership Slack application bio, LeadDev/Mind the Product signup, a drafted subreddit recruitment post, and a drafted 1:1 LinkedIn DM template</li>
+      </ul>
+      <div class="fit"><b>Source:</b> <code>docs/pitch-strategy/26_SELLING_TO_MANAGERS.md</code>; checklist items in <code>mend-todo-list.html</code> (tag: managers).</div>
+    </div>
+
+    <div class="card gap-card">
+      <h3>Still missing</h3>
+      <ul>
+        <li>No decision yet on primary channel priority (LinkedIn vs. TikTok vs. Reddit) if the daily build-log cadence turns out to be too much to sustain alongside both</li>
+        <li>No content pillars or voice guide beyond this page's general brand voice rules (no aphorisms, no "EQ")</li>
+        <li>3 unposted article ideas sit in the content file's own backlog, each needing a sourcing pass before drafting</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-parked">open, not yet decided</span></div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 09 BRAND IDENTITY ===================== -->
+  <details class="category" id="brand" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">09</span><h2>Brand identity</h2><span class="cat-count">5</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">Naming, mark, mascot, and voice &mdash; decided where noted, open where not.</p>
+
+    <div class="card">
+      <h3>Naming structure: Seam / Thimble / Mend <span class="flag">&mdash; decided</span></h3>
+      <ul>
+        <li><b>Seam</b> &mdash; the app name, the only name a new user needs to learn up front</li>
+        <li><b>Thimble</b> &mdash; the AI persona's name, learned naturally by interacting with the app, introduced in-context (the AI introduces itself), never pre-explained</li>
+        <li><b>Mend</b> &mdash; the company name, doesn't appear anywhere user-facing right now</li>
+      </ul>
+      <p class="bullet-lead">Why:</p>
+      <ul>
+        <li>Three new names at once is too much cognitive load for a first-time user</li>
+        <li>The fix isn't collapsing to one name, it's making sure only Seam hits the user before they've built context</li>
+        <li>"Mend" as a visible product name also implies the user is broken and needs fixing, which isn't the message</li>
+        <li>No LLC or revenue yet, so there's no legal/billing surface (ToS, invoices, a "who processes your data" page) forcing "Mend" into view &mdash; revisit once there's a registered entity or paying customers</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-decided">decided 2026-10-23</span></div>
+      <div class="fit"><b>How to apply:</b> don't expose "Mend" in-product UI, marketing copy, or onboarding flows; Seam is the only name that should appear before a user starts using the product.</div>
+    </div>
+
+    <div class="card">
+      <h3>App &amp; feature naming conventions</h3>
+      <p class="bullet-lead">Shipped app codenames (sewing/textile theme):</p>
+      <ul>
+        <li><b>Thimble</b> &mdash; the solo conflict-resolution app overall</li>
+        <li><b>Suture</b> &mdash; the live two-person joint session inside Thimble</li>
+        <li><b>Seam</b> &mdash; the manager app</li>
+        <li><b>Spool</b> &mdash; the sign-up/invite entry point</li>
+        <li><b>Splice</b> &mdash; live group consensus over Zoom</li>
+      </ul>
+      <p class="bullet-lead">Unbuilt concepts, same pattern:</p>
+      <ul>
+        <li><b>Swatch</b> &mdash; designer preflight collaboration</li>
+        <li><b>Loom</b> &mdash; pattern-only project retro</li>
+        <li><b>Hem</b> &mdash; cross-platform writing assistant</li>
+      </ul>
+      <p class="bullet-lead">Deeper copy lexicon, not yet adopted:</p>
+      <ul>
+        <li><i>The Spool</i> &mdash; solo intake</li>
+        <li><i>The Loom</i> &mdash; the ephemeral joint session</li>
+        <li><i>The Snips/Shears</i> &mdash; the safety floor</li>
+        <li><i>The Basting Stitch</i> &mdash; practice rehearsal</li>
+        <li><i>The Pattern</i> &mdash; cheat-sheet summary</li>
+        <li><i>Tension Gauge</i> &mdash; the Watcher concept</li>
+        <li><i>The Dissolving Suture</i> &mdash; the core value prop: clean resolution, no scar tissue</li>
+      </ul>
+      <div class="fit"><b>Status:</b> app codenames are live naming conventions; the copy lexicon is unadopted &mdash; risk of reading as twee to a skeptical enterprise buyer, needs testing against real HR buyers before baking into shipped copy.</div>
+    </div>
+
+    <div class="card">
+      <h3>Logo mark &amp; color system</h3>
+      <ul>
+        <li>The mark: two overlapping circles forming a lowercase "m," with a knot where the two sides meet</li>
+        <li>Wordmark: "mend," all lowercase, Manrope ExtraBold 800, letter-spacing &minus;0.05em, mark to the left and vertically centered</li>
+      </ul>
+      <p class="bullet-lead">Palette:</p>
+      <ul>
+        <li><b>Evergreen</b> #17372E &mdash; ink: text, dark backgrounds, primary buttons</li>
+        <li><b>Mend Pink</b> #F3829A &mdash; primary: logo, fills, icons; never body text on a light background (use the pink-700 step #8c0d28 for pink-toned text/links instead)</li>
+        <li><b>Honey</b> #E9B949 &mdash; accent: highlights, "resolved" states, fills only</li>
+        <li><b>Oat</b> #F6F1E7 &mdash; surface/page background</li>
+        <li>Approved pairings: pink mark + evergreen text on oat &middot; pink mark + oat text on evergreen &middot; evergreen mark + evergreen text on pink</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-decided">shipped brand kit</span></div>
+      <div class="fit"><b>Source:</b> <code>pitch/design_handoffs/mend_sessions/mend-brand-kit/brand-guide.html</code> &mdash; also covers type scale, corner radius (8 / 16 / 28 / pill), and soft ink-tinted elevation shadows.</div>
+    </div>
+
+    <div class="card">
+      <h3>Thimble's visual design (mascot)</h3>
+      <ul>
+        <li>The AI facilitator's on-screen presence: a soft pink blob, not a face or a character</li>
+        <li>Idle shape is a near-circle with a slight organic wobble (asymmetric corner radii, never a perfect circle)</li>
+        <li>A single soft highlight for dimension</li>
+        <li>A pill mouth that only goes fully round while thinking or talking</li>
+        <li>A faint floor shadow pooled beneath it so it reads as sitting on the surface, not pasted on top</li>
+        <li>Production fill is #FF8CA3 on-screen; the flat brand-kit Mend Pink #F3829A is for static/print use</li>
+      </ul>
+      <div class="fit"><b>Build rule:</b> one highlight only, never a second specular dot; shadow is always soft-edged, never a hard drop shadow.</div>
+    </div>
+
+    <div class="card">
+      <h3>Taglines, headlines &amp; voice rules</h3>
+      <p class="bullet-lead">Headlines actually in use across the live pages:</p>
+      <ul>
+        <li>"Fix Coworker Friction Before It Becomes an HR File"</li>
+        <li>"You Lost The People Who Used To Catch Your Mistakes" (employee deck)</li>
+        <li>"Before the Hard Conversation, You're Guessing" / "After a Conflict, You're Angry, Confused, and Unsure" (manager deck)</li>
+        <li>"Resolve the real issue" (brand-kit sample line)</li>
+      </ul>
+      <p class="bullet-lead">Two standing copy rules:</p>
+      <ul>
+        <li>No aphorism headlines or clever reversals ("X is the symptom, Y is the cause," "that's a feature, not a bug") &mdash; state what the thing does, plainly, so the reader doesn't have to decode it</li>
+        <li>Never use the term "EQ" anywhere in copy &mdash; it reads as too soft; use "reading people," "judgment," or "the catch" instead</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-decided">standing voice rules</span></div>
+    </div>
+    </div>
+  </details>
+
+  <!-- ===================== 10 TALKS & PRESENTATIONS ===================== -->
+  <details class="category" id="talks" open>
+    <summary><span class="chev">&#9656;</span><span class="step-num">10</span><h2>Talks &amp; presentations</h2><span class="cat-count">5</span></summary>
+    <div class="cat-body">
+    <p class="cat-note">Brand new &mdash; conference talk angles for pitching yourself to UX conferences on Mend and the problems it solves. Each repurposes material already proven out elsewhere on this page; nothing here has been pitched or submitted anywhere yet.</p>
+
+    <div class="card">
+      <h3>Talk: "Designing Trust You Can't Fake"</h3>
+      <ul>
+        <li>The core design problem wasn't the AI, it was proving the app isn't spying on anyone &mdash; a real case study in trust-by-architecture instead of trust-by-policy</li>
+        <li>The "dissolving suture" metaphor: software for human relationships should hold the dynamic together while it heals, then disappear, with nothing written to disk, no transcripts to subpoena or audit</li>
+        <li>Backed by real research: electronic performance monitoring is linked to higher worker stress with no performance benefit (Ravid et al., 2023); controlled compliance vs. autonomous commitment (Deci &amp; Ryan, 2000)</li>
+        <li>Talk shape: open with the trust moat thesis, walk through what "zero-trace" actually means technically, close with the broader UX principle &mdash; privacy as a product decision users can verify, not a policy they have to take on faith</li>
+      </ul>
+      <div class="fit"><b>Draws on:</b> the trust moat and "no managerial surveillance" cards in Problem framing, "Autonomy, surveillance &amp; honesty" research in Discovery, Post 8 of the social media narrative arc.</div>
+    </div>
+
+    <div class="card">
+      <h3>Talk: "The Solo-First Door"</h3>
+      <ul>
+        <li>Core UX lesson: if a product requires mutual consensus just to open the door, adoption lands at the historical 3&ndash;5% benchmark for voluntary mediation &mdash; the invite itself reads as an accusation</li>
+        <li>The fix wasn't a better invite flow, it was removing the requirement for one: a private solo intake with zero obligation to ever loop the other person in, so the product delivers value even if the "real" feature never gets used</li>
+        <li>Generalizes past this product: a design pattern for any tool that needs vulnerability from a user on day one &mdash; don't demand bravery upfront, build scaffolding that earns it gradually</li>
+        <li>Talk shape: a concrete before/after of the invite-flow design decision, then zoom out to the general principle for UX researchers/designers building anything that asks people to be vulnerable with a stranger (an AI, a mediator, another user)</li>
+      </ul>
+      <div class="fit"><b>Draws on:</b> Post 9 of the social media narrative arc ("Meeting People Where They Are"), the naming-structure card in Brand identity (why Thimble is discovered, not pre-explained &mdash; same "don't ask for buy-in upfront" instinct).</div>
+    </div>
+
+    <div class="card">
+      <h3>Talk: "Debugging People" (origin-story / non-traditional-path angle)</h3>
+      <ul>
+        <li>A UX designer with no HR background, no mediation credential, building an AI tool for workplace conflict &mdash; the pitch is the unlikely background, not despite it, because of it: years of treating human systems like design systems</li>
+        <li>The reframe at the center: that coworker who makes your blood boil probably isn't the problem &mdash; the opposing incentives you're each being judged on are (actor-observer asymmetry, Jones &amp; Nisbett 1971; structural causes of interdepartmental conflict, Walton &amp; Dutton 1969)</li>
+        <li>Natural fit for a "how I got here" / solo-builder / career-change track at a UX conference, not just a product pitch</li>
+        <li>Talk shape: personal narrative first (the 2.8 hrs/week stat as the hook), then the systems-thinking reframe, then what it taught about applying design process to a domain outside software</li>
+      </ul>
+      <div class="fit"><b>Draws on:</b> Post 1 and Post 3 of the social media narrative arc, "Structural, not personal: the attribution research" in Discovery.</div>
+    </div>
+
+    <div class="card">
+      <h3>Talk: "Professionalism Is Broken, and Design Helped Build It"</h3>
+      <ul>
+        <li>A more provocative, critique-angle talk: corporate "professionalism" functions as an emotional gag order, and plenty of workplace software (status indicators, activity trackers, always-on chat) was designed in ways that reinforce the suppression, not just reflect it</li>
+        <li>The reframe: real professionalism is human maturity, not erasure &mdash; grounded in surface-acting research (faking a feeling you don't have is linked to burnout; Hochschild 1983, Grandey 2000)</li>
+        <li>Positions Mend as a counter-example: a tool deliberately designed around the opposite instinct, a private outlet instead of another surface to perform on</li>
+        <li>Best fit for a UX ethics / design-responsibility track rather than a pure product pitch &mdash; more critique than demo</li>
+      </ul>
+      <div class="fit"><b>Draws on:</b> the professionalism-as-human-maturity card in Problem framing, "Autonomy, surveillance &amp; honesty" research in Discovery, Post 6 of the social media narrative arc.</div>
+    </div>
+
+    <div class="card gap-card">
+      <h3>Open: where to actually pitch these</h3>
+      <ul>
+        <li>No specific conference, CFP, or deadline researched or targeted yet &mdash; these are talk angles, not submissions</li>
+        <li>Well-known UX/design conference venues worth researching CFPs for (general knowledge, not yet vetted against this material): Config (Figma), UXPA International, An Event Apart, Interaction (IxDA), World IA Day, Smashing Conf, Design Matters</li>
+        <li>Each talk above would need an abstract, a speaker bio, and ideally a short proof point (a demo, a screenshot, a stat) before submitting anywhere</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-parked">not yet researched</span></div>
+    </div>
+    </div>
+  </details>
+
+  <footer>
+    Compiled from <code>IDEAS.md</code> and project memory across many sessions. Nothing here ships until it moves to <code>ROADMAP.md</code>.
+  </footer>
+
+  </main>
+</div>
+
+<script>
+  const details = Array.from(document.querySelectorAll('details.category'));
+  const tocLinks = Array.from(document.querySelectorAll('.toc-link'));
+
+  document.getElementById('expand-all').addEventListener('click', () => {
+    details.forEach(d => d.open = true);
+  });
+  document.getElementById('collapse-all').addEventListener('click', () => {
+    details.forEach(d => d.open = false);
+  });
+
+  tocLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.getElementById(link.dataset.target);
+      target.open = true;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      history.replaceState(null, '', '#' + link.dataset.target);
+    });
+  });
+
+  const highlight = () => {
+    let current = details[0]?.id;
+    for (const d of details) {
+      const rect = d.getBoundingClientRect();
+      if (rect.top <= 120) current = d.id;
+    }
+    tocLinks.forEach(l => l.classList.toggle('current', l.dataset.target === current));
+  };
+  document.addEventListener('scroll', highlight, { passive: true });
+  highlight();
+
+  if (location.hash) {
+    const id = location.hash.slice(1);
+    const el = document.getElementById(id);
+    if (el) { el.open = true; setTimeout(() => el.scrollIntoView({ block: 'start' }), 0); }
+  }
+</script>
+</body>
+</html>
