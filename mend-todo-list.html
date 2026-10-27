@@ -38,6 +38,13 @@
   .switcher button.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
   .switcher button .hint{font-weight:500; opacity:.75; margin-left:4px;}
 
+  /* tag filter */
+  .filters{display:flex; gap:7px; margin-bottom:18px; flex-wrap:wrap;}
+  .filters button{font-family:'Manrope',sans-serif; font-weight:700; font-size:12px; padding:5px 12px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--ink-soft); cursor:pointer;}
+  .filters button.active{background:var(--accent); color:var(--paper); border-color:var(--accent);}
+  .filters button[data-filter="all"]{color:var(--ink-soft);}
+  .filters button[data-filter="all"].active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+
   .view{display:none;}
   .view.active{display:block;}
 
@@ -74,6 +81,7 @@
   .tag.mvp{background:var(--border); color:var(--ink-soft);}
   .tag.epli{background:var(--ink); color:var(--paper);}
   .tag.seam{background:var(--sage-soft); color:var(--sage);}
+  .tag.pilot{background:var(--accent-soft); color:var(--ink);}
   .sub{display:block; text-align:left; font-size:13.5px; color:var(--ink-soft); margin-top:1px; font-weight:500;}
   code{font-family:'Manrope',sans-serif; background:var(--accent-soft); padding:1px 5px; border-radius:4px; font-size:14.5px;}
   .links{display:flex; gap:7px; flex-wrap:wrap; margin-top:5px;}
@@ -114,6 +122,7 @@
     <button data-view="board">Board <span class="hint">lane progress</span></button>
     <button data-view="timeline">Timeline <span class="hint">what's due when</span></button>
   </div>
+  <div class="filters" id="filters"></div>
 
   <div class="view active" id="view-grouped"></div>
   <div class="view" id="view-board"></div>
@@ -125,7 +134,7 @@
     {id:'t2', tag:'domain', when:{verb:'Due', date:'Oct 29, 2026'}, label:'Set up founder@joinmend.app email forwarding + sending (registrar forwarding + Brevo or SMTP2Go relay)', sub:'Required before submitting any grant or credit application — most apps ask for a founder email on the company domain'},
     {id:'t3', tag:'managers', label:'Ship a zero-install web utility (1-on-1 Tough Talk Scaffolder or Slack Tone Buffer) as the free hook'},
     {id:'t4', tag:'incubator', when:{verb:'Target', date:'Oct 27, 2026'}, label:'Apply to American Underground (Durham)', sub:"No fixed deadline (rolling intake) — picked this date so it doesn't keep sliding", links:[{text:'Apply →', href:'https://americanunderground.com/membership/startups-and-entrepreneurs/'}]},
-    {id:'t5', tag:'grant', when:{verb:'Due', date:'Oct 31, 2026'}, label:'Submit Awesome Foundation Durham/Triangle application ($1,000)', links:[{text:'Apply →', href:'https://www.awesomefoundation.org/en/submissions/new?chapter=durham'}]},
+    {id:'t5', tag:'grant', label:'Submitted Awesome Foundation Durham/Triangle application ($1,000)', sub:'Submitted 2026-10-27 — awaiting decision', links:[{text:'Apply →', href:'https://www.awesomefoundation.org/en/submissions/new?chapter=durham'}]},
     {id:'t6', tag:'grant', when:{verb:'Due', date:'Nov 2, 2026'}, label:'Apply for Google Cloud Start ($2,000) + Anthropic Startup ($1,000) + Microsoft Founders Hub ($1-5k) credits', links:[{text:'Google →', href:'https://startup.google.com/cloud/'},{text:'Anthropic →', href:'https://anthropic.com/contact-sales/startup-program'},{text:'Microsoft →', href:'https://foundershub.startups.microsoft.com/'}]},
     {id:'t7', tag:'grant', when:{verb:'Due', date:'Nov 6, 2026'}, label:'Write and submit Emergent Ventures application (human-written, not AI-generated)', links:[{text:'Apply →', href:'https://www.mercatus.org/emergent-ventures'}]},
     {id:'t8', tag:'grant', when:{verb:'Due', date:'Nov 6, 2026'}, label:'Apply to 1517 Fund Medici Project ($1,000)', links:[{text:'Apply →', href:'https://www.1517fund.com/medici'}]},
@@ -133,19 +142,21 @@
     {id:'t10', tag:'managers', label:'Join Rands Leadership Slack / LeadDev / Product Collective communities'},
     {id:'t11', tag:'managers', label:'Write 2-3 LinkedIn posts dissecting a broken tech ritual (PR review, sprint-planning attribution error, 3-way meeting failure)'},
     {id:'t12', tag:'managers', label:'Draft sponsor hook and shortlist newsletters (Pragmatic Engineer, Refactoring, Level Up, Product Growth, Wes Kao)'},
-    {id:'t13', tag:'mvp', label:'Finish Meeting Strategy feature: system prompt file, <code>meeting_sessions</code> table, and the three routes'},
+    {id:'t13', tag:'mvp', label:'Meeting Strategy feature shipped end to end', sub:'System prompt file, meeting_sessions table, and the routes all confirmed live in server.py and STATUS.md — stale item, left here checked off'},
     {id:'t14', tag:'mvp', label:'Finish Tone-check feature: system prompt + <code>POST /api/tone-check</code> route', sub:'In progress as of 2026-10-20'},
     {id:'t15', tag:'mvp', label:'Run a real two-browser, two-role dry run of the Suture handoff route'},
+    {id:'t34', tag:'pilot', label:'Run Seam end-to-end yourself (Meeting Strategy + Tone-check) and confirm it’s demoable', sub:'Step 1 of starting the manager user test — before pushing it at any tester or buyer'},
+    {id:'t35', tag:'pilot', label:"Set up tracking for Seam's eval metrics before running the cohort", sub:'Step 2 — re-open rate within 2 weeks, artifact-usefulness (did they actually use the strategy in the meeting), tone-check acceptance rate, cascade conversion'},
+    {id:'t17', tag:'pilot', label:'Decide the solo-manager tester cohort size and structure', sub:'Step 3 — how many testers, what counts as a completed test session, how feedback gets collected'},
+    {id:'t24', tag:'pilot', label:'Post the drafted test-cohort recruitment call in r/techmanagers, r/ExperiencedDevs, r/ProductManagement', sub:'Step 4 — no link in the top post, ask people to comment or DM to avoid spam filters; asks for 5-10 managers to run a 10-min test scenario'},
+    {id:'t25', tag:'pilot', label:'Send the drafted 1:1 LinkedIn DM outreach to first-time managers (1-2 yrs in role)', sub:'Step 5 — filter by title and tenure; this group feels 1-on-1 prep pain most acutely'},
+    {id:'t18', tag:'pilot', label:'Validate the $200-500/yr L&D-stipend buyer path against one real manager', sub:'Step 6 — run once the first few testers complete a session'},
     {id:'t16', tag:'grant', when:{verb:'Opens', date:'Jan 25, 2027'}, label:'NC IDEA MICRO application window opens ($10,000)', links:[{text:'Apply →', href:'https://ncidea.org/nc-idea-micro/'}]},
-    {id:'t17', tag:'mvp', label:'Pick and run the solo-manager tester cohort'},
-    {id:'t18', tag:'mvp', label:'Validate the $200-500/yr L&D-stipend buyer path against one real manager'},
     {id:'t19', tag:'incubator', when:{verb:'Opens', date:'Feb 8, 2027'}, label:'CED GRO Incubator Spring cohort window opens', links:[{text:'Apply →', href:'https://cednc.org/get/gro'}]},
     {id:'t20', tag:'incubator', when:{verb:'Due', date:'Feb 15, 2027'}, label:'Submit Launch Chapel Hill Spring cohort application', links:[{text:'Apply →', href:'https://www.launchchapelhill.com/'}]},
     {id:'t21', tag:'grant', when:{verb:'Due', date:'Feb 22, 2027'}, label:'Submit NC IDEA MICRO application ($10,000)', links:[{text:'Apply →', href:'https://ncidea.org/nc-idea-micro/'}]},
     {id:'t22', tag:'managers', label:'Apply to Rands Leadership Slack', sub:'Drafted bio: a product designer studying where cross-team handoffs break down and how leads prep for tough 1-on-1s, not pitching software', links:[{text:'Apply →', href:'https://randsinrepose.com'}]},
     {id:'t23', tag:'managers', label:'Join LeadDev Community Slack and Mind the Product / Product Collective (instant signup)', links:[{text:'LeadDev →', href:'https://leaddev.com/join-slack'}]},
-    {id:'t24', tag:'managers', label:'Post the drafted test-cohort recruitment call in r/techmanagers, r/ExperiencedDevs, r/ProductManagement', sub:'No link in the top post, ask people to comment or DM to avoid spam filters; asks for 5-10 managers to run a 10-min test scenario'},
-    {id:'t25', tag:'managers', label:'Send the drafted 1:1 LinkedIn DM outreach to first-time managers (1-2 yrs in role)', sub:'Filter by title and tenure; this group feels 1-on-1 prep pain most acutely'},
     {id:'t26', tag:'epli', label:'Find and talk to an EPLI broker (Marsh, HUB, Gallagher, Lockton, or a regional EPLI specialist)', sub:"Ask: which carriers run a pre-approved vendor directory with a reimbursement credit (like Chubb's), vs. build everything in-house (like Travelers, Hiscox)"},
     {id:'t27', tag:'epli', label:"Ask the broker (or an existing Chubb EPL policyholder) to share Chubb's actual EPL Consultant Directory Excel list", sub:'See what a real listing looks like, whether software tools appear alongside law firms/HR consultants today'},
     {id:'t28', tag:'epli', label:'Write the one-page "qualifying control" pitch before any carrier conversation', sub:'What Mend does, how it maps to EPL policy coverage (documented reporting mechanism + non-configurable safety-floor escalation), proposed flat (not incident-scaled) credit structure'},
@@ -154,12 +165,13 @@
     {id:'t31', tag:'managers', label:'Pitch a skip-level/director directly on Seam for their own reports', sub:'Self-interest framing: "your reports\' management skill is your own performance metric." Typically 3-8 managers per yes, faster than recruiting one by one'},
     {id:'t32', tag:'managers', label:'Find and pitch an L&D/people-ops lead who owns a coaching-stipend budget line', sub:'Charter, PeopleTech Partners, Hacking HR communities. Script: "sits inside an existing L&D stipend line ($200-500/yr/manager) instead of needing a new procurement line"'},
     {id:'t33', tag:'managers', label:"Join First Round's manager Slack community, Lenny's Newsletter community, and EM365", sub:'Named alongside Rands/LeadDev in the Seam outreach doc but not yet joined'},
-    {id:'t34', tag:'seam', label:'Run Seam end-to-end yourself (Meeting Strategy + Tone-check) and confirm it’s demoable', sub:'Before pushing it at any tester or buyer'},
-    {id:'t35', tag:'seam', label:"Set up tracking for Seam's eval metrics before running the cohort", sub:'Re-open rate within 2 weeks, artifact-usefulness (did they actually use the strategy in the meeting), tone-check acceptance rate, cascade conversion'}
+    {id:'t36', tag:'incubator', label:'Check Knox St. Studios Launch Lab (Durham) for next cohort window and apply', sub:'No open window as of Oct 2026 — last cohort ran Sep-Nov 2025, apps closed Aug 22, 2025. Email info@knoxststudios.org to ask when the next one opens', links:[{text:'Site →', href:'https://www.knoxststudios.org/launch-lab-2025'}]},
+    {id:'t37', tag:'incubator', label:'Check RIoT Accelerator Program (Raleigh/Triangle) next cohort window', sub:'For the separate IoT product idea, not Mend — Spring 2026 cohort deadline (Feb 20, 2026) already passed, ran Mar 31-Jun 24, 2026. Zero-equity, no-cost program; runs multiple cohorts/year — check riot.org directly for the next open window', links:[{text:'Site →', href:'https://riot.org/startup-accelerator/'}]},
+    {id:'t38', tag:'grant', when:{verb:'Target', date:'Nov 2, 2026'}, label:'Form an LLC for Mend', sub:"Not required to apply to most grants/accelerators (CED GRO, Launch Chapel Hill, RIoT, American Underground all take pre-entity applicants), but a registered entity is required before any of them can actually cut a check — NC IDEA and most cash grants need it to pay out. Do this before the Nov 2 Google/Anthropic/Microsoft credits deadline and Nov 6 Emergent Ventures/1517 Fund deadlines so money isn't blocked later", links:[{text:'NC Sec. of State LLC filing →', href:'https://www.sosnc.gov/online_services/business_registration'}]}
   ];
 
-  var TAG_LABELS = {domain:'Domain', managers:'Managers', grant:'Grants', incubator:'Incubators', mvp:'MVP', epli:'EPLI', seam:'Seam'};
-  var GROUP_ORDER = ['domain','mvp','seam','epli','managers','grant','incubator'];
+  var TAG_LABELS = {domain:'Domain', managers:'Managers', grant:'Grants', incubator:'Incubators', mvp:'MVP', epli:'EPLI', seam:'Seam', pilot:'Manager User Test'};
+  var GROUP_ORDER = ['domain','mvp','pilot','seam','epli','managers','grant','incubator'];
 
   function isDone(id){
     try { return localStorage.getItem('mend-todo-' + id) === '1'; } catch(e){ return false; }
@@ -197,19 +209,48 @@
     return days >= -1 && days <= 14;
   }
 
+  var activeFilters = (function(){
+    try {
+      var saved = JSON.parse(localStorage.getItem('mend-todo-filters') || '[]');
+      return Array.isArray(saved) ? saved.filter(function(t){ return GROUP_ORDER.indexOf(t) !== -1; }) : [];
+    } catch(e){ return []; }
+  })();
+
+  function saveFilters(){
+    try { localStorage.setItem('mend-todo-filters', JSON.stringify(activeFilters)); } catch(e){}
+  }
+
+  function filteredTasks(){
+    if (!activeFilters.length) return TASKS;
+    return TASKS.filter(function(t){ return activeFilters.indexOf(t.tag) !== -1; });
+  }
+
+  function renderFilters(){
+    var html = '<button data-filter="all"' + (activeFilters.length ? '' : ' class="active"') + '>All</button>';
+    GROUP_ORDER.forEach(function(tag){
+      var count = TASKS.filter(function(t){ return t.tag === tag; }).length;
+      if (!count) return;
+      var active = activeFilters.indexOf(tag) !== -1 ? ' active' : '';
+      html += '<button data-filter="' + tag + '" class="' + active.trim() + '">' + TAG_LABELS[tag] + '</button>';
+    });
+    document.getElementById('filters').innerHTML = html;
+  }
+
   function overallProgress(){
-    var done = TASKS.filter(function(t){ return isDone(t.id); }).length;
-    return {done: done, total: TASKS.length};
+    var tasks = filteredTasks();
+    var done = tasks.filter(function(t){ return isDone(t.id); }).length;
+    return {done: done, total: tasks.length};
   }
 
   function renderGrouped(){
     var p = overallProgress();
-    var pct = Math.round(100 * p.done / p.total);
+    var pct = p.total ? Math.round(100 * p.done / p.total) : 0;
     var html = '<div class="progress-wrap" data-progress-overall>' +
       '<div class="progress-top"><span class="n">' + p.done + ' / ' + p.total + '</span><span class="label">done</span></div>' +
       '<div class="bar"><i style="width:' + pct + '%"></i></div></div>';
+    var tasks = filteredTasks();
     GROUP_ORDER.forEach(function(tag){
-      var items = TASKS.filter(function(t){ return t.tag === tag; });
+      var items = tasks.filter(function(t){ return t.tag === tag; });
       if (!items.length) return;
       var doneCount = items.filter(function(t){ return isDone(t.id); }).length;
       html += '<div class="group" data-group-tag="' + tag + '">' +
@@ -221,8 +262,9 @@
 
   function renderBoard(){
     var html = '<div class="board">';
+    var tasks = filteredTasks();
     GROUP_ORDER.forEach(function(tag){
-      var items = TASKS.filter(function(t){ return t.tag === tag; });
+      var items = tasks.filter(function(t){ return t.tag === tag; });
       if (!items.length) return;
       var doneCount = items.filter(function(t){ return isDone(t.id); }).length;
       var pct = Math.round(100 * doneCount / items.length);
@@ -236,8 +278,9 @@
   }
 
   function renderTimeline(){
-    var dated = TASKS.filter(function(t){ return t.when; });
-    var undated = TASKS.filter(function(t){ return !t.when; });
+    var tasks = filteredTasks();
+    var dated = tasks.filter(function(t){ return t.when; });
+    var undated = tasks.filter(function(t){ return !t.when; });
     dated.sort(function(a, b){ return new Date(a.when.date) - new Date(b.when.date); });
 
     var buckets = [];
@@ -267,6 +310,7 @@
   }
 
   function renderAll(){
+    renderFilters();
     renderGrouped();
     renderBoard();
     renderTimeline();
@@ -305,6 +349,20 @@
     if (e.target.matches('input[type=checkbox][data-id]')) {
       onCheckboxChange(e.target.getAttribute('data-id'), e.target.checked);
     }
+  });
+
+  document.getElementById('filters').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-filter]');
+    if (!btn) return;
+    var tag = btn.dataset.filter;
+    if (tag === 'all') {
+      activeFilters = [];
+    } else {
+      var i = activeFilters.indexOf(tag);
+      if (i === -1) activeFilters.push(tag); else activeFilters.splice(i, 1);
+    }
+    saveFilters();
+    renderAll();
   });
 
   document.querySelectorAll('.switcher button').forEach(function(btn){
