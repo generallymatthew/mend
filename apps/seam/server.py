@@ -252,9 +252,29 @@ def init_db():
                 updated_at REAL NOT NULL
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS session_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                mode TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                turn_number INTEGER,
+                ts REAL NOT NULL
+            )
+        """)
 
 
 init_db()
+
+
+def log_event(conn: sqlite3.Connection, session_id: str, mode: str, event_type: str, turn_number: int | None = None) -> None:
+    """Pilot-eval instrumentation: one row per session_start/turn/output_generated.
+    See docs/pitch-strategy/25_SEAM_SOLO_MANAGER_COHORT_AND_OUTREACH_STRATEGY.md for
+    the metrics (turn count, duration, completion rate, re-open rate) this feeds."""
+    conn.execute(
+        "INSERT INTO session_events (session_id, mode, event_type, turn_number, ts) VALUES (?, ?, ?, ?, ?)",
+        (session_id, mode, event_type, turn_number, time.time()),
+    )
 
 
 def case_row_to_dict(row: sqlite3.Row) -> dict:
@@ -452,6 +472,7 @@ async def create_case(body: CaseCreate = CaseCreate()):
                 "VALUES (?, ?, ?, 0, NULL, ?, ?, ?)",
                 (str(uuid.uuid4()), case_id, text, position, now, now),
             )
+        log_event(conn, case_id, body.kind, "session_start")
         case = get_case(conn, case_id)
     CONVERSATIONS[case_id] = []
     return case
@@ -607,8 +628,12 @@ async def post_message(case_id: str, body: Message):
                 })
 
         CONVERSATIONS[case_id].append({"role": "user", "content": body.content, "hidden": False})
+        turn_number = sum(1 for m in CONVERSATIONS[case_id] if m["role"] == "user" and not m.get("hidden"))
+        log_event(conn, case_id, case["kind"], "turn", turn_number)
         result = facilitator_reply(case_id, conn, case["kind"])
         case = get_case(conn, case_id)
+        if case["handoff_ready"]:
+            log_event(conn, case_id, case["kind"], "output_generated", turn_number)
         case["roster"] = roster_for_case(case_id)
         plan = get_plan_steps(conn, case_id)
     return {
@@ -809,6 +834,7 @@ async def create_meeting_session():
             "VALUES (?, NULL, NULL, NULL, ?, ?)",
             (session_id, now, now),
         )
+        log_event(conn, session_id, "meeting", "session_start")
         session = get_meeting_session(conn, session_id)
     MEETING_CONVERSATIONS[session_id] = []
     return session
@@ -866,6 +892,8 @@ async def post_meeting_message(session_id: str, body: Message):
             MEETING_CONVERSATIONS[session_id] = []
 
         MEETING_CONVERSATIONS[session_id].append({"role": "user", "content": body.content, "hidden": False})
+        turn_number = sum(1 for m in MEETING_CONVERSATIONS[session_id] if m["role"] == "user" and not m.get("hidden"))
+        log_event(conn, session_id, "meeting", "turn", turn_number)
         result = meeting_strategy_reply(session_id, conn)
 
         signal = result["signal"]
@@ -877,6 +905,7 @@ async def post_meeting_message(session_id: str, body: Message):
                 fields["goal_summary"] = signal["goal_summary"]
             if signal.get("strategy_ready") and signal.get("strategy_text"):
                 fields["strategy_text"] = signal["strategy_text"]
+                log_event(conn, session_id, "meeting", "output_generated", turn_number)
             if fields:
                 set_clause = ", ".join(f"{k} = ?" for k in fields)
                 conn.execute(
@@ -936,6 +965,7 @@ async def create_written_session():
             "INSERT INTO written_sessions (id, title, preview, created_at, updated_at) VALUES (?, NULL, NULL, ?, ?)",
             (session_id, now, now),
         )
+        log_event(conn, session_id, "written", "session_start")
         session = get_written_session(conn, session_id)
     WRITTEN_CONVERSATIONS[session_id] = []
     return session
@@ -998,6 +1028,8 @@ async def post_written_message(session_id: str, body: Message):
         if session_id not in WRITTEN_CONVERSATIONS:
             WRITTEN_CONVERSATIONS[session_id] = []
         WRITTEN_CONVERSATIONS[session_id].append({"role": "user", "content": body.content, "hidden": False})
+        turn_number = sum(1 for m in WRITTEN_CONVERSATIONS[session_id] if m["role"] == "user" and not m.get("hidden"))
+        log_event(conn, session_id, "written", "turn", turn_number)
         result = written_facilitator_reply(session_id, conn)
         if result["feedback"] is not None:
             fields = {"preview": truncate(result["feedback"], 70)}
