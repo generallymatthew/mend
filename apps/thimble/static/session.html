@@ -696,8 +696,21 @@
        the actual vertical scroll/clip instead of silently cutting content
        off with no way to reach it. */
     .live-split .call-layout .call-main{width:100%; max-width:420px; height:100%; max-height:100%; border-radius:20px; overflow-x:hidden; box-shadow:0 24px 60px -16px rgba(23,55,46,.5);}
-    .voice-fab{display:flex;}
+    /* Round FAB removed per explicit ask -- the composer's own mic button
+       (unhidden below) now covers the mobile chat view's voice-memo need
+       directly, so the separate round "Talk to Thimble" entry point into
+       the full avatar/Voice modal is gone too. Base rule stays
+       display:none; markup/JS (voiceFabBtn, the modal open/close wiring)
+       left intact and dormant, same pattern as every other "hidden, not
+       deleted" control in this file -- harmless if ever needed again. */
     .voice-modal-close{display:flex;}
+    /* Composer's own hold-to-dictate mic, unhidden here only -- stays
+       hidden on desktop/tablet where talkMicBtn (inside the now-gone-on-
+       mobile Voice modal) was already the one mic affordance; see this
+       button's own markup comment. `[hidden]` is `!important` globally
+       (see its own rule), so this needs the attribute selector + `!important`
+       to actually win, not just a plain class rule. */
+    .composer-mic-wrap[hidden]{display:flex !important;}
     /* The desktop-pattern nav toggles duplicate what the FAB/modal close
        button now do on mobile -- one way to reach Voice, not two. The
        voice modal's own overflow menu (Start over) isn't needed in this
@@ -974,7 +987,14 @@
                .chat-header-right's own right-aligned button group. -->
           <div class="state-pill" id="statePill">
             <b>Thimble:</b> <span class="state-word" id="stateWord">Listening&hellip;</span>
-            <button id="muteBtn" class="pill-mute-btn" title="Mute"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
+            <!-- Speaker icon, not a mic -- this button mutes BOTH the
+                 employee's mic AND Thimble's own voice together (see its
+                 click handler's own comment on why), and a speaker reads as
+                 "Thimble goes silent," the expectation reported live,
+                 better than a mic ever did. Same single-SVG-plus-toggled-
+                 slash pattern as before, just the shape underneath swapped
+                 -- path lifted from MUTE_ICON_ON's speaker glyph below. -->
+            <button id="muteBtn" class="pill-mute-btn" title="Mute"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4Z"></path><path class="slash" d="M4 4l16 16" style="display:none"></path></svg></button>
           </div>
           <div class="chat-header-right">
             <!-- Mobile-only: the voice modal's own way back to Text,
@@ -1169,10 +1189,15 @@
       <div class="chat-composer">
         <div class="chat-input-row">
           <textarea id="chatInput" rows="2" placeholder="Explain what happened&hellip;"></textarea>
-          <!-- Composer's own hold-to-dictate mic is hidden on this page --
-               explicit call that the hold-dock button (talkMicBtn) works
-               better as the one mic affordance. JS wiring left intact/
-               harmless. -->
+          <button id="chatSendBtn" class="primary send-btn">Send</button>
+          <!-- Composer's own hold-to-dictate mic stays hidden on desktop/
+               tablet -- the hold-dock button (talkMicBtn) is still the one
+               mic affordance there (explicit call, see its own history).
+               On the chat-only mobile layout there's no talkMicBtn in view
+               at all (Voice is a FAB-triggered modal, not part of the chat
+               flow) -- unhidden there via the mobile media query below, per
+               explicit request, positioned after Send rather than before it
+               this time. JS wiring was already intact/harmless either way. -->
           <div class="composer-mic-wrap" hidden>
             <div class="composer-mic-wave" id="composerMicWave"><span></span><span></span><span></span><span></span></div>
             <div class="composer-mic-label" id="composerMicLabel" hidden></div>
@@ -1180,7 +1205,6 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
             </button>
           </div>
-          <button id="chatSendBtn" class="primary send-btn">Send</button>
         </div>
       </div>
     </div>
