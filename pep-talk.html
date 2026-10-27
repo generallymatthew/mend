@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend — pep talk</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --paper:#F6F1E7; --card:#FFFFFF;
+    --accent:#17372E; --accent-soft:#EAF0EC; --border:#DDD4C0;
+    --pink:#F3829A; --pink-soft:#FCEEF0; --pink-ink:#A8405A;
+    --sage:#5F8569; --sage-soft:#E7EEE9;
+    --honey:#FBF2DC; --honey-ink:#8A6A1F;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#EAF0EC; --ink-soft:#A9BDB6; --paper:#132019; --card:#1B2A22;
+      --accent:#8FC9A8; --accent-soft:#223229; --border:#30423A;
+      --pink:#F3829A; --pink-soft:#38232A; --pink-ink:#F0A3B6;
+      --sage:#8FC9A8; --sage-soft:#1F2F27;
+      --honey:#352E1C; --honey-ink:#E3C274;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;}
+  .wrap{max-width:640px; margin:0 auto; padding:40px 20px 80px;}
+
+  .top-row{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:28px;}
+  .label{font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft);}
+  .launchpad-link{font-size:13px; font-weight:700; color:var(--ink-soft); text-decoration:none; white-space:nowrap;}
+  .launchpad-link:hover{color:var(--ink);}
+
+  h1{font-size:28px; font-weight:800; line-height:1.25; margin:0 0 8px;}
+  .sub{font-size:15px; color:var(--ink-soft); margin:0 0 36px;}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px 26px; margin-bottom:18px;}
+  .card h2{font-size:16px; font-weight:800; margin:0 0 10px;}
+  .card p{font-size:15px; line-height:1.6; color:var(--ink-soft); margin:0 0 10px;}
+  .card p:last-child{margin-bottom:0;}
+  .card strong{color:var(--ink); font-weight:700;}
+
+  .card.sage{background:var(--sage-soft); border-color:var(--sage-soft);}
+  .card.sage h2{color:var(--accent);}
+  .card.honey{background:var(--honey); border-color:var(--honey);}
+  .card.honey h2{color:var(--honey-ink);}
+  .card.pink{background:var(--pink-soft); border-color:var(--pink-soft);}
+  .card.pink h2{color:var(--pink-ink);}
+
+  .reframe{display:flex; gap:14px; align-items:flex-start; margin-bottom:14px;}
+  .reframe .col{flex:1; font-size:14px; line-height:1.55;}
+  .reframe .tag{font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; display:block; margin-bottom:4px;}
+  .reframe .boring .tag{color:var(--ink-soft);}
+  .reframe .brave .tag{color:var(--accent);}
+
+  .closer{font-size:17px; font-weight:700; line-height:1.5; text-align:center; margin:40px 0 0; color:var(--ink);}
+  .closer .line{display:block; margin-bottom:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-row">
+    <span class="label">For when it feels foolish</span>
+    <a class="launchpad-link" href="launchpad.html">← launchpad</a>
+  </div>
+
+  <h1>You picked the hard version on purpose.</h1>
+  <p class="sub">Read this when building Mend starts to feel embarrassing. It isn't. Here's why.</p>
+
+  <div class="card sage">
+    <h2>What's actually happening when you feel foolish</h2>
+    <p>You're not embarrassed because the idea is bad. You're embarrassed because the idea is <strong>exposed</strong>. You chose to build something about messy human emotion, conflict, and the moments people feel smallest at work. That subject matter is vulnerable, and building in public around it makes you feel vulnerable too. That's not a signal to stop. That's the cost of working on something that matters.</p>
+  </div>
+
+  <div class="card">
+    <h2>The comparison that's tricking you</h2>
+    <div class="reframe">
+      <div class="col boring">
+        <span class="tag">Boring version</span>
+        A micro-transaction app. Nothing new, very "techy," nothing emotionally at stake. If it flops, it flops quietly. No one laughs, because no one was ever moved by it in the first place.
+      </div>
+      <div class="col brave">
+        <span class="tag">What you're actually building</span>
+        Something about how people feel at work when things go wrong. If it flops, it feels personal, because you put something real into it. That's not a flaw in the plan. That's the whole reason it's worth doing.
+      </div>
+    </div>
+    <p>The boring app would never make you feel foolish. Not because it's safer to build, but because there was never anything of yours in it to expose.</p>
+  </div>
+
+  <div class="card honey">
+    <h2>Why this is the moat, not the liability</h2>
+    <p><strong>Trust is the thing corporations can't credibly build</strong>, and low-stakes-feeling "safe" products don't need trust in the first place. You're building in the one space that actually requires someone to be willing to sit with discomfort instead of engineering around it. That discomfort you feel right now, building it, is the same discomfort the product is designed to hold for someone else. You're not separate from the problem. You understand it because you're willing to feel it.</p>
+  </div>
+
+  <div class="card">
+    <h2>Unusual isn't the same as unfounded</h2>
+    <p>It feels strange because almost nobody is building here. That's not a sign the ground is shaky. It's a sign you're looking at something real that everyone else has walked past.</p>
+    <p><strong>Almost everyone has workplace conflict at some point.</strong> Almost no one gets trained on how to handle it. <strong>People are already turning to generic AI for exactly this</strong>, which means the need isn't hypothetical, it's already showing up, just with no tool built for it. You're not inventing a problem. You're the first one taking it seriously enough to build the worker-first version instead of leaving people to a generic chatbot with no idea what's actually at stake for them.</p>
+    <p>Add in what you know firsthand, what conflict at work actually feels like from the inside, the asymmetry of power in the room, the way HR's neutrality has a structural limit, and this stops looking like a hunch. It's lived experience lining up with a gap nobody's filled. Unusual, yes. Unfounded, no.</p>
+  </div>
+
+  <div class="card pink">
+    <h2>What being brave actually looks like here</h2>
+    <p>It doesn't look like confidence. It looks like building the thing anyway while it still feels exposing. The embarrassment doesn't go away before the work is good; the work gets good while the embarrassment is still there. Feeling foolish isn't a sign you're off track. It's what being early, honest, and ambitious about something emotional feels like from the inside.</p>
+  </div>
+
+  <p class="closer">
+    <span class="line">Easy ideas don't make you feel this way.</span>
+    <span class="line">Keep building.</span>
+  </p>
+
+</div>
+</body>
+</html>
