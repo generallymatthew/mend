@@ -3453,7 +3453,22 @@ function feedSpeechText(fullText, final) {
     // normally happens once the (skipped) audio queue drains -- skip this
     // and avatarState gets stuck on 'thinking' forever, pinning the header
     // on "Thinking..." after every single text reply.
-    if (final && speechCycleGen === replyGen) { avatarState = 'idle'; endReplyCycle(); }
+    //
+    // armTapToTalk() here too, not just the avatarState/endReplyCycle reset
+    // -- this is the one other place a reply cycle ends besides
+    // finishSpeechCycle() (the normal post-TTS path, which already calls
+    // it), and it was missing here. Real bug, found live: ttsMuted persists
+    // across reloads via localStorage (see session-start's own comment on
+    // this same flag), so once it's on, every single reply lands here
+    // instead of finishSpeechCycle -- avatarState reset to 'idle' but
+    // talkMicBtn never got re-armed to 'ready', so it stayed permanently
+    // disabled (stuck showing "Waiting…" with no way to press it) after
+    // the very first muted reply, voice or text.
+    if (final && speechCycleGen === replyGen) {
+      avatarState = 'idle';
+      endReplyCycle();
+      if (liveMode) armTapToTalk();
+    }
     return;
   }
   if (speechCycleGen !== replyGen) return;
