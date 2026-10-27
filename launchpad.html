@@ -60,7 +60,7 @@
 
   <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:4px;">
     <h1>Mend launchpad</h1>
-    <span style="font-size:11.5px; font-weight:700; color:var(--ink-soft);" data-link-count>9 categories</span>
+    <span style="font-size:11.5px; font-weight:700; color:var(--ink-soft);" data-link-count>10 categories</span>
   </div>
   <p style="font-size:12px; color:var(--ink-soft); margin:0 0 18px; line-height:1.5;">Internal draft, pre-legal review — not linked from the public landing page.</p>
 
@@ -186,33 +186,53 @@
       </details>
     </div>
 
+    <!-- Thimble demos -->
+    <div class="card">
+      <details open>
+        <summary class="cat"><span><span class="dot" style="background:var(--pink);"></span><span class="arrow">▸</span>Thimble (demos)</span><span class="count" style="color:var(--pink-ink);">14</span></summary>
+        <div class="sub-desc" style="margin:0 0 7px;">Every standalone Thimble demo/prototype HTML page, in one place — the real running app is under Product → Thimble above</div>
+
+        <details open class="subpanel" style="background:var(--pink-soft);">
+          <summary class="sub" style="color:var(--pink-ink);"><span class="arrow">▸</span>Core flow</summary>
+          <a class="row" href="apps/thimble/static/gate.html" target="_blank">Gate <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/session.html" target="_blank">Session <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/survey.html" target="_blank">Survey <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/conversation_history.html" target="_blank">Conversation history <span class="tag">local file</span></a>
+        </details>
+
+        <details open class="subpanel" style="background:var(--pink-soft);">
+          <summary class="sub" style="color:var(--pink-ink);"><span class="arrow">▸</span>Onboarding</summary>
+          <a class="row" href="apps/thimble/static/onboarding-bubble-placement.html" target="_blank">Bubble placement <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/onboarding-voice-options.html" target="_blank">Voice options <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/listening-options.html" target="_blank">Listening options <span class="tag">local file</span></a>
+        </details>
+
+        <details open class="subpanel" style="background:var(--pink-soft);">
+          <summary class="sub" style="color:var(--pink-ink);"><span class="arrow">▸</span>Avatar / presence exploration</summary>
+          <a class="row" href="http://localhost:8080/intake/static/thimble-states.html" target="_blank" rel="noopener">States — local <span class="tag">:8080</span></a>
+          <a class="row" href="https://mend-mvp.onrender.com/intake/static/thimble-states.html" target="_blank" rel="noopener">States — live <span class="tag" style="color:var(--sage);">render</span></a>
+          <a class="row" href="apps/thimble/static/thimble-expressive-lab.html" target="_blank">Expressive lab <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/thimble-gradient-states-demo.html" target="_blank">Gradient states demo <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/thimble-gradient-colorplay.html" target="_blank">Gradient colorplay <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/thimble-3d-options.html" target="_blank">3D options <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/thimble-3d-talking.html" target="_blank">3D talking <span class="tag">local file</span></a>
+          <a class="row" href="apps/thimble/static/voice-transcript-split.html" target="_blank">Voice/transcript split <span class="tag">local file</span></a>
+        </details>
+      </details>
+    </div>
+
     <!-- QA / internal tools -->
     <div class="card">
       <details open>
-        <summary class="cat"><span><span class="dot" style="background:var(--ink-soft);"></span><span class="arrow">▸</span>QA / internal tools</span><span class="count" style="color:var(--ink-soft);">3</span></summary>
-
-        <details open class="subpanel" style="background:var(--accent-soft);">
-          <summary class="sub" style="color:var(--ink-soft);"><span class="arrow">▸</span>Thimble states</summary>
-          <div class="sub-desc">Every avatar state running live side by side — no mic or real call needed</div>
-          <a class="row" href="http://localhost:8080/intake/static/thimble-states.html" target="_blank" rel="noopener">Local <span class="tag">:8080</span></a>
-          <a class="row" href="https://mend-mvp.onrender.com/intake/static/thimble-states.html" target="_blank" rel="noopener">Live <span class="tag" style="color:var(--sage);">render</span></a>
-        </details>
-        <a class="row" href="apps/classifier/data/review_page.html" target="_blank" style="margin-top:4px;">Classifier — phrase review tool <span class="tag">local file</span></a>
+        <summary class="cat"><span><span class="dot" style="background:var(--ink-soft);"></span><span class="arrow">▸</span>QA / internal tools</span><span class="count" style="color:var(--ink-soft);">1</span></summary>
+        <a class="row" href="apps/classifier/data/review_page.html" target="_blank">Classifier — phrase review tool <span class="tag">local file</span></a>
       </details>
     </div>
 
     <!-- App static pages -->
     <div class="card">
       <details>
-        <summary class="cat"><span><span class="dot" style="background:var(--border);"></span><span class="arrow">▸</span>App static pages (raw files)</span><span class="count" style="color:var(--ink-soft);">10</span></summary>
-        <a class="row" href="apps/thimble/static/session.html" target="_blank">Thimble — session <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/survey.html" target="_blank">Thimble — survey <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/gate.html" target="_blank">Thimble — gate <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/conversation_history.html" target="_blank">Thimble — conversation history <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/listening-options.html" target="_blank">Thimble — listening options <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/thimble-3d-options.html" target="_blank">Thimble — 3D options <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/thimble-3d-talking.html" target="_blank">Thimble — 3D talking <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/voice-transcript-split.html" target="_blank">Thimble — voice/transcript split <span class="tag">local file</span></a>
+        <summary class="cat"><span><span class="dot" style="background:var(--border);"></span><span class="arrow">▸</span>App static pages (raw files)</span><span class="count" style="color:var(--ink-soft);">2</span></summary>
         <a class="row" href="apps/splice/static/index.html" target="_blank">Splice — index <span class="tag">local file</span></a>
         <a class="row" href="apps/splice/static/zoom-panel.html" target="_blank">Splice — zoom panel <span class="tag">local file</span></a>
       </details>
@@ -245,7 +265,7 @@
   </div>
 
   <footer>
-    Internal draft, pre-legal review. Not linked from <code>index.html</code> (the public Pages landing) &mdash; just a bookmark for testing. Open/closed state of each category and sub-group is remembered per browser. "App static pages" and "Design mockups" link to raw files on disk, not necessarily the actual served route &mdash; use the Product section above for the real proxied URLs where one exists.
+    Internal draft, pre-legal review. Not linked from <code>index.html</code> (the public Pages landing) &mdash; just a bookmark for testing. Open/closed state of each category and sub-group is remembered per browser. "App static pages" and "Design mockups" link to raw files on disk, not necessarily the actual served route &mdash; use the Product section above for the real proxied URLs where one exists. Kept current by hand as new pages land, the same way <code>ideas.html</code> is kept current &mdash; whenever a new demo/mockup/prototype page is added anywhere in the repo, it gets a row here too.
   </footer>
 </div>
 <script>
