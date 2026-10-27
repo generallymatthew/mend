@@ -450,7 +450,9 @@ function applyThimbleState(inst, state) {
     d.hidden = !thinkingNow;
     d.style.width = d.style.height = dotSize + 'px';
   });
-  inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
+  inst.mouth.style.transition = talking
+    ? 'top .35s ease, left .35s ease, width .35s ease, border-radius .35s ease'
+    : 'top .35s ease, left .35s ease, width .35s ease, height .35s ease, border-radius .35s ease';
   renderThimbleMouth(inst, state);
 }
 function updateThimbleMotion(inst, now, idleBreathing) {

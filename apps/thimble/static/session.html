@@ -2831,20 +2831,24 @@ function applyThimbleState(inst, state) {
     d.hidden = !thinkingNow;
     d.style.width = d.style.height = dotSize + 'px';
   });
-  // .thimble-mouth's CSS transition (width/height/border-radius, .35s) is
-  // for smooth shape changes BETWEEN states (e.g. thinking's small oval
-  // morphing into talking's bigger one) -- reported live as the talking
-  // mouth feeling
-  // sluggish even after the amplitude-envelope fix above, and this is why:
-  // updateThimbleMotion sets .style.height every animation frame (~16ms)
-  // to track real speech amplitude, but the CSS transition doesn't let it
-  // snap to each new value -- it eases toward it over 350ms, so a stream
-  // of 16ms-apart targets gets rendered as a heavily lagged blend of the
-  // last several, independent of how fast the JS-side envelope itself
-  // reacts. Height is excluded from the transition list while talking so
-  // real-time amplitude updates render immediately; width/border-radius
-  // stay animated for the state-to-state shape morph.
-  inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
+  // .thimble-mouth's CSS transition is for smooth shape changes BETWEEN
+  // states (e.g. thinking's small off-center oval morphing into talking's
+  // bigger centered one). top/left/width/border-radius always transition --
+  // previously this was '' (no transition at all) for every non-talking
+  // state, so every state-to-state switch (idle<->listening<->thinking<->
+  // paused) snapped the mouth's position/shape instantly, read live as a
+  // jarring jump rather than a morph. Height is the one exception while
+  // actually talking: updateThimbleMotion sets .style.height every
+  // animation frame (~16ms) to track real speech amplitude, and the CSS
+  // transition doesn't let it snap to each new value -- it eases toward it
+  // over 350ms, so a stream of 16ms-apart targets gets rendered as a
+  // heavily lagged blend of the last several, independent of how fast the
+  // JS-side envelope itself reacts. So height drops out of the list only
+  // while talking; every other state keeps it, since nothing else drives
+  // height every frame.
+  inst.mouth.style.transition = talking
+    ? 'top .35s ease, left .35s ease, width .35s ease, border-radius .35s ease'
+    : 'top .35s ease, left .35s ease, width .35s ease, height .35s ease, border-radius .35s ease';
   renderThimbleMouth(inst, state);
 }
 

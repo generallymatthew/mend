@@ -566,7 +566,9 @@
     inst.blend.style.opacity = '0';
     var talking = state === 'talking';
     inst.ripple.hidden = !talking;
-    inst.mouth.style.transition = talking ? 'width .35s ease, border-radius .35s ease' : '';
+    inst.mouth.style.transition = talking
+    ? 'top .35s ease, left .35s ease, width .35s ease, border-radius .35s ease'
+    : 'top .35s ease, left .35s ease, width .35s ease, height .35s ease, border-radius .35s ease';
     renderMouth(inst, state);
   }
   function tick(inst, now){
