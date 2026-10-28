@@ -7,6 +7,8 @@ apps/classifier/data/gen_stderr.txt
 .run_logs/
 apps/thimble/survey_responses.jsonl
 apps/thimble/analytics_events.jsonl
+apps/thimble/feedback_alert_state.json
+apps/thimble/feedback_alert_log.jsonl
 apps/thimble/tests/benchmark_results_*.json
 apps/seam/cases.db
 apps/seam/survey_responses.jsonl

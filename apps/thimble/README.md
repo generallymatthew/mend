@@ -42,6 +42,24 @@ MAIL_FROM=...   # optional, defaults to SMTP_USER
 
 This only ever fires for the consent-gated floor tier (harassment/discrimination, retaliation, illegal activity), only after the employee actually says yes. The auto-notify tier (threats/violence, immediate safety risk) is intentionally not wired to any send yet.
 
+## Optional: per-reply feedback alerting
+
+Testers can flag a Thimble reply as unhelpful (thumbs-down) or confusing ("?") directly in the chat UI — see `static/session.html`'s `.fb-pill`/`attachFeedbackUI()`. Each tap appends a structured line to `analytics_events.jsonl` (`session_id`, `turn`, `flag`, `reason` — never message text).
+
+`feedback_alert.py` watches that file for a spike and sends an alert. Unset by default — run it, it just prints what it would send. To actually get emailed, set `FEEDBACK_ALERT_EMAIL` in `.env` (reuses the same `SMTP_*`/`MAIL_FROM` vars as HR notification above — deliberately a different recipient, since this is a product-quality signal, not an employee disclosure):
+
+```
+FEEDBACK_ALERT_EMAIL=you@example.com
+```
+
+Run it once from cron every 15 minutes or so:
+
+```
+*/15 * * * * cd /path/to/apps/thimble && .venv/bin/python3 feedback_alert.py
+```
+
+Defaults to alerting when 3+ down/confused flags land within a 60-minute window, with a 60-minute cooldown between alerts so a sustained spike doesn't re-page every run. Tune with `--threshold`, `--window`, `--cooldown` (all in minutes except threshold, a flag count). `--dry-run` prints without sending or updating alert state — useful for checking what a real run would do. `--loop --interval 60` runs in the foreground on a timer instead of once-and-exit, handy for local testing without wiring up cron.
+
 ## Optional: tester access gate
 
 Unset by default (local dev needs no setup). Set `TESTER_ACCESS_CODE` in `.env` (and on Render, before sending the live URL to anyone) to require a shared passcode before any page or `/api/*` call is served — a lightweight wall against random crawlers/scrapers hitting the paid LLM/voice endpoints, not real per-user auth. A tester without the cookie gets redirected to `/gate` (or a 401 on API calls), enters the code once, and it's remembered via a cookie for 30 days.
