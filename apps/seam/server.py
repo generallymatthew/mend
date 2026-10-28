@@ -123,7 +123,7 @@ CASE_SYSTEM_PROMPTS = {"conflict": SYSTEM_PROMPT, "coaching": COACHING_SYSTEM_PR
 # A router, not a facilitator persona, so it stays inline here rather than
 # in its own reviewable prompt file like the ones above.
 CLASSIFY_SYSTEM_PROMPT = """Decide which one of four kinds of help the manager is asking for, from what they've said so far. Reply with exactly one lowercase word, nothing else:
-conflict -- tension or friction involving their direct report and someone else (a peer, another team, or another of their reports) -- the manager is adjudicating or thinking through a dispute between other people, not delivering feedback themselves.
+conflict -- tension or friction involving their direct report and someone else (a peer, another team, or another of their reports), OR a more diffuse sense that something's off with the team or a relationship even before any specific incident or person is named -- the manager is adjudicating or trying to understand friction or distance between people, not delivering feedback themselves. A manager describing specific observed behavior (people going quiet, less openness, a shift in how the team acts around them) is enough to classify this as conflict even with no named person or incident yet; don't require a clean two-party dispute before routing here.
 coaching -- the manager preparing for or rehearsing a hard performance or conduct conversation THEY need to have with their own direct report -- they themselves are about to deliver the difficult feedback, not mediate between others.
 meeting -- preparing strategy or approach for a meeting they're walking into.
 written -- help answering or drafting a specific message, email, or reply.
