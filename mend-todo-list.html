@@ -82,6 +82,7 @@
   .tag.epli{background:var(--ink); color:var(--paper);}
   .tag.seam{background:var(--sage-soft); color:var(--sage);}
   .tag.pilot{background:var(--accent-soft); color:var(--ink);}
+  .tag.conf{background:var(--pink-soft); color:var(--pink-ink);}
   .sub{display:block; text-align:left; font-size:13.5px; color:var(--ink-soft); margin-top:1px; font-weight:500;}
   code{font-family:'Manrope',sans-serif; background:var(--accent-soft); padding:1px 5px; border-radius:4px; font-size:14.5px;}
   .links{display:flex; gap:7px; flex-wrap:wrap; margin-top:5px;}
@@ -167,11 +168,18 @@
     {id:'t33', tag:'managers', label:"Join First Round's manager Slack community, Lenny's Newsletter community, and EM365", sub:'Named alongside Rands/LeadDev in the Seam outreach doc but not yet joined'},
     {id:'t36', tag:'incubator', label:'Check Knox St. Studios Launch Lab (Durham) for next cohort window and apply', sub:'No open window as of Oct 2026 — last cohort ran Sep-Nov 2025, apps closed Aug 22, 2025. Email info@knoxststudios.org to ask when the next one opens', links:[{text:'Site →', href:'https://www.knoxststudios.org/launch-lab-2025'}]},
     {id:'t37', tag:'incubator', label:'Check RIoT Accelerator Program (Raleigh/Triangle) next cohort window', sub:'For the separate IoT product idea, not Mend — Spring 2026 cohort deadline (Feb 20, 2026) already passed, ran Mar 31-Jun 24, 2026. Zero-equity, no-cost program; runs multiple cohorts/year — check riot.org directly for the next open window', links:[{text:'Site →', href:'https://riot.org/startup-accelerator/'}]},
-    {id:'t38', tag:'grant', when:{verb:'Target', date:'Nov 2, 2026'}, label:'Form an LLC for Mend', sub:"Not required to apply to most grants/accelerators (CED GRO, Launch Chapel Hill, RIoT, American Underground all take pre-entity applicants), but a registered entity is required before any of them can actually cut a check — NC IDEA and most cash grants need it to pay out. Do this before the Nov 2 Google/Anthropic/Microsoft credits deadline and Nov 6 Emergent Ventures/1517 Fund deadlines so money isn't blocked later", links:[{text:'NC Sec. of State LLC filing →', href:'https://www.sosnc.gov/online_services/business_registration'}]}
+    {id:'t38', tag:'grant', when:{verb:'Target', date:'Nov 2, 2026'}, label:'Form an LLC for Mend', sub:"Not required to apply to most grants/accelerators (CED GRO, Launch Chapel Hill, RIoT, American Underground all take pre-entity applicants), but a registered entity is required before any of them can actually cut a check — NC IDEA and most cash grants need it to pay out. Do this before the Nov 2 Google/Anthropic/Microsoft credits deadline and Nov 6 Emergent Ventures/1517 Fund deadlines so money isn't blocked later", links:[{text:'NC Sec. of State LLC filing →', href:'https://www.sosnc.gov/online_services/business_registration'}]},
+    {id:'t39', tag:'conf', when:{verb:'Due', date:'Nov 16, 2026'}, label:'Submit a Config 2027 (Figma) speaker proposal', sub:'Design/dev conference, Pier 80, San Francisco, May 25-27, 2027 — CFP window Oct 19-Nov 16, 2026', links:[{text:'Apply →', href:'https://config.figma.com/call-for-speakers'}]},
+    {id:'t40', tag:'conf', when:{verb:'Due', date:'Dec 31, 2026'}, label:'Submit a Workhuman Live Nashville 2027 speaker proposal', sub:'HR/people-leader conference, Nashville, Apr 26-29, 2027 — pitches the "institutions not people" framing to an HR-buyer audience', links:[{text:'Apply →', href:'https://www.workhumanlive.com/become-a-speaker/'}]},
+    {id:'t41', tag:'conf', when:{verb:'Due', date:'Feb 5, 2027'}, label:'Submit a Workhuman Forum London 2027 speaker proposal', sub:'HR conference, London — same pitch as Workhuman Live Nashville, different region/buyer pool', links:[{text:'Apply →', href:'https://forum.workhuman.com/become-a-speaker/'}]},
+    {id:'t42', tag:'conf', when:{verb:'Due', date:'Dec 10, 2026'}, label:'Submit a UXDX USA 2027 speaker proposal', sub:'Product/UX/eng cross-functional conference, New York, May 10-12, 2027 — pitch the Facilitator/Watcher friction-as-systems-problem angle', links:[{text:'Apply →', href:'https://uxdx.com/speak/'}]},
+    {id:'t43', tag:'conf', label:'Check All Things AI 2027 (Raleigh) for its CFP deadline and submit', sub:'Raleigh Convention Center, Apr 18-20, 2027 — run by the All Things Open team, local to the Triangle. CFP is open ("Submit a talk" live) but no deadline is posted yet — check back', links:[{text:'Site →', href:'https://events.allthingsai.org/events/all-things-ai-2027'}]},
+    {id:'t44', tag:'conf', when:{verb:'Due', date:'Nov 13, 2026'}, label:'Apply to SXSW Pitch 2027 (SaaS, Enterprise & Developer Platforms track)', sub:'Startup pitch competition, Austin, Mar 16-17, 2027 — $225 regular entry fee, early-bird window already closed', links:[{text:'Apply →', href:'https://sxsw.com/pitch/'}]},
+    {id:'t45', tag:'conf', when:{verb:'Due', date:'Jan 31, 2027'}, label:'Apply to South Summit Madrid Startup Competition 2027', sub:'Madrid, Jun 2-4, 2027 — free to apply and attend if selected, any country/stage, 100 finalists get a 3-min stage pitch + investor matchmaking', links:[{text:'Apply →', href:'https://www.southsummit.io/en/content/startup-competition'}]}
   ];
 
-  var TAG_LABELS = {domain:'Domain', managers:'Managers', grant:'Grants', incubator:'Incubators', mvp:'MVP', epli:'EPLI', seam:'Seam', pilot:'Manager User Test'};
-  var GROUP_ORDER = ['domain','mvp','pilot','seam','epli','managers','grant','incubator'];
+  var TAG_LABELS = {domain:'Domain', managers:'Managers', grant:'Grants', incubator:'Incubators', mvp:'MVP', epli:'EPLI', seam:'Seam', pilot:'Manager User Test', conf:'Conferences'};
+  var GROUP_ORDER = ['domain','mvp','pilot','seam','epli','managers','grant','incubator','conf'];
 
   function isDone(id){
     try { return localStorage.getItem('mend-todo-' + id) === '1'; } catch(e){ return false; }

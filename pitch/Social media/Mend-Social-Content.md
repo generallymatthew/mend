@@ -73,7 +73,7 @@ That's the gap I'm building Mend to close.
 
 ### Post 3: The Big Realization: What You Get Blamed For Shapes How You Act
 
-**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always structural misalignment: different goals, different workloads, or processes that were never built to fit together, colliding in one interaction. (Walton & Dutton, "The Management of Interdepartmental Conflict," Administrative Science Quarterly, 1969: https://doi.org/10.2307/2391364) The two people in the friction aren't the only ones who misread it this way: a manager who steps in to settle it usually makes the same mistake too, and solving it for them teaches the team to escalate instead of work it out on their own.
+**Core insight:** Workplace friction is rarely caused by "bad people" or malice. It's almost always structural misalignment: different goals, different workloads, or processes that were never built to fit together, colliding in one interaction. (Walton & Dutton, "The Management of Interdepartmental Conflict," Administrative Science Quarterly, 1969: https://doi.org/10.2307/2391364) A manager who steps in to settle it usually misreads it the same way, and solving it for the team teaches people to escalate instead of work it out themselves.
 
 **We blame bad behavior for what's usually structural misalignment.**
 
@@ -82,21 +82,15 @@ Here's a common scenario in tech:
 - **Role A (feature designer/PM):** measured on launch speed, experimentation velocity, and user engagement.
 - **Role B (core infrastructure engineer):** penalized heavily for system regressions, technical debt, and latency spikes.
 
-Both are talented, well-intentioned, and acting completely rationally based on how their managers evaluate them.
+Both are talented, well-intentioned, and acting rationally based on how their managers evaluate them. The friction shows up when stakes are higher than usual, a tight deadline, a high-visibility launch, and that pressure is what makes the designer assume the engineer is a territorial gatekeeper, and the engineer assume the designer is reckless.
 
-This doesn't happen every time these two interact. It shows up when the stakes are higher than usual, a tight deadline, a high-visibility launch, extra pressure from above, and that pressure is what makes the designer assume the engineer is a territorial gatekeeper with an ego, and the engineer assume the designer is reckless and sloppy.
+In organizational psychology, this is the **actor-observer asymmetry**: we judge our own behavior based on context and constraints, but judge colleagues' behavior based on perceived character flaws. (Jones & Nisbett, 1971; the related Fundamental Attribution Error is Lee Ross, 1977: https://explore.psychsafety.com/n/ross-1977/)
 
-In organizational psychology, this is the **actor-observer asymmetry**: we judge our own behavior based on context and constraints, but we judge our colleagues' behavior based on perceived character flaws. (Jones & Nisbett, "The Actor and the Observer: Divergent Perceptions of the Causes of Behavior," 1971; the related, single-directional Fundamental Attribution Error is Lee Ross, "The Intuitive Psychologist and His Shortcomings," 1977: https://explore.psychsafety.com/n/ross-1977/)
+Most of what reads as ego in a coworker is them reacting to pressure you can't see. If you want to resolve cross-functional friction, stop asking "why are they being so difficult?" Start asking "what pressure are they under that I can't see?"
 
-Most of what reads as ego or unprofessionalism in a coworker is them reacting to pressure you can't see: a deadline, understaffing, a bad week, pressure from their own manager.
+The moment you map the pressure instead of the character, the malice disappears. Here it's a metric; just as often it's a workload, a deadline, or a process bolted together instead of designed to fit. A 1969 study found the same pattern at the organizational level: friction tracks with differentiated goals and task interdependence, not who's in the role.
 
-If you want to resolve cross-functional friction, stop asking "why are they being so difficult?" Start asking "what pressure are they under that I can't see, a metric, a deadline, a process I don't have to deal with?"
-
-The moment you map that pressure instead of their character, the malice disappears. In this designer/engineer example it happens to be a metric. Just as often it's a workload, a deadline, or a process bolted together instead of designed to fit. A 1969 study on interdepartmental conflict found the same thing at the organizational level: friction tracks with differentiated goals and task interdependence, not who's in the role. (Walton & Dutton, 1969: https://doi.org/10.2307/2391364)
-
-Managers default to the same personality read. And even when a manager does see the structural mismatch, settling it for the two people solves one fight and breaks something bigger: it teaches the team that disagreements get resolved by escalation, not by working them out. A manager who mediates every low-stakes dispute trains their team to bring every future one too.
-
-The two people in the room are the only ones who know what the pressure actually feels like from each seat. A manager handing down a verdict skips that step. The teams that get better are the ones where people work out the mismatch themselves, manager out of the room.
+Managers default to the same personality read, and even when they spot the structural mismatch, settling it for the two people solves one fight and breaks something bigger: it trains the team to escalate instead of work things out. The two people in the room are the only ones who know what the pressure feels like from their own seat, a manager handing down a verdict skips that step.
 
 **How Mend helps:** Mend walks each person through their own pressures first, then helps them see the other side's, so the fix targets the real mismatch instead of a personality.
 
@@ -259,6 +253,25 @@ At Mend, we reframe the conversation around **operational calibration:**
 Teams don't need another HR compliance policy. They need private operational scaffolding to turn friction into clarity, reclaim their sprint focus, and stay human in modern workplaces.
 
 **How Mend helps:** Mend turns a vague, personal-sounding conflict into a concrete, written working agreement. That's the actual goal, not forced friendship.
+
+---
+
+### Post 11: Arming Employees Against a Dismissive Employer
+
+**Core insight:** Large employers often relate to employees the way a dismissive-avoidant partner relates to a partner: minimizing needs, deflecting accountability, offering structure without warmth. Attachment theory describes individual psychology, so applying it to an institution here is a working metaphor, not a clinical diagnosis. The mechanism that makes it real at the institutional level has its own research line: institutional betrayal, where an institution fails to prevent or respond to harm it had a duty to address. (Smith & Freyd, "Institutional Betrayal," American Psychologist, 2014: https://doi.org/10.1037/a0037564)
+
+**When an institution keeps minimizing what you raise, the fix isn't getting louder or going quiet. It's changing what you do with the signal.**
+
+Dismissive-avoidant systems bank on one thing: that you'll either escalate until you look difficult, or absorb it until you stop raising it at all. Both outcomes protect the institution, not you. A few things work better, without asking you to go cold:
+
+1. **Name the pattern instead of internalizing it.** "This is institutional minimizing" keeps your read on reality intact. "Maybe I'm overreacting" is what repeated dismissal is designed to produce.
+2. **Separate where you get validated from where you make the ask.** Process the feeling with people who'll actually engage with it: peers, someone outside the org. Keep the ask to the institution itself flat, factual, repeatable. Don't make the channel that keeps dismissing you double as your emotional outlet.
+3. **Document for memory, not leverage.** A written record isn't a case you're building to use against someone. It's what stops you from being talked out of what was actually said, later, by the same institution that dismissed it the first time.
+4. **Decide your exit criteria before you need them.** Dismissive systems rely on indefinite patience. Deciding in advance what "I've raised this enough times with no real response" looks like stops the slow erosion from deciding it for you.
+
+None of this requires becoming someone who doesn't feel the friction. It just stops the institution's dismissiveness from becoming your own self-doubt.
+
+**How Mend helps:** Mend is where you do steps 1 through 3 privately, off the record, before you ever take something back to the institution: naming the pattern, separating the vent from the ask, and turning what happened into a clear, factual record for yourself.
 
 ---
 
@@ -547,6 +560,18 @@ A few things worth knowing before posting any of the above:
 
 ---
 
+## Article Idea Backlog (not yet drafted)
+
+Raw angles to turn into full posts later. Each needs the sourcing pass this file does for everything else before it goes out.
+
+1. **Professionalism as a trade of humanity for profit.** The claim: corporate "professionalism" norms ask each employee to suppress parts of themselves (reactions, needs, honest feedback) so the organization runs smoothly, and that suppression is unpaid labor that benefits the company's bottom line, not the employee. Ties into Post 6's surface-acting research (Hochschild, Grandey) but pushes further into who actually captures the value of that suppression. Needs a source for the economic framing, not just the psychological cost.
+
+2. **Conflict as the nervous system of the corporate body dysregulating.** The claim: workplace conflict isn't a malfunction to route around, it's a signal, the same way nervous system dysregulation is a signal in a person, not noise. Pairs well with Post 5 (friction as kinetic energy) and Post 7 (surveillance kills honesty), but the nervous-system framing needs a legitimate source bridge (organizational behavior research that treats conflict as diagnostic signal, not a polyvagal/individual-nervous-system citation misapplied to an org).
+
+3. **Corporations as dismissive-avoidant in their relationship to employees.** Drafted as Post 11 in Part 1 above, with the attachment-theory framing disclaimed as a metaphor and backed by institutional betrayal research (Smith & Freyd, 2014) instead of a clinical claim.
+
+---
+
 ## Sources & Data Notes
 
 Every citation now lives inline in the post text itself (name, year, and a direct link), right next to the claim it supports, so there's no footnote marker to strip when you copy a post out of this file. This section is just the master list for your own records and fact-checking, not something to paste anywhere.
@@ -570,3 +595,5 @@ Every citation now lives inline in the post text itself (name, year, and a direc
 **9. Surface acting vs. deep acting.** Arlie R. Hochschild, *The Managed Heart: Commercialization of Human Feeling* (1983): https://www.ucpress.edu/books/the-managed-heart/paper. Alicia A. Grandey, *"Emotion Regulation in the Workplace: A New Way to Conceptualize Emotional Labor"* (Journal of Occupational Health Psychology, 2000): https://doi.org/10.1037/1076-8998.5.1.95
 
 **10. Electronic performance monitoring and worker stress.** Danielle M. Ravid, Jolene C. White, David L. Tomczak, Allison F. Miles, & Tara S. Behrend, *"A Meta-Analysis of the Effects of Electronic Performance Monitoring on Work Outcomes"* (Personnel Psychology, 2023, 94 samples, ~23,461 workers). https://gwern.net/doc/sociology/technology/2022-ravid.pdf
+
+**11. Institutional betrayal.** Carly P. Smith & Jennifer J. Freyd, *"Institutional Betrayal"* (American Psychologist, 2014). https://doi.org/10.1037/a0037564
