@@ -1270,10 +1270,11 @@ function newConversation() {
   pendingTurns = null;
   roster = {};
   document.getElementById("thread-header").style.display = "none";
-  document.getElementById("intro").style.display = "flex";
+  document.getElementById("intro").style.display = "none";
   const messagesEl = document.getElementById("messages");
-  messagesEl.style.display = "none";
+  messagesEl.style.display = "flex";
   messagesEl.innerHTML = "";
+  appendBubble(messagesEl, "assistant", "Tell me what's going on.");
   setPanelApplicable(document.getElementById("plan-panel"), false);
   setPanelApplicable(document.getElementById("meeting-plan-panel"), false);
   renderConvoList();
@@ -1631,6 +1632,9 @@ async function sendMessage() {
   document.getElementById("send-btn").disabled = true;
 
   try {
+    // A real person doesn't start typing the instant your message lands --
+    // give Thimble the same beat before the typing indicator appears.
+    await new Promise((r) => setTimeout(r, 700 + Math.random() * 600));
     if (activeConvo) {
       const pending = appendBubble(messagesEl, "assistant", "...", true);
       const body = await sendRealMessage(activeConvo.type, activeConvo.id, text);

@@ -52,7 +52,11 @@ from pydantic import BaseModel
 
 ROOT = Path(__file__).parent
 load_dotenv(ROOT / ".env")
-SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-case-plan-system-prompt.md"
+SYSTEM_PROMPT_FILE = ROOT.parent / (
+    "facilitator-case-plan-system-prompt-minimal.md"
+    if os.environ.get("SEAM_MINIMAL_PROMPT", "").lower() in ("1", "true", "yes")
+    else "facilitator-case-plan-system-prompt.md"
+)
 COACHING_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-manager-coaching-system-prompt.md"
 TONE_CHECK_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-tone-check-system-prompt.md"
 MEETING_STRATEGY_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-meeting-strategy-system-prompt.md"
