@@ -1,5 +1,5 @@
 # Render deploy variant of ../Caddyfile: same path-prefix scheme (Thimble
-# under /intake/, Seam under /manager/), but listens on Render's injected
+# under /intake/, Seam under /seam/), but listens on Render's injected
 # $PORT instead of a fixed local port, and only proxies the apps this
 # deploy actually runs.
 #
@@ -11,14 +11,14 @@
 # Pitch/ demo assets they embed, etc.) are served directly from disk when
 # the request matches an existing file -- no per-page handle block needed
 # as more of these get added. Short aliases (/about, /testers, /story,
-# /manager-story) rewrite to their .html file first.
+# /seam-story) rewrite to their .html file first.
 
 :{$PORT} {
 	handle_path /intake/* {
 		reverse_proxy 127.0.0.1:8420
 	}
 
-	handle_path /manager/* {
+	handle_path /seam/* {
 		reverse_proxy 127.0.0.1:8460
 	}
 
@@ -48,8 +48,8 @@
 		file_server
 	}
 
-	handle /manager-story {
-		rewrite * /manager-story.html
+	handle /seam-story {
+		rewrite * /seam-story.html
 		file_server
 	}
 

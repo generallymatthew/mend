@@ -18,6 +18,27 @@ headings.
 
 ---
 
+## Architecture cleanup
+
+### Consolidate Spool into Seam as one app
+`apps/spool` and `apps/seam` currently run as two separate backend processes
+in production (`deploy/start.sh`): Spool serves the root landing/chooser page
+(`/`), Seam serves the actual manager tool (`/seam/`, renamed from the
+stale `/manager/` path on 2026-10-28). Not intentional — Seam is meant to
+be the one app name for the manager-facing product. Spool should be
+folded into Seam (one FastAPI app, one deploy process) instead of staying
+a separate service.
+- Source: found while testing the live site 2026-10-28 — `LINKS.md` still
+  labels the root URL "Spool," which is accurate today but reflects the
+  split that shouldn't exist.
+- Where it could plug in: `apps/seam/server.py` absorbing Spool's routes;
+  `deploy/start.sh`, `render.yaml`, `Caddyfile`/`render.Caddyfile`, and
+  `LINKS.md` would all need updating to drop the separate `spool` process.
+- Why not active: not yet scheduled — flagged here so it's captured before
+  the testing phase, not lost.
+
+---
+
 ## Narrative / positioning
 
 ### Reframe "professionalism" as human maturity, not human erasure
@@ -353,6 +374,65 @@ recording).
   camera/screen. Doing this for real means a new capture + multimodal
   review pipeline with its own privacy design, not a toggle on what
   exists. Parked, not committed.
+
+### Legal/rights decoder — plain-English handbook, PIP, and NDA translation + statutory circuit breaker
+Two parts: (1) translate obscure handbook language, ambiguous PIP wording, or
+NDA/non-compete clauses into plain English, off the record; (2) a breaker
+that flags when an issue crosses from routine interpersonal friction into a
+labor-rights question (Title VII, retaliation, misclassification,
+constructive dismissal) and surfaces the user's actual options — document
+privately, know your rights — before they say anything further.
+- Source: user-floated idea, 2026-10-28.
+- Where it could plug in: PIP Navigator's translator phase (above) is the
+  closest existing shape, but PIP Navigator's own carve-out says "no legal
+  advice" — this idea runs straight into that boundary and would need its
+  own legal-review pass before touching real users, likely harder than PIP
+  Navigator's own carve-out review.
+- Why not active: unscoped; the safety-floor/no-legal-advice boundary this
+  would need to operate inside hasn't been designed yet.
+
+### Meeting HUD — persistent on-screen tactical cheat sheet during a live external meeting
+A HUD surfacing the techniques already in "Concrete in-meeting circuit
+breakers" (write-don't-speak, physiological sigh, operational questions) as
+glanceable on-screen tripwires during a real meeting happening outside Mend,
+not a prep/practice session.
+- Source: user-floated idea, 2026-10-28.
+- Where it could plug in: tension with two existing ideas needs resolving
+  first, not built independently — distinct from the "Ambient pacing HUD"
+  above, which is explicitly prep/practice-only and deliberately avoids
+  being a live-meeting overlay, and close enough to the rejected "live
+  in-ear coaching during a real meeting" idea (see Ideation section) that
+  the same objections (divided attention, consent/recording concerns, reads
+  as adversarial if the other party learns about it) likely apply even
+  without an AI feeding live lines.
+- Why not active: unscoped; needs the pacing-HUD/rejected-coaching tension
+  resolved before it's buildable.
+
+### Unblockable communication scripts — pre-drafted boundary-setting formulas
+A small library of ready-made phrasings for common boundary situations:
+scope defense ("if we pull Project A into this sprint, Project B's delivery
+date moves two weeks — which trade-off would leadership prefer?") and async
+insulation ("I'll post a bulleted dependency update daily at 9:30 so you have
+visibility without breaking focus time"). Concrete scripts, not just
+technique advice.
+- Source: user-floated idea, 2026-10-28.
+- Where it could plug in: pairs with the standing self-advocacy advice idea
+  above and the Basting Stitch rehearsal flow (see STATUS.md / project
+  memory) — a scripts library the rehearsal flow could pull from.
+- Why not active: unscoped; no script library exists yet, no decision on
+  how many/which situations to cover first.
+
+### Reframe regulation tools as cognitive performance equipment, not wellness
+Positioning note, not a feature: pitch the somatic down-regulation tools
+(physiological sigh, Gimbal) as tactical cognitive-performance equipment —
+"when your heart rate spikes, your prefrontal cortex drops offline and your
+peripheral vision narrows, so you lose your leverage" — rather than
+wellness/mindfulness language.
+- Source: user-floated idea, 2026-10-28.
+- Where it could plug in: copy/positioning for the Gimbal device idea and
+  the in-meeting circuit breakers idea above, not a new feature.
+- Why not active: copy direction only; needs to be applied consistently
+  wherever regulation tools are described, not a one-off rewrite.
 
 ---
 

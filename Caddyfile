@@ -30,7 +30,7 @@
 		reverse_proxy 127.0.0.1:8424
 	}
 
-	handle_path /manager/* {
+	handle_path /seam/* {
 		reverse_proxy 127.0.0.1:8460
 	}
 

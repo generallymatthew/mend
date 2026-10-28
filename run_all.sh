@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs the whole product locally behind one entry point:
 # http://localhost:8080/ -- Spool at the root, Thimble/Suture/
-# post-session/Seam under /intake/, /joint/, /post/, /manager/ (see Caddyfile).
+# post-session/Seam under /intake/, /joint/, /post/, /seam/ (see Caddyfile).
 #
 # Starts all four apps' own uvicorn (each in its own .venv, unmodified) in
 # the background, then Caddy in the foreground. Ctrl-C stops Caddy and

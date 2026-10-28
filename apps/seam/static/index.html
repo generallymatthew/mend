@@ -293,10 +293,10 @@
 
   /* Pre-use tester gate: shown once per browser before anything else is
      interactive (z-index above every other overlay). Merges what used to
-     be two separate steps -- manager-story.html's own "read this first"
+     be two separate steps -- seam-story.html's own "read this first"
      modal and the standalone survey.html -- into one blocking screen
      inside Seam itself, so a tester can't skip past the instructions
-     without landing in survey.html at all (manager-story.html's
+     without landing in survey.html at all (seam-story.html's
      pre-story modal still exists for context on that page, this is the
      actual gate). Submits the same trimmed set of fields survey.html
      posts to /api/survey, just four of its nine questions -- the signal
@@ -312,15 +312,15 @@
     box-shadow: 0 24px 60px rgba(23,55,46,0.32); display: flex; flex-direction: column;
     overflow: hidden;
   }
-  #gate-modal .gate-tabs { display: flex; gap: 4px; padding: 16px 28px 0; }
+  #gate-modal .gate-tabs { display: flex; gap: 4px; padding: 16px 28px 0; position: relative; z-index: 2; }
   #gate-modal .gate-tab {
     flex: 1; font: inherit; font-weight: 700; font-size: 12.5px; color: var(--muted);
-    background: var(--panel-bg); border: none; border-radius: 999px 999px 0 0;
-    padding: 10px 14px 9px; cursor: pointer;
+    background: var(--panel-bg); border: 1px solid var(--border); border-radius: 12px 12px 0 0;
+    padding: 10px 14px 9px; margin-bottom: -1px; cursor: pointer;
   }
-  #gate-modal .gate-tab.sel { background: var(--app-bg); color: var(--ink); }
+  #gate-modal .gate-tab.sel { background: var(--app-bg); color: var(--ink); border-bottom-color: var(--app-bg); }
   #gate-modal .gate-pane[hidden] { display: none; }
-  #gate-modal .gate-head { padding: 22px 28px 18px; border-bottom: 1px solid var(--border); }
+  #gate-modal .gate-head { padding: 22px 28px 18px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; z-index: 1; }
   #gate-modal .gate-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
   #gate-modal .gate-brand .brand-name { font-size: 15px; font-weight: 800; color: var(--ink); }
   #gate-modal .gate-tag {
@@ -990,7 +990,7 @@
 <script>
 // Path-relative, not hardcoded absolute: this page is served standalone
 // at "/" (direct port) but needs to work behind a path-prefixed proxy
-// too (e.g. "/manager/" on the live Render deploy), same class of bug
+// too (e.g. "/seam/" on the live Render deploy), same class of bug
 // documented in ../../thimble/static/session.html. index.html is always
 // served at this app's actual mount root, so location.pathname IS that
 // root already -- no need to strip a trailing segment the way a deeper
@@ -1344,6 +1344,10 @@ function renderStrategyPoints(session) {
 function renderPlan(steps) {
   const container = document.getElementById("plan-steps");
   container.innerHTML = "";
+  if (!steps.length) {
+    container.innerHTML = `<div class="strategy-placeholder">No action items yet -- keep talking it through, or add one below.</div>`;
+    return;
+  }
   steps.forEach((s, i) => {
     container.appendChild(renderStep(s, i));
   });
@@ -1773,7 +1777,7 @@ updateScrim();
 // install prompt as a real button instead of waiting on the omnibox icon.
 // ---------------------------------------------------------------------
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js");
+  navigator.serviceWorker.register(apiPath("/sw.js"));
 }
 const installBtn = document.getElementById("install-btn");
 let deferredInstallPrompt = null;
