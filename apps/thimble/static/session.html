@@ -4167,6 +4167,9 @@ async function sendText() {
   addMessage(text, 'employee');
   logEvent('turn', {mode: 'text', turn: ++analyticsTurnCount});
   setBusy(true);
+  // A real person doesn't start typing the instant your message lands --
+  // give Thimble the same beat before the typing indicator appears.
+  await new Promise(r => setTimeout(r, 700 + Math.random() * 600));
   avatarState = 'thinking';
   const myGen = ++replyGen;
   startInterruptMonitor(myGen);
