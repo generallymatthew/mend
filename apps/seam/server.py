@@ -29,6 +29,7 @@ import secrets
 import sqlite3
 import tempfile
 import time
+import traceback
 import uuid
 from pathlib import Path
 
@@ -357,6 +358,30 @@ def add_seam_plan_steps(conn: sqlite3.Connection, case_id: str, texts: list[str]
 # --- App ---------------------------------------------------------------
 
 app = FastAPI()
+
+
+@app.exception_handler(Exception)
+async def log_unhandled_exception(request: Request, exc: Exception):
+    # Render only captures stdout/stderr as logs (see deploy/start.sh) -- an
+    # unhandled exception here would otherwise surface to a tester as a bare
+    # 500 with zero trace anywhere a human could find it.
+    print(f"[error] unhandled exception on {request.method} {request.url.path}: {exc!r}", flush=True)
+    traceback.print_exc()
+    return JSONResponse(status_code=500, content={"detail": "internal error"})
+
+
+@app.get("/health")
+async def health():
+    checks = {"anthropic_key": client is not None}
+    try:
+        with db() as conn:
+            conn.execute("SELECT 1")
+        checks["db"] = True
+    except Exception as e:
+        checks["db"] = False
+        checks["db_error"] = str(e)
+    healthy = checks["anthropic_key"] and checks["db"]
+    return JSONResponse(status_code=200 if healthy else 503, content={"ok": healthy, **checks})
 
 
 @app.get("/")
