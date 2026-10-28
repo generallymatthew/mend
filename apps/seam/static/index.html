@@ -308,7 +308,7 @@
   }
   #gate-overlay.open { display: flex; }
   #gate-modal {
-    width: 460px; max-width: 100%; background: var(--app-bg); border-radius: 18px;
+    width: 600px; max-width: 100%; background: var(--app-bg); border-radius: 18px;
     box-shadow: 0 24px 60px rgba(23,55,46,0.32); display: flex; flex-direction: column;
     overflow: hidden;
   }
@@ -320,8 +320,8 @@
   }
   #gate-modal .gate-tab.sel { background: var(--app-bg); color: var(--ink); border-bottom-color: var(--app-bg); }
   #gate-modal .gate-pane[hidden] { display: none; }
-  #gate-modal .gate-head { padding: 22px 28px 18px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; z-index: 1; }
-  #gate-modal .gate-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  #gate-modal .gate-head { padding: 16px 28px 12px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; z-index: 1; }
+  #gate-modal .gate-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   #gate-modal .gate-brand .brand-name { font-size: 15px; font-weight: 800; color: var(--ink); }
   #gate-modal .gate-tag {
     display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .04em;
@@ -330,8 +330,9 @@
   }
   #gate-modal h1 { margin: 0 0 8px; font-size: 20px; font-weight: 800; color: var(--ink); line-height: 1.25; }
   #gate-modal .gate-sub { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
-  #gate-modal .gate-body { padding: 20px 28px; }
-  #gate-modal .gate-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; counter-reset: step; }
+  #gate-modal .gate-body { padding: 14px 28px; }
+  #gate-modal .gate-about { margin: 0 0 14px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+  #gate-modal .gate-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: step; }
   #gate-modal .gate-steps > li { counter-increment: step; display: flex; gap: 12px; align-items: flex-start; }
   #gate-modal .gate-steps > li::before {
     content: counter(step); flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
@@ -355,7 +356,7 @@
   #gate-modal .choice input { position: absolute; opacity: 0; pointer-events: none; }
   #gate-modal .gate-error { display: none; font-size: 12.5px; color: #b3261e; margin: -8px 0 14px; }
   #gate-modal .gate-error.show { display: block; }
-  #gate-modal .gate-foot { padding: 18px 28px 24px; border-top: 1px solid var(--border); }
+  #gate-modal .gate-foot { padding: 14px 28px 18px; border-top: 1px solid var(--border); }
   #gate-modal .gate-submit {
     width: 100%; background: var(--ink); color: #fff; font-weight: 700; font-size: 14px;
     padding: 13px; border: none; border-radius: 999px; cursor: pointer; font-family: inherit;
@@ -826,14 +827,15 @@
         <p class="gate-sub">We really appreciate you taking the time to test Seam.</p>
       </div>
       <div class="gate-body">
+        <p class="gate-about">Seam is for managers dealing with conflict on their team. It helps you prep for a hard conversation, get the wording right on a tricky message, or work through tension between two people who report to you -- tell it what's going on and it works out which kind of help fits, then walks you through it.</p>
         <ol class="gate-steps">
           <li>
             <div>
-              <b>A few things to test.</b> <span>Bring Seam a real situation from your team -- it'll work out what kind of help fits. A few examples:</span>
+              <b>A few things to test.</b> <span>Bring Seam a real situation from your team. A few simple ones to try:</span>
               <div class="gate-try-examples">
-                <div class="intro-example">"Prep for a hard conversation with a direct report"</div>
-                <div class="intro-example">"Two of your direct reports aren't getting along"</div>
-                <div class="intro-example">"Help answering a message where the wording really matters"</div>
+                <div class="intro-example">"One of my reports keeps missing deadlines and I need to talk to them about it"</div>
+                <div class="intro-example">"Two people on my team aren't getting along"</div>
+                <div class="intro-example">"I need to tell my manager something they won't want to hear"</div>
               </div>
             </div>
           </li>
