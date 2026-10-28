@@ -1574,10 +1574,11 @@ function showDisambiguation(messagesEl) {
   b.innerHTML = `
     <div>One thing first -- is this...</div>
     <div class="disambig-options">
-      <button type="button" data-type="conflict">Something that happened with someone</button>
+      <button type="button" data-type="conflict">Tension between people on my team</button>
       <button type="button" data-type="coaching">Prepping to talk to one of my own reports</button>
       <button type="button" data-type="meeting">A meeting I'm prepping for</button>
       <button type="button" data-type="written">A message I need to answer</button>
+      <button type="button" data-type="conflict">Not sure yet, help me figure out what's going on</button>
     </div>
   `;
   b.querySelectorAll("button").forEach((btn) => {
