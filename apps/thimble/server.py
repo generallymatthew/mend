@@ -998,6 +998,9 @@ async def llm_chat_completions(request: Request):
     return StreamingResponse(stream_facilitator_reply(messages), media_type="text/event-stream")
 
 
+TEST_SHORT_INTRO = os.environ.get("TEST_SHORT_INTRO", "").lower() in ("1", "true", "yes")
+
+
 @app.get("/api/history")
 async def get_history(session_id: str | None = None):
     """`conversation` lives server-side and survives a reload; the
@@ -1033,9 +1036,14 @@ async def start(payload: dict = None):
     payload = payload or {}
     conversation = get_conversation(payload.get("session_id"))
     if not conversation:
-        greeting = "Hey, what's going on"
-        conversation.append({"role": "assistant", "content": greeting})
-        return {"reply": greeting, "signal": None}
+        kickoff = "(Someone just opened the app. Begin the conversation now with your opening line.)"
+        if TEST_SHORT_INTRO:
+            kickoff += (
+                " (Testing note, not from the user: keep this opening to one short sentence, "
+                "skip the usual disclosures, so this is fast to click through repeatedly.)"
+            )
+        conversation.append({"role": "user", "content": kickoff})
+        return await run_in_threadpool(facilitator_reply, conversation)
     return {"reply": None, "signal": None}
 
 
