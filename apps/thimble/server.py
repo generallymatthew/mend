@@ -1573,8 +1573,14 @@ async def submit_survey(request: Request):
 # session have", "text or voice", "did anyone interrupt" in aggregate without
 # ever carrying what was actually said.
 ANALYTICS_FILE = ROOT / "analytics_events.jsonl"
-VALID_ANALYTICS_EVENTS = {"session_start", "turn", "interrupt", "session_end"}
+VALID_ANALYTICS_EVENTS = {"session_start", "turn", "interrupt", "session_end", "feedback"}
 VALID_ANALYTICS_MODES = {"text", "voice"}
+# "feedback" flags a single reply as unhelpful ("down") or confusing
+# ("confused"), optionally with a one-tap reason slug -- never free text,
+# so this stays within the same "no conversation content" guarantee as
+# every other analytics event (see this file's own comment above).
+VALID_FEEDBACK_FLAGS = {"down", "confused"}
+VALID_FEEDBACK_REASONS = {"too_vague", "didnt_match", "hard_to_follow"}
 _events_sheet = None
 _events_sheet_init_failed = False
 
@@ -1600,8 +1606,8 @@ def get_events_sheet():
         try:
             _events_sheet = spreadsheet.worksheet("events")
         except gspread.WorksheetNotFound:
-            _events_sheet = spreadsheet.add_worksheet(title="events", rows=1000, cols=6)
-            _events_sheet.append_row(["timestamp_utc", "session_id", "event", "mode", "turn"])
+            _events_sheet = spreadsheet.add_worksheet(title="events", rows=1000, cols=7)
+            _events_sheet.append_row(["timestamp_utc", "session_id", "event", "mode", "turn", "flag", "reason"])
     except Exception as e:
         print(f"[analytics] Google Sheets auth/open failed, falling back to local log: {e}", flush=True)
         _events_sheet_init_failed = True
@@ -1624,7 +1630,13 @@ async def submit_analytics_event(request: Request):
     turn = data.get("turn")
     if turn is not None and not isinstance(turn, int):
         return JSONResponse({"error": "invalid turn"}, status_code=400)
-    record = {"ts": time.time(), "session_id": session_id, "event": event, "mode": mode, "turn": turn}
+    flag = data.get("flag")
+    if flag is not None and flag not in VALID_FEEDBACK_FLAGS:
+        return JSONResponse({"error": "invalid flag"}, status_code=400)
+    reason = data.get("reason")
+    if reason is not None and reason not in VALID_FEEDBACK_REASONS:
+        return JSONResponse({"error": "invalid reason"}, status_code=400)
+    record = {"ts": time.time(), "session_id": session_id, "event": event, "mode": mode, "turn": turn, "flag": flag, "reason": reason}
     sheet = get_events_sheet()
     if sheet is not None:
         try:
@@ -1636,6 +1648,8 @@ async def submit_analytics_event(request: Request):
                     event,
                     mode or "",
                     turn if turn is not None else "",
+                    flag or "",
+                    reason or "",
                 ],
             )
         except Exception as e:

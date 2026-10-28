@@ -172,6 +172,69 @@
      glow pulsing behind Thimble (set via JS's own opacity/scale breathe,
      see updateThimbleMotion) instead of a band sweeping outward. */
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
+  /* Listening's "I heard that" cue -- a soft blurred glow pulse, prototyped
+     in apps/thimble/static/thimble-expressive-lab.html to replace the old
+     hearingRipplePolygon/clip-path ear-ripple below, which was explicitly
+     rejected live ("i hate that ripple it doesnt look like an organic
+     ripple and never has") even after a full tuning pass (see
+     thimble-states.html's old ripple-tuning panel -- amplitude, spatial
+     reach, trailing oscillations, roundness, settle speed, all dialed in,
+     still rejected). The problem was the technique itself (a faceted
+     N-point polygon outline), not any parameter value -- blur hides the
+     underlying geometry instead of tracing it as a crisp outline, same
+     reason .thimble-ripple above (talking's glow) never drew this
+     complaint. One-shot: scale/opacity animate out from nothing and back
+     to nothing, so no visibility toggling needed beyond the .pulse class. */
+  .thimble-listen-glow{position:absolute; inset:0; border-radius:50%; background:#b0ded1; filter:blur(16px); opacity:0; z-index:-1; pointer-events:none;}
+  @keyframes thimble-listen-pulse{
+    0%{transform:scale(1); opacity:0;}
+    18%{opacity:.5;}
+    100%{transform:scale(1.55); opacity:0;}
+  }
+  .thimble-listen-glow.pulse{animation:thimble-listen-pulse 1.1s ease-out;}
+  /* Squash & stretch on every state landing, prototyped in the same lab
+     page -- confirmed-good at 50% strength (the original fixed amounts
+     below are already halved from the lab's "too cartoony" 100% baseline).
+     Lives on .thimble-avatar (no inline transform of its own -- core
+     carries lean, ring carries nod/breathe/wiggle -- same reasoning as
+     thimble-core's own split-out comment above) so this keyframe never
+     fights per-frame JS writes to the same property. One-shot: the class
+     is added then removed right after, so it can retrigger next time. */
+  @keyframes thimble-squash-pulse{
+    0%{transform:scale(1,1);}
+    28%{transform:scale(1.05,.93);}
+    58%{transform:scale(.97,1.035);}
+    100%{transform:scale(1,1);}
+  }
+  .thimble-avatar.squash-pulse{animation:thimble-squash-pulse .42s cubic-bezier(.32,.9,.38,1);}
+  /* Anticipation: a brief inward "gather" the instant listening ends and
+     thinking begins -- telegraphs that Thimble noticed before the color/
+     shape lerp even finishes, instead of reading as purely reactive. Fires
+     alongside the state change, not before it (unlike the lab's version,
+     which delays the actual state flip by ~160ms) -- inserting an
+     artificial delay into this app's real turn-handling flow risked
+     interacting with its AbortController/interrupt-monitor timing, which
+     the lab's standalone demo doesn't have to worry about. */
+  @keyframes thimble-anticipate{
+    0%{transform:scale(1);}
+    100%{transform:scale(.95);}
+  }
+  .thimble-avatar.anticipating{animation:thimble-anticipate .16s ease-out forwards;}
+  /* Backchannel ack: a quick "mhm" double-nod fired on a detected
+     mid-utterance pause (see maybeFireBackchannel below), distinct from
+     the continuous listening nod and from the loud-input glow pulse above
+     -- this one fires on a pause, not on volume. Lives on its own wrapper
+     (not .thimble-core, which already carries the lean transform, and not
+     .thimble-ring, which carries per-frame nod/breathe/wiggle) so it
+     composes with both instead of fighting either. */
+  .thimble-backchannel{position:absolute; inset:0;}
+  @keyframes thimble-backchannel-nod{
+    0%,100%{transform:translateY(0);}
+    30%{transform:translateY(6%);}
+    55%{transform:translateY(-2%);}
+    80%{transform:translateY(3%);}
+  }
+  .thimble-backchannel.nodding{animation:thimble-backchannel-nod .5s ease-out;}
   /* Contact shadow -- a flat ellipse on the floor below Thimble, as if lit
      from directly above and hovering, not resting on it. A direct child of
      .thimble-avatar (not .thimble-core), so it never leans/rotates with
@@ -485,6 +548,29 @@
   .chat-bubble{padding:12px 16px; border-radius:16px; font-size:15.5px; line-height:1.6; white-space:pre-wrap; max-width:80%;}
   .chat-bubble.mine{background:var(--accent); color:var(--paper); border-bottom-right-radius:4px;}
   .chat-bubble.theirs{background:var(--paper); color:var(--ink); border-bottom-left-radius:4px;}
+  /* Per-reply feedback (thumbs-down / "confused") -- hover-reveal pill
+     docked to the bubble's own corner, same look as session.html's design
+     review mockup (Option B's UI). Hidden by default so the transcript
+     stays clean; a hover reveals it on desktop, and tapping the bubble
+     itself toggles the same reveal for touch, where :hover never fires.
+     Tapping an icon fires the bare flag event immediately (so the signal
+     lands even if the tester stops there), then progressively discloses a
+     row of one-tap reason chips -- no free text, nothing conversational,
+     see logEvent('feedback', ...) at its call sites for exactly what's
+     sent. */
+  .chat-bubble-wrap{position:relative;}
+  .fb-pill{position:absolute; bottom:-12px; right:-6px; display:flex; gap:4px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:3px; box-shadow:0 2px 6px rgba(23,55,46,.14); opacity:0; visibility:hidden; transition:opacity .15s ease; z-index:2;}
+  .chat-bubble-wrap:hover .fb-pill, .fb-pill.fb-shown{opacity:1; visibility:visible;}
+  .fb-btn{width:24px; height:24px; border:none; background:transparent; border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-soft); font-size:13px; font-weight:700; transition:all .12s ease;}
+  .fb-btn svg{width:13px; height:13px;}
+  .fb-btn:hover{background:var(--accent-soft); color:var(--ink);}
+  .fb-btn.fb-down.fb-active{background:#FBEAE7; color:#B3473A;}
+  .fb-btn.fb-confused.fb-active{background:#FBF1E0; color:#A6782E;}
+  .fb-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; max-width:280px;}
+  .fb-chip{font-size:12px; font-weight:600; padding:5px 10px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--ink-soft); cursor:pointer;}
+  .fb-chip:hover{border-color:var(--ink-soft); color:var(--ink);}
+  .fb-toast{display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; font-weight:600; color:var(--ink-soft); background:var(--accent-soft); padding:5px 9px; border-radius:999px;}
+  .fb-extra{margin-top:2px;}
   .chat-typing{display:flex; gap:5px; padding:14px 16px; border-radius:14px; border-bottom-left-radius:4px; background:var(--paper); align-self:flex-start;}
   .chat-typing span{width:7px; height:7px; border-radius:50%; background:#17372E66; animation:thimble-dot 1.2s ease-in-out infinite;}
   .chat-typing span:nth-child(2){animation-delay:.2s;}
@@ -1033,15 +1119,18 @@
             <div class="avatar-row">
               <div class="thimble-avatar" id="thimbleAvatar">
                 <div class="thimble-shadow" id="thimbleShadow"></div>
-                <div class="thimble-core" id="thimbleCore">
-                  <div class="thimble-ripple" id="thimbleRippleA" hidden></div>
-                  <div class="thimble-ring" id="thimbleRing">
-                    <div class="thimble-body" id="thimbleBody">
-                      <div class="thimble-blend" id="thimbleBlend"></div>
-                      <div class="thimble-brain-dot" id="thimbleDotA" style="background:#F3829A;" hidden></div>
-                      <div class="thimble-brain-dot" id="thimbleDotB" style="background:#b0ded1;" hidden></div>
-                      <div class="thimble-brain-dot" id="thimbleDotC" style="background:#A3CFE0;" hidden></div>
-                      <div class="thimble-mouth" id="thimbleMouth"></div>
+                <div class="thimble-backchannel" id="thimbleBackchannel">
+                  <div class="thimble-core" id="thimbleCore">
+                    <div class="thimble-ripple" id="thimbleRippleA" hidden></div>
+                    <div class="thimble-listen-glow" id="thimbleListenGlow"></div>
+                    <div class="thimble-ring" id="thimbleRing">
+                      <div class="thimble-body" id="thimbleBody">
+                        <div class="thimble-blend" id="thimbleBlend"></div>
+                        <div class="thimble-brain-dot" id="thimbleDotA" style="background:#F3829A;" hidden></div>
+                        <div class="thimble-brain-dot" id="thimbleDotB" style="background:#b0ded1;" hidden></div>
+                        <div class="thimble-brain-dot" id="thimbleDotC" style="background:#A3CFE0;" hidden></div>
+                        <div class="thimble-mouth" id="thimbleMouth"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2586,6 +2675,7 @@ function thimbleInstance(prefix, size) {
     blend: document.getElementById(prefix + 'Blend'),
     mouth: document.getElementById(prefix + 'Mouth'),
     rippleA: document.getElementById(prefix + 'RippleA'),
+    listenGlow: document.getElementById(prefix + 'ListenGlow'),
     dotA: document.getElementById(prefix + 'DotA'),
     dotB: document.getElementById(prefix + 'DotB'),
     dotC: document.getElementById(prefix + 'DotC'),
@@ -2697,49 +2787,12 @@ function domeWobbleRadius(domeFactor, lvl) {
   const rimY = 50 - (14 + 3 * lvl) * domeFactor;
   return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
 }
-// "Hearing you": a quick, small ripple fired from where each ear would sit
-// on the dome (roughly upper-left/upper-right) the instant the employee's
-// own mic level crosses a threshold -- prototyped and tuned side by side
-// with the plain dome wobble in thimble-states.html before landing here.
-// Modeled like a stone dropped in water: a wavefront starts at each ear and
-// travels both ways around the perimeter at once, fully settled by
-// HEARING_RIPPLE_DURATION. Deliberately subtle (small amplitude, short
-// life) -- the point is a quick confirming flicker you catch out of the
-// corner of your eye, not a show, and the goal is for this alone to read as
-// "it heard that" clearly enough to eventually replace the You-tile's own
-// glow as that confirmation.
+// "Hearing you": a quick glow pulse (see .thimble-listen-glow's CSS
+// comment) fired from the body the instant the employee's own mic level
+// crosses this threshold. Used to be a polygon clip-path ripple built from
+// the constants/functions this comment used to introduce -- replaced
+// 2026-10-27, see .thimble-listen-glow's own comment for why.
 const HEARING_PING_THRESHOLD = 0.22;
-const HEARING_RIPPLE_DURATION = 2.2; // seconds for each front to cross its own far half of the body
-const HEARING_RIPPLE_AMP = 32; // peak ripple height, % of radius -- 3.5/9/18 all read as too small live
-const HEARING_RIPPLE_K = 5; // how many trailing oscillations ride behind the front
-const HEARING_RIPPLE_AGE_DECAY = 2.2; // how fast a ring settles once the front has passed it
-const HEARING_RIPPLE_SPATIAL_DECAY = 1.3; // how much weaker farther-out rings are
-const HEARING_EAR_OFFSET = 0.85; // radians either side of straight-up
-const HEARING_EAR_ORIGINS = [-Math.PI / 2 - HEARING_EAR_OFFSET, -Math.PI / 2 + HEARING_EAR_OFFSET];
-function hearingRippleAt(d, frontPos) {
-  if (d > frontPos) return 0;
-  const age = frontPos - d;
-  const spatialDecay = Math.exp(-d / HEARING_RIPPLE_SPATIAL_DECAY);
-  const ageDecay = Math.exp(-age * HEARING_RIPPLE_AGE_DECAY);
-  return HEARING_RIPPLE_AMP * spatialDecay * ageDecay * Math.sin(age * HEARING_RIPPLE_K);
-}
-function hearingRipplePolygon(pingP) {
-  const N = 96;
-  const frontPos = pingP * Math.PI; // 0 (at an ear) -> PI (the point opposite it)
-  const pts = [];
-  for (let i = 0; i < N; i++) {
-    const th = (i / N) * Math.PI * 2;
-    let ripple = 0;
-    for (const origin of HEARING_EAR_ORIGINS) {
-      let d = th - origin;
-      d = Math.abs(Math.atan2(Math.sin(d), Math.cos(d))); // unsigned angular distance, [0, PI]
-      ripple += hearingRippleAt(d, frontPos);
-    }
-    const r = 50 + ripple;
-    pts.push(`${(50 + r * Math.cos(th)).toFixed(2)}% ${(50 + r * Math.sin(th)).toFixed(2)}%`);
-  }
-  return `polygon(${pts.join(',')})`;
-}
 const thimbleBig = thimbleInstance('thimble', 200);
 const thimbleMini = thimbleInstance('thimbleMini', 48);
 
@@ -2818,7 +2871,16 @@ function renderThimbleMouth(inst, state) {
 
 function applyThimbleState(inst, state) {
   if (state === inst.renderedState) return;
+  const prevState = inst.renderedState;
   inst.renderedState = state;
+  // Anticipation: only on the one transition that matters most (Thimble
+  // "noticing you stopped"), not every state change -- see this class's
+  // own CSS comment for why it doesn't delay anything.
+  if (inst.el && prevState === 'listening' && state === 'thinking') {
+    inst.el.classList.remove('anticipating');
+    void inst.el.offsetWidth;
+    inst.el.classList.add('anticipating');
+  }
   const shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
   inst.core.style.transform = shape.lean;
   inst.body.style.animation = shape.anim;
@@ -2874,6 +2936,14 @@ function applyThimbleState(inst, state) {
     ? 'top .35s ease, left .35s ease, width .35s ease, border-radius .35s ease'
     : 'top .35s ease, left .35s ease, width .35s ease, height .35s ease, border-radius .35s ease';
   renderThimbleMouth(inst, state);
+  // Squash & stretch on landing -- confirmed-good at 50% strength in the
+  // lab (thimble-expressive-lab.html), already baked into the keyframe's
+  // own scale amounts above rather than a tunable slider here.
+  if (inst.el) {
+    inst.el.classList.remove('squash-pulse');
+    void inst.el.offsetWidth;
+    inst.el.classList.add('squash-pulse');
+  }
 }
 
 // Active-listening wobble/lean/nod. The outline itself (this function's
@@ -3033,24 +3103,22 @@ function updateThimbleMotion(inst, now, level, listening) {
     inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
     const domePhase = inst.wobblePhase;
     const domeFactor = (1 + Math.cos(domePhase * 2 * Math.PI)) / 2;
-    inst.body.style.clipPath = 'none';
     inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
-    // Ear ripple: only while actually listening (not idle -- idle has no
-    // real input to react to), and never while muted -- arming a ripple off
-    // a level that isn't really your mic, or letting one already in flight
-    // keep playing after you mute, would read as a bug ("it heard me, but
-    // I'm muted?"). See hearingRipplePolygon's own comment for the motion
-    // itself; this just arms/advances/clears inst.pingT, same pattern as
-    // the thimble-states.html prototype this was built against.
-    if (avatarState === 'listening') {
+    // "I heard that" cue: only while actually listening (not idle -- idle
+    // has no real input to react to), and never while muted -- arming this
+    // off a level that isn't really your mic, or letting one already in
+    // flight play after you mute, would read as a bug ("it heard me, but
+    // I'm muted?"). See .thimble-listen-glow's own CSS comment for why
+    // this is a blur pulse now, not the old clip-path polygon.
+    if (avatarState === 'listening' && inst.listenGlow) {
       const wasLoud = inst._hearingLoud || false;
       const isLoud = !micMuted && inst.lvl > HEARING_PING_THRESHOLD;
-      if (isLoud && !wasLoud) inst.pingT = 0;
+      if (isLoud && !wasLoud) {
+        inst.listenGlow.classList.remove('pulse');
+        void inst.listenGlow.offsetWidth;
+        inst.listenGlow.classList.add('pulse');
+      }
       inst._hearingLoud = isLoud;
-      if (micMuted) inst.pingT = 1;
-      else inst.pingT = inst.pingT == null ? 1 : inst.pingT + dt / HEARING_RIPPLE_DURATION;
-      const pingP = Math.min(1, inst.pingT);
-      if (pingP < 1) inst.body.style.clipPath = hearingRipplePolygon(pingP);
     }
     if (speaking) {
       // Single soft glow behind Thimble while talking, not two expanding
@@ -3264,12 +3332,35 @@ function updateStatePill() {
   // as-is since Thimble itself keeps working regardless of mic mute.
   const mutedOverride = micMuted && (avatarState === 'idle' || avatarState === 'listening' || avatarState === 'ready');
   const word = mutedOverride ? 'Muted' : (STATE_WORDS[avatarState] || 'Listening…');
+  // chatTyping's own visibility is computed unconditionally, BEFORE the
+  // word-unchanged early-return below -- it depends on activeSpeechBubble,
+  // not just avatarState/word, and activeSpeechBubble can flip (e.g. the
+  // greeting's bubble getting created) without the word changing at all.
+  // Gating this the same way stateWordEl/lastStateWord are gated meant it
+  // only ever got recomputed on a word change, so a change to
+  // activeSpeechBubble landing in between two word changes was invisible
+  // until the next one -- reported live as "two empty speech bubbles"
+  // staying up together through all of 'thinking' instead of the dots
+  // disappearing the moment the real bubble existed. See
+  // !!activeSpeechBubble's own reasoning below.
+  const wasTypingHidden = chatTyping.hidden;
+  // !!activeSpeechBubble: the greeting (start()'s voice branch) creates its
+  // reply bubble eagerly and empty, synced to fill in as the audio plays
+  // (activeSpeechBubble is set the moment that bubble exists), unlike a
+  // normal reply's bubble, which only gets created lazily once the first
+  // streamed partial actually arrives. Without this check, that empty
+  // greeting bubble and these generic typing dots both show at once during
+  // 'thinking', since both are legitimately representing "nothing to show
+  // yet," just via two different mechanisms. A real reply's cycle never has
+  // this problem (activeSpeechBubble stays null throughout its own
+  // 'thinking' phase, only getting set after streaming fully resolves), so
+  // this only ever changes behavior for the one path that actually had the
+  // bug.
+  chatTyping.hidden = !BUSY_STATES.includes(avatarState) || avatarState === 'talking' || !!activeSpeechBubble;
   if (word === lastStateWord) return;
   lastStateWord = word;
   stateWordEl.textContent = word;
   chatStatusEl.textContent = CHAT_STATUS[avatarState] || CHAT_STATUS.idle;
-  const wasTypingHidden = chatTyping.hidden;
-  chatTyping.hidden = !BUSY_STATES.includes(avatarState) || avatarState === 'talking';
   // The typing dots sit at the very end of the thread, same as any other
   // message -- but unlike addMessage()/the streaming callback, nothing
   // scrolled to reveal THIS one specifically, since toggling .hidden here
@@ -3356,6 +3447,14 @@ function animateAvatar(now) {
   updateThimbleMotion(thimbleBig, t, level, listening);
   const employeeLit = recording && level > VAD_THRESHOLD;
   updateEmployeeMotion(t, level, employeeLit);
+  // Backchannel ack: unconditional on recording+listening+unmuted, not
+  // gated by liveMode/deepgramEnabled/holdControlled the way checkVad is
+  // below -- this is a cosmetic "still listening" nod, not anything that
+  // ends a turn, so it should work the same in every recording mode.
+  // Resets (not just skips) the moment any of that stops being true, so a
+  // pause detected mid-turn never leaks into the next one.
+  if (recording && avatarState === 'listening' && !micMuted) checkBackchannel(level, t);
+  else resetBackchannel();
   if (recording) {
     micIndicatorDot.classList.toggle('lit', employeeLit);
     employeeTile.classList.toggle('lit', employeeLit);
@@ -3813,7 +3912,7 @@ function formatGreeting(text) {
 // talking rather than racing ahead of it. div.fullText is the finalize
 // target either way -- the complete value to snap to once the speech (or,
 // for a non-syncToSpeech caller, the reveal timer) is done.
-function addMessage(text, cls, animate, onDone, syncToSpeech) {
+function addMessage(text, cls, animate, onDone, syncToSpeech, turnNum) {
   const div = document.createElement('div');
   div.className = 'msg ' + cls;
   div.textContent = (animate || syncToSpeech) ? '' : text;
@@ -3827,10 +3926,25 @@ function addMessage(text, cls, animate, onDone, syncToSpeech) {
   who.className = 'chat-who';
   who.textContent = mine ? 'You' : 'Thimble';
   wrap.appendChild(who);
-  const bubble = document.createElement('div');
-  bubble.className = 'chat-bubble ' + (mine ? 'mine' : 'theirs');
-  bubble.textContent = (animate || syncToSpeech) ? '' : text;
-  wrap.appendChild(bubble);
+  let bubble;
+  if (mine) {
+    bubble = document.createElement('div');
+    bubble.className = 'chat-bubble mine';
+    bubble.textContent = (animate || syncToSpeech) ? '' : text;
+    wrap.appendChild(bubble);
+  } else {
+    // Thimble replies get a feedback pill, so the bubble sits inside its
+    // own positioning wrapper (.chat-bubble-wrap) instead of going
+    // straight into .chat-msg-wrap -- see attachFeedbackUI().
+    const bubbleWrap = document.createElement('div');
+    bubbleWrap.className = 'chat-bubble-wrap';
+    bubble = document.createElement('div');
+    bubble.className = 'chat-bubble theirs';
+    bubble.textContent = (animate || syncToSpeech) ? '' : text;
+    bubbleWrap.appendChild(bubble);
+    attachFeedbackUI(bubbleWrap, turnNum != null ? turnNum : null);
+    wrap.appendChild(bubbleWrap);
+  }
   chatThreadInner.insertBefore(wrap, chatTyping);
   chatThread.scrollTop = chatThread.scrollHeight;
   div.chatWrap = wrap;
@@ -3840,6 +3954,65 @@ function addMessage(text, cls, animate, onDone, syncToSpeech) {
   else if (animate) revealMessageText(div, text, onDone);
   else if (onDone) onDone();
   return div;
+}
+
+// Builds the hover/tap-reveal feedback pill docked to a Thimble bubble's
+// corner (thumbs-down / "?"), and wires its progressive disclosure: a tap
+// fires the bare flag right away, then expands one-tap reason chips.
+// Nothing here ever sends message text -- see logEvent's own comment.
+const FB_REASON_CHIPS = [
+  {slug: 'too_vague', label: 'Too vague'},
+  {slug: 'didnt_match', label: "Didn't match my situation"},
+  {slug: 'hard_to_follow', label: 'Hard to follow'},
+];
+function attachFeedbackUI(bubbleWrap, turnNum) {
+  const pill = document.createElement('div');
+  pill.className = 'fb-pill';
+  const downBtn = document.createElement('button');
+  downBtn.className = 'fb-btn fb-down';
+  downBtn.title = "Didn't like this";
+  downBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 14V4M2 9h3v9a1 1 0 0 0 1 1h1.5l1 4 5.5-5.5 2.5-.5a2 2 0 0 0 1.5-2l-1-5a2 2 0 0 0-2-2h-5" transform="rotate(180 12 12)"/></svg>';
+  const confusedBtn = document.createElement('button');
+  confusedBtn.className = 'fb-btn fb-confused';
+  confusedBtn.title = 'This confused me';
+  confusedBtn.textContent = '?';
+  pill.appendChild(downBtn);
+  pill.appendChild(confusedBtn);
+  const extra = document.createElement('div');
+  extra.className = 'fb-extra';
+  bubbleWrap.appendChild(pill);
+  bubbleWrap.appendChild(extra);
+
+  function pickFlag(flag, btn) {
+    const alreadyActive = btn.classList.contains('fb-active');
+    [downBtn, confusedBtn].forEach((b) => b.classList.remove('fb-active'));
+    extra.innerHTML = '';
+    if (alreadyActive) return; // second tap just closes the chips back up
+    btn.classList.add('fb-active');
+    logEvent('feedback', {turn: turnNum, flag});
+    const chips = document.createElement('div');
+    chips.className = 'fb-chips';
+    FB_REASON_CHIPS.forEach(({slug, label}) => {
+      const chip = document.createElement('button');
+      chip.className = 'fb-chip';
+      chip.textContent = label;
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        logEvent('feedback', {turn: turnNum, flag, reason: slug});
+        extra.innerHTML = '<div class="fb-toast">✓ Thanks — logged</div>';
+      });
+      chips.appendChild(chip);
+    });
+    extra.appendChild(chips);
+  }
+  downBtn.addEventListener('click', (e) => { e.stopPropagation(); pickFlag('down', downBtn); });
+  confusedBtn.addEventListener('click', (e) => { e.stopPropagation(); pickFlag('confused', confusedBtn); });
+
+  // :hover reveals the pill on desktop; touch has no hover, so tapping
+  // the bubble itself toggles the same 'fb-shown' class. stopPropagation
+  // on the pill's own clicks (above) keeps picking a flag from also
+  // re-toggling this.
+  bubbleWrap.addEventListener('click', () => pill.classList.toggle('fb-shown'));
 }
 
 // Word-by-word reveal for addMessage()'s animate flag -- see its own
@@ -3996,7 +4169,7 @@ async function sendText() {
       // First delta creates the bubble (same addMessage() every other
       // reply uses); later ones just update its text in place, same
       // pattern the live voice-transcript bubble already uses.
-      if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator', false, null, willSpeak); return; }
+      if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator', false, null, willSpeak, analyticsTurnCount); return; }
       replyBubble.fullText = partial;
       if (!willSpeak) {
         replyBubble.textContent = partial;
@@ -4122,6 +4295,25 @@ let vadCalibrateMax = 0;
 let vadThreshold = VAD_THRESHOLD;
 let vadTurnStartedAt = 0;
 let vadBlipSince = null;
+// Backchannel ack: an independent, much shorter pause detector than the
+// turn-ending one above -- its job is to catch an ordinary mid-sentence
+// breath and fire a quick "mhm" nod, not to end the turn, so it runs
+// unconditionally during any real recording (Deepgram or raw-VAD mode,
+// push-to-talk or live) rather than being gated by the same
+// liveMode/deepgramEnabled/holdControlled checks checkVad's call site
+// uses. Deliberately separate state from vadSpeaking/vadSilenceSince above
+// -- sharing those would mean a fired backstop/blip reset in checkVad
+// could silently reset this too, and vice versa; two independent small
+// state machines reading the same `level` is simpler to reason about than
+// one shared one serving two different jobs. BACKCHANNEL_PAUSE_MS is well
+// under VAD_SILENCE_MS (1100) so the nod reads as "still listening,
+// go on" well before any real turn-ending silence would fire.
+const BACKCHANNEL_PAUSE_MS = 450;
+const BACKCHANNEL_MIN_SPEECH_MS = 600; // require some real speech first -- otherwise it'd nod the instant listening starts, before anything was said
+let bcSpeaking = false;
+let bcSpeechStarted = null;
+let bcSilenceSince = null;
+let bcFiredThisPause = false;
 // Deepgram-path backstop: checkVad (and its own blip backstop above) is
 // skipped entirely when deepgramEnabled -- Deepgram does its own
 // server-side endpointing instead (see DEEPGRAM_URL's utterance_end_ms in
@@ -4240,6 +4432,49 @@ function checkVad(level, now) {
     vadSilenceSince = null;
     vadBlipSince = now; // backstop: if silence just continues from here, stop anyway above
   }
+}
+
+// Fires the "mhm" nod (see .thimble-backchannel's CSS comment) on a quick
+// one-shot class toggle -- harmless to call repeatedly, it just retriggers
+// the animation from the top each time.
+function fireBackchannelNod() {
+  const el = document.getElementById('thimbleBackchannel');
+  if (!el) return;
+  el.classList.remove('nodding');
+  void el.offsetWidth;
+  el.classList.add('nodding');
+}
+
+// Backchannel pause detector -- see bcSpeaking/BACKCHANNEL_PAUSE_MS's own
+// declarations above for why this is independent of checkVad rather than
+// sharing its state. Reuses vadThreshold (calibrated by checkVad when raw-
+// VAD mode is active; just VAD_THRESHOLD's own default otherwise) as a
+// reasonable "is this actually speech" bar rather than inventing a second
+// threshold to tune.
+function checkBackchannel(level, now) {
+  if (level > vadThreshold) {
+    if (!bcSpeaking) { bcSpeaking = true; bcSpeechStarted = now; }
+    bcSilenceSince = null;
+    bcFiredThisPause = false;
+    return;
+  }
+  if (!bcSpeaking) return;
+  if (bcSilenceSince === null) { bcSilenceSince = now; return; }
+  if (bcFiredThisPause) return;
+  if (now - bcSilenceSince < BACKCHANNEL_PAUSE_MS) return;
+  if (bcSilenceSince - bcSpeechStarted < BACKCHANNEL_MIN_SPEECH_MS) return; // too short to be a real pause worth acking (e.g. a click/breath right at the start)
+  bcFiredThisPause = true;
+  fireBackchannelNod();
+}
+// Resets the detector's state -- called whenever listening ends (a new
+// turn, or the state moving on to thinking/talking/paused), so a pause
+// mid-recording never leaks into the next turn and fires a stray nod
+// against silence that was never really a pause in anything.
+function resetBackchannel() {
+  bcSpeaking = false;
+  bcSpeechStarted = null;
+  bcSilenceSince = null;
+  bcFiredThisPause = false;
 }
 
 // Barge-in. The turn recorder's own mic stream closes the moment a turn
@@ -4551,7 +4786,7 @@ async function startRecordingTurn(tapMode) {
       const willSpeak = !ttsMuted && captionsOn;
       console.log(`[timing] voice pre-LLM: drain=${(tDrained - tStop).toFixed(0)}ms transcribe=${(tTranscribed - tDrained).toFixed(0)}ms total_before_reply_call=${(tTranscribed - tStop).toFixed(0)}ms`);
       const {reply, signal} = await streamFacilitatorReply(transcript, (partial) => {
-        if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator', false, null, willSpeak); return; }
+        if (!replyBubble) { replyBubble = addMessage(partial, 'facilitator', false, null, willSpeak, analyticsTurnCount); return; }
         replyBubble.fullText = partial;
         if (!willSpeak) {
           replyBubble.textContent = partial;
@@ -5077,8 +5312,11 @@ async function start() {
         const histRes = await fetch(apiPath('/api/history?session_id=' + encodeURIComponent(sessionId)));
         const hist = await histRes.json();
         if ((hist.turns || []).length) {
+          let replayTurnIdx = 0;
           for (const turn of hist.turns) {
-            addMessage(turn.text, turn.role === 'user' ? 'employee' : 'facilitator');
+            const isFacilitator = turn.role !== 'user';
+            if (isFacilitator) replayTurnIdx++;
+            addMessage(turn.text, isFacilitator ? 'facilitator' : 'employee', false, null, false, isFacilitator ? replayTurnIdx : null);
           }
           // The transcript panel is collapsed by default in Voice view --
           // replaying history into it while it's still hidden is exactly
