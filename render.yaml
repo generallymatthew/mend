@@ -18,3 +18,5 @@ services:
         sync: false
       - key: DEEPGRAM_API_KEY
         sync: false
+      - key: SEAM_TEST_MODE
+        value: "true"

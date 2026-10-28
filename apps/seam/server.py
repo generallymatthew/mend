@@ -17,6 +17,13 @@ conversation so far, but not the case itself: the anchor and plan are
 re-seeded into a fresh conversation via a hidden context message the next
 time that case is opened.
 
+With SEAM_TEST_MODE=true, that case/plan storage moves off disk entirely:
+the "cases.db" above becomes a SQLite database that lives only in this
+process's RAM (a shared-cache `:memory:` database), so restarting the
+process -- or a redeploy -- drops every case and plan step along with the
+conversation text. Used for the tester round, where testers are told
+nothing they enter is kept.
+
 Run:
     pip install -r requirements.txt
     export ANTHROPIC_API_KEY=...   # your own key, set in your shell/.env, never pasted into chat
@@ -50,6 +57,11 @@ COACHING_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-manager-coaching-system
 TONE_CHECK_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-tone-check-system-prompt.md"
 MEETING_STRATEGY_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-meeting-strategy-system-prompt.md"
 DB_FILE = ROOT / "cases.db"
+TEST_MODE = os.environ.get("SEAM_TEST_MODE", "").lower() in ("1", "true", "yes")
+# Shared-cache in-memory DB: every sqlite3.connect() to this name within the
+# process sees the same data, as long as at least one connection stays open
+# (hence _TEST_DB_KEEPALIVE below) -- nothing ever touches disk.
+TEST_DB_URI = "file:seam_test_db?mode=memory&cache=shared"
 MODEL = "claude-sonnet-5"
 JOINT_SESSION_BASE_URL = os.environ.get("JOINT_SESSION_BASE_URL", "http://localhost:8421")
 
@@ -179,9 +191,17 @@ def roster_for_case(case_id: str) -> dict:
 # --- Storage ---------------------------------------------------------------
 
 def db() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_FILE)
+    if TEST_MODE:
+        conn = sqlite3.connect(TEST_DB_URI, uri=True)
+    else:
+        conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+# Keeps the shared-cache in-memory DB alive between requests -- if the last
+# connection to it closed, the data would vanish. Never closed on purpose.
+_TEST_DB_KEEPALIVE = db() if TEST_MODE else None
 
 
 def init_db():
