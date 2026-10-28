@@ -1402,12 +1402,31 @@ function getSessionId() {
   }
 }
 const sessionId = getSessionId();
+
+// Separate from sessionId above: one per DEVICE, in localStorage so it
+// survives new tabs, reloads, and browser restarts -- lets analytics
+// group multiple visits/tabs back to the same tester instead of counting
+// every tab as a new person. Anonymous (no name/email), just a stable id.
+function getTesterId() {
+  try {
+    let id = localStorage.getItem('mendTesterId');
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      localStorage.setItem('mendTesterId', id);
+    }
+    return id;
+  } catch (e) {
+    return null; // localStorage unavailable (e.g. private mode) -- analytics still works, just without tester grouping
+  }
+}
+const testerId = getTesterId();
+
 let analyticsTurnCount = 0;
 function logEvent(event, extra) {
   fetch(apiPath('/api/analytics'), {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(Object.assign({session_id: sessionId, event}, extra || {})),
+    body: JSON.stringify(Object.assign({session_id: sessionId, tester_id: testerId, event}, extra || {})),
     keepalive: true, // lets session_end's fetch survive the page actually unloading
   }).catch(() => {}); // best-effort -- never blocks or breaks the real conversation flow
 }

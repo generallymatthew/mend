@@ -1606,8 +1606,8 @@ def get_events_sheet():
         try:
             _events_sheet = spreadsheet.worksheet("events")
         except gspread.WorksheetNotFound:
-            _events_sheet = spreadsheet.add_worksheet(title="events", rows=1000, cols=7)
-            _events_sheet.append_row(["timestamp_utc", "session_id", "event", "mode", "turn", "flag", "reason"])
+            _events_sheet = spreadsheet.add_worksheet(title="events", rows=1000, cols=8)
+            _events_sheet.append_row(["timestamp_utc", "session_id", "tester_id", "event", "mode", "turn", "flag", "reason"])
     except Exception as e:
         print(f"[analytics] Google Sheets auth/open failed, falling back to local log: {e}", flush=True)
         _events_sheet_init_failed = True
@@ -1624,6 +1624,8 @@ async def submit_analytics_event(request: Request):
     session_id = str(data.get("session_id") or "")[:64]
     if not session_id:
         return JSONResponse({"error": "missing session_id"}, status_code=400)
+    tester_id_raw = data.get("tester_id")
+    tester_id = str(tester_id_raw)[:64] if tester_id_raw else None
     mode = data.get("mode")
     if mode is not None and mode not in VALID_ANALYTICS_MODES:
         return JSONResponse({"error": "invalid mode"}, status_code=400)
@@ -1636,7 +1638,7 @@ async def submit_analytics_event(request: Request):
     reason = data.get("reason")
     if reason is not None and reason not in VALID_FEEDBACK_REASONS:
         return JSONResponse({"error": "invalid reason"}, status_code=400)
-    record = {"ts": time.time(), "session_id": session_id, "event": event, "mode": mode, "turn": turn, "flag": flag, "reason": reason}
+    record = {"ts": time.time(), "session_id": session_id, "tester_id": tester_id, "event": event, "mode": mode, "turn": turn, "flag": flag, "reason": reason}
     sheet = get_events_sheet()
     if sheet is not None:
         try:
@@ -1645,6 +1647,7 @@ async def submit_analytics_event(request: Request):
                 [
                     time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(record["ts"])) + " UTC",
                     session_id,
+                    tester_id or "",
                     event,
                     mode or "",
                     turn if turn is not None else "",
