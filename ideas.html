@@ -133,7 +133,7 @@
 
   <!-- ===================== 01 DISCOVERY ===================== -->
   <details class="category" id="discovery" open>
-    <summary><span class="chev">&#9656;</span><span class="step-num">01</span><h2>Discovery</h2><span class="cat-count">6</span></summary>
+    <summary><span class="chev">&#9656;</span><span class="step-num">01</span><h2>Discovery</h2><span class="cat-count">7</span></summary>
     <div class="cat-body">
     <p class="cat-note">Research gathered before (or to support) any product decision &mdash; the raw evidence base, including the academic conflict theory that backs the pitch. Consolidated here from material that was previously scattered across Ideation and Problem framing.</p>
 
@@ -204,12 +204,22 @@
       </ul>
       <div class="fit"><b>Fits:</b> the root-cause case for why Mend is newly necessary now, not five years ago &mdash; backs the employee-deck headline ("You Lost The People Who Used To Catch Your Mistakes," see Brand identity) with the actual causal chain behind it.</div>
     </div>
+
+    <div class="card">
+      <h3>Chatbot social-dynamics usage evidence</h3>
+      <ul>
+        <li>OpenAI: 1.9% of ChatGPT messages fall in "Relationships/Personal Reflection" &mdash; roughly 340M messages/week</li>
+        <li>Anthropic: 2.9% of Claude.ai usage is "affective," with "Interpersonal Advice" as the closest bucket</li>
+        <li>Direct data answering the objection "why not just use ChatGPT" &mdash; people are already bringing relationship and interpersonal problems to general chatbots at real scale</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> the competitive-moat argument in the pitch decks and Go-to-market &mdash; this is the demand-side evidence, distinct from the trust-moat's supply-side argument above.</div>
+    </div>
     </div>
   </details>
 
   <!-- ===================== 02 PROBLEM FRAMING ===================== -->
   <details class="category" id="framing" open>
-    <summary><span class="chev">&#9656;</span><span class="step-num">02</span><h2>Problem framing</h2><span class="cat-count">6</span></summary>
+    <summary><span class="chev">&#9656;</span><span class="step-num">02</span><h2>Problem framing</h2><span class="cat-count">9</span></summary>
     <div class="cat-body">
     <p class="cat-note">The load-bearing beliefs everything else gets checked against &mdash; what Mend is actually for, and why no one else can build it.</p>
 
@@ -265,6 +275,14 @@
     </div>
 
     <div class="card">
+      <h3>Core principles</h3>
+      <ul>
+        <li>Thimble won't help a worker write up, document, or escalate something that's likely to produce a bad outcome for them &mdash; same logic as taking the keys from a drunk driver: the tool's job is to stop harm, not to type faster for someone walking into it</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-decided">decided, foundational</span></div>
+    </div>
+
+    <div class="card">
       <h3>Conflict was never contained to two people</h3>
       <ul>
         <li>Whoever's in the room when tension happens absorbs the atmosphere; whoever isn't backchannels about it afterward</li>
@@ -272,12 +290,31 @@
       </ul>
       <div class="fit"><b>Fits:</b> defends the ROI math in the pitch decks and product spec against the "but it's just two people" objection.</div>
     </div>
+
+    <div class="card">
+      <h3>Dropped the employer-configurable trigger ceiling</h3>
+      <ul>
+        <li>Spec change: removed the tier letting a company add its own categories on top of the safety floor</li>
+        <li>Reasoning: an employer-defined category list would let the employer dictate what counts as reportable, collapsing confidentiality and risking NLRA Section 7 exposure (surveillance/chilling of protected concerted activity)</li>
+        <li>The safety floor stays a fixed, non-configurable set (harassment/threats/illegal activity/safety risk) &mdash; no employer customization layer on top</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-decided">decided &mdash; spec change</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Seam's two unexamined legal gaps</h3>
+      <ul>
+        <li>A manager's own usage/billing metadata inside Seam could itself place Mend inside that manager's litigation exposure if a dispute later goes legal</li>
+        <li>The safety-floor screen only checks employee-reported behavior &mdash; nothing currently catches a manager's own stated retaliatory plan, typed into Seam by the manager</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-parked">open, needs a legal pass before Seam ships further</span></div>
+    </div>
     </div>
   </details>
 
   <!-- ===================== 03 IDEATION ===================== -->
   <details class="category" id="ideation" open>
-    <summary><span class="chev">&#9656;</span><span class="step-num">03</span><h2>Ideation</h2><span class="cat-count">20</span></summary>
+    <summary><span class="chev">&#9656;</span><span class="step-num">03</span><h2>Ideation</h2><span class="cat-count">31</span></summary>
     <div class="cat-body">
     <p class="cat-note">Feature, copy, facilitator-behavior, and new-product concepts &mdash; raw material, not commitments.</p>
 
@@ -490,12 +527,99 @@
       </ul>
       <div class="meta-row"><span class="tag status-rejected">superseded by routine-close design</span></div>
     </div>
+
+    <div class="card">
+      <h3>Legal/rights decoder</h3>
+      <ul>
+        <li>Translates obscure handbook language, ambiguous PIP wording, or NDA/non-compete clauses into plain English, off the record</li>
+        <li>A statutory circuit breaker flags when an issue crosses from routine interpersonal friction into a labor-rights question (Title VII, retaliation, misclassification, constructive dismissal) and surfaces the user's actual options before they say anything further</li>
+      </ul>
+      <div class="fit"><b>Status:</b> runs straight into PIP Navigator's own "no legal advice" carve-out &mdash; would need its own legal-review pass before touching real users, likely harder than PIP Navigator's own review.</div>
+    </div>
+
+    <div class="card">
+      <h3>Meeting HUD &mdash; live tactical cheat sheet during a real external meeting</h3>
+      <ul>
+        <li>Surfaces the techniques from "Concrete in-meeting circuit breakers" above as glanceable on-screen tripwires during a real meeting happening outside Mend, not a prep/practice session</li>
+      </ul>
+      <div class="fit"><b>Status:</b> tension with two existing ideas needs resolving first &mdash; the prototype's ambient pacing HUD is deliberately prep/practice-only, and this is close enough to the rejected live-in-ear-coaching idea above (divided attention, consent/recording concerns, reads as adversarial if the other party finds out) that the same objections likely apply even without an AI feeding live lines.</div>
+    </div>
+
+    <div class="card">
+      <h3>Unblockable communication scripts</h3>
+      <ul>
+        <li>Pre-drafted boundary-setting formulas, not just technique advice &mdash; e.g. scope defense ("if we pull Project A into this sprint, Project B's delivery date moves two weeks &mdash; which trade-off would leadership prefer?") and async insulation ("I'll post a bulleted dependency update daily at 9:30 so you have visibility without breaking focus time")</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> pairs with the standing self-advocacy advice idea and the Basting Stitch rehearsal flow &mdash; a scripts library the rehearsal flow could pull from.</div>
+    </div>
+
+    <div class="card">
+      <h3>Reframe regulation tools as cognitive performance equipment, not wellness</h3>
+      <ul>
+        <li>Positioning note, not a feature: pitch the somatic tools (physiological sigh, Gimbal) as tactical cognitive-performance equipment &mdash; "when your heart rate spikes, your prefrontal cortex drops offline and your peripheral vision narrows, so you lose your leverage" &mdash; instead of wellness/mindfulness language</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> keeps copy consistent with the no-soft-language rule already in place for this product &mdash; applies to the Gimbal device idea and the in-meeting circuit breakers idea above.</div>
+    </div>
+
+    <div class="card">
+      <h3>Gimbal &mdash; somatic breathing-pacer hardware concept</h3>
+      <ul>
+        <li>A physical or on-screen device that paces breathing on a 4s expand / 1s hold / 6s contract cycle, with bilateral ocular pacing (eyes tracking a moving point left-right) to help settle an activated nervous system</li>
+        <li>Framed deliberately as "tactical cognitive hardware prep," not a wellness gadget &mdash; see the no-soft-language positioning note above</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-parked">hardware/device concept, unscoped</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Real-time biometric telemetry for dysregulation</h3>
+      <ul>
+        <li>Phone IMU (fidgeting/tremor), camera PPG and webcam rPPG (heart rate from skin color changes), and pupillometry as signals that someone is dysregulating mid-session</li>
+        <li>Zero-trace by design &mdash; processed locally, in RAM only, never persisted or sent anywhere, matching the trust-moat architecture</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> would feed the ambient pacing HUD below. <b>Status:</b> unscoped, needs its own privacy/consent review given it's reading a person's body, not just their words.</div>
+    </div>
+
+    <div class="card">
+      <h3>Ambient pacing HUD</h3>
+      <ul>
+        <li>A live, non-verbal dashboard during a practice session: talk-time ratio, a tempo cue, a rough mood read</li>
+        <li>Deliberately prep/practice-only &mdash; distinct from the "Meeting HUD" idea above, which would surface similar signals during a real external meeting and runs into the same consent/attention objections as rejected live-in-ear coaching</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> pairs with the biometric telemetry idea above as its input signal.</div>
+    </div>
+
+    <div class="card">
+      <h3>5-step pacing protocol with staging fork</h3>
+      <ul>
+        <li>Raw Vent &rarr; Pressure Gauge Check &rarr; Subtle Incentive Inquiry &rarr; Organic Realization &rarr; Actionable Staging Fork</li>
+        <li>The staging fork ends in four explicit exit options rather than funneling everyone toward one "resolution"</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> a more formalized version of the 4-step constructive collaboration arc above &mdash; needs reconciling with it rather than running as a second, competing protocol.</div>
+    </div>
+
+    <div class="card">
+      <h3>Standing self-advocacy advice</h3>
+      <ul>
+        <li>Always-available coaching on asking for a raise or promoting your own work, not just conflict-triggered</li>
+        <li>Tied to the community-as-leverage principle in Problem framing: advocating for yourself individually feeds collective advocacy</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> pairs with the unblockable communication scripts idea above.</div>
+    </div>
+
+    <div class="card">
+      <h3>Audio-only rehearsal delivery feedback</h3>
+      <ul>
+        <li>Thimble critiques the pace, filler words, and tone of a practiced presentation</li>
+        <li>Audio-only by design, not video &mdash; keeps the zero-trace promise and avoids the surveillance-adjacent feel of being watched while rehearsing</li>
+      </ul>
+      <div class="fit"><b>Fits:</b> the Basting Stitch rehearsal flow.</div>
+    </div>
     </div>
   </details>
 
   <!-- ===================== 04 PROTOTYPE ===================== -->
   <details class="category" id="prototype" open>
-    <summary><span class="chev">&#9656;</span><span class="step-num">04</span><h2>Prototype</h2><span class="cat-count">6</span></summary>
+    <summary><span class="chev">&#9656;</span><span class="step-num">04</span><h2>Prototype</h2><span class="cat-count">7</span></summary>
     <div class="cat-body">
     <p class="cat-note">Things that exist as running code, not just a writeup.</p>
 
@@ -561,6 +685,17 @@
         <li><b>Handoff Mode</b> &mdash; hands a case to a private peer session once both sides agree on what the actual blocker is; the manager stays out of that room once handed off</li>
       </ul>
       <div class="fit"><b>Fits:</b> clarifies what Seam (the manager app) actually does beyond "solo coaching" &mdash; see Brand identity for the Seam/Thimble/Mend naming structure.</div>
+    </div>
+
+    <div class="card">
+      <h3>Splice &mdash; live group consensus over Zoom, actual build status</h3>
+      <ul>
+        <li>Real WebSocket room/chat/voting backend built, not just concept &mdash; Zoom Apps SDK companion-panel architecture decided and implemented</li>
+        <li>Browser-verified end-to-end flow works</li>
+        <li>Known unresolved bug: <code>zoom-panel.html</code> has a message-render / WebSocket-reconnect-loop issue</li>
+      </ul>
+      <div class="meta-row"><span class="tag status-live">built, one open bug</span></div>
+      <div class="fit"><b>Fits:</b> Splice is only name-dropped elsewhere (app concept ranking, naming conventions) &mdash; this is its actual Prototype entry.</div>
     </div>
     </div>
   </details>
