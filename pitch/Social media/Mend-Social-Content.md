@@ -100,7 +100,7 @@ Managers default to the same personality read, and even when they spot the struc
 
 **Core insight:** Employees routinely blame personality and ego for conflict because systemic pressure is invisible. Corporations encourage this narrative because pathologizing individuals absolves leadership from auditing broken systems.
 
-**Leadership blames "warring egos" for conflict because fixing the system costs more than blaming a person.**
+**55% of people blame workplace conflict on personality and ego. Dig in, and 80% of it is structural misalignment.**
 
 The data on workplace disputes highlights a striking contradiction:
 
