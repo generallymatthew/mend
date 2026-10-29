@@ -541,15 +541,6 @@
     padding: 10px 16px; font-size: 13px; color: var(--muted); font-style: italic;
   }
 
-  .bubble.disambig { display: flex; flex-direction: column; gap: 10px; }
-  .disambig-options { display: flex; flex-direction: column; gap: 6px; }
-  .disambig-options button {
-    font: inherit; font-size: 13px; text-align: left; cursor: pointer;
-    border: 1px solid #E7D2D8; border-radius: 10px; background: #fff; color: var(--ink);
-    padding: 8px 12px;
-  }
-  .disambig-options button:hover { background: var(--accent-pink-bg); }
-  .disambig-options button:disabled { opacity: 0.5; cursor: default; }
   .send-btn {
     width: 36px; height: 36px; border-radius: 999px; background: var(--accent-pink);
     border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -1164,12 +1155,11 @@ function wirePushToTalk(btn, targetEl) {
 // table/endpoints, same control-block schema -- see CASE_SYSTEM_PROMPTS in
 // server.py) and most of its UI treatment below (plan panel, incident
 // summary, close button); it just never gets a hand-off/peer-session offer
-// (see showPanelsForType), and POSTs a {kind} body on creation so the
-// backend picks the right persona (see CREATE_PATH's special-case in
-// resolveType).
+// (see showPanelsForType). /api/resolve-general (server.py) handles the
+// {kind} distinction when creating a case from a resolved general-mode
+// conversation.
 const CASE_LIKE_TYPES = ["conflict", "coaching"];
 const TYPE_LABEL = { conflict: "Conflict", coaching: "Coaching", meeting: "Meeting", written: "Written" };
-const CREATE_PATH = { conflict: "/api/cases", coaching: "/api/cases", meeting: "/api/meeting-sessions", written: "/api/written-sessions" };
 const GET_PATH = {
   conflict: (id) => `/api/cases/${id}`,
   coaching: (id) => `/api/cases/${id}`,
@@ -1186,6 +1176,7 @@ const MESSAGE_PATH = {
 let conversations = []; // merged list of {id, type, title, preview, updated_at, status}
 let activeConvo = null; // {id, type} once a thread has resolved to a real session
 let pendingTurns = null; // array of not-yet-classified user turns, while activeConvo is null
+let pendingHistory = null; // array of {role, content} incl. general-mode replies, for /api/general-reply continuity -- superset of pendingTurns, reset together
 
 function conversationPreview(c) {
   if (CASE_LIKE_TYPES.includes(c.type)) return c.next_action || c.last_action || c.tension_summary || "Just opened";
@@ -1268,6 +1259,7 @@ function applyCaseStatus(caseObj) {
 function newConversation() {
   activeConvo = null;
   pendingTurns = null;
+  pendingHistory = [{ role: "assistant", content: "Tell me what's going on." }];
   roster = {};
   document.getElementById("thread-header").style.display = "none";
   document.getElementById("intro").style.display = "none";
@@ -1285,6 +1277,7 @@ function newConversation() {
 async function openConvo(id, type) {
   activeConvo = { id, type };
   pendingTurns = null;
+  pendingHistory = null;
   document.getElementById("intro").style.display = "none";
   document.getElementById("thread-header").style.display = "flex";
   const messagesEl = document.getElementById("messages");
@@ -1565,60 +1558,6 @@ async function sendRealMessage(type, id, text) {
   return await res.json();
 }
 
-function showDisambiguation(messagesEl) {
-  const row = document.createElement("div");
-  row.className = "msg-row assistant";
-  row.innerHTML = avatarSvg();
-  const b = document.createElement("div");
-  b.className = "bubble assistant disambig";
-  b.innerHTML = `
-    <div>One thing first -- is this...</div>
-    <div class="disambig-options">
-      <button type="button" data-type="conflict">Tension between people on my team</button>
-      <button type="button" data-type="coaching">Prepping to talk to one of my own reports</button>
-      <button type="button" data-type="meeting">A meeting I'm prepping for</button>
-      <button type="button" data-type="written">A message I need to answer</button>
-      <button type="button" data-type="conflict">Not sure yet, help me figure out what's going on</button>
-    </div>
-  `;
-  b.querySelectorAll("button").forEach((btn) => {
-    btn.onclick = () => {
-      b.querySelectorAll("button").forEach((x) => (x.disabled = true));
-      resolveType(btn.dataset.type, messagesEl);
-    };
-  });
-  row.appendChild(b);
-  messagesEl.appendChild(row);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-async function resolveType(type, messagesEl) {
-  const turns = pendingTurns;
-  pendingTurns = null;
-  // "conflict"/"coaching" share one endpoint (/api/cases) but need a {kind}
-  // body so the backend picks the right persona; meeting/written take no
-  // creation body at all.
-  const fetchOpts = { method: "POST" };
-  if (CASE_LIKE_TYPES.includes(type)) {
-    fetchOpts.headers = { "Content-Type": "application/json" };
-    fetchOpts.body = JSON.stringify({ kind: type });
-  }
-  const res = await fetch(apiPath(CREATE_PATH[type]), fetchOpts);
-  const obj = await res.json();
-  activeConvo = { id: obj.id, type };
-  showPanelsForType(type);
-  document.getElementById("thread-title").textContent = obj.title || "New conversation";
-
-  for (const turn of turns) {
-    const pending = appendBubble(messagesEl, "assistant", "...", true);
-    const body = await sendRealMessage(type, obj.id, turn);
-    pending.closest(".msg-row").remove();
-    appendBubble(messagesEl, "assistant", body.reply);
-    applyConvoResult(type, body);
-  }
-  await loadConversations();
-}
-
 async function sendMessage() {
   const composer = document.getElementById("composer");
   const text = composer.value.trim();
@@ -1652,25 +1591,65 @@ async function sendMessage() {
     }
 
     if (!pendingTurns) pendingTurns = [];
+    if (!pendingHistory) pendingHistory = [];
     pendingTurns.push(text);
-    const pending = appendBubble(messagesEl, "assistant", "...", true);
+    pendingHistory.push({ role: "user", content: text });
+
+    const classifyPending = appendBubble(messagesEl, "assistant", "...", true);
     const res = await fetch(apiPath("/api/classify"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages: pendingTurns }),
     });
     const { type } = await res.json();
-    pending.closest(".msg-row").remove();
+    classifyPending.closest(".msg-row").remove();
 
     if (type === "unsure") {
-      if (pendingTurns.length === 1) {
-        appendBubble(messagesEl, "assistant", "Can you say a bit more about what's going on?");
-      } else {
-        showDisambiguation(messagesEl);
-      }
+      // Still not confidently in one of the four tracks -- give a real
+      // reply from the general prompt instead of stalling on a canned
+      // "say more" message or forcing the manager to pick a bucket
+      // themselves. Classify runs again next turn; the moment it resolves,
+      // this exchange converts into that real track below.
+      const genPending = appendBubble(messagesEl, "assistant", "...", true);
+      const genRes = await fetch(apiPath("/api/general-reply"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ turns: pendingHistory }),
+      });
+      const { reply } = await genRes.json();
+      genPending.closest(".msg-row").remove();
+      appendBubble(messagesEl, "assistant", reply);
+      pendingHistory.push({ role: "assistant", content: reply });
       return;
     }
-    await resolveType(type, messagesEl);
+
+    // Resolved: convert into the real track. Everything except the turn
+    // that just triggered this (the latest user message) already got a
+    // real general-mode reply, so seed the new case/session with that
+    // prior history only, then send the triggering turn for real through
+    // the now-known track to get its actual first reply -- general-reply
+    // never got a chance to answer it, since classify resolved on this
+    // same turn before that call would have happened.
+    const priorHistory = pendingHistory.slice(0, -1);
+    const resolveRes = await fetch(apiPath("/api/resolve-general"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, turns: priorHistory }),
+    });
+    const obj = await resolveRes.json();
+    activeConvo = { id: obj.id, type };
+    pendingTurns = null;
+    pendingHistory = null;
+    showPanelsForType(type);
+    document.getElementById("thread-title").textContent = obj.title || "New conversation";
+    document.getElementById("thread-header").style.display = "flex";
+
+    const realPending = appendBubble(messagesEl, "assistant", "...", true);
+    const realBody = await sendRealMessage(type, obj.id, text);
+    realPending.closest(".msg-row").remove();
+    appendBubble(messagesEl, "assistant", realBody.reply);
+    applyConvoResult(type, realBody);
+    await loadConversations();
   } finally {
     document.getElementById("send-btn").disabled = false;
   }

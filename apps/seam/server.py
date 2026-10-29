@@ -57,6 +57,7 @@ SYSTEM_PROMPT_FILE = ROOT.parent / (
     if os.environ.get("SEAM_MINIMAL_PROMPT", "").lower() in ("1", "true", "yes")
     else "facilitator-case-plan-system-prompt.md"
 )
+GENERAL_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-general-system-prompt.md"
 COACHING_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-manager-coaching-system-prompt.md"
 TONE_CHECK_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-tone-check-system-prompt.md"
 MEETING_STRATEGY_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-meeting-strategy-system-prompt.md"
@@ -109,6 +110,7 @@ def load_system_prompt(path: Path) -> str:
 
 
 SYSTEM_PROMPT = load_system_prompt(SYSTEM_PROMPT_FILE)
+GENERAL_SYSTEM_PROMPT = load_system_prompt(GENERAL_SYSTEM_PROMPT_FILE)
 COACHING_SYSTEM_PROMPT = load_system_prompt(COACHING_SYSTEM_PROMPT_FILE)
 TONE_CHECK_SYSTEM_PROMPT = load_system_prompt(TONE_CHECK_SYSTEM_PROMPT_FILE)
 MEETING_STRATEGY_SYSTEM_PROMPT = load_system_prompt(MEETING_STRATEGY_SYSTEM_PROMPT_FILE)
@@ -488,6 +490,68 @@ async def classify(body: ClassifyRequest):
     if raw not in ("conflict", "coaching", "meeting", "written"):
         return {"type": "unsure"}
     return {"type": raw}
+
+
+class GeneralReplyRequest(BaseModel):
+    turns: list[dict]  # [{"role": "user"|"assistant", "content": str}, ...]
+
+
+@app.post("/api/general-reply")
+async def general_reply(body: GeneralReplyRequest):
+    """Real reply for the turns before classify can confidently place the
+    conversation in one of the four tracks -- same 'stateless, nothing
+    persisted' contract as /api/classify above, just producing an actual
+    response instead of a type label. The caller keeps calling classify
+    in parallel each turn; once that resolves, /api/resolve-general below
+    creates the real case/session and seeds its history directly with
+    this exchange, rather than replaying it through the specialized
+    track's own model and generating a second, different reply to turns
+    the manager already got a real answer to."""
+    if client is None:
+        return {"reply": "Tell me more about what's going on."}
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            system=GENERAL_SYSTEM_PROMPT,
+            messages=[{"role": t["role"], "content": t["content"]} for t in body.turns],
+        )
+    except Exception:
+        return {"reply": "Tell me more about what's going on."}
+    text = "".join(block.text for block in response.content if block.type == "text").strip()
+    return {"reply": text or "Tell me more about what's going on."}
+
+
+class ResolveGeneralRequest(BaseModel):
+    type: str
+    turns: list[dict]  # the general-mode exchange so far, already shown to the manager
+
+
+@app.post("/api/resolve-general")
+async def resolve_general(body: ResolveGeneralRequest):
+    """Converts a general-mode conversation into a real case/session once
+    classify has confidently placed it, seeding that session's history
+    directly from the exchange already shown to the manager instead of
+    replaying it through the specialized track's model (which would
+    produce a second, different reply to turns already answered -- see
+    general_reply's docstring above)."""
+    if body.type not in ("conflict", "coaching", "meeting", "written"):
+        return JSONResponse({"error": f"unknown type {body.type!r}"}, status_code=400)
+    seeded = [{"role": t["role"], "content": t["content"], "hidden": False} for t in body.turns]
+    for m in seeded:
+        if m["role"] == "assistant":
+            m["visible"] = m["content"]
+
+    if body.type in ("conflict", "coaching"):
+        obj = await create_case(CaseCreate(kind=body.type))
+        CONVERSATIONS[obj["id"]] = seeded
+    elif body.type == "meeting":
+        obj = await create_meeting_session()
+        MEETING_CONVERSATIONS[obj["id"]] = seeded
+    else:
+        obj = await create_written_session()
+        WRITTEN_CONVERSATIONS[obj["id"]] = seeded
+    return obj
 
 
 @app.get("/api/cases")
