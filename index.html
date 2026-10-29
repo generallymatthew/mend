@@ -115,11 +115,8 @@
   .door-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:4px;}
   @media (max-width:760px){ .door-grid{grid-template-columns:1fr 1fr;} }
   @media (max-width:520px){ .door-grid{grid-template-columns:1fr;} }
-  .door-card{min-width:0; background:var(--card); border:1px solid var(--card-border); border-top:3px solid var(--accent-solid); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; box-shadow:0 10px 24px rgba(0,0,0,0.2); transition:transform .15s ease, box-shadow .15s ease;}
+  .door-card{min-width:0; background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; box-shadow:0 10px 24px rgba(0,0,0,0.2); transition:transform .15s ease, box-shadow .15s ease;}
   .door-card:hover{transform:translateY(-2px); box-shadow:0 14px 32px rgba(0,0,0,0.3);}
-  .door-card:nth-child(2){border-top-color:var(--pink);}
-  .door-card:nth-child(3){border-top-color:var(--honey);}
-  .door-card:nth-child(4){border-top-color:rgba(255,255,255,0.3);}
   @media (max-width:700px){ .door-grid{gap:10px;} .door-card{padding:16px 12px;} }
   @media (max-width:520px){ .door-card{background:transparent; border:none; border-radius:0; box-shadow:none; padding:20px 0; border-bottom:1px solid var(--border);} .door-card:last-child{border-bottom:none;} .door-card:hover{transform:none; box-shadow:none;} }
   .door-ico{width:38px; height:38px; border-radius:11px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
@@ -191,7 +188,7 @@
   footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
   footer a{color:var(--ink-soft);}
 
-  .builder-note{background:var(--card); border:1px solid var(--card-border); border-left:3px solid var(--honey); border-radius:16px; padding:28px 28px 24px; box-shadow:0 14px 30px rgba(0,0,0,0.2);}
+  .builder-note{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:28px 28px 24px; box-shadow:0 14px 30px rgba(0,0,0,0.2);}
   .builder-note .kicker{font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
   .builder-note .section-headline{margin-top:0;}
   .builder-note p{font-size:14px; color:var(--ink-soft); max-width:none;}
