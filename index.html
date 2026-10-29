@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mend &middot; get a second opinion before you say anything</title>
+<title>Mend &middot; get a second opinion before the hard conversation</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -37,9 +37,12 @@
   .nav-links a{text-decoration:none; color:var(--ink-soft); padding:6px 0; border-bottom:2px solid transparent; white-space:nowrap;}
   .nav-links a:hover{color:var(--ink);}
   .nav-links a.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .nav-links a.minor{font-weight:600; color:var(--muted); font-size:12.5px;}
+  .nav-links a.minor:hover{color:var(--ink-soft);}
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
   .nav-cta{font-size:12.5px; font-weight:700; color:#fff; background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap;}
   @media (max-width:680px){ .nav-links{display:none;} }
+  @media (max-width:480px){ .manifesto-link{display:none;} }
 
   .modal-overlay{display:none; position:fixed; inset:0; background:rgba(23,55,46,0.45); z-index:50; align-items:flex-start; justify-content:center; padding:48px 20px; overflow-y:auto;}
   .modal-overlay.open{display:flex;}
@@ -106,38 +109,38 @@
   section.block{margin-top:48px;}
   #doors{scroll-margin-top:84px;}
 
-  .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
+  .door-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:4px;}
+  @media (max-width:760px){ .door-grid{grid-template-columns:1fr 1fr;} }
   @media (max-width:520px){ .door-grid{grid-template-columns:1fr;} }
   .door-card{min-width:0; background:var(--card); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; box-shadow:0 1px 2px rgba(23,55,46,0.04); transition:transform .15s ease, box-shadow .15s ease;}
   .door-card:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(23,55,46,0.08);}
   .door-card:nth-child(2){border-top-color:var(--pink);}
   .door-card:nth-child(3){border-top-color:var(--honey);}
+  .door-card:nth-child(4){border-top-color:var(--ink-soft);}
   @media (max-width:700px){ .door-grid{gap:10px;} .door-card{padding:16px 12px;} }
   @media (max-width:520px){ .door-card{background:transparent; border:none; border-radius:0; box-shadow:none; padding:20px 0; border-bottom:1px solid var(--border);} .door-card:last-child{border-bottom:none;} .door-card:hover{transform:none; box-shadow:none;} }
-  .door-ico{width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
-  .door-ico svg{width:22px; height:22px;}
-  .door-card:nth-child(1) .door-ico{background:var(--accent);}
+  .door-ico{width:38px; height:38px; border-radius:11px; background:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .door-ico svg{width:20px; height:20px;}
   .door-card:nth-child(2) .door-ico{background:var(--pink);}
   .door-card:nth-child(3) .door-ico{background:var(--honey);}
-  @media (max-width:700px){ .door-ico{width:34px; height:34px; margin-bottom:10px;} .door-ico svg{width:19px; height:19px;} }
+  .door-card:nth-child(4) .door-ico{background:var(--ink-soft);}
+  @media (max-width:700px){ .door-ico{width:32px; height:32px; margin-bottom:10px;} .door-ico svg{width:17px; height:17px;} }
   .door-t{font-weight:700; font-size:15px; margin-bottom:8px; line-height:1.3;}
-  .door-d{font-size:13px; color:var(--ink-soft); line-height:1.5; flex:1; margin-bottom:18px;}
+  .door-d{font-size:13px; color:var(--ink-soft); line-height:1.5; flex:1; margin-bottom:0;}
   @media (max-width:700px){ .door-t{font-size:13.5px; margin-bottom:6px;} .door-d{font-size:12px;} }
-  .door-btn{display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13px; color:var(--accent); text-decoration:none;}
-  .door-btn:hover{text-decoration:underline;}
   .door-footnote{font-size:12.5px; color:var(--muted); text-align:center; margin:18px 0 0;}
 
-  .audience-doors{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:4px;}
-  @media (max-width:600px){ .audience-doors{grid-template-columns:1fr;} }
-  .audience-door{background:var(--card); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:16px; padding:22px 20px;}
-  .audience-door.manager{border-top-color:var(--pink);}
-  .audience-tag{font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
-  .audience-door h4{font-size:15px; font-weight:800; margin:0 0 8px; line-height:1.3;}
-  .audience-door p{font-size:13px; color:var(--ink-soft); line-height:1.5; margin:0 0 14px;}
-  .audience-door .door-btn{display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13px; color:#fff; background:var(--accent); padding:9px 18px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease;}
-  .audience-door .door-btn:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(23,55,46,0.2); text-decoration:none;}
-  .audience-door.manager .door-btn{background:var(--pink);}
-  .audience-door.manager .door-btn:hover{box-shadow:0 4px 10px rgba(243,130,154,0.35);}
+  .icon-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
+  .icon-list li{display:flex; gap:14px; align-items:flex-start;}
+  .icon-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
+  .icon-list li:nth-child(2) .ico{background:var(--pink-soft);}
+  .icon-list li:nth-child(3) .ico{background:var(--honey-soft);}
+  .icon-list .ico svg{width:18px; height:18px; display:block;}
+  .icon-list .txt{padding-top:2px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
+  .icon-list .txt b{color:var(--ink); display:block; font-size:14.5px; margin-bottom:2px;}
+
+  .aside-link{display:inline-flex; align-items:center; gap:6px; margin-top:16px; font-weight:700; font-size:13px; color:var(--ink-soft); text-decoration:none; background:none; border:none; padding:0; font-family:inherit; cursor:pointer;}
+  .aside-link:hover{color:var(--ink); text-decoration:underline;}
 
   .why-columns{display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:6px;}
   @media (max-width:760px){ .why-columns{grid-template-columns:1fr;} }
@@ -204,12 +207,13 @@
     <a class="topnav-brand" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
     <nav class="nav-links">
       <a href="index.html" class="active">Home</a>
-      <a href="story.html">Thimble</a>
       <a href="seam-story.html">Seam</a>
       <a href="founder.html">Founder</a>
+      <a href="story.html" class="minor">Thimble</a>
     </nav>
     <div class="nav-right">
       <button type="button" class="manifesto-link" onclick="document.getElementById('manifestoModal').classList.add('open')">Our Manifesto</button>
+      <a class="nav-cta" href="/seam/">Start with Seam &rarr;</a>
     </div>
   </div>
 </header>
@@ -217,9 +221,10 @@
 
   <div class="hero">
     <div class="hero-text">
-      <h1>Get a Second Opinion Before You Say Anything.</h1>
-      <p class="lede">Work through a conversation that matters: a hard conversation coming up, a conflict you're still deciding how to handle, or even just getting some insight as to why it happened in the first place. Mend gives you an unbiased second opinion, privately, before you decide what to do. Nothing is recorded, nothing reaches HR, and your manager never knows you used it.</p>
-      <a class="btn-top" href="#doors">Find Your Door &rarr;</a>
+      <h1>Get a Second Opinion Before the Hard Conversation.</h1>
+      <p class="lede">A direct report needs tough feedback. Two people on your team can't work together. Or you're just trying to understand how a conflict started in the first place. There's no neutral person to think it through with, and getting it wrong costs you the relationship, the team's trust, or both. Mend is where you get a second opinion before you're in the room. Nothing is recorded, and nothing reaches HR unless the law requires it.</p>
+      <a class="btn-top" href="#doors">See How Managers Use Mend &rarr;</a>
+      <button type="button" class="aside-link" onclick="document.getElementById('thimbleModal').classList.add('open')">Not managing anyone? See Thimble, for employees &rarr;</button>
     </div>
     <div class="hero-visual">
       <div class="hero-avatar">
@@ -230,63 +235,47 @@
     </div>
   </div>
 
-  <section class="block" id="doors">
-    <h3 class="section-headline">Mend Helps You Understand the Social Dynamics at Play, Before You Act on Them.</h3>
-    <p class="section-sub">Whatever side of a conflict you're on.</p>
-    <div class="audience-doors">
-      <div class="audience-door">
-        <div class="audience-tag">For Employees</div>
-        <h4>Work well with the people around you.</h4>
-        <p>Get a second opinion before a hard conversation, prep for what's coming, or get insight into a conflict you're still making sense of.</p>
-        <a class="door-btn" href="story.html">Read the Thimble story &rarr;</a>
-      </div>
-      <div class="audience-door manager">
-        <div class="audience-tag">For Managers</div>
-        <h4>Help your team work well together.</h4>
-        <p>Get a second opinion before a hard conversation, prep for a tricky meeting, or check the tone on a message before it goes out.</p>
-        <a class="door-btn" href="seam-story.html">Read the Seam story &rarr;</a>
-      </div>
-    </div>
-  </section>
-
   <section class="block builder-note">
     <p class="kicker">A note from the builder</p>
-    <h3 class="section-headline">The Third Way to Be Professional</h3>
-    <p>Earlier in my career, whenever I ran into tension with a coworker, I did what almost everyone does: I asked my friends.</p>
-    <p>Because they cared about me, they validated me. They told me I was right, that the other person was being unreasonable, and that I didn&rsquo;t deserve it. It felt good in the moment. But they didn&rsquo;t tell me what I actually needed to hear: my own part in the dynamic.</p>
+    <h3 class="section-headline">The First Time I Managed People</h3>
+    <p>Nobody handed me a manual. There wasn&rsquo;t exactly training, I just figured it out as I went. I read books, I looked things up online, I did what you do.</p>
+    <p>But what I actually wanted was someone to talk to who wasn&rsquo;t my own manager, because I didn&rsquo;t want to look incompetent in front of them. Someone I could get into the actual specifics with.</p>
     <details class="read-more">
       <summary><span class="chevron">&#9662;</span></summary>
       <div class="more-body">
-        <p>Armed with that validation, I made reactive, defensive choices that set my career back years.</p>
-        <p>People pretend workplace dynamics are common sense. They aren&rsquo;t. They&rsquo;re complicated, emotionally charged, and rarely taught.</p>
-        <p>Worse, corporate culture tells us the only way to be &ldquo;professional&rdquo; is to pretend our humanity doesn&rsquo;t exist: check your feelings at the door, smile through misaligned expectations, and treat emotional friction like an HR malfunction. But suppressing how you feel doesn&rsquo;t make you professional, it just drives the frustration into quiet avoidance and backchannel gossip.</p>
-        <p>We built Mend around a third option: being professionally human.</p>
-        <p>You don&rsquo;t have to turn into an emotionless corporate cog, and you don&rsquo;t have to sabotage your reputation either. Mend is the private, neutral mirror I wish I had back then: a place to drop the filter, be messy and honest off the record, figure out what&rsquo;s actually happening beneath the surface, and handle conflict like a grown-up before walking into the room.</p>
+        <p>And specifics take detail. They take nuance. That&rsquo;s the part that&rsquo;s genuinely boring to bring to your own manager: they&rsquo;ve got a lot on their plate, and most of the time they don&rsquo;t need to hear it, and honestly shouldn&rsquo;t have to.</p>
+        <p>What I needed was a confidant. Someone I could lay out the whole situation for, in as much detail as it actually took, and just get a gut check from. Not a verdict, not a script, just someone to think out loud with before I had to go handle it for real.</p>
+        <p>That&rsquo;s the gap Mend is built to fill. Somewhere to work through the specifics, off the record, before the hard conversation, instead of guessing your way through it alone.</p>
       </div>
     </details>
   </section>
 
-  <section class="block">
-    <h3 class="section-headline">Three Ways to Use Mend</h3>
-    <p class="section-sub">No invite required, and no menu to click through. Each one opens a new conversation with Thimble; just start talking, and it steers from what you say.</p>
+  <section class="block" id="doors">
+    <h3 class="section-headline">Ways Managers Use Mend</h3>
+    <p class="section-sub">No invite required, and no menu to click through. Each one opens a new conversation with Thimble, the same facilitator employees use; just start talking, and it steers from what you say.</p>
     <div class="door-grid">
       <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="16" cy="20" r="10" stroke="#fff" stroke-width="2"/><circle cx="24" cy="20" r="10" stroke="#fff" stroke-width="2" stroke-opacity=".55"/></svg></div>
-        <div class="door-t">Understand What Happened</div>
-        <div class="door-d">Deconstruct what happened without judgment. Map the hidden role pressures and opposing KPIs driving the other person's behavior, so you get real insight into why it happened in the first place.</div>
-      </div>
-      <div class="door-card">
         <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
-        <div class="door-t">Prep for What's Coming</div>
-        <div class="door-d">Do a 3-minute mock conversation against a realistic AI colleague before you have the real sync. Test your talking points and refine your boundaries with zero stakes.</div>
+        <div class="door-t">Rehearse Mode</div>
+        <div class="door-d">For a hard performance or conduct conversation, or a meeting you need to walk into prepared. Practice it before you're actually in the room.</div>
       </div>
       <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="11" stroke="#17372E" stroke-width="2"/><path d="M14 20l4 4 8-8" stroke="#17372E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="door-t">Decide How to Respond</div>
-        <div class="door-d">Build a clear, fair game plan for delivering hard feedback or addressing a performance issue, without it turning into a complaint waiting to happen. Walk in with the right words, not just good intentions.</div>
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="28" height="24" rx="3" stroke="#fff" stroke-width="2"/><path d="M12 16h16M12 21h16M12 26h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="door-t">Tone Check</div>
+        <div class="door-d">Before you hit send on a hard email or Slack message, get a second opinion on how it actually reads, not just how you meant it.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="26" rx="3" stroke="#fff" stroke-width="2"/><path d="M15 8v-2a2 2 0 012-2h6a2 2 0 012 2v2" stroke="#fff" stroke-width="2"/><path d="M14 18h12M14 23h12M14 28h8" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg></div>
+        <div class="door-t">Case Mode</div>
+        <div class="door-d">For a conflict between two people on your team. Work out what's actually driving it and land on a concrete plan, without you having to play judge.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><path d="M10 20h20M24 14l6 6-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="door-t">Handoff Mode</div>
+        <div class="door-d">Once both sides agree on the real blocker, hand the case to a private session between the two people themselves. You stay out of that room entirely.</div>
       </div>
     </div>
-    <p class="door-footnote">Need to align with a colleague together? Joint, decoupled peer mediation can be initiated from inside any solo session.</p>
+    <p class="door-footnote">Working through something on your own, not managing someone else? <button type="button" class="aside-link" style="margin-top:0;" onclick="document.getElementById('thimbleModal').classList.add('open')">Thimble is Mend's employee-facing app &rarr;</button></p>
   </section>
 
   <section class="block">
@@ -295,10 +284,10 @@
     <p class="section-sub">Working through peer tension isn't an emergency or a personal failing. It's proactive team hygiene that keeps projects shipping.</p>
     <div class="why-columns">
       <div class="why-col employee">
-        <div class="why-col-t">What You Get as an Employee</div>
-        <div class="why-item"><div class="why-k">Zero Career Risk</div><div class="why-v">Resolving friction peer-to-peer prevents you or your coworker from getting tagged as "difficult" or "culture risks" on a management radar.</div></div>
-        <div class="why-item"><div class="why-k">Drop the Defenses</div><div class="why-v">Without managers or HR watching, you don't have to posture or defend your ego. You can own your part and fix the dynamic with your dignity intact.</div></div>
-        <div class="why-item"><div class="why-k">Full Autonomy</div><div class="why-v">You decide what actions to take. If you only want to process your thoughts or rehearse solo, you never have to invite anyone else.</div></div>
+        <div class="why-col-t">What You Get as a Manager</div>
+        <div class="why-item"><div class="why-k">Confidence Without Formal Training</div><div class="why-v">Nobody trained you to handle conflict between the people you manage. Mend is somewhere to think it through before you're in the room, without it reading as a gap in your skills.</div></div>
+        <div class="why-item"><div class="why-k">No People-Ops Meeting Required</div><div class="why-v">Work through an ordinary performance conversation or team friction on your own first, instead of booking time with HR for something that isn't a formal case yet.</div></div>
+        <div class="why-item"><div class="why-k">Full Autonomy</div><div class="why-v">You decide what to do with what you work out. Rehearse solo, check a message's tone, or hand a resolved case to the two people involved; nothing moves without you.</div></div>
       </div>
       <div class="why-col company">
         <div class="why-col-t">Why HR &amp; Leadership Support This</div>
@@ -313,12 +302,12 @@
     <h3 class="section-headline">The Cost of the Usual Options</h3>
     <p class="section-sub">Most conflict at work isn't personal, it's structural: unclear roles, competing incentives, bad process. Treating it as a character problem instead of a structural one is why it almost never gets fixed.</p>
     <div class="compare-grid">
-      <div class="compare-row"><span class="k">Say Nothing (Avoidance)</span><span class="v">The default choice. Tension festers, code reviews get delayed, and team collaboration quietly grinds to a halt.</span></div>
-      <div class="compare-row"><span class="k">Vent to a Coworker</span><span class="v">Feels cathartic for an hour, but fixes nothing structurally and drags uninvolved teammates into backchannel politics.</span></div>
-      <div class="compare-row"><span class="k">Escalate to HR or Management</span><span class="v">Creates an adversarial paper trail for an issue that was simply two people out of sync, turning normal friction into a formal performance risk.</span></div>
-      <div class="compare-row"><span class="k">Ask the AI App on Your Phone</span><span class="v">A general-purpose chatbot wasn't built for this. It has no grounding in conflict resolution methodology and no way to reliably tell a genuine misunderstanding apart from conduct that's actually harassment, so it can just as easily talk you out of raising something serious.</span></div>
+      <div class="compare-row"><span class="k">Hope It Resolves on Its Own</span><span class="v">It almost never does, and by the time it reaches you unprompted, it's usually already worse than the first version you saw.</span></div>
+      <div class="compare-row"><span class="k">Vent to a Peer Manager</span><span class="v">Feels safer than venting to HR, but it still risks turning into office politics about one of your own reports, and it still only gives you one side.</span></div>
+      <div class="compare-row"><span class="k">Escalate to HR Too Early</span><span class="v">Sometimes the right call, but reaching for it before you've worked out what's going on turns a fixable team problem into a formal process neither employee asked for.</span></div>
+      <div class="compare-row"><span class="k">Open a Generic AI Chatbot</span><span class="v">It only ever hears your read on your own report, so it has no way to tell whether your framing is actually fair. It will still hand you a confident script.</span></div>
       <div class="compare-divider">We think there's a better way</div>
-      <div class="compare-row highlight"><span class="k">Resolve with Mend</span><span class="v">Talk it through privately with Mend first, then work out how to actually fix it. Mend is trained on current conflict-resolution methodology and specifically on the distinction between a misunderstanding and harassment, so it knows when to help you work things out and when to automatically route to HR instead. Nothing is recorded, and no one else, not your manager, not HR, ever finds out it happened.</span></div>
+      <div class="compare-row highlight"><span class="k">Get a Second Opinion from Mend</span><span class="v">Talk it through privately with Mend first, then work out how to actually fix it. Mend is trained on current conflict-resolution methodology and specifically on the distinction between a misunderstanding and harassment, so it knows when to help you work things out and when to automatically route to HR instead. Nothing is recorded, and no one else, not your own manager, not HR, ever finds out it happened.</span></div>
     </div>
     <p class="belief-line">Resolving conflict directly is a sign of maturity, not a failure. The people who engage with it should be seen as the adults in the room, not as the source of the problem.</p>
   </section>
@@ -335,9 +324,9 @@
 
   <div class="cta">
     <div class="cta-avatar" id="ctaAvatar"></div>
-    <h3 class="section-headline">Ready to Clear the Air?</h3>
-    <p>Pick a practice scenario or simply type what's happening in your own words. Off the record, zero judgment, and completely confidential.</p>
-    <a class="btn" href="/intake/session">Start the Conversation &rarr;</a>
+    <h3 class="section-headline">Get Your Second Opinion</h3>
+    <p>Describe the conflict or the conversation you need to have in your own words, whatever stage you're at. Off the record, zero judgment, and completely confidential.</p>
+    <a class="btn" href="/seam/">Start the Conversation &rarr;</a>
     <div class="trust-line">Testing Prototype: we want your honest take, on the pitch above as much as the session itself. Does the problem above match something you've experienced? Does "nothing is recorded, ever" read as credible? Was there a reason you hesitated before clicking Start?</div>
   </div>
 
@@ -367,12 +356,33 @@
     </ul>
   </div>
 </div>
+
+<div class="modal-overlay" id="thimbleModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="thimbleTitle">
+    <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('thimbleModal').classList.remove('open')">&times;</button>
+    <h2 class="modal-title" id="thimbleTitle">Thimble, Mend's App for Employees</h2>
+    <p class="modal-sub">Same privacy model, same facilitator, built for the other side of the conversation.</p>
+    <p class="lead-line" style="margin:0 0 18px; padding-top:0; border-top:none; font-style:normal;">Get a second opinion before a hard conversation, prep for what's coming, or get insight into a conflict you're still making sense of, all without your manager or HR ever knowing you used it.</p>
+    <h3>What Thimble Is For</h3>
+    <ul>
+      <li><b>Understand what happened.</b> Map the hidden role pressures and competing priorities driving the other person's behavior, so you get real insight into why it happened.</li>
+      <li><b>Prep for what's coming.</b> Rehearse a hard conversation against a realistic AI colleague before you have the real one, with zero stakes.</li>
+      <li><b>Decide how to respond.</b> Build a clear, fair game plan for raising something, without it turning into a complaint waiting to happen.</li>
+    </ul>
+    <p style="margin-top:22px; display:flex; flex-wrap:wrap; gap:10px;">
+      <a class="btn-top" style="margin-top:0;" href="/intake/session">Start with Thimble &rarr;</a>
+      <a class="hr-link" style="display:inline-flex; align-items:center; gap:6px; margin:0; background:#fff; color:var(--ink); font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; border:1px solid var(--border);" href="story.html">Read the full Thimble story &rarr;</a>
+    </p>
+  </div>
+</div>
 <script>
 (function(){
-  // Manifesto modal: Escape closes it regardless of focus, same as the
-  // backdrop-click handler inlined on the overlay itself.
+  // Manifesto + Thimble modals: Escape closes whichever is open, same as the
+  // backdrop-click handler inlined on each overlay itself.
   document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape') document.getElementById('manifestoModal').classList.remove('open');
+    if (e.key !== 'Escape') return;
+    document.getElementById('manifestoModal').classList.remove('open');
+    document.getElementById('thimbleModal').classList.remove('open');
   });
 })();
 </script>
