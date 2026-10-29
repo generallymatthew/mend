@@ -23,6 +23,19 @@
   .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
   .brand-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
   .wordmark{font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; line-height:1;}
+
+  .topnav{position:sticky; top:0; z-index:30; background:rgba(246,241,231,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--border); margin-bottom:40px;}
+  .topnav-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:22px;}
+  .topnav-brand{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .topnav-brand .wordmark{font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; color:var(--ink);}
+  .nav-links{display:flex; gap:18px; font-size:13px; font-weight:700; color:var(--ink-soft);}
+  .nav-links a{text-decoration:none; color:var(--ink-soft); padding:6px 0; border-bottom:2px solid transparent; white-space:nowrap;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-links a.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
+  .nav-cta{font-size:12.5px; font-weight:700; color:#fff; background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap;}
+  @media (max-width:680px){ .nav-links{display:none;} }
+
   .hero{display:flex; align-items:center; gap:32px;}
   .hero-text{flex:1; min-width:0;}
   @media (max-width:600px){ .hero{flex-direction:column; align-items:flex-start; gap:20px;} }
@@ -192,13 +205,21 @@
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="brand-row" style="justify-content:space-between">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div class="mark"></div>
-      <div class="wordmark">Mend</div>
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="topnav-brand" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="story.html">Thimble</a>
+      <a href="seam-story.html" class="active">Seam</a>
+      <a href="founder.html">Founder</a>
+    </nav>
+    <div class="nav-right">
+      <a class="nav-cta" href="/seam/">Start a Session &rarr;</a>
     </div>
   </div>
+</header>
+<div class="wrap">
 
   <div class="hero">
     <div class="hero-text">
