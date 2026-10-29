@@ -113,6 +113,14 @@
   .door-btn:hover{text-decoration:underline;}
   .door-footnote{font-size:12.5px; color:var(--muted); text-align:center; margin:18px 0 0;}
 
+  .audience-doors{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:4px;}
+  @media (max-width:600px){ .audience-doors{grid-template-columns:1fr;} }
+  .audience-door{background:var(--card); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:16px; padding:22px 20px;}
+  .audience-door.manager{border-top-color:var(--pink);}
+  .audience-tag{font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
+  .audience-door h4{font-size:15px; font-weight:800; margin:0 0 8px; line-height:1.3;}
+  .audience-door p{font-size:13px; color:var(--ink-soft); line-height:1.5; margin:0 0 14px;}
+
   .why-columns{display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:6px;}
   @media (max-width:760px){ .why-columns{grid-template-columns:1fr;} }
   .why-col{min-width:0;}
@@ -185,7 +193,6 @@
       <h1>Get a Second Opinion Before You Say Anything.</h1>
       <p class="lede">Work through a conversation that matters: a hard conversation coming up, a conflict you're still deciding how to handle, or even just getting some insight as to why it happened in the first place. Mend gives you an unbiased second opinion, privately, before you decide what to do. Nothing is recorded, nothing reaches HR, and your manager never knows you used it.</p>
       <a class="btn-top" href="/intake/session">Start a Private Session &rarr;</a>
-      <div style="margin-top:14px; font-size:12.5px; color:var(--muted);">New here? Read the full story <a href="story.html" style="color:var(--accent); font-weight:700; text-decoration:none;">for employees</a> or <a href="seam-story.html" style="color:var(--accent); font-weight:700; text-decoration:none;">for managers</a>.</div>
     </div>
     <div class="hero-visual">
       <div class="hero-avatar">
@@ -195,6 +202,25 @@
       <div class="avatar-status"><span class="dot"></span>Thimble, your session facilitator</div>
     </div>
   </div>
+
+  <section class="block">
+    <h3 class="section-headline">Mend Helps You Understand the Social Dynamics at Play, Before You Act on Them.</h3>
+    <p class="section-sub">Whatever side of a conflict you're on.</p>
+    <div class="audience-doors">
+      <div class="audience-door">
+        <div class="audience-tag">For Employees</div>
+        <h4>Work well with the people around you.</h4>
+        <p>Get a second opinion before a hard conversation, prep for what's coming, or get insight into a conflict you're still making sense of.</p>
+        <a class="door-btn" href="story.html">Read the Thimble story &rarr;</a>
+      </div>
+      <div class="audience-door manager">
+        <div class="audience-tag">For Managers</div>
+        <h4>Help your team work well together.</h4>
+        <p>Get a second opinion before a hard conversation, prep for a tricky meeting, or check the tone on a message before it goes out.</p>
+        <a class="door-btn" href="seam-story.html">Read the Seam story &rarr;</a>
+      </div>
+    </div>
+  </section>
 
   <section class="block builder-note">
     <p class="kicker">A note from the builder</p>

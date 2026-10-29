@@ -87,17 +87,20 @@
   .evidence-card.secondary{opacity:0.82;}
   @media (max-width:600px){ .evidence-org{font-size:18px;} .evidence-finding{font-size:14px;} }
 
-  .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
+  .door-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:4px;}
+  @media (max-width:760px){ .door-grid{grid-template-columns:1fr 1fr;} }
   @media (max-width:520px){ .door-grid{grid-template-columns:1fr;} }
   .door-card{min-width:0; background:var(--card); border:1px solid var(--border); border-top:3px solid var(--accent); border-radius:16px; padding:22px 20px; box-shadow:0 1px 2px rgba(23,55,46,0.04); transition:transform .15s ease, box-shadow .15s ease;}
   .door-card:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(23,55,46,0.08);}
   .door-card:nth-child(2){border-top-color:var(--pink);}
   .door-card:nth-child(3){border-top-color:var(--honey);}
+  .door-card:nth-child(4){border-top-color:var(--ink-soft);}
   @media (max-width:700px){ .door-grid{gap:10px;} .door-card{padding:16px 12px;} }
   @media (max-width:520px){ .door-card{background:transparent; border:none; border-radius:0; box-shadow:none; padding:20px 0; border-bottom:1px solid var(--border);} .door-card:last-child{border-bottom:none;} .door-card:hover{transform:none; box-shadow:none;} }
   .door-ico{width:38px; height:38px; border-radius:11px; background:var(--accent); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
   .door-card:nth-child(2) .door-ico{background:var(--pink);}
   .door-card:nth-child(3) .door-ico{background:var(--honey);}
+  .door-card:nth-child(4) .door-ico{background:var(--ink-soft);}
   .door-ico svg{width:20px; height:20px; display:block;}
   @media (max-width:700px){ .door-ico{width:32px; height:32px; margin-bottom:10px;} .door-ico svg{width:17px; height:17px;} }
   .door-t{font-weight:700; font-size:15px; margin-bottom:8px; line-height:1.3;}
@@ -307,7 +310,12 @@
       <div class="door-card">
         <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
         <div class="door-t">Rehearse Mode</div>
-        <div class="door-d">For a hard performance or conduct conversation you need to have with your own direct report. Practice it before you're actually in the room.</div>
+        <div class="door-d">For a hard performance or conduct conversation, or a meeting you need to walk into prepared. Practice it before you're actually in the room.</div>
+      </div>
+      <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="28" height="24" rx="3" stroke="#fff" stroke-width="2"/><path d="M12 16h16M12 21h16M12 26h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="door-t">Tone Check</div>
+        <div class="door-d">Before you hit send on a hard email or Slack message, get a second opinion on how it actually reads, not just how you meant it.</div>
       </div>
       <div class="door-card">
         <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="26" rx="3" stroke="#fff" stroke-width="2"/><path d="M15 8v-2a2 2 0 012-2h6a2 2 0 012 2v2" stroke="#fff" stroke-width="2"/><path d="M14 18h12M14 23h12M14 28h8" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg></div>
