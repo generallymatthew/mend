@@ -20,6 +20,7 @@
     --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
   }
   *{box-sizing:border-box}
+  html{scroll-behavior:smooth;}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
   .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
 
@@ -103,6 +104,7 @@
   .btn-top:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(23,55,46,0.24);}
 
   section.block{margin-top:48px;}
+  #doors{scroll-margin-top:84px;}
 
   .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
   @media (max-width:520px){ .door-grid{grid-template-columns:1fr;} }
@@ -213,7 +215,7 @@
     <div class="hero-text">
       <h1>Get a Second Opinion Before You Say Anything.</h1>
       <p class="lede">Work through a conversation that matters: a hard conversation coming up, a conflict you're still deciding how to handle, or even just getting some insight as to why it happened in the first place. Mend gives you an unbiased second opinion, privately, before you decide what to do. Nothing is recorded, nothing reaches HR, and your manager never knows you used it.</p>
-      <a class="btn-top" href="/intake/session">Start a Private Session &rarr;</a>
+      <a class="btn-top" href="#doors">Find Your Door &rarr;</a>
     </div>
     <div class="hero-visual">
       <div class="hero-avatar">
@@ -224,7 +226,7 @@
     </div>
   </div>
 
-  <section class="block">
+  <section class="block" id="doors">
     <h3 class="section-headline">Mend Helps You Understand the Social Dynamics at Play, Before You Act on Them.</h3>
     <p class="section-sub">Whatever side of a conflict you're on.</p>
     <div class="audience-doors">
