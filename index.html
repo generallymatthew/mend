@@ -112,9 +112,8 @@
   section.block{margin-top:48px;}
   #doors{scroll-margin-top:84px;}
 
-  .door-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:4px;}
-  @media (max-width:760px){ .door-grid{grid-template-columns:1fr 1fr;} }
-  @media (max-width:520px){ .door-grid{grid-template-columns:1fr;} }
+  .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
+  @media (max-width:620px){ .door-grid{grid-template-columns:1fr;} }
   .door-card{min-width:0; background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; box-shadow:0 10px 24px rgba(0,0,0,0.2); transition:transform .15s ease, box-shadow .15s ease;}
   .door-card:hover{transform:translateY(-2px); box-shadow:0 14px 32px rgba(0,0,0,0.3);}
   @media (max-width:700px){ .door-grid{gap:10px;} .door-card{padding:16px 12px;} }
@@ -123,7 +122,6 @@
   .door-ico svg{width:20px; height:20px;}
   .door-card:nth-child(2) .door-ico{background:rgba(243,130,154,0.18);}
   .door-card:nth-child(3) .door-ico{background:rgba(233,185,73,0.18);}
-  .door-card:nth-child(4) .door-ico{background:rgba(255,255,255,0.08);}
   @media (max-width:700px){ .door-ico{width:32px; height:32px; margin-bottom:10px;} .door-ico svg{width:17px; height:17px;} }
   .door-t{font-weight:700; font-size:15px; margin-bottom:8px; line-height:1.3; color:#fff;}
   .door-d{font-size:13px; color:var(--muted); line-height:1.5; flex:1; margin-bottom:0;}
@@ -259,24 +257,19 @@
     <p class="section-sub">No invite required, and no menu to click through. Each one opens a new conversation with Thimble, the same facilitator employees use; just start talking, and it steers from what you say.</p>
     <div class="door-grid">
       <div class="door-card">
+        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="26" rx="3" stroke="#fff" stroke-width="2"/><path d="M15 8v-2a2 2 0 012-2h6a2 2 0 012 2v2" stroke="#fff" stroke-width="2"/><path d="M14 18h12M14 23h12M14 28h8" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg></div>
+        <div class="door-t">Team Conflict</div>
+        <div class="door-d">For a conflict between two people on your team. Work out what's actually driving it and land on a concrete plan, without you having to play judge.</div>
+      </div>
+      <div class="door-card">
         <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
-        <div class="door-t">Rehearse Mode</div>
-        <div class="door-d">For a hard performance or conduct conversation, or a meeting you need to walk into prepared. Practice it before you're actually in the room.</div>
+        <div class="door-t">Hard Conversation</div>
+        <div class="door-d">For a hard performance or conduct conversation with your own report. Practice it before you're actually in the room.</div>
       </div>
       <div class="door-card">
         <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="28" height="24" rx="3" stroke="#fff" stroke-width="2"/><path d="M12 16h16M12 21h16M12 26h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div class="door-t">Tone Check</div>
         <div class="door-d">Before you hit send on a hard email or Slack message, get a second opinion on how it actually reads, not just how you meant it.</div>
-      </div>
-      <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="26" rx="3" stroke="#fff" stroke-width="2"/><path d="M15 8v-2a2 2 0 012-2h6a2 2 0 012 2v2" stroke="#fff" stroke-width="2"/><path d="M14 18h12M14 23h12M14 28h8" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg></div>
-        <div class="door-t">Case Mode</div>
-        <div class="door-d">For a conflict between two people on your team. Work out what's actually driving it and land on a concrete plan, without you having to play judge.</div>
-      </div>
-      <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><path d="M10 20h20M24 14l6 6-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="door-t">Handoff Mode</div>
-        <div class="door-d">Once both sides agree on the real blocker, hand the case to a private session between the two people themselves. You stay out of that room entirely.</div>
       </div>
     </div>
     <p class="door-footnote">Working through something on your own, not managing someone else? <button type="button" class="aside-link" style="margin-top:0;" onclick="document.getElementById('thimbleModal').classList.add('open')">Thimble is Mend's employee-facing app &rarr;</button></p>
