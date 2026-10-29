@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; Founder</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Fraunces:ital,opsz,wght@0,9,700;1,9,500&display=swap" rel="stylesheet">
+<style>
+  /* Same brand kit as about.html/story.html/seam-story.html: Evergreen ink,
+     Oat paper, Evergreen as the primary accent, Pink reserved for the logo
+     mark, Honey as a highlight fill paired with ink text on top. */
+  :root{
+    --ink:#17372E; --ink-soft:#3C4C49; --muted:#6E7268; --paper:#F6F1E7;
+    --card:#FFFFFF; --border:#DDD4C0; --accent:#17372E; --accent-soft:#EAF0EC;
+    --pink:#F3829A; --pink-soft:#FDEAEE; --honey:#E9B949; --honey-soft:#FBF2DC;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .brand-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .wordmark{font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; line-height:1;}
+  .back-link{margin-left:auto; font-size:13px; font-weight:700; color:var(--ink-soft); text-decoration:none;}
+  .back-link:hover{color:var(--accent);}
+
+  .kicker{font-family:'Fraunces',Georgia,serif; font-style:italic; font-size:14px; color:var(--muted); margin:0 0 10px;}
+  h1{font-family:'Fraunces',Georgia,serif; font-size:2.15rem; line-height:1.2; letter-spacing:-0.015em; margin:0 0 14px; font-weight:700;}
+  h2.eyebrow{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--ink-soft); text-transform:uppercase;}
+  h3.section-headline{font-family:'Fraunces',Georgia,serif; font-size:1.35rem; font-weight:700; letter-spacing:-0.01em; margin:48px 0 10px; color:var(--ink); line-height:1.25;}
+  p.lede{font-size:1.05rem; color:var(--ink-soft); margin:0 0 8px; max-width:56ch;}
+  p{margin:0 0 14px;}
+  section.block{margin-top:48px;}
+  section.block:first-of-type{margin-top:36px;}
+
+  .link-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px;}
+  .link-row a{font-size:12.5px; font-weight:700; color:var(--accent); background:var(--accent-soft); padding:7px 14px; border-radius:999px; text-decoration:none;}
+
+  .role-cards{display:flex; flex-direction:column; gap:14px; margin-top:16px;}
+  .role-card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px 22px;}
+  .role-card-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:8px;}
+  .role-card-co{font-weight:800; font-size:15px;}
+  .role-card-title{font-size:13px; color:var(--ink-soft);}
+  .role-card-meta{font-size:12px; color:var(--muted); background:var(--accent-soft); padding:3px 10px; border-radius:999px; white-space:nowrap;}
+  .role-card .headline{font-size:13.5px; color:var(--ink-soft); line-height:1.5; margin:0;}
+
+  .ask-panel{background:var(--ink); border-radius:20px; padding:30px 28px; color:#fff;}
+  .ask-panel h3{color:#fff; margin-top:0;}
+  .ask-panel p{color:rgba(255,255,255,0.78); font-size:14px;}
+  .ask-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:16px;}
+  .ask-item{background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14); border-radius:14px; padding:16px 18px;}
+  .ask-item b{display:block; color:var(--honey); font-size:13px; margin-bottom:6px;}
+  .ask-item span{font-size:13px; color:rgba(255,255,255,0.85); line-height:1.5;}
+
+  .cta-row{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px;}
+  .btn-top{display:inline-flex; align-items:center; gap:6px; background:var(--accent); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; box-shadow:0 2px 6px rgba(23,55,46,0.18);}
+  .btn-top:hover{transform:translateY(-1px); box-shadow:0 6px 14px rgba(23,55,46,0.24);}
+  .hr-link{display:inline-flex; align-items:center; gap:6px; background:#fff; color:var(--ink); font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; border:1px solid var(--border);}
+  .hr-link:hover{transform:translateY(-1px); box-shadow:0 2px 6px rgba(23,55,46,0.1);}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand-row">
+    <div class="mark"></div>
+    <div class="wordmark">Mend</div>
+    <a class="back-link" href="index.html">&larr; Back to Mend</a>
+  </div>
+
+  <p class="kicker">Founder</p>
+  <h1>Matthew Barton, Founder</h1>
+  <p class="lede">I'm a UX designer living and working in Durham, NC, across telecom startups, fintech, and accounting software. Design, technology, and human behavior have been my three constants, which is why UX has always fit, and why I'm building Mend: a worker-first, AI-powered mediation tool built to keep workers' best interests at the center of every interaction.</p>
+  <div class="link-row">
+    <a href="mailto:matthew.barton@gmail.com">matthew.barton@gmail.com</a>
+    <a href="https://generallymatthew.github.io/" target="_blank" rel="noopener">Portfolio</a>
+    <a href="https://www.linkedin.com/in/matthew-waite-barton" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="tel:9199067085">919.906.7085</a>
+  </div>
+
+  <section class="block">
+    <h3 class="section-headline">Why Mend</h3>
+    <p>Mend applies the same research-first approach I bring to every project to workplace conflict: the moment after a conflict with a coworker, when you need to figure out what to do next and don't have anyone unbiased to ask.</p>
+    <p>Mend is something I wish I had when I first started my career.</p>
+  </section>
+
+  <section class="block">
+    <h2 class="eyebrow">Experience</h2>
+    <div class="role-cards">
+      <div class="role-card">
+        <div class="role-card-head"><div><div class="role-card-co">Blackbaud</div><div class="role-card-title">Senior UX Designer</div></div><div class="role-card-meta">2020&ndash;2026</div></div>
+        <p class="headline">Designed an agentic AI automation that drove 128% of a two-quarter retention goal; led churn-reduction initiatives on the company's 2nd-highest margin product.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-card-head"><div><div class="role-card-co">Fidelity TalentSource</div><div class="role-card-title">UX Designer</div></div><div class="role-card-meta">2019&ndash;2020</div></div>
+        <p class="headline">Sole designer on Fidelity's HSA auto-investing concept for first-time investors; won department-wide buy-in on the framework.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-card-head"><div><div class="role-card-co">Republic Wireless</div><div class="role-card-title">Senior UX Designer</div></div><div class="role-card-meta">2012&ndash;2018</div></div>
+        <p class="headline">Led the UX team for 6+ years on apps and services used daily by hundreds of thousands of people.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-card-head"><div><div class="role-card-co">iContact &middot; Hesketh &middot; Brooks Bell</div><div class="role-card-title">UX / Digital Strategy / Interactive Design</div></div><div class="role-card-meta">2007&ndash;2012</div></div>
+        <p class="headline">Owned UX/UI and front-end for an email-marketing product; digital strategy and conversion-optimized design for clients including AOL and The Wall Street Journal.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-card-head"><div><div class="role-card-co">FIDM</div><div class="role-card-title">Associate's Degree, Visual Communications</div></div><div class="role-card-meta">San Francisco, CA</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="ask-panel">
+      <h3 class="section-headline" style="margin-top:0;">What I'm Trying to Accomplish</h3>
+      <p>Taking Mend from a working prototype to a validated product, then a funded company.</p>
+      <div class="ask-grid">
+        <div class="ask-item"><b>Pilot</b><span>Run a 50&ndash;100 pair pilot cohort to prove employees will actually use it, and that it measurably cuts the time conflict currently costs a team.</span></div>
+        <div class="ask-item"><b>Trust architecture</b><span>Get the zero-trace, ephemeral-memory privacy model right first, it's the actual moat, not a feature list, and it's what makes the pilot results credible.</span></div>
+        <div class="ask-item"><b>Legal review</b><span>Get real employment counsel on the trigger-category definitions (the Title VII/harassment auto-escalation logic) before this goes near a real employee's real conflict.</span></div>
+        <div class="ask-item"><b>Pricing validated</b><span>Prove the below-enterprise-floor pricing model against one real signed deal, not just a spreadsheet model.</span></div>
+        <div class="ask-item"><b>Runway</b><span>Non-dilutive credits and incubator support, Google for Startups among them, to fund that pilot before pricing equity against early traction.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-row">
+    <a class="btn-top" href="index.html">See the Mend Story &rarr;</a>
+    <a class="hr-link" href="https://generallymatthew.github.io/" target="_blank" rel="noopener">Full Portfolio &amp; Case Studies &rarr;</a>
+  </div>
+
+  <footer>
+    <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product.</div>
+  </footer>
+</div>
+</body>
+</html>
