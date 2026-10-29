@@ -63,6 +63,7 @@ Static `.dc.html` mockups for engineering/design handoff — same templated form
 - [Thimble shape options](https://claude.ai/artifact/QxwTAwoqh4GpiYvG5Y5GmF) — the four dome/cone/barrel candidates compared against empathizing's shape
 - [Product spec (live artifact)](https://claude.ai/artifact/PRQ4kwizN721tXCAf6ACpt)
 - [Workflow diagram](https://claude.ai/artifact/3PmW3kE6ejoq4B8XxS9rH1)
+- Pitch & talk decks (Slides-type Artifacts, no local file) — indexed in [pitch/decks/README.md](pitch/decks/README.md)
 
 ## GitHub Pages
 
