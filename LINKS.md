@@ -26,7 +26,7 @@ python3 -m http.server 8000
 | Joint session · Employee B | [localhost:8080/joint/?code=links&role=b](http://localhost:8080/joint/?code=links&role=b) | — not deployed |
 | Post-session check-in | [localhost:8080/post/](http://localhost:8080/post/) | — not deployed |
 | Joint session · audio (opt-in, needs LiveKit) | [localhost:8080/joint-audio/](http://localhost:8080/joint-audio/) | — not deployed |
-| About (why this matters) | [localhost:8080/about](http://localhost:8080/about) or [localhost:8000/about.html](http://localhost:8000/about.html) | [mend-mvp.onrender.com/about](https://mend-mvp.onrender.com/about) |
+| About (why this matters) | [localhost:8080/about](http://localhost:8080/about) or [localhost:8000/index.html](http://localhost:8000/index.html) (about.html retired, duplicated index.html) | [mend-mvp.onrender.com/about](https://mend-mvp.onrender.com/about) |
 
 Only spool + thimble are in the live Render deploy (`render.yaml`/`deploy/start.sh`) — everything else above only exists locally. Open both Employee A and Employee B links (two tabs, or send B to someone else) for a real two-person joint session.
 
