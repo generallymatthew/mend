@@ -66,18 +66,20 @@
   .screenshot-chrome{background:#1b1f1e; padding:10px 14px; display:flex; align-items:center; gap:7px;}
   .screenshot-chrome .dot{width:10px; height:10px; border-radius:50%; display:inline-block;}
   .screenshot-url{margin-left:16px; font-size:11px; color:var(--muted);}
-  .screenshot-app{background:#F6F1E7; color:#17372E;}
-  .screenshot-topbar{display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid #DDD4C0;}
+  .screenshot-app{background:#FFFFFF; color:#17372E; font-family:'Manrope',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+  .screenshot-topbar{display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid #CBD3CD;}
   .screenshot-logo{font-weight:800; font-size:15px;}
-  .screenshot-pill{margin-left:auto; font-size:11px; font-weight:700; color:#5B655F; background:#fff; border:1px solid #DDD4C0; padding:5px 12px; border-radius:999px;}
-  .screenshot-pill.accent{margin-left:0; color:#17372E; background:#EAF0EC; border:none;}
-  .screenshot-body{display:flex;}
-  .screenshot-sidebar{width:180px; border-right:1px solid #DDD4C0; padding:16px 14px; flex-shrink:0;}
-  .screenshot-sidebar-label{font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#8A8F89; margin-bottom:10px;}
-  .screenshot-thread{background:#fff; border:1px solid #DDD4C0; border-radius:10px; padding:10px 12px; font-size:12px; font-weight:700;}
+  .screenshot-pill{margin-left:auto; font-size:12px; font-weight:600; color:#17372E; background:rgba(23,55,46,0.08); border:none; padding:8px 14px 8px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:6px;}
+  .screenshot-pill.accent{margin-left:0;}
+  .screenshot-body{display:flex; background:#F7F9F7;}
+  .screenshot-sidebar{width:180px; background:#EEF2EE; border-right:1px solid #CBD3CD; padding:16px 14px; flex-shrink:0;}
+  .screenshot-sidebar-label{font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#83928B; margin-bottom:10px;}
+  .screenshot-thread{background:#FFFFFF; border-left:3px solid #17372E; border-radius:10px; padding:10px 12px;}
+  .screenshot-thread .name{font-size:12.5px; font-weight:600; color:#17372E;}
+  .screenshot-thread .tag{display:inline-block; margin-top:5px; font-size:10.5px; font-weight:700; color:#52605A; background:#E7ECE7; border-radius:999px; padding:2px 9px;}
   .screenshot-chat{flex:1; padding:22px 24px; display:flex; flex-direction:column; gap:14px; min-width:0;}
-  .screenshot-bubble{align-self:flex-start; max-width:80%; background:#fff; border:1px solid #DDD4C0; border-radius:14px 14px 14px 4px; padding:12px 14px; font-size:13px; line-height:1.5;}
-  .screenshot-bubble.me{align-self:flex-end; background:#17372E; color:#fff; border:none; border-radius:14px 14px 4px 14px;}
+  .screenshot-bubble{align-self:flex-start; max-width:80%; background:#FCEEF0; border-radius:20px 20px 20px 5px; padding:12px 16px; font-size:13px; line-height:1.5;}
+  .screenshot-bubble.me{align-self:flex-end; background:#17372E; color:#fff; border-radius:20px 20px 5px 20px;}
   @media (max-width:560px){ .screenshot-sidebar{display:none;} }
   .screenshot-caption{font-size:11.5px; color:var(--muted); text-align:center; margin:14px 0 0;}
 
@@ -118,6 +120,11 @@
   .icon-list .ico svg{width:18px; height:18px; display:block;}
   .icon-list .txt{padding-top:2px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
   .icon-list .txt b{color:#fff; display:block; font-size:14.5px; margin-bottom:2px;}
+  .simple-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:16px;}
+  .simple-list li{display:flex; gap:12px; align-items:flex-start;}
+  .simple-list li::before{content:""; flex-shrink:0; width:7px; height:7px; border-radius:50%; background:var(--accent-solid, #E9B949); margin-top:7px;}
+  .simple-list .txt{font-size:14px; color:var(--ink-soft); line-height:1.5;}
+  .simple-list .txt b{color:#fff; display:block; font-size:14.5px; margin-bottom:2px;}
 
   .evidence-block{background:rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:22px; padding:clamp(32px,5vw,52px) clamp(24px,5vw,48px); margin-top:8px; box-shadow:0 20px 44px rgba(0,0,0,0.22);}
   .evidence-head{max-width:640px; margin-bottom:clamp(24px,4vw,36px);}
@@ -283,13 +290,15 @@
     <div class="screenshot-app">
       <div class="screenshot-topbar">
         <span class="screenshot-logo">Seam</span>
-        <span class="screenshot-pill">Give feedback</span>
-        <span class="screenshot-pill accent">&#128274; Anonymity enforced</span>
+        <span class="screenshot-pill accent"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Anonymity enforced</span>
       </div>
       <div class="screenshot-body">
         <div class="screenshot-sidebar">
           <div class="screenshot-sidebar-label">Conversations</div>
-          <div class="screenshot-thread">Missed deadlines</div>
+          <div class="screenshot-thread">
+            <div class="name">Missed deadlines</div>
+            <span class="tag">Conflict</span>
+          </div>
         </div>
         <div class="screenshot-chat">
           <div class="screenshot-bubble">When did things start feeling tense between you two?</div>
@@ -303,9 +312,12 @@
 
   <section class="block">
     <h3 class="section-headline">Why managers rarely ask for help with this</h3>
-    <p>You got promoted into management because you were excellent as an individual contributor, and because you showed a desire to lead. That excellence took years to build: a four-year degree in most cases, plus thousands of hours honing your craft as a junior professional.</p>
-    <p>None of that applies to the social and interpersonal side of the job. There's no formal training for navigating conflict between the people you manage, and no way to get feedback on how you're handling it that isn't framed as a violation with consequences attached.</p>
-    <p>Most people treat social skill as something you're born with, not something you learn, and that framing is exactly what makes asking for help here feel riskier than it should. When you hit a problem in your actual area of expertise, you research it or ask a respected peer or manager, the right move every time. But asking for help with a social or interpersonal problem can read as admitting you're missing a skill you're assumed to already have, and if it's assumed to be innate, the fear is that it can't be taught at all.</p>
+    <p>The skills that got you promoted don't cover this part of the job.</p>
+    <ul class="simple-list">
+      <li><div class="txt"><b>No formal training.</b> You spent years building technical expertise. None of it touches navigating conflict between the people you manage.</div></li>
+      <li><div class="txt"><b>No safe feedback loop.</b> The only feedback you get on how you're handling it usually shows up framed as a violation, with consequences attached.</div></li>
+      <li><div class="txt"><b>Asking feels like admitting a flaw.</b> Social skill gets treated as something you're born with, not something you learn. So asking for help here reads very differently than asking for help in your actual area of expertise, where it's the obvious right move.</div></li>
+    </ul>
   </section>
 
   <section class="block">
