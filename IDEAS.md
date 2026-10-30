@@ -438,6 +438,31 @@ wellness/mindfulness language.
 
 ## Business model
 
+### Manager-to-team invite as Thimble's distribution and credibility path
+Managers already using Seam can invite their own team to Thimble, so the
+first thing an employee hears about Thimble is "my manager actually found
+this useful and wants me to have it," not a cold, slightly cringe-inducing
+self-serve pitch for an AI conflict tool. Solves two problems at once: the
+adoption-credibility gap Thimble has on its own (nobody wants to be the
+first person at a company to use something like this), and gives Seam
+managers a concrete reason to keep paying attention to Mend between actual
+conflict episodes.
+- Source: user idea, 2026-10-30, raised right after the Seam-first
+  marketing-site work landed — explicit framing was "a really good way to
+  get around the cringe factor and give Thimble some credibility because
+  their managers are actively asking them to use it because they
+  themselves found it useful."
+- Where it could plug in: a Seam dashboard/admin feature (invite flow,
+  probably post-session or from a settings area); marketing copy on
+  index.html/seam-story.html once built ("invite your team" as a listed
+  manager benefit); ties into the existing "two products, one engine"
+  subsidy idea below, since this is the other product's actual bridge
+  from manager to employee.
+- Why not active: pricing/mechanics explicitly deferred by the user
+  ("we can figure out pricing later") — no invite flow exists in
+  `apps/seam` yet, and it's not clear whether it's a free team-wide
+  unlock, a per-seat add-on, or something else.
+
 ### Two products, one engine — institution-facing tool funds the consumer tool
 The business-model framing behind the EPLI/EAP distribution work: an
 institution-facing tool (satisfies what an insurer/broker/EAP vendor wants
