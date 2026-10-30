@@ -146,6 +146,29 @@
   }
   .convo-type-tag.pending { color: var(--faint); background: var(--panel-bg); font-weight: 600; }
 
+  /* Sidebar empty state: shown instead of #convo-list's contents when
+     there are no conversations yet. Reuses .intro-examples-label /
+     .intro-example from the thread-side empty state so the two places
+     that teach "what Seam is for" stay visually consistent. */
+  .convo-empty { flex: 1; overflow: auto; padding: 4px 14px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .convo-empty-copy h3 { font-size: 14px; font-weight: 700; margin: 0 0 4px; }
+  .convo-empty-copy p { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 0; }
+  .convo-empty .intro-examples-label { text-align: left; }
+  .convo-empty .intro-example { font-size: 12.5px; padding: 9px 12px; }
+
+  /* New-conversation FAB: lives in the sidebar, next to the empty state,
+     so there's an obvious way in on a fresh phone even though the
+     sidebar itself starts closed on mobile (see #sidebar-toggle). The
+     "+" in the Conversations header still works too; this is just a
+     second, harder-to-miss entry point for a sidebar with nothing in it. */
+  .convo-new-fab {
+    align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+    font: inherit; font-size: 12.5px; font-weight: 700; color: #fff;
+    background: var(--ink); border: none; border-radius: 999px; padding: 10px 16px 10px 14px;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(23,55,46,0.22);
+  }
+  .convo-new-fab svg { flex-shrink: 0; }
+
   /* Help modal */
   #help-overlay {
     display: none; position: fixed; inset: 0; background: rgba(23, 55, 46, 0.35);
@@ -676,13 +699,29 @@
   </div>
 </div>
 <div id="app">
-  <div id="sidebar">
+  <div id="sidebar" class="closed">
     <div class="sidebar-section active">
       <div class="sidebar-subheader">
         <span class="label">Conversations</span>
         <button class="sidebar-new-btn" id="new-convo-btn" title="New conversation">+</button>
       </div>
       <div id="convo-list"></div>
+      <div class="convo-empty" id="convo-empty" style="display:none">
+        <div class="convo-empty-copy">
+          <h3>What do you want to discuss today?</h3>
+          <p>Your conversations with Thimble will show up here.</p>
+        </div>
+        <div class="intro-examples">
+          <div class="intro-examples-label">Things people bring here</div>
+          <div class="intro-example">"Prep for a hard conversation with a direct report"</div>
+          <div class="intro-example">"Help me answer a message where the wording really matters"</div>
+          <div class="intro-example">"Two of my direct reports aren't getting along"</div>
+        </div>
+        <button class="convo-new-fab" id="convo-empty-new-btn" title="New conversation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New conversation
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1221,6 +1260,9 @@ async function loadConversations() {
 
 function renderConvoList() {
   const list = document.getElementById("convo-list");
+  const empty = document.getElementById("convo-empty");
+  list.style.display = conversations.length ? "block" : "none";
+  empty.style.display = conversations.length ? "none" : "flex";
   list.innerHTML = "";
   for (const c of conversations) {
     const row = document.createElement("div");
@@ -1690,6 +1732,7 @@ function closeHelp() {
 }
 
 document.getElementById("new-convo-btn").onclick = newConversation;
+document.getElementById("convo-empty-new-btn").onclick = newConversation;
 document.getElementById("close-case-btn").onclick = closeCase;
 document.getElementById("send-btn").onclick = sendMessage;
 document.getElementById("add-step-btn").onclick = addStep;
