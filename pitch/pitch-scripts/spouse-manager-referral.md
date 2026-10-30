@@ -5,7 +5,7 @@
 
 ---
 
-**Subject:** A tool my husband built for managers, worth 5 minutes
+**Subject:** A tool my husband built for managers
 
 Hi
 
