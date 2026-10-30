@@ -12,5 +12,6 @@ Same product, different language for different buyers. Each file is a ready-to-a
 | [oss-maintainers.md](oss-maintainers.md) | Open-source maintainers / project leads | Tester recruiting and the OSS conflict-resolution use case |
 | [legal-and-compliance.md](legal-and-compliance.md) | Employment counsel, compliance reviewers | Pre-pilot legal scoping, safety-floor stress-testing |
 | [elevator-pitch.md](elevator-pitch.md) | Anyone, 30 seconds | Networking events, cold hallway conversations |
+| [spouse-manager-referral.md](spouse-manager-referral.md) | Managers, personal network | Your wife's own referral email recruiting managers to test Seam |
 
 For the full incubator *application* (not just a pitch conversation), see [../INCUBATOR_PITCH.md](../INCUBATOR_PITCH.md). For the underlying strategy and metaphor system these all draw from, see [../docs/pitch-strategy/](../docs/pitch-strategy/).
