@@ -41,6 +41,19 @@
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
   .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25);}
   @media (max-width:680px){ .nav-links{display:none;} }
+
+  .nav-toggle{display:none; align-items:center; justify-content:center; width:34px; height:34px; background:none; border:none; cursor:pointer; padding:0; flex-shrink:0;}
+  .nav-toggle span{display:block; width:20px; height:2px; background:var(--muted); border-radius:2px; position:relative;}
+  .nav-toggle span::before,.nav-toggle span::after{content:''; position:absolute; left:0; width:20px; height:2px; background:var(--muted); border-radius:2px;}
+  .nav-toggle span::before{top:-6px;}
+  .nav-toggle span::after{top:6px;}
+  @media (max-width:680px){ .nav-toggle{display:flex;} }
+  .mobile-menu{display:none; flex-direction:column; background:rgba(10,24,19,0.96); border-bottom:1px solid var(--border); padding:6px 20px 14px;}
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{padding:11px 0; font-size:14px; font-weight:700; color:var(--muted); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.08);}
+  .mobile-menu a:last-child{border-bottom:none;}
+  .mobile-menu a.active{color:#fff;}
+
   .hero{display:flex; align-items:center; gap:32px;}
   .hero-text{flex:1; min-width:0;}
   .hero-visual{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:12px;}
@@ -245,7 +258,14 @@
       -->
       <a class="nav-cta" href="/intake/session">Start with Thimble &rarr;</a>
     </div>
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><span></span></button>
   </div>
+  <nav class="mobile-menu" id="mobileMenu">
+    <a href="index.html">Home</a>
+    <a href="seam-story.html">Seam</a>
+    <a href="founder.html">Founder</a>
+    <a href="story.html" class="active">Thimble</a>
+  </nav>
 </header>
 <div class="wrap">
 
@@ -262,7 +282,8 @@
   </div>
 
   <section class="block builder-note">
-    <h3 class="section-headline">A note from the builder</h3>
+    <p class="kicker">A note from the builder</p>
+    <h3 class="section-headline">I Used to Ask My Friends</h3>
     <p>Earlier in my career, whenever I ran into tension with a coworker, I did what almost everyone does: I asked my friends.</p>
     <p>Because they cared about me, they validated me. They told me I was right, that the other person was being unreasonable, and that I didn&rsquo;t deserve it. It felt good in the moment. But they didn&rsquo;t tell me what I actually needed to hear: my own part in the dynamic.</p>
     <details class="read-more">
@@ -654,6 +675,26 @@
       adv.setLevel(0.35 + 0.35 * Math.abs(Math.sin(t * 1.8 + 1.5)));
     }, 80);
   }
+})();
+</script>
+<script>
+(function(){
+  // Mobile nav: hidden below 680px (.nav-links), this hamburger toggle is
+  // the only way to reach the other pages at that width -- previously
+  // there was none at all.
+  var toggle = document.getElementById('navToggle');
+  var menu = document.getElementById('mobileMenu');
+  if (!toggle || !menu) return;
+  toggle.addEventListener('click', function(){
+    var open = menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  menu.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    });
+  });
 })();
 </script>
 </body>
