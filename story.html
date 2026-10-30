@@ -39,7 +39,8 @@
   .nav-links a.minor{font-weight:600; color:rgba(143,163,153,0.6); font-size:12.5px;}
   .nav-links a.minor:hover{color:var(--muted);}
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
-  .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25);}
+  .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .2s ease, transform .2s ease;}
+  .nav-cta.visible{opacity:1; transform:translateY(0); pointer-events:auto;}
   @media (max-width:680px){ .nav-links{display:none;} }
 
   .nav-toggle{display:none; align-items:center; justify-content:center; width:34px; height:34px; background:none; border:none; cursor:pointer; padding:0; flex-shrink:0;}
@@ -75,7 +76,7 @@
   .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background-image:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%); background-color:#FF8CA3; overflow:hidden; transition:border-radius .6s ease, background-color .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background-image:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%); background-color:#FF8CA3; overflow:hidden; transition:border-radius .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
 
@@ -247,8 +248,9 @@
     <nav class="nav-links">
       <a href="index.html">Home</a>
       <a href="seam-story.html">Seam</a>
-      <a href="founder.html">Founder</a>
       <a href="story.html" class="active minor">Thimble</a>
+      <a href="founder.html">Founder</a>
+      <a href="index.html#manifesto">Approach</a>
     </nav>
     <div class="nav-right">
       <!-- Ko-fi link hidden for now, keep markup ready to re-enable
@@ -263,8 +265,9 @@
   <nav class="mobile-menu" id="mobileMenu">
     <a href="index.html">Home</a>
     <a href="seam-story.html">Seam</a>
-    <a href="founder.html">Founder</a>
     <a href="story.html" class="active">Thimble</a>
+    <a href="founder.html">Founder</a>
+    <a href="index.html#manifesto">Approach</a>
   </nav>
 </header>
 <div class="wrap">
@@ -566,18 +569,39 @@
     talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
   };
   // Per-state body colors, matching the live app's THIMBLE_COLORS
-  // (apps/thimble/static/session.html) -- idle/listening are no longer
-  // pink there, only thinking/talking still use honey/pink. Not porting
-  // the app's full "Four-Color Bloom" blended-gradient render here (a
-  // continuous 4-color weighted blend driven by per-frame interpolation);
-  // this is a static marketing page's decorative loop, so a plain
-  // CSS-transitioned solid-color swap per state is enough to carry the
-  // updated palette without that engine.
+  // (apps/thimble/static/session.html). Now ports the app's actual current
+  // look -- the "Four-Color Bloom" fill, where all four state colors stay
+  // visible as blended corner blobs all the time and a state change only
+  // shifts each blob's weight, not which colors exist -- instead of the
+  // flat solid-color swap this used before. Previously skipped as "overkill
+  // for a decorative loop," but this page already runs a per-frame tick()
+  // loop for the wobble/breathe motion, so there was no separate engine to
+  // add: the bloom lerp below just reuses that same frame.
   var THIMBLE_COLORS = {
     idle:      '#A3CFE0',
     listening: '#B0DED1',
     thinking:  '#E9B949',
     talking:   '#F3829A'
+  };
+  function thimbleHexToRgb(hex){
+    var n = parseInt(hex.slice(1), 16);
+    return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
+  }
+  var THIMBLE_BLOOM_ORDER = ['idle', 'listening', 'thinking', 'talking'];
+  var THIMBLE_BLOOM_RGB = {};
+  THIMBLE_BLOOM_ORDER.forEach(function(k){ THIMBLE_BLOOM_RGB[k] = thimbleHexToRgb(THIMBLE_COLORS[k]); });
+  // Fixed "home" corner for each color's blob, same layout as the app.
+  var THIMBLE_BLOOM_POS = {
+    idle:      {hx: 15, hy: 15},
+    listening: {hx: 85, hy: 15},
+    thinking:  {hx: 80, hy: 85},
+    talking:   {hx: 20, hy: 85}
+  };
+  var THIMBLE_BLOOM_WEIGHTS = {
+    idle:      {idle: .46, listening: .20, thinking: .14, talking: .20},
+    listening: {idle: .20, listening: .46, thinking: .20, talking: .14},
+    thinking:  {idle: .14, listening: .20, thinking: .46, talking: .20},
+    talking:   {idle: .20, listening: .14, thinking: .20, talking: .46}
   };
   function domeWobbleRadius(domeFactor, lvl){
     var capY = 50 + (DOME_RADIUS_CAP + 3 * lvl) * domeFactor;
@@ -599,7 +623,11 @@
     var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
     inst.el.style.transform = shape.lean;
     inst.blend.style.opacity = '0';
-    inst.body.style.backgroundColor = THIMBLE_COLORS[state] || THIMBLE_COLORS.listening;
+    inst.bloomTarget = THIMBLE_BLOOM_WEIGHTS[state] || THIMBLE_BLOOM_WEIGHTS.listening;
+    if (!inst.bloomCurrent) {
+      inst.bloomCurrent = {};
+      THIMBLE_BLOOM_ORDER.forEach(function(k){ inst.bloomCurrent[k] = inst.bloomTarget[k]; });
+    }
     var talking = state === 'talking';
     inst.ripple.hidden = !talking;
     inst.mouth.style.transition = talking
@@ -611,6 +639,28 @@
     applyState(inst, inst.state);
     var dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
     inst.lastT = now;
+    // Bloom weight lerp toward inst.bloomTarget (set in applyState above),
+    // every frame -- an exponential ease so a fast state change still reads
+    // as one continuous color shift, not a snap. ~.2s to settle, matching
+    // the app's own tuned rate.
+    var colorRate = 1 - Math.pow(0.000001, dt);
+    var cur = inst.bloomCurrent, tgt = inst.bloomTarget;
+    var r = 0, g = 0, b = 0;
+    THIMBLE_BLOOM_ORDER.forEach(function(k){
+      cur[k] += (tgt[k] - cur[k]) * colorRate;
+      var c = THIMBLE_BLOOM_RGB[k];
+      r += c.r * cur[k]; g += c.g * cur[k]; b += c.b * cur[k];
+    });
+    inst.body.style.backgroundColor = 'rgb(' + Math.round(r) + ', ' + Math.round(g) + ', ' + Math.round(b) + ')';
+    var blobs = THIMBLE_BLOOM_ORDER.map(function(k){
+      var w = cur[k], c = THIMBLE_BLOOM_RGB[k], pos = THIMBLE_BLOOM_POS[k];
+      var radius = (16 + w * 110).toFixed(1);
+      var alpha = Math.min(1, 0.3 + w * 1.1).toFixed(2);
+      return 'radial-gradient(circle at ' + pos.hx + '% ' + pos.hy + '%, rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ') 0%, transparent ' + radius + '%)';
+    }).join(',');
+    var ap = THIMBLE_BLOOM_POS[inst.state] || THIMBLE_BLOOM_POS.idle;
+    inst.body.style.backgroundImage =
+      'radial-gradient(circle at ' + ap.hx + '% ' + ap.hy + '%, rgba(255,255,255,.7) 0%, transparent 16%),' + blobs;
     var speaking = inst.state === 'talking';
     var thinkingState = inst.state === 'thinking';
     var nodding = inst.state === 'listening';
@@ -663,22 +713,26 @@
   // Hero Thimble: cycles idle -> listening -> thinking -> talking on a
   // loop with a fake amplitude signal, same as about.html's hero.
   if (!window.ThimbleAvatarV2) return;
-  var heroHost = document.getElementById('heroAvatar');
-  if (!heroHost) return;
-  var hero = new ThimbleAvatarV2(heroHost, { size: 140 });
   var states = ['idle', 'listening', 'thinking', 'talking'];
-  var i = 0;
-  hero.setState(states[0]);
-  setInterval(function(){ i++; hero.setState(states[i % states.length]); }, 3200);
   var t0 = performance.now();
-  setInterval(function(){
-    var t = (performance.now() - t0) / 1000;
-    hero.setLevel(0.35 + 0.35 * Math.abs(Math.sin(t * 1.8)));
-  }, 80);
+  var heroHost = document.getElementById('heroAvatar');
+  if (heroHost) {
+    var hero = new ThimbleAvatarV2(heroHost, { size: 140 });
+    var i = 0;
+    hero.setState(states[0]);
+    setInterval(function(){ i++; hero.setState(states[i % states.length]); }, 3200);
+    setInterval(function(){
+      var t = (performance.now() - t0) / 1000;
+      hero.setLevel(0.35 + 0.35 * Math.abs(Math.sin(t * 1.8)));
+    }, 80);
+  }
 
   // Advantage-section Thimble: same cycling loop, offset out of phase
   // with the hero one so the two avatars don't lock-step if both are
-  // visible at once while scrolling.
+  // visible at once while scrolling. story.html has no heroAvatar host at
+  // all (only index.html/seam-story.html do) -- this used to live behind
+  // an `if (!heroHost) return` guard that bailed the whole script before
+  // ever reaching here, so this avatar never actually rendered.
   var advHost = document.getElementById('advantageAvatar');
   if (advHost && window.ThimbleAvatarV2) {
     var adv = new ThimbleAvatarV2(advHost, { size: 104 });
@@ -710,6 +764,22 @@
       toggle.setAttribute('aria-expanded', 'false');
     });
   });
+})();
+</script>
+<script>
+(function(){
+  // Nav CTA stays hidden on load and only appears once the page's own
+  // in-hero CTA button has scrolled out of view -- avoids showing two
+  // identical "do this" buttons on screen at once. Pages with no hero CTA
+  // of their own (nothing to be redundant with) just show it immediately.
+  var navCta = document.querySelector('.nav-cta');
+  if (!navCta) return;
+  var heroCta = document.querySelector('.hero .btn-top, .hero-ctas .btn-top');
+  if (!heroCta) { navCta.classList.add('visible'); return; }
+  var observer = new IntersectionObserver(function(entries){
+    navCta.classList.toggle('visible', !entries[0].isIntersecting);
+  }, { threshold: 0, rootMargin: '-' + (document.querySelector('.topnav').offsetHeight + 4) + 'px 0px 0px 0px' });
+  observer.observe(heroCta);
 })();
 </script>
 </body>

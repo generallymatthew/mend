@@ -26,8 +26,6 @@
 
   .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
   .brand-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
-  .manifesto-link{font-size:13px; font-weight:700; color:var(--muted); text-decoration:none; border:1px solid var(--border); border-radius:999px; padding:7px 16px; background:transparent; cursor:pointer; font-family:inherit; appearance:none;}
-  .manifesto-link:hover{color:#fff; border-color:var(--accent-solid);}
 
   .topnav{position:sticky; top:0; z-index:30; background:rgba(10,24,19,0.78); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); margin-bottom:40px;}
   .topnav-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:22px;}
@@ -40,9 +38,9 @@
   .nav-links a.minor{font-weight:600; color:rgba(143,163,153,0.6); font-size:12.5px;}
   .nav-links a.minor:hover{color:var(--muted);}
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
-  .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25);}
+  .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .2s ease, transform .2s ease;}
+  .nav-cta.visible{opacity:1; transform:translateY(0); pointer-events:auto;}
   @media (max-width:680px){ .nav-links{display:none;} }
-  @media (max-width:480px){ .manifesto-link{display:none;} }
 
   .nav-toggle{display:none; align-items:center; justify-content:center; width:34px; height:34px; background:none; border:none; cursor:pointer; padding:0; flex-shrink:0;}
   .nav-toggle span{display:block; width:20px; height:2px; background:var(--muted); border-radius:2px; position:relative;}
@@ -82,6 +80,9 @@
   .hero-avatar{position:relative; width:176px; height:176px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 50%, rgba(243,130,154,0.24) 0%, rgba(243,130,154,0.2) 45%, rgba(233,185,73,0) 72%);}
   .avatar-status{display:inline-flex; align-items:center; gap:6px; font-family:'Manrope',sans-serif; font-size:10.5px; color:var(--muted); background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:5px 11px; border-radius:999px; white-space:nowrap;}
   .avatar-status .dot{width:6px; height:6px; border-radius:50%; background:#5FCF8F; flex-shrink:0;}
+  .avatar-status-row{display:flex; align-items:center; gap:8px;}
+  .thimble-info-btn{flex-shrink:0; width:20px; height:20px; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--muted); font-size:11px; font-weight:800; font-family:'Manrope',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; appearance:none; transition:color .15s ease, border-color .15s ease;}
+  .thimble-info-btn:hover{color:#fff; border-color:var(--muted);}
 
   .speech-bubble{position:absolute; top:6px; right:-6px; display:flex; align-items:center; gap:4px; background:#fff; border:1px solid rgba(23,55,46,0.12); border-radius:14px; padding:9px 11px; box-shadow:0 6px 14px rgba(0,0,0,0.25);}
   .speech-bubble::after{content:''; position:absolute; bottom:-6px; left:16px; width:11px; height:11px; background:#fff; border-right:1px solid rgba(23,55,46,0.12); border-bottom:1px solid rgba(23,55,46,0.12); transform:rotate(45deg);}
@@ -103,7 +104,7 @@
   .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background-image:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%); background-color:#FF8CA3; overflow:hidden; transition:border-radius .6s ease, background-color .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background-image:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%); background-color:#FF8CA3; overflow:hidden; transition:border-radius .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
 
@@ -119,6 +120,35 @@
   .btn-top:hover{transform:translateY(-1px); box-shadow:0 14px 28px rgba(243,130,154,0.36), 0 2px 6px rgba(0,0,0,0.24);}
 
   section.block{margin-top:48px;}
+
+  .evidence-block{background:rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:22px; padding:clamp(32px,5vw,52px) clamp(24px,5vw,48px); margin-top:8px; box-shadow:0 20px 44px rgba(0,0,0,0.22);}
+  .evidence-head{max-width:640px; margin-bottom:clamp(24px,4vw,36px);}
+  .evidence-eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.09em; text-transform:uppercase; color:var(--honey); margin-bottom:10px;}
+  .evidence-title{font-size:clamp(22px,3vw,30px); line-height:1.2; color:#fff; margin:0 0 10px; font-weight:800;}
+  .evidence-sub{font-size:14.5px; line-height:1.55; color:var(--muted); margin:0;}
+  .evidence-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;}
+  .evidence-card{background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; gap:10px;}
+  .evidence-card.lead{background:linear-gradient(135deg,#F3829A,#E9B949); border-color:transparent;}
+  .evidence-tag{align-self:flex-start; font-size:10.5px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; padding:4px 10px; border-radius:999px;}
+  .evidence-tag.primary{background:rgba(23,55,46,0.85); color:#fff;}
+  .evidence-tag.independent{background:rgba(255,255,255,0.1); color:#fff;}
+  .evidence-tag.secondary{background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6);}
+  .evidence-card.lead .evidence-tag{background:rgba(23,55,46,0.85); color:#fff;}
+  .evidence-finding{font-size:20px; line-height:1.35; color:#fff; font-weight:800;}
+  .evidence-card.lead .evidence-finding{color:var(--accent-ink);}
+  .evidence-org{font-size:12px; font-weight:700; letter-spacing:0.02em; color:rgba(255,255,255,0.5);}
+  .evidence-card.lead .evidence-org{color:rgba(23,55,46,0.72);}
+  .evidence-meta{font-size:12.5px; line-height:1.5; color:rgba(255,255,255,0.5);}
+  .evidence-card.lead .evidence-meta{color:rgba(23,55,46,0.72);}
+  .evidence-card.secondary{opacity:0.82;}
+  .evidence-source{margin-top:2px;}
+  .evidence-source summary{cursor:pointer; list-style:none; font-size:11px; font-weight:700; letter-spacing:0.02em; color:rgba(255,255,255,0.45); display:flex; align-items:center; gap:4px;}
+  .evidence-source summary::-webkit-details-marker{display:none;}
+  .evidence-source summary .chev{font-size:9px; transition:transform .15s ease;}
+  .evidence-source[open] summary .chev{transform:rotate(90deg);}
+  .evidence-source .evidence-meta{margin-top:8px;}
+  .evidence-card.lead .evidence-source summary{color:rgba(23,55,46,0.55);}
+  @media (max-width:600px){ .evidence-finding{font-size:17px;} }
 
   .lede-tip{position:relative; appearance:none; border:none; background:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; cursor:help; display:inline;}
   .lede-tip:hover,.lede-tip:focus{color:#fff;}
@@ -168,20 +198,21 @@
     <nav class="nav-links">
       <a href="index.html" class="active">Home</a>
       <a href="seam-story.html">Seam</a>
-      <a href="founder.html">Founder</a>
       <a href="story.html" class="minor">Thimble</a>
+      <a href="founder.html">Founder</a>
+      <a href="index.html#manifesto" onclick="event.preventDefault(); document.getElementById('manifestoModal').classList.add('open');">Approach</a>
     </nav>
     <div class="nav-right">
-      <button type="button" class="manifesto-link" onclick="document.getElementById('manifestoModal').classList.add('open')">Our Approach</button>
-      <a class="nav-cta" href="/seam/">Start with Seam &rarr;</a>
+      <a class="nav-cta" href="/seam/">Try Seam &rarr;</a>
     </div>
     <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><span></span></button>
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     <a href="index.html" class="active">Home</a>
     <a href="seam-story.html">Seam</a>
-    <a href="founder.html">Founder</a>
     <a href="story.html">Thimble</a>
+    <a href="founder.html">Founder</a>
+    <a href="index.html#manifesto" onclick="event.preventDefault(); document.getElementById('manifestoModal').classList.add('open'); document.getElementById('mobileMenu').classList.remove('open');">Approach</a>
   </nav>
 </header>
 <div class="wrap">
@@ -200,7 +231,10 @@
         <div id="heroAvatar"></div>
         <div class="speech-bubble" aria-hidden="true"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
       </div>
-      <div class="avatar-status"><span class="dot"></span>Thimble, your session facilitator</div>
+      <div class="avatar-status-row">
+        <div class="avatar-status"><span class="dot"></span>Thimble, your session facilitator</div>
+        <button type="button" class="thimble-info-btn" aria-label="Learn how Thimble actually works" onclick="document.getElementById('thimbleCapabilitiesModal').classList.add('open')">i</button>
+      </div>
     </div>
   </div>
 
@@ -254,6 +288,79 @@
     </div>
   </section>
 
+  <section class="block evidence-block">
+    <div class="evidence-head">
+      <span class="evidence-eyebrow">The research behind these numbers</span>
+      <h3 class="evidence-title">Why a Second Opinion Pays for Itself</h3>
+      <p class="evidence-sub">Seven datasets, current and historical, all pointing the same direction: what gets left on the table when a conversation that matters goes unaddressed, on your team's output and your own time.</p>
+    </div>
+    <div class="evidence-grid">
+      <div class="evidence-card lead">
+        <span class="evidence-tag primary">Primary &middot; most-cited</span>
+        <div class="evidence-finding">2.8 hrs/week per employee lost to conflict.</div>
+        <div class="evidence-org">CPP Inc. (2008)</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">~50% cite personality clashes as the leading cause. ~5,000 employees, nine countries. The most widely cited figure in this field; newer, independent research elsewhere on this page lands on the same scale of cost.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Manager time cost</span>
+        <div class="evidence-finding">Managers spend over 4 hours a week on workplace conflict.</div>
+        <div class="evidence-org">Myers-Briggs Company</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">&ldquo;Conflict at Work&rdquo; report, led by John Hackston, Head of Thought Leadership. Up from the company&rsquo;s 2008 study &mdash; 36% of people now report dealing with conflict often, very often, or all the time.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Cost estimate</span>
+        <div class="evidence-finding">$2.6B lost every day to workplace incivility in the US.</div>
+        <div class="evidence-org">SHRM</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">Up from $2B/day in 2024. Society for Human Resource Management, Civility Index &middot; independent HR professional body.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Independent corroboration</span>
+        <div class="evidence-finding">&pound;28.5bn a year lost to workplace conflict in the UK.</div>
+        <div class="evidence-org">CIPD / Warwick</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">About &pound;1,000 per employee, 9.7M employees affected annually. &ldquo;The Cost of Conflict at Work and Its Impact on Productivity&rdquo; &middot; CIPD-funded, Warwick Institute for Employment Research, using Acas analysis.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Health &amp; wellness</span>
+        <div class="evidence-finding">Conflict with your boss: 22% more sick days.</div>
+        <div class="evidence-org">Peer-reviewed / IJERPH</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">&ldquo;The Relationship between Workplace Conflicts and Subsequent Physician-Certified Sick Leave,&rdquo; prospective population study, <i>Int. J. Environ. Res. Public Health</i> (2022). Also backed by a CDC/NIOSH-archived meta-analysis of 79 studies linking interpersonal conflict to measurable physical strain.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Engagement cost</span>
+        <div class="evidence-finding">Disengaged employees cost $3,400&ndash;$10,000 a year, each.</div>
+        <div class="evidence-org">Gallup</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">18% less productive, 37% more absenteeism. State of the Global Workplace &middot; $450&ndash;550B lost annually in the US, $8.8T globally.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Engagement upside</span>
+        <div class="evidence-finding">Top-engagement teams: 23% more profitable.</div>
+        <div class="evidence-org">Gallup</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">Also 18% more productive, 78% less absenteeism. Q12 meta-analysis, thousands of business units &middot; the flip side of what unresolved conflict drags down.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <div class="cta">
     <div class="cta-avatar" id="ctaAvatar"></div>
     <h3 class="section-headline">See What Seam Actually Does</h3>
@@ -269,8 +376,8 @@
 <div class="modal-overlay" id="manifestoModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="manifestoTitle">
     <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('manifestoModal').classList.remove('open')">&times;</button>
-    <h2 class="modal-title" id="manifestoTitle">The Mend Manifesto</h2>
-    <p class="modal-sub">We value mending relationships over:</p>
+    <h2 class="modal-title" id="manifestoTitle">The Mend Approach to Workplace Friction</h2>
+    <p class="modal-sub">Stated simply, we value people over:</p>
     <ul>
       <li><b>Structural clarity over litigating blame.</b> Workplace friction stems from colliding incentives, competing KPIs, and overloaded schedules, not malice or "bad people." We solve the system, not the personality.</li>
       <li><b>Radical privacy over managerial surveillance.</b> Honest resolution cannot survive an audience. People only own their part when their words cannot be weaponized on a performance review or an HR docket.</li>
@@ -288,17 +395,43 @@
   </div>
 </div>
 
+<!-- Thimble capabilities modal: informational only, no CTA -- Home still
+     doesn't pitch Thimble directly (see the comment this replaced), this
+     just answers "how does this thing actually work" for whoever clicks
+     the small info button next to the hero avatar's status pill. Content
+     is pulled from the real facilitator-intake-system-prompt.md and the
+     safety-floor voting work (see STATUS.md), not invented. -->
+<div class="modal-overlay" id="thimbleCapabilitiesModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="thimbleCapabilitiesTitle">
+    <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('thimbleCapabilitiesModal').classList.remove('open')">&times;</button>
+    <h2 class="modal-title" id="thimbleCapabilitiesTitle">How Thimble Actually Works</h2>
+    <p class="modal-sub">Not a generic chatbot wearing a mascot. Here's what's actually running underneath.</p>
+    <ul>
+      <li><b>A purpose-built system prompt, not a persona bolted onto a general assistant.</b> Thimble's entire conduct &mdash; short, spoken-style turns instead of essays, never taking either side, pushing back on a plan that's vague or likely to blindside someone &mdash; comes from a system prompt written and iterated specifically for workplace conflict conversations, not a generic "be helpful" instruction.</li>
+      <li><b>Harassment &amp; safety floor recognition.</b> Every turn, in every phase, gets continuously screened against a fixed set of categories &mdash; harassment or discrimination based on a protected characteristic, threats, illegal activity, immediate safety risk, retaliation for something someone had a legitimate right to do. This isn't a keyword filter: it re-weighs the whole conversation as new detail comes in, and a vague warning or a sudden cold shoulder can meet the floor just as much as an explicit threat.</li>
+      <li><b>Deterministic rules on top of the model, not just a vibe.</b> Once the floor is met, what happens next isn't up for interpretation: the session stops coaching toward a plan, the person is told plainly and never silently, and Mend sends nothing to HR without their explicit, informed yes &mdash; no silent reports, ever.</li>
+      <li><b>A second opinion on genuinely ambiguous cases.</b> When a disclosure is a real toss-up, not just sensitive, Thimble doesn't settle it alone on a single pass &mdash; it runs an any-of-k self-consistency check (several independent reads voting) before the floor decision is finalized, instead of trusting one read of one conversation.</li>
+    </ul>
+  </div>
+</div>
+
 <script>
 (function(){
-  // Manifesto modal: Escape closes it, same as the backdrop-click handler
-  // inlined on the overlay itself. (The Thimble modal that used to live
-  // here was removed -- Home no longer pitches Thimble directly, per the
-  // Who/Why vs. What/How restructure; the nav's own Thimble link still
-  // reaches story.html.)
+  // Manifesto + Thimble-capabilities modals: Escape closes whichever is
+  // open, same as each one's own backdrop-click handler inlined on its
+  // overlay.
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape') return;
     document.getElementById('manifestoModal').classList.remove('open');
+    document.getElementById('thimbleCapabilitiesModal').classList.remove('open');
   });
+  // The nav's "Approach" link on every other page points here as a real
+  // URL (index.html#manifesto) since the manifesto content only lives on
+  // this page -- open it on load if that's how we arrived, same as the
+  // in-page Approach link's own onclick does directly.
+  if (location.hash === '#manifesto') {
+    document.getElementById('manifestoModal').classList.add('open');
+  }
 })();
 </script>
 <script>
@@ -317,18 +450,39 @@
     talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
   };
   // Per-state body colors, matching the live app's THIMBLE_COLORS
-  // (apps/thimble/static/session.html) -- idle/listening are no longer
-  // pink there, only thinking/talking still use honey/pink. Not porting
-  // the app's full "Four-Color Bloom" blended-gradient render here (a
-  // continuous 4-color weighted blend driven by per-frame interpolation);
-  // this is a static marketing page's decorative loop, so a plain
-  // CSS-transitioned solid-color swap per state is enough to carry the
-  // updated palette without that engine.
+  // (apps/thimble/static/session.html). Now ports the app's actual current
+  // look -- the "Four-Color Bloom" fill, where all four state colors stay
+  // visible as blended corner blobs all the time and a state change only
+  // shifts each blob's weight, not which colors exist -- instead of the
+  // flat solid-color swap this used before. Previously skipped as "overkill
+  // for a decorative loop," but this page already runs a per-frame tick()
+  // loop for the wobble/breathe motion, so there was no separate engine to
+  // add: the bloom lerp below just reuses that same frame.
   var THIMBLE_COLORS = {
     idle:      '#A3CFE0',
     listening: '#B0DED1',
     thinking:  '#E9B949',
     talking:   '#F3829A'
+  };
+  function thimbleHexToRgb(hex){
+    var n = parseInt(hex.slice(1), 16);
+    return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
+  }
+  var THIMBLE_BLOOM_ORDER = ['idle', 'listening', 'thinking', 'talking'];
+  var THIMBLE_BLOOM_RGB = {};
+  THIMBLE_BLOOM_ORDER.forEach(function(k){ THIMBLE_BLOOM_RGB[k] = thimbleHexToRgb(THIMBLE_COLORS[k]); });
+  // Fixed "home" corner for each color's blob, same layout as the app.
+  var THIMBLE_BLOOM_POS = {
+    idle:      {hx: 15, hy: 15},
+    listening: {hx: 85, hy: 15},
+    thinking:  {hx: 80, hy: 85},
+    talking:   {hx: 20, hy: 85}
+  };
+  var THIMBLE_BLOOM_WEIGHTS = {
+    idle:      {idle: .46, listening: .20, thinking: .14, talking: .20},
+    listening: {idle: .20, listening: .46, thinking: .20, talking: .14},
+    thinking:  {idle: .14, listening: .20, thinking: .46, talking: .20},
+    talking:   {idle: .20, listening: .14, thinking: .20, talking: .46}
   };
   function domeWobbleRadius(domeFactor, lvl){
     var capY = 50 + (DOME_RADIUS_CAP + 3 * lvl) * domeFactor;
@@ -350,7 +504,11 @@
     var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
     inst.el.style.transform = shape.lean;
     inst.blend.style.opacity = '0';
-    inst.body.style.backgroundColor = THIMBLE_COLORS[state] || THIMBLE_COLORS.listening;
+    inst.bloomTarget = THIMBLE_BLOOM_WEIGHTS[state] || THIMBLE_BLOOM_WEIGHTS.listening;
+    if (!inst.bloomCurrent) {
+      inst.bloomCurrent = {};
+      THIMBLE_BLOOM_ORDER.forEach(function(k){ inst.bloomCurrent[k] = inst.bloomTarget[k]; });
+    }
     var talking = state === 'talking';
     inst.ripple.hidden = !talking;
     inst.mouth.style.transition = talking
@@ -362,6 +520,28 @@
     applyState(inst, inst.state);
     var dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
     inst.lastT = now;
+    // Bloom weight lerp toward inst.bloomTarget (set in applyState above),
+    // every frame -- an exponential ease so a fast state change still reads
+    // as one continuous color shift, not a snap. ~.2s to settle, matching
+    // the app's own tuned rate.
+    var colorRate = 1 - Math.pow(0.000001, dt);
+    var cur = inst.bloomCurrent, tgt = inst.bloomTarget;
+    var r = 0, g = 0, b = 0;
+    THIMBLE_BLOOM_ORDER.forEach(function(k){
+      cur[k] += (tgt[k] - cur[k]) * colorRate;
+      var c = THIMBLE_BLOOM_RGB[k];
+      r += c.r * cur[k]; g += c.g * cur[k]; b += c.b * cur[k];
+    });
+    inst.body.style.backgroundColor = 'rgb(' + Math.round(r) + ', ' + Math.round(g) + ', ' + Math.round(b) + ')';
+    var blobs = THIMBLE_BLOOM_ORDER.map(function(k){
+      var w = cur[k], c = THIMBLE_BLOOM_RGB[k], pos = THIMBLE_BLOOM_POS[k];
+      var radius = (16 + w * 110).toFixed(1);
+      var alpha = Math.min(1, 0.3 + w * 1.1).toFixed(2);
+      return 'radial-gradient(circle at ' + pos.hx + '% ' + pos.hy + '%, rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ') 0%, transparent ' + radius + '%)';
+    }).join(',');
+    var ap = THIMBLE_BLOOM_POS[inst.state] || THIMBLE_BLOOM_POS.idle;
+    inst.body.style.backgroundImage =
+      'radial-gradient(circle at ' + ap.hx + '% ' + ap.hy + '%, rgba(255,255,255,.7) 0%, transparent 16%),' + blobs;
     var speaking = inst.state === 'talking';
     var thinkingState = inst.state === 'thinking';
     var nodding = inst.state === 'listening';
@@ -450,6 +630,22 @@
       toggle.setAttribute('aria-expanded', 'false');
     });
   });
+})();
+</script>
+<script>
+(function(){
+  // Nav CTA stays hidden on load and only appears once the page's own
+  // in-hero CTA button has scrolled out of view -- avoids showing two
+  // identical "do this" buttons on screen at once. Pages with no hero CTA
+  // of their own (nothing to be redundant with) just show it immediately.
+  var navCta = document.querySelector('.nav-cta');
+  if (!navCta) return;
+  var heroCta = document.querySelector('.hero .btn-top, .hero-ctas .btn-top');
+  if (!heroCta) { navCta.classList.add('visible'); return; }
+  var observer = new IntersectionObserver(function(entries){
+    navCta.classList.toggle('visible', !entries[0].isIntersecting);
+  }, { threshold: 0, rootMargin: '-' + (document.querySelector('.topnav').offsetHeight + 4) + 'px 0px 0px 0px' });
+  observer.observe(heroCta);
 })();
 </script>
 </body>
