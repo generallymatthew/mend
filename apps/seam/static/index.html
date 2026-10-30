@@ -414,7 +414,18 @@
   }
   .bubble.assistant { background: var(--accent-pink-bg); border-radius: 20px 20px 20px 5px; }
   .bubble.user { background: var(--ink); color: #fff; border-radius: 20px 20px 5px 20px; }
-  .bubble.pending { opacity: 0.5; }
+  .bubble.pending:not(:has(.typing-dots)) { opacity: 0.5; }
+  .typing-dots { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; }
+  .typing-dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    opacity: 0.3; animation: typing-dot-bounce 1.2s ease-in-out infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes typing-dot-bounce {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-3px); }
+  }
   /* Close case: the thread dissolves in place to signal nothing lingers --
      closing only flips a status flag server-side, it doesn't delete the
      messages, so this is purely a motion cue, not real erasure. */
@@ -1061,7 +1072,11 @@ function appendBubble(messagesEl, role, text, pending) {
   if (role === "assistant") row.innerHTML = avatarSvg();
   const b = document.createElement("div");
   b.className = "bubble " + role + (pending ? " pending" : "");
-  renderBubbleText(b, text);
+  if (pending && text === "...") {
+    b.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+  } else {
+    renderBubbleText(b, text);
+  }
   row.appendChild(b);
   messagesEl.appendChild(row);
   messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -1291,8 +1306,17 @@ function setPanelApplicable(panelEl, applicable) {
     panelEl.style.display = "none";
     return;
   }
-  panelEl.classList.add("open");
   panelEl.style.display = "flex";
+  // On mobile the panel is an off-canvas drawer: becoming applicable just
+  // means the Plan/Strategy toggle now works, it shouldn't slide the panel
+  // into view on its own (e.g. right after the first message gets
+  // classified). On desktop there's no drawer -- "open" is the only thing
+  // that makes it visible, so it has to be applied immediately here.
+  if (isMobile()) {
+    panelEl.classList.remove("open");
+  } else {
+    panelEl.classList.add("open");
+  }
 }
 
 function showPanelsForType(type) {
