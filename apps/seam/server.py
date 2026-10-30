@@ -156,6 +156,41 @@ WRITTEN_CONVERSATIONS: dict[str, list[dict]] = {}
 # sees, which still gets the raw conversation for real continuity.
 ROSTERS: dict[str, dict[str, dict]] = {}
 
+# Last-activity timestamp per id, shared across the three conversation dicts
+# above (ids are uuid4, so no collision risk between a case/meeting/written
+# session). Backs the idle purge below -- the safety net for when a tab
+# crashes or the manager just walks away without the pagehide beacon
+# (see /api/cases/{case_id}/end) ever firing.
+_LAST_TOUCHED: dict[str, float] = {}
+
+IDLE_TTL_SECONDS = 30 * 60
+
+
+def touch(id_: str) -> None:
+    _LAST_TOUCHED[id_] = time.time()
+
+
+def forget_conversation(id_: str) -> None:
+    """Drop everything this prototype holds in memory for one id: the
+    conversation text, its name roster (if any), and its touch timestamp.
+    Used both by the idle sweep and by the explicit end-of-session beacon."""
+    CONVERSATIONS.pop(id_, None)
+    MEETING_CONVERSATIONS.pop(id_, None)
+    WRITTEN_CONVERSATIONS.pop(id_, None)
+    ROSTERS.pop(id_, None)
+    _LAST_TOUCHED.pop(id_, None)
+
+
+def purge_idle_conversations() -> None:
+    """Lazy sweep, run on each incoming message: evict any id that's been
+    idle past IDLE_TTL_SECONDS. Covers the case where the browser never
+    gets to send the end-of-session beacon (crash, dead wifi, abandoned
+    tab)."""
+    now = time.time()
+    stale = [id_ for id_, last in _LAST_TOUCHED.items() if now - last > IDLE_TTL_SECONDS]
+    for id_ in stale:
+        forget_conversation(id_)
+
 
 def merge_names(case_id: str, names: list[dict] | None) -> None:
     if not names:
@@ -714,12 +749,14 @@ class Message(BaseModel):
 
 @app.post("/api/cases/{case_id}/messages")
 async def post_message(case_id: str, body: Message):
+    purge_idle_conversations()
     with db() as conn:
         case = get_case(conn, case_id)
         if case is None:
             return JSONResponse({"error": "no such case"}, status_code=404)
         plan = get_plan_steps(conn, case_id)
 
+        touch(case_id)
         if case_id not in CONVERSATIONS:
             CONVERSATIONS[case_id] = []
             seed = seed_context_message(case, plan)
@@ -746,6 +783,18 @@ async def post_message(case_id: str, body: Message):
         "plan": plan,
         "user_message_redacted": redact_names(body.content, case_id),
     }
+
+
+@app.post("/api/cases/{case_id}/end")
+async def end_conversation(case_id: str):
+    """Fired by the browser as the tab closes (see the pagehide beacon in
+    static/index.html) so the conversation text is gone the moment the
+    manager is actually done, not just eventually on an idle timeout or a
+    server restart. Only clears this prototype's in-memory conversation
+    state -- the case's anchor/plan in cases.db are untouched, since those
+    are meant to survive (see module docstring)."""
+    forget_conversation(case_id)
+    return JSONResponse({"ok": True})
 
 
 @app.post("/api/cases/{case_id}/handoff")
@@ -958,6 +1007,16 @@ async def get_meeting_session_detail(session_id: str):
     return {"session": session, "messages": messages}
 
 
+@app.post("/api/meeting-sessions/{session_id}/end")
+async def end_meeting_conversation(session_id: str):
+    """Same tab-close contract as /api/cases/{case_id}/end, for meeting-
+    strategy threads: drops the in-memory conversation text immediately
+    instead of waiting on the idle-TTL sweep. The session's title/
+    goal_summary/strategy_text in meeting_sessions is untouched."""
+    forget_conversation(session_id)
+    return JSONResponse({"ok": True})
+
+
 def meeting_strategy_reply(session_id: str, conn: sqlite3.Connection) -> dict:
     """Same shape as facilitator_reply, for the meeting-strategy prompt and
     conversation store instead of the case-plan ones."""
@@ -987,11 +1046,13 @@ def meeting_strategy_reply(session_id: str, conn: sqlite3.Connection) -> dict:
 
 @app.post("/api/meeting-sessions/{session_id}/messages")
 async def post_meeting_message(session_id: str, body: Message):
+    purge_idle_conversations()
     with db() as conn:
         session = get_meeting_session(conn, session_id)
         if session is None:
             return JSONResponse({"error": "no such meeting session"}, status_code=404)
 
+        touch(session_id)
         if session_id not in MEETING_CONVERSATIONS:
             MEETING_CONVERSATIONS[session_id] = []
 
@@ -1089,6 +1150,16 @@ async def get_written_session_detail(session_id: str):
     return {"session": session, "messages": messages}
 
 
+@app.post("/api/written-sessions/{session_id}/end")
+async def end_written_conversation(session_id: str):
+    """Same tab-close contract as /api/cases/{case_id}/end, for written
+    (tone-check) threads: drops the in-memory drafts/feedback immediately
+    instead of waiting on the idle-TTL sweep. The session's title/preview
+    in written_sessions is untouched."""
+    forget_conversation(session_id)
+    return JSONResponse({"ok": True})
+
+
 def written_facilitator_reply(session_id: str, conn: sqlite3.Connection) -> dict:
     """Same shape as facilitator_reply/meeting_strategy_reply, for the
     tone-check prompt. Each user turn is still graded as its own draft per
@@ -1125,10 +1196,12 @@ def written_facilitator_reply(session_id: str, conn: sqlite3.Connection) -> dict
 
 @app.post("/api/written-sessions/{session_id}/messages")
 async def post_written_message(session_id: str, body: Message):
+    purge_idle_conversations()
     with db() as conn:
         session = get_written_session(conn, session_id)
         if session is None:
             return JSONResponse({"error": "no such written session"}, status_code=404)
+        touch(session_id)
         if session_id not in WRITTEN_CONVERSATIONS:
             WRITTEN_CONVERSATIONS[session_id] = []
         WRITTEN_CONVERSATIONS[session_id].append({"role": "user", "content": body.content, "hidden": False})

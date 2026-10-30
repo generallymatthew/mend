@@ -1172,11 +1172,32 @@ const MESSAGE_PATH = {
   meeting: (id) => `/api/meeting-sessions/${id}/messages`,
   written: (id) => `/api/written-sessions/${id}/messages`,
 };
+// App-wide data-retention contract: every conversation type gets an /end
+// endpoint the tab-close beacon below can hit, regardless of kind.
+const END_PATH = {
+  conflict: (id) => `/api/cases/${id}/end`,
+  coaching: (id) => `/api/cases/${id}/end`,
+  meeting: (id) => `/api/meeting-sessions/${id}/end`,
+  written: (id) => `/api/written-sessions/${id}/end`,
+};
 
 let conversations = []; // merged list of {id, type, title, preview, updated_at, status}
 let activeConvo = null; // {id, type} once a thread has resolved to a real session
 let pendingTurns = null; // array of not-yet-classified user turns, while activeConvo is null
 let pendingHistory = null; // array of {role, content} incl. general-mode replies, for /api/general-reply continuity -- superset of pendingTurns, reset together
+
+// Tells the server the conversation is over so it can drop the in-memory
+// chat text right away, instead of leaving it to the idle-timeout sweep.
+// pagehide (not beforeunload) is what fires reliably on tab close, mobile
+// backgrounding, and navigating away; sendBeacon fires-and-forgets even as
+// the page is torn down. Applies to every conversation type (conflict,
+// coaching, meeting, written) -- this is an app-wide retention contract,
+// not a conflict-case special case.
+window.addEventListener("pagehide", () => {
+  if (activeConvo) {
+    navigator.sendBeacon(apiPath(END_PATH[activeConvo.type](activeConvo.id)));
+  }
+});
 
 function conversationPreview(c) {
   if (CASE_LIKE_TYPES.includes(c.type)) return c.next_action || c.last_action || c.tension_summary || "Just opened";
