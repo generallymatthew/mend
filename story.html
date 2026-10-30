@@ -75,7 +75,7 @@
   .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background-image:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%); background-color:#FF8CA3; overflow:hidden; transition:border-radius .6s ease, background-color .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
 
@@ -565,6 +565,20 @@
     thinking:  {lean:'none', mouthTop:62, mouthW:.12, mouthH:.07, mouthX:58},
     talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
   };
+  // Per-state body colors, matching the live app's THIMBLE_COLORS
+  // (apps/thimble/static/session.html) -- idle/listening are no longer
+  // pink there, only thinking/talking still use honey/pink. Not porting
+  // the app's full "Four-Color Bloom" blended-gradient render here (a
+  // continuous 4-color weighted blend driven by per-frame interpolation);
+  // this is a static marketing page's decorative loop, so a plain
+  // CSS-transitioned solid-color swap per state is enough to carry the
+  // updated palette without that engine.
+  var THIMBLE_COLORS = {
+    idle:      '#A3CFE0',
+    listening: '#B0DED1',
+    thinking:  '#E9B949',
+    talking:   '#F3829A'
+  };
   function domeWobbleRadius(domeFactor, lvl){
     var capY = 50 + (DOME_RADIUS_CAP + 3 * lvl) * domeFactor;
     var rimY = 50 - (DOME_RADIUS_RIM + 3 * lvl) * domeFactor;
@@ -585,6 +599,7 @@
     var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
     inst.el.style.transform = shape.lean;
     inst.blend.style.opacity = '0';
+    inst.body.style.backgroundColor = THIMBLE_COLORS[state] || THIMBLE_COLORS.listening;
     var talking = state === 'talking';
     inst.ripple.hidden = !talking;
     inst.mouth.style.transition = talking

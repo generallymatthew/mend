@@ -103,7 +103,7 @@
   .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
   .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
   .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
-  .thimble-body{position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3; overflow:hidden; transition:border-radius .6s ease, background .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background-image:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%); background-color:#FF8CA3; overflow:hidden; transition:border-radius .6s ease, background-color .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
   .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
   .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
 
@@ -151,6 +151,11 @@
 
   .aside-link{display:inline-flex; align-items:center; gap:6px; margin-top:0; font-weight:700; font-size:13.5px; color:var(--muted); text-decoration:none; background:none; border:none; padding:0; font-family:inherit; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.2);}
   .aside-link:hover{color:#fff;}
+
+  .lede-tip{position:relative; appearance:none; border:none; background:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; cursor:help; display:inline;}
+  .lede-tip:hover,.lede-tip:focus{color:#fff;}
+  .lede-tip .tooltip{position:absolute; left:0; bottom:100%; margin-bottom:10px; width:280px; max-width:80vw; background:#15302A; border:1px solid var(--border); color:#fff; font-size:12.5px; font-weight:500; line-height:1.55; padding:12px 14px; border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,0.4); opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .15s ease, transform .15s ease; z-index:5; text-align:left;}
+  .lede-tip:hover .tooltip,.lede-tip:focus .tooltip,.lede-tip:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateY(0);}
 
   .why-columns{display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:6px;}
   @media (max-width:760px){ .why-columns{grid-template-columns:1fr;} }
@@ -212,7 +217,7 @@
       <a href="story.html" class="minor">Thimble</a>
     </nav>
     <div class="nav-right">
-      <button type="button" class="manifesto-link" onclick="document.getElementById('manifestoModal').classList.add('open')">Our Manifesto</button>
+      <button type="button" class="manifesto-link" onclick="document.getElementById('manifestoModal').classList.add('open')">Our Approach</button>
       <a class="nav-cta" href="/seam/">Start with Seam &rarr;</a>
     </div>
     <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><span></span></button>
@@ -230,10 +235,9 @@
     <div class="hero-badge"><span class="dot"></span>Private &middot; never recorded &middot; never shared</div>
     <div class="hero-text">
       <h1>Get a Second Opinion Before the Hard Conversation.</h1>
-      <p class="lede">A direct report needs tough feedback. Two people on your team can't work together. Or you're trying to understand how a conflict started. There's no neutral person to think it through with, and getting it wrong costs trust. Mend is that second opinion, privately, before you're in the room. Nothing is recorded, and nothing reaches HR unless the law requires it.</p>
+      <p class="lede">A direct report needs tough feedback. Two people on your team can't work together. Or you're trying to understand how a conflict started. There's no neutral person to think it through with, and getting it wrong costs trust. Mend is that second opinion, privately, before you're in the room. <button type="button" class="lede-tip">Nothing is recorded*<span class="tooltip">Except when the law requires it: if what's being discussed meets the legal standard for harassment, discrimination, or a physical threat, the session automatically halts and routes to HR.</span></button>.</p>
       <div class="hero-ctas">
-        <a class="btn-top" href="#doors">See How Managers Use Mend &rarr;</a>
-        <button type="button" class="aside-link" onclick="document.getElementById('thimbleModal').classList.add('open')">Not a manager? See Thimble &rarr;</button>
+        <a class="btn-top" href="/seam/">Start a Conversation &rarr;</a>
       </div>
     </div>
     <div class="hero-visual">
@@ -392,6 +396,20 @@
     thinking:  {lean:'none', mouthTop:62, mouthW:.12, mouthH:.07, mouthX:58},
     talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
   };
+  // Per-state body colors, matching the live app's THIMBLE_COLORS
+  // (apps/thimble/static/session.html) -- idle/listening are no longer
+  // pink there, only thinking/talking still use honey/pink. Not porting
+  // the app's full "Four-Color Bloom" blended-gradient render here (a
+  // continuous 4-color weighted blend driven by per-frame interpolation);
+  // this is a static marketing page's decorative loop, so a plain
+  // CSS-transitioned solid-color swap per state is enough to carry the
+  // updated palette without that engine.
+  var THIMBLE_COLORS = {
+    idle:      '#A3CFE0',
+    listening: '#B0DED1',
+    thinking:  '#E9B949',
+    talking:   '#F3829A'
+  };
   function domeWobbleRadius(domeFactor, lvl){
     var capY = 50 + (DOME_RADIUS_CAP + 3 * lvl) * domeFactor;
     var rimY = 50 - (DOME_RADIUS_RIM + 3 * lvl) * domeFactor;
@@ -412,6 +430,7 @@
     var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
     inst.el.style.transform = shape.lean;
     inst.blend.style.opacity = '0';
+    inst.body.style.backgroundColor = THIMBLE_COLORS[state] || THIMBLE_COLORS.listening;
     var talking = state === 'talking';
     inst.ripple.hidden = !talking;
     inst.mouth.style.transition = talking
