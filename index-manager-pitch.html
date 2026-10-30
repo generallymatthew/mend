@@ -166,20 +166,6 @@
   .info-card.accent .k{color:#F3C9D3;}
   .info-card.accent-honey .k{color:#F5D896;}
 
-  .advantage-row{display:flex; align-items:center; gap:28px; margin-top:18px;}
-  .advantage-avatar{flex-shrink:0; width:104px; height:104px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 50%, rgba(243,130,154,0.24) 0%, rgba(243,130,154,0.2) 45%, rgba(233,185,73,0) 72%);}
-  .advantage-row .icon-list{flex:1; min-width:0; margin-top:0;}
-  @media (max-width:620px){ .advantage-row{flex-direction:column; align-items:flex-start; gap:20px;} .advantage-avatar{margin:0 auto;} }
-
-  .icon-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
-  .icon-list li{display:flex; gap:14px; align-items:flex-start;}
-  .icon-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center;}
-  .icon-list li:nth-child(2) .ico{background:rgba(243,130,154,0.16);}
-  .icon-list li:nth-child(3) .ico{background:rgba(233,185,73,0.16);}
-  .icon-list .ico svg{width:18px; height:18px; display:block;}
-  .icon-list .txt{padding-top:2px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
-  .icon-list .txt b{color:#fff; display:block; font-size:14.5px; margin-bottom:2px;}
-
   .cta{margin-top:48px; background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 30px 60px rgba(0,0,0,0.3); position:relative; overflow:hidden;}
   .cta-avatar{width:52px; height:52px; margin:0 auto 14px;}
   .cta h2{color:var(--muted); margin:0 0 8px;}
@@ -369,27 +355,6 @@
         <div class="k">It tells you what you need to hear</div>
         <div class="v">Seam isn't built to agree with you. It's built to be honest with you.</div>
       </div>
-    </div>
-  </section>
-
-  <section class="block">
-    <h3 class="section-headline">Why an AI facilitator works better than a person</h3>
-    <div class="advantage-row">
-      <div class="advantage-avatar"><div id="advantageAvatar"></div></div>
-      <ul class="icon-list">
-        <li>
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3M4 6h16M12 6v12M8 21h8" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M4 6l-2.5 6a3 3 0 006 0L4 6z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 6l-2.5 6a3 3 0 006 0L20 6z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
-          <div class="txt">It's unbiased. Seam has no stake in whether you or your report comes out looking better.</div>
-        </li>
-        <li>
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z" stroke="#F3829A" stroke-width="2" stroke-linejoin="round"/></svg></div>
-          <div class="txt">You can bring it the stuff that feels too small to bother anyone else with. It won't judge you for asking.</div>
-        </li>
-        <li>
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#E9B949" stroke-width="2"/><path d="M12 8v4l3 2" stroke="#E9B949" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div class="txt">It's always available, without pulling a peer manager's or HR's time into something that's still yours to work through.</div>
-        </li>
-      </ul>
     </div>
   </section>
 
@@ -642,19 +607,6 @@
   }
   var ctaHost = document.getElementById('ctaAvatar');
   if (ctaHost) new ThimbleAvatarV2(ctaHost, { size: 52 });
-
-  var advHost = document.getElementById('advantageAvatar');
-  if (advHost) {
-    var adv = new ThimbleAvatarV2(advHost, { size: 104 });
-    var advI = 0;
-    adv.setState(states[advI % states.length]);
-    setInterval(function(){ advI++; adv.setState(states[advI % states.length]); }, 3200);
-    var advT0 = performance.now();
-    setInterval(function(){
-      var t = (performance.now() - advT0) / 1000;
-      adv.setLevel(0.35 + 0.35 * Math.abs(Math.sin(t * 1.8)));
-    }, 80);
-  }
 })();
 </script>
 <script>
