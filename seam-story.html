@@ -141,6 +141,13 @@
   .evidence-meta{font-size:12.5px; line-height:1.5; color:rgba(255,255,255,0.5);}
   .evidence-card.lead .evidence-meta{color:rgba(23,55,46,0.72);}
   .evidence-card.secondary{opacity:0.82;}
+  .evidence-source{margin-top:2px;}
+  .evidence-source summary{cursor:pointer; list-style:none; font-size:11px; font-weight:700; letter-spacing:0.02em; color:rgba(255,255,255,0.45); display:flex; align-items:center; gap:4px;}
+  .evidence-source summary::-webkit-details-marker{display:none;}
+  .evidence-source summary .chev{font-size:9px; transition:transform .15s ease;}
+  .evidence-source[open] summary .chev{transform:rotate(90deg);}
+  .evidence-source .evidence-meta{margin-top:8px;}
+  .evidence-card.lead .evidence-source summary{color:rgba(23,55,46,0.55);}
   @media (max-width:600px){ .evidence-org{font-size:18px;} .evidence-finding{font-size:14px;} }
 
   .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
@@ -343,38 +350,56 @@
       <div class="evidence-card lead">
         <span class="evidence-tag primary">Primary &middot; current</span>
         <div class="evidence-org">SHRM</div>
-        <div class="evidence-finding">$2.6B lost per day to workplace incivility in the US (Q2 2026), up from $2B/day in 2024.</div>
-        <div class="evidence-meta">Society for Human Resource Management, Civility Index &middot; independent HR professional body.</div>
+        <div class="evidence-finding">$2.6B lost every day to workplace incivility in the US.</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">Up from $2B/day in 2024. Society for Human Resource Management, Civility Index &middot; independent HR professional body.</div>
+        </details>
       </div>
       <div class="evidence-card">
         <span class="evidence-tag independent">Independent corroboration</span>
         <div class="evidence-org">CIPD / Warwick</div>
-        <div class="evidence-finding">&pound;28.5bn a year lost to workplace conflict in the UK alone, about &pound;1,000 per employee. 9.7M employees affected annually.</div>
-        <div class="evidence-meta">&ldquo;The Cost of Conflict at Work and Its Impact on Productivity&rdquo; &middot; CIPD-funded, Warwick Institute for Employment Research, using Acas analysis.</div>
+        <div class="evidence-finding">&pound;28.5bn a year lost to workplace conflict in the UK.</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">About &pound;1,000 per employee, 9.7M employees affected annually. &ldquo;The Cost of Conflict at Work and Its Impact on Productivity&rdquo; &middot; CIPD-funded, Warwick Institute for Employment Research, using Acas analysis.</div>
+        </details>
       </div>
       <div class="evidence-card">
         <span class="evidence-tag independent">Health &amp; wellness</span>
         <div class="evidence-org">Peer-reviewed / IJERPH</div>
-        <div class="evidence-finding">Burdensome conflict with a superior predicts a 22% increase in physician-certified sick days.</div>
-        <div class="evidence-meta">&ldquo;The Relationship between Workplace Conflicts and Subsequent Physician-Certified Sick Leave,&rdquo; prospective population study, <i>Int. J. Environ. Res. Public Health</i> (2022). Also backed by a CDC/NIOSH-archived meta-analysis of 79 studies linking interpersonal conflict to measurable physical strain.</div>
+        <div class="evidence-finding">Conflict with your boss: 22% more sick days.</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">&ldquo;The Relationship between Workplace Conflicts and Subsequent Physician-Certified Sick Leave,&rdquo; prospective population study, <i>Int. J. Environ. Res. Public Health</i> (2022). Also backed by a CDC/NIOSH-archived meta-analysis of 79 studies linking interpersonal conflict to measurable physical strain.</div>
+        </details>
       </div>
       <div class="evidence-card">
         <span class="evidence-tag independent">Engagement cost</span>
         <div class="evidence-org">Gallup</div>
-        <div class="evidence-finding">Each actively disengaged employee costs $3,400&ndash;$10,000 a year: 18% less productive, 37% more absenteeism.</div>
-        <div class="evidence-meta">State of the Global Workplace &middot; $450&ndash;550B lost annually in the US, $8.8T globally.</div>
+        <div class="evidence-finding">Disengaged employees cost $3,400&ndash;$10,000 a year, each.</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">18% less productive, 37% more absenteeism. State of the Global Workplace &middot; $450&ndash;550B lost annually in the US, $8.8T globally.</div>
+        </details>
       </div>
       <div class="evidence-card">
         <span class="evidence-tag independent">Engagement upside</span>
         <div class="evidence-org">Gallup</div>
-        <div class="evidence-finding">Top-quartile-engagement teams are 23% more profitable, 18% more productive, 78% less absenteeism.</div>
-        <div class="evidence-meta">Q12 meta-analysis, thousands of business units &middot; the flip side of what unresolved conflict drags down.</div>
+        <div class="evidence-finding">Top-engagement teams: 23% more profitable.</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">Also 18% more productive, 78% less absenteeism. Q12 meta-analysis, thousands of business units &middot; the flip side of what unresolved conflict drags down.</div>
+        </details>
       </div>
       <div class="evidence-card secondary">
         <span class="evidence-tag secondary">Historical reference</span>
         <div class="evidence-org">CPP Inc. (2008)</div>
-        <div class="evidence-finding">2.8 hrs/week per employee, ~50% cite personality clashes as the leading cause. ~5,000 employees, nine countries.</div>
-        <div class="evidence-meta">The most widely cited figure in this field. Newer, independent research above lands on the same scale of cost.</div>
+        <div class="evidence-finding">2.8 hrs/week per employee lost to conflict.</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">~50% cite personality clashes as the leading cause. ~5,000 employees, nine countries. The most widely cited figure in this field; newer, independent research above lands on the same scale of cost.</div>
+        </details>
       </div>
     </div>
   </section>
