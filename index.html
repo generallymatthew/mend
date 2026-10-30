@@ -20,7 +20,7 @@
     --pink:#F3829A; --pink-soft:rgba(243,130,154,0.1); --honey:#E9B949; --honey-soft:rgba(233,185,73,0.1);
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth; overflow-x:hidden;}
   body{margin:0; background:linear-gradient(180deg,#0E2119 0%,#0A1813 40%,#0B1A14 100%); background-attachment:fixed; color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
   .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
 
@@ -152,8 +152,8 @@
 
   .lede-tip{position:relative; appearance:none; border:none; background:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; cursor:help; display:inline;}
   .lede-tip:hover,.lede-tip:focus{color:#fff;}
-  .lede-tip .tooltip{position:absolute; left:0; bottom:100%; margin-bottom:10px; width:280px; max-width:80vw; background:#15302A; border:1px solid var(--border); color:#fff; font-size:12.5px; font-weight:500; line-height:1.55; padding:12px 14px; border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,0.4); opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .15s ease, transform .15s ease; z-index:5; text-align:left;}
-  .lede-tip:hover .tooltip,.lede-tip:focus .tooltip,.lede-tip:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateY(0);}
+  .lede-tip .tooltip{position:absolute; left:50%; bottom:100%; margin-bottom:10px; width:280px; max-width:calc(100vw - 32px); background:#15302A; border:1px solid var(--border); color:#fff; font-size:12.5px; font-weight:500; line-height:1.55; padding:12px 14px; border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,0.4); opacity:0; visibility:hidden; transform:translateX(-50%) translateY(4px); transition:opacity .15s ease, transform .15s ease; z-index:5; text-align:left;}
+  .lede-tip:hover .tooltip,.lede-tip:focus .tooltip,.lede-tip:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateX(-50%) translateY(0);}
 
   .info-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:16px;}
   @media (max-width:700px){ .info-grid{grid-template-columns:1fr;} }
