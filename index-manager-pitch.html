@@ -1,0 +1,649 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mend &middot; becoming a manager doesn't come with a redo button</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Dark "Confidential" direction -- picked over the light brand-kit
+     defaults after a design-review pass (see STATUS.md), per explicit
+     user request. Deep evergreen gradient background, glass panels
+     instead of white cards, a pink->honey gradient reserved for primary
+     CTAs, pink/honey used translucently as accents instead of flat fills. */
+  :root{
+    --ink:#EFE7D8; --ink-soft:#C9D6CE; --muted:#8FA399;
+    --card:rgba(255,255,255,0.045); --card-border:rgba(255,255,255,0.12); --border:rgba(255,255,255,0.14);
+    --accent:linear-gradient(135deg,#F3829A,#E9B949); --accent-ink:#17372E; --accent-solid:#F3829A;
+    --accent-soft:rgba(243,130,154,0.12);
+    --pink:#F3829A; --pink-soft:rgba(243,130,154,0.1); --honey:#E9B949; --honey-soft:rgba(233,185,73,0.1);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; overflow-x:hidden;}
+  body{margin:0; background:linear-gradient(180deg,#0E2119 0%,#0A1813 40%,#0B1A14 100%); background-attachment:fixed; color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+  .brand-row{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+
+  .topnav{position:sticky; top:0; z-index:30; background:rgba(10,24,19,0.78); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); margin-bottom:40px;}
+  .topnav-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:22px;}
+  .topnav-brand{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .topnav-brand .wordmark{font-size:1.1rem; font-weight:800; letter-spacing:-0.02em; color:#fff;}
+  .nav-links{display:flex; gap:18px; font-size:13.5px; font-weight:700; color:var(--muted); margin-left:14px; padding-left:22px; border-left:1px solid var(--border);}
+  .nav-links a{text-decoration:none; color:var(--muted); padding:6px 0; white-space:nowrap; position:relative;}
+  .nav-links a:hover{color:#fff;}
+  .nav-links a.active{color:#fff;}
+  .nav-links a.active::after{content:''; position:absolute; left:0; right:0; bottom:-14px; height:2px; background:var(--accent-solid);}
+  .nav-links a.minor{font-weight:600; color:rgba(143,163,153,0.6); font-size:12.5px;}
+  .nav-links a.minor:hover{color:var(--muted);}
+  .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
+  .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .2s ease, transform .2s ease;}
+  .nav-cta.visible{opacity:1; transform:translateY(0); pointer-events:auto;}
+  @media (max-width:680px){ .nav-links{display:none;} }
+
+  .nav-toggle{display:none; align-items:center; justify-content:center; width:34px; height:34px; background:none; border:none; cursor:pointer; padding:0; flex-shrink:0;}
+  .nav-toggle span{display:block; width:20px; height:2px; background:var(--muted); border-radius:2px; position:relative;}
+  .nav-toggle span::before,.nav-toggle span::after{content:''; position:absolute; left:0; width:20px; height:2px; background:var(--muted); border-radius:2px;}
+  .nav-toggle span::before{top:-6px;}
+  .nav-toggle span::after{top:6px;}
+  @media (max-width:680px){ .nav-toggle{display:flex;} }
+  .mobile-menu{display:none; flex-direction:column; background:rgba(10,24,19,0.96); border-bottom:1px solid var(--border); padding:6px 20px 14px;}
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{padding:11px 0; font-size:14px; font-weight:700; color:var(--muted); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.08);}
+  .mobile-menu a:last-child{border-bottom:none;}
+  .mobile-menu a.active{color:#fff;}
+
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:50; align-items:flex-start; justify-content:center; padding:48px 20px; overflow-y:auto;}
+  .modal-overlay.open{display:flex;}
+  .modal-card{background:#0F241C; border:1px solid var(--border); border-radius:20px; max-width:640px; width:100%; padding:36px 32px 32px; position:relative; box-shadow:0 30px 60px rgba(0,0,0,0.4);}
+  .modal-close{position:absolute; top:18px; right:18px; width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--muted); font-size:16px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .modal-close:hover{color:#fff; border-color:var(--muted);}
+  .modal-card h2.modal-title{font-size:1.5rem; font-weight:800; margin:0 0 4px; letter-spacing:-0.01em; color:#fff;}
+  .modal-card .modal-sub{font-size:13px; color:var(--muted); margin:0 0 22px;}
+  .modal-card h3{font-size:14px; font-weight:800; margin:26px 0 10px; letter-spacing:-0.005em; color:#fff;}
+  .modal-card h3:first-of-type{margin-top:6px;}
+  .modal-card ul{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:12px;}
+  .modal-card li{font-size:13.5px; line-height:1.55; color:var(--ink-soft);}
+  .modal-card li b{color:#fff;}
+  .modal-card p.lead-line{font-size:13.5px; color:var(--ink-soft); margin:0 0 8px;}
+  @media (max-width:600px){ .modal-card{padding:28px 20px 24px;} }
+  .wordmark{font-size:1.6rem; font-weight:800; letter-spacing:-0.02em; line-height:1; color:#fff;}
+
+
+  .hero{display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; margin-bottom:4px;}
+  .hero-badge{display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#F3A6B7; background:rgba(243,130,154,0.12); border:1px solid rgba(243,130,154,0.35); padding:8px 18px; border-radius:999px; margin-bottom:22px;}
+  .hero-badge .dot{width:6px; height:6px; border-radius:50%; background:#F3829A; box-shadow:0 0 8px #F3829A; flex-shrink:0;}
+  .hero-text{max-width:620px; display:flex; flex-direction:column; align-items:center;}
+  .hero-ctas{display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:16px; margin-top:22px;}
+  .hero-visual{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:40px;}
+  .hero-avatar{position:relative; width:176px; height:176px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 50%, rgba(243,130,154,0.24) 0%, rgba(243,130,154,0.2) 45%, rgba(233,185,73,0) 72%);}
+  .avatar-status{display:inline-flex; align-items:center; gap:6px; font-family:'Manrope',sans-serif; font-size:10.5px; color:var(--muted); background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:5px 11px; border-radius:999px; white-space:nowrap;}
+  .avatar-status .dot{width:6px; height:6px; border-radius:50%; background:#5FCF8F; flex-shrink:0;}
+  .avatar-status-row{display:flex; align-items:center; gap:8px;}
+  .thimble-info-btn{flex-shrink:0; width:20px; height:20px; border-radius:50%; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--muted); font-size:11px; font-weight:800; font-family:'Manrope',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; appearance:none; transition:color .15s ease, border-color .15s ease;}
+  .thimble-info-btn:hover{color:#fff; border-color:var(--muted);}
+
+  .speech-bubble{position:absolute; top:6px; right:-6px; display:flex; align-items:center; gap:4px; background:#fff; border:1px solid rgba(23,55,46,0.12); border-radius:14px; padding:9px 11px; box-shadow:0 6px 14px rgba(0,0,0,0.25);}
+  .speech-bubble::after{content:''; position:absolute; bottom:-6px; left:16px; width:11px; height:11px; background:#fff; border-right:1px solid rgba(23,55,46,0.12); border-bottom:1px solid rgba(23,55,46,0.12); transform:rotate(45deg);}
+  .typing-dot{width:5px; height:5px; border-radius:50%; background:#3C4C49; animation:typing-bounce 1.3s infinite ease-in-out;}
+  .typing-dot:nth-child(2){animation-delay:.15s;}
+  .typing-dot:nth-child(3){animation-delay:.3s;}
+  @keyframes typing-bounce{0%,60%,100%{transform:translateY(0); opacity:.4;} 30%{transform:translateY(-3px); opacity:1;}}
+  @media (prefers-reduced-motion: reduce){ .typing-dot{animation:none; opacity:.7;} }
+
+  @media (max-width:600px){ .hero{gap:0;} }
+
+  /* Thimble avatar: ported from thimble/static/index.html's current
+     "Soft Dome" body (dome-wobble clip-path, ring/body/blend/mouth parts),
+     the same shape the live session actually uses -- replaces the older,
+     separate thimble_avatar-new-mow handoff this page used to load. No mic
+     or TTS input here, so the ear-ripple/employee-tile pieces of the
+     thimble version are dropped; state cycling and levels are faked by
+     the hero/cta loop below instead. */
+  .thimble-avatar{position:relative; transition:transform .7s cubic-bezier(.3,1.4,.5,1), opacity .4s ease;}
+  .thimble-ripple{position:absolute; inset:0; border-radius:50%; background:#F3829A; filter:blur(18px); z-index:-1;}
+  .thimble-ring{position:absolute; inset:0; transform-origin:50% 90%; transition:transform .18s ease-out;}
+  .thimble-body{position:absolute; inset:0; border-radius:50%; background-image:radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%); background-color:#FF8CA3; overflow:hidden; transition:border-radius .6s ease; box-shadow:0 0 50px rgba(243,130,154,0.4);}
+  .thimble-blend{position:absolute; width:80%; height:80%; left:-38%; top:30%; border-radius:50%; background:#E9B949; mix-blend-mode:multiply; opacity:0; transition:opacity .8s ease;}
+  .thimble-mouth{position:absolute; left:50%; transform:translate(-50%,-50%); transition:width .35s ease, height .35s ease, border-radius .35s ease; box-sizing:border-box;}
+
+  h1{font-size:2.15rem; line-height:1.35; letter-spacing:-0.015em; margin:0 0 26px; font-weight:800; color:#fff;}
+  h2{font-size:13px; font-weight:700; margin:0 0 10px; letter-spacing:.04em; color:var(--muted); text-transform:uppercase;}
+  h3.section-headline{font-size:1.35rem; font-weight:800; letter-spacing:-0.01em; margin:48px 0 10px; color:#fff; line-height:1.25;}
+  h2 + h3.section-headline{margin-top:0;}
+  p.lede{font-size:1.05rem; color:var(--ink-soft); margin:0 0 8px; max-width:48ch;}
+  p.section-sub{font-size:14px; color:var(--muted); margin:0 0 18px; max-width:54ch;}
+  p{margin:0 0 14px;}
+
+  .btn-top{display:inline-flex; align-items:center; gap:6px; margin-top:0; background:var(--accent); color:var(--accent-ink); font-weight:800; font-size:13.5px; padding:12px 24px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 10px 22px rgba(243,130,154,0.28), 0 2px 6px rgba(0,0,0,0.2);}
+  .btn-top:hover{transform:translateY(-1px); box-shadow:0 14px 28px rgba(243,130,154,0.36), 0 2px 6px rgba(0,0,0,0.24);}
+
+  section.block{margin-top:48px;}
+
+  .evidence-block{background:rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:22px; padding:clamp(32px,5vw,52px) clamp(24px,5vw,48px); margin-top:8px; box-shadow:0 20px 44px rgba(0,0,0,0.22);}
+  .evidence-head{max-width:640px; margin-bottom:clamp(24px,4vw,36px);}
+  .evidence-eyebrow{display:inline-block; font-size:12px; font-weight:800; letter-spacing:0.09em; text-transform:uppercase; color:var(--honey); margin-bottom:10px;}
+  .evidence-title{font-size:clamp(22px,3vw,30px); line-height:1.2; color:#fff; margin:0 0 10px; font-weight:800;}
+  .evidence-sub{font-size:14.5px; line-height:1.55; color:var(--muted); margin:0;}
+  .evidence-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;}
+  .evidence-card{background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; gap:10px;}
+  .evidence-card.lead{background:linear-gradient(135deg,#F3829A,#E9B949); border-color:transparent;}
+  .evidence-tag{align-self:flex-start; font-size:10.5px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; padding:4px 10px; border-radius:999px;}
+  .evidence-tag.primary{background:rgba(23,55,46,0.85); color:#fff;}
+  .evidence-tag.independent{background:rgba(255,255,255,0.1); color:#fff;}
+  .evidence-tag.secondary{background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6);}
+  .evidence-card.lead .evidence-tag{background:rgba(23,55,46,0.85); color:#fff;}
+  .evidence-finding{font-size:20px; line-height:1.35; color:#fff; font-weight:800;}
+  .evidence-card.lead .evidence-finding{color:var(--accent-ink);}
+  .evidence-org{font-size:12px; font-weight:700; letter-spacing:0.02em; color:rgba(255,255,255,0.5);}
+  .evidence-card.lead .evidence-org{color:rgba(23,55,46,0.72);}
+  .evidence-meta{font-size:12.5px; line-height:1.5; color:rgba(255,255,255,0.5);}
+  .evidence-card.lead .evidence-meta{color:rgba(23,55,46,0.72);}
+  .evidence-card.secondary{opacity:0.82;}
+  .evidence-source{margin-top:2px;}
+  .evidence-source summary{cursor:pointer; list-style:none; font-size:11px; font-weight:700; letter-spacing:0.02em; color:rgba(255,255,255,0.45); display:flex; align-items:center; gap:4px;}
+  .evidence-source summary::-webkit-details-marker{display:none;}
+  .evidence-source summary .chev{font-size:9px; transition:transform .15s ease;}
+  .evidence-source[open] summary .chev{transform:rotate(90deg);}
+  .evidence-source .evidence-meta{margin-top:8px;}
+  .evidence-card.lead .evidence-source summary{color:rgba(23,55,46,0.55);}
+  @media (max-width:600px){ .evidence-finding{font-size:17px;} }
+
+  .lede-tip{position:relative; appearance:none; border:none; background:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; cursor:help; display:inline;}
+  .lede-tip:hover,.lede-tip:focus{color:#fff;}
+  .lede-tip .tooltip{position:absolute; left:50%; bottom:100%; margin-bottom:10px; width:280px; max-width:calc(100vw - 32px); background:#15302A; border:1px solid var(--border); color:#fff; font-size:12.5px; font-weight:500; line-height:1.55; padding:12px 14px; border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,0.4); opacity:0; visibility:hidden; transform:translateX(-50%) translateY(4px); transition:opacity .15s ease, transform .15s ease; z-index:5; text-align:left;}
+  .lede-tip:hover .tooltip,.lede-tip:focus .tooltip,.lede-tip:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateX(-50%) translateY(0);}
+
+  .info-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:16px;}
+  @media (max-width:700px){ .info-grid{grid-template-columns:1fr;} }
+  .info-grid.cols-2{grid-template-columns:1fr 1fr;}
+  @media (max-width:620px){ .info-grid.cols-2{grid-template-columns:1fr;} }
+  .info-card{background:var(--card); border:1px solid var(--card-border); border-radius:20px; padding:22px 20px; box-shadow:0 10px 24px rgba(0,0,0,0.2);}
+  .info-card .k{font-weight:800; font-size:14px; color:#fff; margin-bottom:8px;}
+  .info-card .v{font-size:12.5px; color:var(--muted); line-height:1.55;}
+  .info-card.accent .k{color:#F3C9D3;}
+  .info-card.accent-honey .k{color:#F5D896;}
+
+  .cta{margin-top:48px; background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 30px 60px rgba(0,0,0,0.3); position:relative; overflow:hidden;}
+  .cta-avatar{width:52px; height:52px; margin:0 auto 14px;}
+  .cta h2{color:var(--muted); margin:0 0 8px;}
+  .cta h3.section-headline{color:#fff; margin:0 0 8px; font-size:1.3rem;}
+  .cta p{color:var(--muted); margin:0 0 20px; font-size:14px;}
+  .cta a.btn{display:inline-block; background:var(--accent); color:var(--accent-ink); font-weight:800; font-size:14.5px; padding:15px 32px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 18px 36px rgba(243,130,154,0.3);}
+  .cta a.btn:hover{transform:translateY(-1px); box-shadow:0 22px 42px rgba(243,130,154,0.38);}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+
+  .builder-note{background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:28px 28px 24px; box-shadow:0 14px 30px rgba(0,0,0,0.2);}
+  .builder-note .kicker{font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+  .builder-note .section-headline{margin-top:0;}
+  .builder-note p{font-size:14px; color:var(--ink-soft); max-width:none;}
+  .builder-note .read-more{margin-top:4px;}
+  .builder-note .read-more summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; color:var(--honey); margin-bottom:4px;}
+  .builder-note .read-more summary::-webkit-details-marker{display:none;}
+  .builder-note .read-more summary::after{content:'Read the rest of the letter'; }
+  .builder-note .read-more[open] summary::after{content:'Show less';}
+  .builder-note .read-more summary .chevron{display:inline-block; transition:transform .15s ease;}
+  .builder-note .read-more[open] summary .chevron{transform:rotate(180deg);}
+  .builder-note .read-more .more-body{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav-inner">
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><span></span></button>
+    <a class="topnav-brand" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
+    <nav class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="seam-story.html">Seam</a>
+      <a href="story.html" class="minor">Thimble</a>
+      <a href="founder.html">Founder</a>
+      <a href="index.html#manifesto" onclick="event.preventDefault(); document.getElementById('manifestoModal').classList.add('open');">Approach</a>
+    </nav>
+    <div class="nav-right">
+      <a class="nav-cta" href="/seam/">Try Seam &rarr;</a>
+    </div>
+  </div>
+  <nav class="mobile-menu" id="mobileMenu">
+    <a href="index.html" class="active">Home</a>
+    <a href="seam-story.html">Seam</a>
+    <a href="story.html">Thimble</a>
+    <a href="founder.html">Founder</a>
+    <a href="index.html#manifesto" onclick="event.preventDefault(); document.getElementById('manifestoModal').classList.add('open'); document.getElementById('mobileMenu').classList.remove('open');">Approach</a>
+  </nav>
+</header>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-badge"><span class="dot"></span>Private &middot; never recorded &middot; never shared</div>
+    <div class="hero-text">
+      <h1>Becoming a Manager Doesn't Come With a Redo Button.</h1>
+      <p class="lede">You don't need someone to teach you how to manage. You need a second opinion on a message you're not sure about, workshopping how to handle a conflict between members of your team, or rehearsing for a tough conversation you need to have. Seam is that second opinion, privately, before you're in the room.</p>
+      <div class="hero-ctas">
+        <a class="btn-top" href="/seam/">Try Seam &rarr;</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-avatar">
+        <div id="heroAvatar"></div>
+        <div class="speech-bubble" aria-hidden="true"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+      </div>
+      <div class="avatar-status-row">
+        <div class="avatar-status"><span class="dot"></span>Thimble, your session facilitator</div>
+        <button type="button" class="thimble-info-btn" aria-label="Learn how Thimble actually works" onclick="document.getElementById('thimbleCapabilitiesModal').classList.add('open')">i</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="block builder-note">
+    <p class="kicker">A note from the builder</p>
+    <h3 class="section-headline">When I Became a Manager</h3>
+    <p>Nobody handed me a manual. I figured it out as I went.</p>
+    <p>What I learned was the specific, ordinary stuff: the message I wasn&rsquo;t sure about, the friction I didn&rsquo;t know how to handle, the meeting I needed to get right and had no neutral person to check it with first.</p>
+    <details class="read-more">
+      <summary><span class="chevron">&#9662;</span></summary>
+      <div class="more-body">
+        <p>And specifics take detail. They take nuance. That&rsquo;s the part that&rsquo;s genuinely boring to bring to your own manager: they&rsquo;ve got a lot on their plate already, and most of the time they don&rsquo;t need to hear it.</p>
+        <p>What I needed was somewhere to work through the specifics myself, off the record, before I had to go handle it for real. Not a verdict, not a script, just a gut check.</p>
+        <p>That&rsquo;s the gap Seam is built to fill.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="block">
+    <h2>Right now, your options</h2>
+    <h3 class="section-headline">None of them give you a confidential second opinion.</h3>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="k">Practice by yourself</div>
+        <div class="v">Hard to give yourself honest feedback when you're also the one judging it.</div>
+      </div>
+      <div class="info-card">
+        <div class="k">Use generic AI</div>
+        <div class="v">It's an echo chamber, not built to handle the social dynamics these conversations actually involve.</div>
+      </div>
+      <div class="info-card">
+        <div class="k">Ask your manager or peers</div>
+        <div class="v">That well runs dry fast. It's not realistic for a Slack message, and you can't always be fully honest with them either.</div>
+      </div>
+    </div>
+    <p class="section-sub">They don't let you actually prepare for it.</p>
+  </section>
+
+  <section class="block evidence-block">
+    <div class="evidence-head">
+      <span class="evidence-eyebrow">The research behind these numbers</span>
+      <h3 class="evidence-title">Conflict Is Costly, in Any Form</h3>
+      <p class="evidence-sub">Four datasets, current and historical, all pointing the same direction: what gets left on the table when friction and tough conversations go unaddressed.</p>
+    </div>
+    <div class="evidence-grid">
+      <div class="evidence-card lead">
+        <span class="evidence-tag primary">Primary &middot; most-cited</span>
+        <div class="evidence-finding">2.8 hrs/week per employee lost to conflict.</div>
+        <div class="evidence-org">CPP Inc. (2008)</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">~50% cite personality clashes as the leading cause. ~5,000 employees, nine countries. The most widely cited figure in this field; newer, independent research elsewhere on this page lands on the same scale of cost.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Manager time cost</span>
+        <div class="evidence-finding">Managers spend over 4 hours a week on workplace conflict.</div>
+        <div class="evidence-org">Myers-Briggs Company</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">&ldquo;Conflict at Work&rdquo; report, led by John Hackston, Head of Thought Leadership. Up from the company&rsquo;s 2008 study &mdash; 36% of people now report dealing with conflict often, very often, or all the time.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Cost estimate</span>
+        <div class="evidence-finding">$2.6B lost every day to workplace incivility in the US.</div>
+        <div class="evidence-org">SHRM</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">Up from $2B/day in 2024. Society for Human Resource Management, Civility Index &middot; independent HR professional body.</div>
+        </details>
+      </div>
+      <div class="evidence-card">
+        <span class="evidence-tag independent">Health &amp; wellness</span>
+        <div class="evidence-finding">Conflict with your boss: 22% more sick days.</div>
+        <div class="evidence-org">Peer-reviewed / IJERPH</div>
+        <details class="evidence-source">
+          <summary><span class="chev">&#9656;</span>Source</summary>
+          <div class="evidence-meta">&ldquo;The Relationship between Workplace Conflicts and Subsequent Physician-Certified Sick Leave,&rdquo; prospective population study, <i>Int. J. Environ. Res. Public Health</i> (2022). Also backed by a CDC/NIOSH-archived meta-analysis of 79 studies linking interpersonal conflict to measurable physical strain.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Why Seam</h2>
+    <h3 class="section-headline">Built for the conversations that actually matter.</h3>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="k">Handling team friction</div>
+        <div class="v">Seam understands that interpersonal friction is usually a symptom of misalignment, not the problem itself, and works on the actual cause.</div>
+      </div>
+      <div class="info-card">
+        <div class="k">Tone-checking a written message</div>
+        <div class="v">Seam makes sure your intentions actually match your words.</div>
+      </div>
+      <div class="info-card">
+        <div class="k">Preparing for a talk or meeting</div>
+        <div class="v">Seam helps you think through strategy that accounts for how the room will actually hear it, not just how you intend it to sound.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Why you can trust Seam</h2>
+    <h3 class="section-headline">On your side, and on theirs.</h3>
+    <div class="info-grid">
+      <div class="info-card accent">
+        <div class="k">There's a safety floor</div>
+        <div class="v">If what you describe crosses a real line, Seam doesn't just quietly talk you through it. It flags it, instead of leaving something serious for you to carry alone.</div>
+      </div>
+      <div class="info-card accent-honey">
+        <div class="k">Nothing is saved</div>
+        <div class="v">The conversation exists while you're in it, and nowhere after.</div>
+      </div>
+      <div class="info-card">
+        <div class="k">It tells you what you need to hear</div>
+        <div class="v">Seam isn't built to agree with you. It's built to be honest with you.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <div class="cta-avatar" id="ctaAvatar"></div>
+    <h3 class="section-headline">What We're Really Giving You Is Peace of Mind</h3>
+    <p>Peace of mind that the message you just sent says what you meant. Peace of mind that the conflict on your team gets handled at the root, not just smoothed over. Peace of mind walking into the room, because you have already done the work.</p>
+    <a class="btn" href="/seam/">Try Seam &rarr;</a>
+  </div>
+
+  <footer>
+    <div class="footer-note">Internal draft, pre-legal review. This is an alternate manager-pitch framing of the home page, being tested against the current one &mdash; not a finished product. &middot; <a href="founder.html">About the founder</a></div>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="manifestoModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="manifestoTitle">
+    <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('manifestoModal').classList.remove('open')">&times;</button>
+    <h2 class="modal-title" id="manifestoTitle">The Mend Approach to Workplace Friction</h2>
+    <p class="modal-sub">Stated simply, we value people over:</p>
+    <ul>
+      <li><b>Structural clarity over litigating blame.</b> Workplace friction stems from colliding incentives, competing KPIs, and overloaded schedules, not malice or "bad people." We solve the system, not the personality.</li>
+      <li><b>Radical privacy over managerial surveillance.</b> Honest resolution cannot survive an audience. People only own their part when their words cannot be weaponized on a performance review or an HR docket.</li>
+      <li><b>Personal agency over forced corporate harmony.</b> We never demand apologies, preach toxic positivity, or force coworkers to become friends. Setting clear, functional operational boundaries is just as valid.</li>
+      <li><b>Decoupled consent over performative truces.</b> Concessions made under live social pressure fall apart the moment people leave the room. True agreements are evaluated and signed alone, with zero coercion and no audience.</li>
+      <li><b>Dissolving sutures over permanent dossiers.</b> The process exists purely to stabilize the dynamic while it repairs. Once alignment holds, the record dissolves completely.</li>
+    </ul>
+    <h3>What We Mean by &ldquo;Solving the System&rdquo;</h3>
+    <p class="lead-line">When an argument feels personal, the instinct is to diagnose the other person as difficult, incompetent, or toxic. But in high-velocity teams, conflict almost always comes down to structural design:</p>
+    <ul>
+      <li><b>Colliding Incentives.</b> Engineering is penalized for regressions and system instability, while Product is measured on delivery speed. Both are doing their jobs, which puts their day-to-day workflows on a direct collision course.</li>
+      <li><b>Unclear Swimlanes &amp; SLAs.</b> Vague ownership, ambiguous handoffs, and misaligned turnaround expectations create friction that masquerades as interpersonal hostility.</li>
+      <li><b>Operational Fixes.</b> Instead of trying to fix personalities, we fix the machine, aligning delivery criteria, defining explicit handoff boundaries, and removing structural mismatches so both people can succeed without friction.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Thimble capabilities modal: informational only, no CTA -- Home still
+     doesn't pitch Thimble directly (see the comment this replaced), this
+     just answers "how does this thing actually work" for whoever clicks
+     the small info button next to the hero avatar's status pill. Content
+     is pulled from the real facilitator-intake-system-prompt.md and the
+     safety-floor voting work (see STATUS.md), not invented. -->
+<div class="modal-overlay" id="thimbleCapabilitiesModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="thimbleCapabilitiesTitle">
+    <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('thimbleCapabilitiesModal').classList.remove('open')">&times;</button>
+    <h2 class="modal-title" id="thimbleCapabilitiesTitle">How Thimble Actually Works</h2>
+    <p class="modal-sub">Not a generic chatbot wearing a mascot. Here's what's actually running underneath.</p>
+    <ul>
+      <li><b>A purpose-built system prompt, not a persona bolted onto a general assistant.</b> Thimble's entire conduct &mdash; short, spoken-style turns instead of essays, never taking either side, pushing back on a plan that's vague or likely to blindside someone &mdash; comes from a system prompt written and iterated specifically for workplace conflict conversations, not a generic "be helpful" instruction.</li>
+      <li><b>Harassment &amp; safety floor recognition.</b> Every turn, in every phase, gets continuously screened against a fixed set of categories &mdash; harassment or discrimination based on a protected characteristic, threats, illegal activity, immediate safety risk, retaliation for something someone had a legitimate right to do. This isn't a keyword filter: it re-weighs the whole conversation as new detail comes in, and a vague warning or a sudden cold shoulder can meet the floor just as much as an explicit threat.</li>
+      <li><b>Deterministic rules on top of the model, not just a vibe.</b> Once the floor is met, what happens next isn't up for interpretation: the session stops coaching toward a plan, the person is told plainly and never silently, and Mend sends nothing to HR without their explicit, informed yes &mdash; no silent reports, ever.</li>
+      <li><b>A second opinion on genuinely ambiguous cases.</b> When a disclosure is a real toss-up, not just sensitive, Thimble doesn't settle it alone on a single pass &mdash; it runs an any-of-k self-consistency check (several independent reads voting) before the floor decision is finalized, instead of trusting one read of one conversation.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Manifesto + Thimble-capabilities modals: Escape closes whichever is
+  // open, same as each one's own backdrop-click handler inlined on its
+  // overlay.
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    document.getElementById('manifestoModal').classList.remove('open');
+    document.getElementById('thimbleCapabilitiesModal').classList.remove('open');
+  });
+  // The nav's "Approach" link on every other page points here as a real
+  // URL (index.html#manifesto) since the manifesto content only lives on
+  // this page -- open it on load if that's how we arrived, same as the
+  // in-page Approach link's own onclick does directly.
+  if (location.hash === '#manifesto') {
+    document.getElementById('manifestoModal').classList.add('open');
+  }
+})();
+</script>
+<script>
+(function(){
+  // ThimbleAvatarV2: a static-page port of the live avatar's own render
+  // loop (thimble/static/index.html's THIMBLE_SHAPES, domeWobbleRadius,
+  // applyThimbleState/renderThimbleMouth, updateThimbleMotion), trimmed to
+  // what a mic-less, TTS-less marketing preview needs. setState/setLevel
+  // keep the same call shape the old design-handoff ThimbleAvatar used, so
+  // the cycling loop below didn't need to change.
+  var DOME_RADIUS_CAP = 12, DOME_RADIUS_RIM = 14;
+  var THIMBLE_SHAPES = {
+    idle:      {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
+    listening: {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
+    thinking:  {lean:'none', mouthTop:62, mouthW:.12, mouthH:.07, mouthX:58},
+    talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
+  };
+  // Per-state body colors, matching the live app's THIMBLE_COLORS
+  // (apps/thimble/static/session.html). Now ports the app's actual current
+  // look -- the "Four-Color Bloom" fill, where all four state colors stay
+  // visible as blended corner blobs all the time and a state change only
+  // shifts each blob's weight, not which colors exist -- instead of the
+  // flat solid-color swap this used before. Previously skipped as "overkill
+  // for a decorative loop," but this page already runs a per-frame tick()
+  // loop for the wobble/breathe motion, so there was no separate engine to
+  // add: the bloom lerp below just reuses that same frame.
+  var THIMBLE_COLORS = {
+    idle:      '#A3CFE0',
+    listening: '#B0DED1',
+    thinking:  '#E9B949',
+    talking:   '#F3829A'
+  };
+  function thimbleHexToRgb(hex){
+    var n = parseInt(hex.slice(1), 16);
+    return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
+  }
+  var THIMBLE_BLOOM_ORDER = ['idle', 'listening', 'thinking', 'talking'];
+  var THIMBLE_BLOOM_RGB = {};
+  THIMBLE_BLOOM_ORDER.forEach(function(k){ THIMBLE_BLOOM_RGB[k] = thimbleHexToRgb(THIMBLE_COLORS[k]); });
+  // Fixed "home" corner for each color's blob, same layout as the app.
+  var THIMBLE_BLOOM_POS = {
+    idle:      {hx: 15, hy: 15},
+    listening: {hx: 85, hy: 15},
+    thinking:  {hx: 80, hy: 85},
+    talking:   {hx: 20, hy: 85}
+  };
+  var THIMBLE_BLOOM_WEIGHTS = {
+    idle:      {idle: .46, listening: .20, thinking: .14, talking: .20},
+    listening: {idle: .20, listening: .46, thinking: .20, talking: .14},
+    thinking:  {idle: .14, listening: .20, thinking: .46, talking: .20},
+    talking:   {idle: .20, listening: .14, thinking: .20, talking: .46}
+  };
+  function domeWobbleRadius(domeFactor, lvl){
+    var capY = 50 + (DOME_RADIUS_CAP + 3 * lvl) * domeFactor;
+    var rimY = 50 - (DOME_RADIUS_RIM + 3 * lvl) * domeFactor;
+    return '50% 50% 50% 50% / ' + capY.toFixed(1) + '% ' + capY.toFixed(1) + '% ' + rimY.toFixed(1) + '% ' + rimY.toFixed(1) + '%';
+  }
+  function renderMouth(inst, state){
+    var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+    inst.mouth.style.top = shape.mouthTop + '%';
+    inst.mouth.style.left = (shape.mouthX || 50) + '%';
+    inst.mouth.style.width = (shape.mouthW * inst.size) + 'px';
+    inst.mouth.style.height = (shape.mouthH * inst.size) + 'px';
+    inst.mouth.style.background = '#F6F1E7';
+    inst.mouth.style.borderRadius = (state === 'talking' || state === 'thinking') ? '50%' : '999px';
+  }
+  function applyState(inst, state){
+    if (state === inst.renderedState) return;
+    inst.renderedState = state;
+    var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
+    inst.el.style.transform = shape.lean;
+    inst.blend.style.opacity = '0';
+    inst.bloomTarget = THIMBLE_BLOOM_WEIGHTS[state] || THIMBLE_BLOOM_WEIGHTS.listening;
+    if (!inst.bloomCurrent) {
+      inst.bloomCurrent = {};
+      THIMBLE_BLOOM_ORDER.forEach(function(k){ inst.bloomCurrent[k] = inst.bloomTarget[k]; });
+    }
+    var talking = state === 'talking';
+    inst.ripple.hidden = !talking;
+    inst.mouth.style.transition = talking
+    ? 'top .35s ease, left .35s ease, width .35s ease, border-radius .35s ease'
+    : 'top .35s ease, left .35s ease, width .35s ease, height .35s ease, border-radius .35s ease';
+    renderMouth(inst, state);
+  }
+  function tick(inst, now){
+    applyState(inst, inst.state);
+    var dt = Math.min(0.1, inst.lastT == null ? 0 : (now - inst.lastT) / 1000);
+    inst.lastT = now;
+    // Bloom weight lerp toward inst.bloomTarget (set in applyState above),
+    // every frame -- an exponential ease so a fast state change still reads
+    // as one continuous color shift, not a snap. ~.2s to settle, matching
+    // the app's own tuned rate.
+    var colorRate = 1 - Math.pow(0.000001, dt);
+    var cur = inst.bloomCurrent, tgt = inst.bloomTarget;
+    var r = 0, g = 0, b = 0;
+    THIMBLE_BLOOM_ORDER.forEach(function(k){
+      cur[k] += (tgt[k] - cur[k]) * colorRate;
+      var c = THIMBLE_BLOOM_RGB[k];
+      r += c.r * cur[k]; g += c.g * cur[k]; b += c.b * cur[k];
+    });
+    inst.body.style.backgroundColor = 'rgb(' + Math.round(r) + ', ' + Math.round(g) + ', ' + Math.round(b) + ')';
+    var blobs = THIMBLE_BLOOM_ORDER.map(function(k){
+      var w = cur[k], c = THIMBLE_BLOOM_RGB[k], pos = THIMBLE_BLOOM_POS[k];
+      var radius = (16 + w * 110).toFixed(1);
+      var alpha = Math.min(1, 0.3 + w * 1.1).toFixed(2);
+      return 'radial-gradient(circle at ' + pos.hx + '% ' + pos.hy + '%, rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ') 0%, transparent ' + radius + '%)';
+    }).join(',');
+    var ap = THIMBLE_BLOOM_POS[inst.state] || THIMBLE_BLOOM_POS.idle;
+    inst.body.style.backgroundImage =
+      'radial-gradient(circle at ' + ap.hx + '% ' + ap.hy + '%, rgba(255,255,255,.7) 0%, transparent 16%),' + blobs;
+    var speaking = inst.state === 'talking';
+    var thinkingState = inst.state === 'thinking';
+    var nodding = inst.state === 'listening';
+    var y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
+    var wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
+    var breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
+    inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+    var breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
+    inst.ring.style.transform = 'translateY(' + y.toFixed(2) + '%) rotate(' + wiggle.toFixed(2) + 'deg) scale(' + breathe.toFixed(4) + ')';
+    var input = thinkingState ? 0.15 : inst.level;
+    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
+    var wobblePeriod = thinkingState ? 3.4 : 1.6;
+    inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+    var domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
+    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+    if (speaking) {
+      inst.ripple.style.borderRadius = inst.body.style.borderRadius;
+      inst.ripple.style.transform = inst.ring.style.transform + ' scale(' + (1.04 + 0.05 * domeFactor).toFixed(3) + ')';
+      inst.ripple.style.opacity = (0.22 + 0.16 * domeFactor).toFixed(3);
+    }
+    requestAnimationFrame(function(t){ tick(inst, t); });
+  }
+  window.ThimbleAvatarV2 = function(host, opts){
+    var size = (opts && opts.size) || 140;
+    host.innerHTML = '<div class="thimble-avatar" style="width:' + size + 'px;height:' + size + 'px;">' +
+      '<div class="thimble-ripple" hidden></div>' +
+      '<div class="thimble-ring"><div class="thimble-body"><div class="thimble-blend"></div><div class="thimble-mouth"></div></div></div>' +
+    '</div>';
+    var el = host.querySelector('.thimble-avatar');
+    var inst = {
+      size: size, el: el,
+      ring: el.querySelector('.thimble-ring'),
+      body: el.querySelector('.thimble-body'),
+      blend: el.querySelector('.thimble-blend'),
+      mouth: el.querySelector('.thimble-mouth'),
+      ripple: el.querySelector('.thimble-ripple'),
+      renderedState: null, state: 'idle', level: 0, lvl: 0,
+      wobblePhase: 0, breathePhase: 0, lastT: null
+    };
+    requestAnimationFrame(function(t){ tick(inst, t); });
+    return {
+      setState: function(s){ inst.state = s; },
+      setLevel: function(l){ inst.level = l; }
+    };
+  };
+})();
+</script>
+<script>
+(function(){
+  // Hero Thimble: cycles idle -> listening -> thinking -> talking on a
+  // loop with a fake amplitude signal, just to give the primer page a
+  // living preview of the thing you're about to talk to.
+  if (!window.ThimbleAvatarV2) return;
+  var heroHost = document.getElementById('heroAvatar');
+  if (heroHost) {
+    var hero = new ThimbleAvatarV2(heroHost, { size: 140 });
+    var states = ['idle', 'listening', 'thinking', 'talking'];
+    var i = 0;
+    hero.setState(states[0]);
+    setInterval(function(){ i++; hero.setState(states[i % states.length]); }, 3200);
+    var t0 = performance.now();
+    setInterval(function(){
+      var t = (performance.now() - t0) / 1000;
+      hero.setLevel(0.35 + 0.35 * Math.abs(Math.sin(t * 1.8)));
+    }, 80);
+  }
+  var ctaHost = document.getElementById('ctaAvatar');
+  if (ctaHost) new ThimbleAvatarV2(ctaHost, { size: 52 });
+})();
+</script>
+<script>
+(function(){
+  // Mobile nav: hidden below 680px (.nav-links), this hamburger toggle is
+  // the only way to reach the other pages at that width -- previously
+  // there was none at all.
+  var toggle = document.getElementById('navToggle');
+  var menu = document.getElementById('mobileMenu');
+  if (!toggle || !menu) return;
+  toggle.addEventListener('click', function(){
+    var open = menu.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  menu.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      menu.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+})();
+</script>
+<script>
+(function(){
+  // Nav CTA stays hidden on load and only appears once the page's own
+  // in-hero CTA button has scrolled out of view -- avoids showing two
+  // identical "do this" buttons on screen at once. Pages with no hero CTA
+  // of their own (nothing to be redundant with) just show it immediately.
+  var navCta = document.querySelector('.nav-cta');
+  if (!navCta) return;
+  var heroCta = document.querySelector('.hero .btn-top, .hero-ctas .btn-top');
+  if (!heroCta) { navCta.classList.add('visible'); return; }
+  var observer = new IntersectionObserver(function(entries){
+    navCta.classList.toggle('visible', !entries[0].isIntersecting);
+  }, { threshold: 0, rootMargin: '-' + (document.querySelector('.topnav').offsetHeight + 4) + 'px 0px 0px 0px' });
+  observer.observe(heroCta);
+})();
+</script>
+</body>
+</html>

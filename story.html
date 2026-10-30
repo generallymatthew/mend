@@ -31,11 +31,12 @@
   .topnav{position:sticky; top:0; z-index:30; background:rgba(10,24,19,0.78); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); margin-bottom:40px;}
   .topnav-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:22px;}
   .topnav-brand{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
-  .topnav-brand .wordmark{font-size:1.25rem; font-weight:800; letter-spacing:-0.02em; color:#fff;}
-  .nav-links{display:flex; gap:18px; font-size:13px; font-weight:700; color:var(--muted);}
-  .nav-links a{text-decoration:none; color:var(--muted); padding:6px 0; border-bottom:2px solid transparent; white-space:nowrap;}
+  .topnav-brand .wordmark{font-size:1.1rem; font-weight:800; letter-spacing:-0.02em; color:#fff;}
+  .nav-links{display:flex; gap:18px; font-size:13.5px; font-weight:700; color:var(--muted); margin-left:14px; padding-left:22px; border-left:1px solid var(--border);}
+  .nav-links a{text-decoration:none; color:var(--muted); padding:6px 0; white-space:nowrap; position:relative;}
   .nav-links a:hover{color:#fff;}
-  .nav-links a.active{color:#fff; border-bottom-color:var(--accent-solid);}
+  .nav-links a.active{color:#fff;}
+  .nav-links a.active::after{content:''; position:absolute; left:0; right:0; bottom:-14px; height:2px; background:var(--accent-solid);}
   .nav-links a.minor{font-weight:600; color:rgba(143,163,153,0.6); font-size:12.5px;}
   .nav-links a.minor:hover{color:var(--muted);}
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
