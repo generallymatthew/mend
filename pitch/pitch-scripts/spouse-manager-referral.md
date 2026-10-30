@@ -9,7 +9,7 @@
 
 Hi
 
-My husband's been building Seam, a private tool for managers to work through conflict with their team: rehearsing a hard conversation or managing an ongoing conflict between two people who report to you.
+My husband's been building Seam, a private tool for managers to work through friction with their team: rehearsing a hard conversation or managing ongoing friction between two people who report to you.
 
 Nothing you say or enter is saved, so feel free to be honest.
 
