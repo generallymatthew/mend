@@ -34,7 +34,6 @@ Only spool + thimble are in the live Render deploy (`render.yaml`/`deploy/start.
 
 | Page | Local | Live |
 |---|---|---|
-| Thimble states (every avatar state, side by side) | [localhost:8080/intake/static/thimble-states.html](http://localhost:8080/intake/static/thimble-states.html) | [mend-mvp.onrender.com/intake/static/thimble-states.html](https://mend-mvp.onrender.com/intake/static/thimble-states.html) |
 | Launchpad (this same link list, as a page) | [localhost:8080/launchpad](http://localhost:8080/launchpad) or [localhost:8000/launchpad.html](http://localhost:8000/launchpad.html) | [mend-mvp.onrender.com/launchpad](https://mend-mvp.onrender.com/launchpad) |
 | Phrase review (classifier training-data labeling tool) | [localhost:8000/apps/classifier/data/review_page.html](<http://localhost:8000/apps/classifier/data/review_page.html>) | — local only |
 
