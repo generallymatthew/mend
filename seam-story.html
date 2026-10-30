@@ -57,6 +57,30 @@
   .hero-text{flex:1; min-width:0;}
   @media (max-width:600px){ .hero{flex-direction:column; align-items:flex-start; gap:20px;} }
 
+  /* Real-product screenshot, framed like a browser window. Built from
+     markup rather than an uploaded image so it stays editable text, but
+     the inner app colors are the real (light-themed) Seam UI, not
+     restyled to match the dark marketing page -- an honest preview beats
+     a prettier fake. */
+  .screenshot-frame{margin-top:40px; border-radius:20px; overflow:hidden; box-shadow:0 30px 70px rgba(0,0,0,0.5); border:1px solid var(--card-border);}
+  .screenshot-chrome{background:#1b1f1e; padding:10px 14px; display:flex; align-items:center; gap:7px;}
+  .screenshot-chrome .dot{width:10px; height:10px; border-radius:50%; display:inline-block;}
+  .screenshot-url{margin-left:16px; font-size:11px; color:var(--muted);}
+  .screenshot-app{background:#F6F1E7; color:#17372E;}
+  .screenshot-topbar{display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid #DDD4C0;}
+  .screenshot-logo{font-weight:800; font-size:15px;}
+  .screenshot-pill{margin-left:auto; font-size:11px; font-weight:700; color:#5B655F; background:#fff; border:1px solid #DDD4C0; padding:5px 12px; border-radius:999px;}
+  .screenshot-pill.accent{margin-left:0; color:#17372E; background:#EAF0EC; border:none;}
+  .screenshot-body{display:flex;}
+  .screenshot-sidebar{width:180px; border-right:1px solid #DDD4C0; padding:16px 14px; flex-shrink:0;}
+  .screenshot-sidebar-label{font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#8A8F89; margin-bottom:10px;}
+  .screenshot-thread{background:#fff; border:1px solid #DDD4C0; border-radius:10px; padding:10px 12px; font-size:12px; font-weight:700;}
+  .screenshot-chat{flex:1; padding:22px 24px; display:flex; flex-direction:column; gap:14px; min-width:0;}
+  .screenshot-bubble{align-self:flex-start; max-width:80%; background:#fff; border:1px solid #DDD4C0; border-radius:14px 14px 14px 4px; padding:12px 14px; font-size:13px; line-height:1.5;}
+  .screenshot-bubble.me{align-self:flex-end; background:#17372E; color:#fff; border:none; border-radius:14px 14px 4px 14px;}
+  @media (max-width:560px){ .screenshot-sidebar{display:none;} }
+  .screenshot-caption{font-size:11.5px; color:var(--muted); text-align:center; margin:14px 0 0;}
+
   /* Thimble avatar: same port as story.html/about.html -- see those files
      for the fuller comment on where this shape and render loop come from
      (thimble/static/index.html's live avatar). */
@@ -132,13 +156,22 @@
   .door-d{font-size:13px; color:var(--muted); line-height:1.5;}
   @media (max-width:700px){ .door-t{font-size:13.5px; margin-bottom:6px;} .door-d{font-size:12px;} }
 
-  .privacy-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
-  .privacy-list li{display:flex; gap:14px; align-items:flex-start;}
-  .privacy-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center;}
-  .privacy-list li:nth-child(2) .ico{background:rgba(233,185,73,0.16);}
-  .privacy-list .ico svg{width:18px; height:18px; display:block;}
-  .privacy-list .k{font-weight:800; color:#fff; font-size:14.5px; display:block; margin-bottom:3px; padding-top:2px;}
-  .privacy-list .v{color:var(--muted); font-size:14px; line-height:1.55;}
+  .mode-row{display:flex; flex-direction:column; gap:14px; margin-top:4px;}
+  .mode-card{background:var(--card); border:1px solid var(--card-border); border-radius:18px; padding:22px 24px; display:flex; gap:18px; align-items:flex-start;}
+  .mode-card .ico{width:38px; height:38px; border-radius:11px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mode-card:nth-child(2) .ico{background:rgba(243,130,154,0.18);}
+  .mode-card:nth-child(3) .ico{background:rgba(233,185,73,0.18);}
+  .mode-card .t{font-weight:800; font-size:15px; color:#fff; margin-bottom:6px;}
+  .mode-card .d{font-size:13px; color:var(--muted); line-height:1.55;}
+
+  .privacy-grid{display:flex; flex-direction:column; gap:1px; margin-top:4px; background:var(--card); border:1px solid var(--card-border); border-radius:14px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.22);}
+  .privacy-row{display:flex; flex-direction:column; gap:4px; font-size:14px; padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.08);}
+  .privacy-row:last-child{border-bottom:none;}
+  .privacy-row .k{font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;}
+  .privacy-row .k::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent-solid); flex-shrink:0;}
+  .privacy-row:nth-child(3) .k::before{background:var(--pink);}
+  .privacy-row .v{color:var(--muted);}
+  @media (max-width:600px){ .privacy-grid{background:transparent; border:none; box-shadow:none; border-radius:0;} }
 
   .research-callout{margin-top:18px; display:flex; align-items:center; gap:16px; background:rgba(233,185,73,0.07); border:1px solid rgba(233,185,73,0.22); border-radius:16px; padding:18px 20px;}
   .research-callout .ico{flex-shrink:0; width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center;}
@@ -162,18 +195,6 @@
   .modal-card li b{color:#fff;}
   .modal-card p.lead-line{font-size:13.5px; color:var(--ink-soft); font-style:italic; margin:22px 0 0; padding-top:18px; border-top:1px solid var(--border);}
   @media (max-width:600px){ .modal-card{padding:28px 20px 24px;} }
-
-  .builder-note{margin-top:48px; background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:28px 28px 24px; box-shadow:0 14px 30px rgba(0,0,0,0.2);}
-  .builder-note .kicker{margin-bottom:10px;}
-  .builder-note .section-headline{margin-top:0;}
-  .builder-note p{font-size:14px; color:var(--ink-soft); max-width:none;}
-  .builder-note .read-more summary{list-style:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:13.5px; color:var(--honey); margin-bottom:4px;}
-  .builder-note .read-more summary::-webkit-details-marker{display:none;}
-  .builder-note .read-more summary::after{content:'Read the rest of the letter';}
-  .builder-note .read-more[open] summary::after{content:'Show less';}
-  .builder-note .read-more summary .chevron{display:inline-block; transition:transform .15s ease;}
-  .builder-note .read-more[open] summary .chevron{transform:rotate(180deg);}
-  .builder-note .read-more .more-body{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
 
   /* Thimble vs. generic LLM comparison. Desktop: a three-column grid
      (dimension / Thimble / generic chatbot). Mobile: each row's two
@@ -242,9 +263,9 @@
 
   <div class="hero">
     <div class="hero-text">
-      <p class="kicker">For Managers</p>
-      <h1>Get a Second Opinion Before the Hard Conversation.</h1>
-      <p class="lede">A direct report needs tough feedback. Two people on your team can't work together. Or you're just trying to understand how a conflict started in the first place. There's no neutral person to think it through with, and getting it wrong costs you the relationship, the team's trust, or both. Mend is where you get a second opinion before you're in the room.</p>
+      <p class="kicker">How Seam Works</p>
+      <h1>One Conversation with Thimble, Steered by What You Type.</h1>
+      <p class="lede">No menu to click through and nothing to configure. Say what's going on, and Seam figures out whether it's a team conflict, a hard conversation you need to prep for, or a message you want checked &mdash; then runs the right kind of conversation.</p>
       <div class="cta-row">
         <a class="btn-top" href="/seam/">Start a Private Session &rarr;</a>
         <a class="hr-link" href="#for-hr">How Mend Can Help HR &rarr;</a>
@@ -252,20 +273,33 @@
     </div>
   </div>
 
-  <section class="block builder-note">
-    <p class="kicker">A note from the builder</p>
-    <h3 class="section-headline">The First Time I Managed People</h3>
-    <p>The first time I managed people, nobody handed me a manual. There wasn't exactly training, I just figured it out as I went. I read books, I looked things up online, I did what you do.</p>
-    <p>But what I actually wanted was someone to talk to who wasn't my own manager, because I didn't want to look incompetent in front of them. Someone I could get into the actual specifics with.</p>
-    <details class="read-more">
-      <summary><span class="chevron">&#9662;</span></summary>
-      <div class="more-body">
-        <p>And specifics take detail. They take nuance. That's the part that's genuinely boring to bring to your own manager: they've got a lot on their plate, and most of the time they don't need to hear it, and honestly shouldn't have to.</p>
-        <p>What I needed was a confidant. Someone I could lay out the whole situation for, in as much detail as it actually took, and just get a gut check from. Not a verdict, not a script, just someone to think out loud with before I had to go handle it for real.</p>
-        <p>That's the gap Mend is built to fill. Somewhere to work through the specifics, off the record, before the hard conversation, instead of guessing your way through it alone.</p>
+  <div class="screenshot-frame">
+    <div class="screenshot-chrome">
+      <span class="dot" style="background:#f3756b;"></span>
+      <span class="dot" style="background:#e9b949;"></span>
+      <span class="dot" style="background:#5fcf8f;"></span>
+      <span class="screenshot-url">trymend.solutions/seam/</span>
+    </div>
+    <div class="screenshot-app">
+      <div class="screenshot-topbar">
+        <span class="screenshot-logo">Seam</span>
+        <span class="screenshot-pill">Give feedback</span>
+        <span class="screenshot-pill accent">&#128274; Anonymity enforced</span>
       </div>
-    </details>
-  </section>
+      <div class="screenshot-body">
+        <div class="screenshot-sidebar">
+          <div class="screenshot-sidebar-label">Conversations</div>
+          <div class="screenshot-thread">Missed deadlines</div>
+        </div>
+        <div class="screenshot-chat">
+          <div class="screenshot-bubble">When did things start feeling tense between you two?</div>
+          <div class="screenshot-bubble me">A few weeks ago, when the launch date moved.</div>
+          <div class="screenshot-bubble">Why do you think they pushed for the earlier date?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="screenshot-caption">An actual Seam session, framed for illustration &mdash; colors are the real product UI, not restyled for the marketing page.</p>
 
   <section class="block">
     <h3 class="section-headline">Why managers rarely ask for help with this</h3>
@@ -346,22 +380,20 @@
     <h3 class="section-headline">Why Mend was built for managers</h3>
     <p>Mend lets you talk through a specific, named conflict with Thimble, the same facilitator employees use, whose job is to hear you out and drive toward an understanding of what's actually causing the friction, not just hand you a script.</p>
     <p>Mend focuses on the structural forces that cause conflict between people on your team, rather than asking you to referee a personality clash, leveraging current conflict-resolution best practices.</p>
-    <h2 class="eyebrow" style="margin-top:28px;">Ways managers can use Mend</h2>
-    <div class="door-grid">
-      <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="26" rx="3" stroke="#fff" stroke-width="2"/><path d="M15 8v-2a2 2 0 012-2h6a2 2 0 012 2v2" stroke="#fff" stroke-width="2"/><path d="M14 18h12M14 23h12M14 28h8" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg></div>
-        <div class="door-t">Team Conflict</div>
-        <div class="door-d">For a conflict between two people on your team. Work out what's actually driving it and land on a concrete plan, without you having to play judge.</div>
+    <h2 class="eyebrow" style="margin-top:28px;">What It Actually Does</h2>
+    <p class="section-sub" style="margin-top:-6px;">Three tracks, one conversation. You never pick one &mdash; Seam classifies what you describe and routes to the right track on its own.</p>
+    <div class="mode-row">
+      <div class="mode-card">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="26" rx="3" stroke="#fff" stroke-width="2"/><path d="M15 8v-2a2 2 0 012-2h6a2 2 0 012 2v2" stroke="#fff" stroke-width="2"/><path d="M14 18h12M14 23h12M14 28h8" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg></div>
+        <div><div class="t">Team Conflict</div><div class="d">You describe what's going on between two people on your team. Seam works out what's actually driving it and helps you land on a concrete plan &mdash; you never have to play judge.</div></div>
       </div>
-      <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
-        <div class="door-t">Hard Conversation</div>
-        <div class="door-d">For a hard performance or conduct conversation with your own report. Practice it before you're actually in the room.</div>
+      <div class="mode-card">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
+        <div><div class="t">Hard Conversation</div><div class="d">Practice a hard performance or conduct conversation with your own report before you're actually in the room. Thimble plays a realistic version of them, including pushback.</div></div>
       </div>
-      <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="28" height="24" rx="3" stroke="#fff" stroke-width="2"/><path d="M12 16h16M12 21h16M12 26h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <div class="door-t">Tone Check</div>
-        <div class="door-d">Before you hit send on a hard email or Slack message, get a second opinion on how it actually reads, not just how you meant it.</div>
+      <div class="mode-card">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="28" height="24" rx="3" stroke="#fff" stroke-width="2"/><path d="M12 16h16M12 21h16M12 26h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div><div class="t">Tone Check</div><div class="d">Paste a hard email or Slack message before you send it. Get a second opinion on how it actually reads, not just how you meant it.</div></div>
       </div>
     </div>
   </section>
@@ -486,16 +518,13 @@
     <h3 class="section-headline">Will managers actually use this?</h3>
     <p>None of this matters if a manager doesn't feel safe using it, because they fear HR or their own boss is &ldquo;listening in&rdquo; on a conversation about their own shortcomings as a manager.</p>
     <p>That's why Mend is built from the ground up with total anonymity: no persistent record of what's shared. Session content is never truly saved; it's held in volatile memory and flushed as soon as the session ends.</p>
-    <ul class="privacy-list">
-      <li>
-        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.6-3 8.3-7 10-4-1.7-7-5.4-7-10V6l7-3z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M12 8v5M12 16v.01" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <div><span class="k">Illegal conduct or safety risk goes to HR automatically</span><span class="v">If what's being discussed meets the legal standard for discrimination, retaliation, or a physical threat, Thimble escalates on its own. That call isn't left to the manager in the moment, and it isn't left unsaid either; they're always told plainly, before anything is sent.</span></div>
-      </li>
-      <li>
-        <div class="ico"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#E9B949" stroke-width="2"/><path d="M8 11V8a4 4 0 118 0v3" stroke="#E9B949" stroke-width="2" stroke-linecap="round"/><path d="M12 14.5v2" stroke="#E9B949" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <div><span class="k">Everything else stays off the record</span><span class="v">That one safeguard is what makes the rest of the promise credible: for ordinary friction and an ordinary hard conversation, nothing is saved, nothing reaches HR, and nothing gets back to the manager's own boss.</span></div>
-      </li>
-    </ul>
+    <h3 class="section-headline" style="margin-top:28px;">How the Privacy Actually Works</h3>
+    <p class="section-sub">Not a policy promise &mdash; the technical mechanics.</p>
+    <div class="privacy-grid">
+      <div class="privacy-row"><span class="k">What is Recorded</span><span class="v">Nothing. Sessions run in volatile memory enclaves and are never written to disk. We don't "record then delete": it is never saved in the first place.</span></div>
+      <div class="privacy-row"><span class="k">What Managers See</span><span class="v">Zero visibility into voluntary sessions. For sessions formally assigned by a manager, they receive only a binary confirmation: "Resolved" or "Unresolved", never conversation content.</span></div>
+      <div class="privacy-row"><span class="k">Automatic Safety Protocols</span><span class="v">If what's being discussed meets the legal standard for discrimination, retaliation, or a physical threat, Thimble escalates on its own and the manager is always told plainly, before anything is sent.</span></div>
+    </div>
   </section>
 
   <section class="block">
@@ -535,9 +564,9 @@
   </section>
 
   <div class="cta">
-    <h3 class="section-headline">Get Your Second Opinion</h3>
-    <p>Describe the conflict or the conversation you need to have in your own words, whatever stage you're at. Off the record, zero judgment, and completely confidential.</p>
-    <a class="btn" href="/seam/">Start the Conversation &rarr;</a>
+    <h3 class="section-headline">Ready to Try It?</h3>
+    <p>Bring a real situation from your team, or use one of the sample scenarios. Off the record, zero judgment, and completely confidential.</p>
+    <a class="btn" href="/seam/">Start with Seam &rarr;</a>
     <p style="margin-top:16px;"><a href="/seam/survey" style="color:var(--ink-soft); font-size:13px; font-weight:700;">Testing Seam? Continue to the survey &rarr;</a></p>
     <p style="margin-top:8px;"><a href="/manager-test/" style="color:var(--ink-soft); font-size:13px; font-weight:700;">How good a read do you have on your own team's conflicts? Take the 2-minute test &rarr;</a></p>
   </div>

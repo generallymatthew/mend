@@ -115,69 +115,25 @@
   p.section-sub{font-size:14px; color:var(--muted); margin:0 0 18px; max-width:54ch;}
   p{margin:0 0 14px;}
 
-  .trust-line{display:flex; align-items:center; gap:8px; margin-top:16px; font-size:12px; color:var(--muted);}
-  .trust-line svg{flex-shrink:0;}
-
   .btn-top{display:inline-flex; align-items:center; gap:6px; margin-top:0; background:var(--accent); color:var(--accent-ink); font-weight:800; font-size:13.5px; padding:12px 24px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 10px 22px rgba(243,130,154,0.28), 0 2px 6px rgba(0,0,0,0.2);}
   .btn-top:hover{transform:translateY(-1px); box-shadow:0 14px 28px rgba(243,130,154,0.36), 0 2px 6px rgba(0,0,0,0.24);}
 
   section.block{margin-top:48px;}
-  #doors{scroll-margin-top:84px;}
-
-  .door-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:4px;}
-  @media (max-width:620px){ .door-grid{grid-template-columns:1fr;} }
-  .door-card{min-width:0; background:var(--card); border:1px solid var(--card-border); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; box-shadow:0 10px 24px rgba(0,0,0,0.2); transition:transform .15s ease, box-shadow .15s ease;}
-  .door-card:hover{transform:translateY(-2px); box-shadow:0 14px 32px rgba(0,0,0,0.3);}
-  @media (max-width:700px){ .door-grid{gap:10px;} .door-card{padding:16px 12px;} }
-  @media (max-width:520px){ .door-card{background:transparent; border:none; border-radius:0; box-shadow:none; padding:20px 0; border-bottom:1px solid var(--border);} .door-card:last-child{border-bottom:none;} .door-card:hover{transform:none; box-shadow:none;} }
-  .door-ico{width:38px; height:38px; border-radius:11px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
-  .door-ico svg{width:20px; height:20px;}
-  .door-card:nth-child(2) .door-ico{background:rgba(243,130,154,0.18);}
-  .door-card:nth-child(3) .door-ico{background:rgba(233,185,73,0.18);}
-  @media (max-width:700px){ .door-ico{width:32px; height:32px; margin-bottom:10px;} .door-ico svg{width:17px; height:17px;} }
-  .door-t{font-weight:700; font-size:15px; margin-bottom:8px; line-height:1.3; color:#fff;}
-  .door-d{font-size:13px; color:var(--muted); line-height:1.5; flex:1; margin-bottom:0;}
-  @media (max-width:700px){ .door-t{font-size:13.5px; margin-bottom:6px;} .door-d{font-size:12px;} }
-  .door-footnote{font-size:12.5px; color:var(--muted); text-align:center; margin:18px 0 0;}
-
-  .icon-list{margin:18px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:22px;}
-  .icon-list li{display:flex; gap:14px; align-items:flex-start;}
-  .icon-list .ico{flex-shrink:0; width:38px; height:38px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;}
-  .icon-list li:nth-child(2) .ico{background:var(--pink-soft);}
-  .icon-list li:nth-child(3) .ico{background:var(--honey-soft);}
-  .icon-list .ico svg{width:18px; height:18px; display:block;}
-  .icon-list .txt{padding-top:2px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
-  .icon-list .txt b{color:#fff; display:block; font-size:14.5px; margin-bottom:2px;}
-
-  .aside-link{display:inline-flex; align-items:center; gap:6px; margin-top:0; font-weight:700; font-size:13.5px; color:var(--muted); text-decoration:none; background:none; border:none; padding:0; font-family:inherit; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.2);}
-  .aside-link:hover{color:#fff;}
 
   .lede-tip{position:relative; appearance:none; border:none; background:none; padding:0; margin:0; font:inherit; font-weight:700; color:inherit; cursor:help; display:inline;}
   .lede-tip:hover,.lede-tip:focus{color:#fff;}
   .lede-tip .tooltip{position:absolute; left:0; bottom:100%; margin-bottom:10px; width:280px; max-width:80vw; background:#15302A; border:1px solid var(--border); color:#fff; font-size:12.5px; font-weight:500; line-height:1.55; padding:12px 14px; border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,0.4); opacity:0; visibility:hidden; transform:translateY(4px); transition:opacity .15s ease, transform .15s ease; z-index:5; text-align:left;}
   .lede-tip:hover .tooltip,.lede-tip:focus .tooltip,.lede-tip:focus-visible .tooltip{opacity:1; visibility:visible; transform:translateY(0);}
 
-  .why-columns{display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:6px;}
-  @media (max-width:760px){ .why-columns{grid-template-columns:1fr;} }
-  .why-col{min-width:0;}
-  .why-col-t{font-weight:700; font-size:14px; line-height:1.3; min-height:36px; display:flex; align-items:flex-end; margin-bottom:16px; color:#fff;}
-  .why-item{margin-bottom:16px;}
-  .why-item:last-child{margin-bottom:0;}
-  .why-k{font-weight:700; font-size:13.5px; margin-bottom:3px; display:flex; align-items:center; gap:8px; color:#F3C9D3;}
-  .why-k::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent-solid); flex-shrink:0;}
-  .why-col.company .why-k{color:#F5D896;}
-  .why-col.company .why-k::before{background:var(--honey);}
-  .why-v{font-size:13px; color:var(--muted); line-height:1.5; padding-left:15px;}
-
-
-  .privacy-grid{display:flex; flex-direction:column; gap:1px; margin-top:4px; background:var(--card); border:1px solid var(--card-border); border-radius:14px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.22);}
-  .privacy-row{display:flex; flex-direction:column; gap:4px; font-size:14px; padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.08);}
-  .privacy-row:last-child{border-bottom:none;}
-  .privacy-row .k{font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;}
-  .privacy-row .k::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent-solid); flex-shrink:0;}
-  .privacy-row:nth-child(3) .k::before{background:var(--pink);}
-  .privacy-row .v{color:var(--muted);}
-  @media (max-width:600px){ .privacy-grid{background:transparent; border:none; box-shadow:none; border-radius:0;} }
+  .info-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:16px;}
+  @media (max-width:700px){ .info-grid{grid-template-columns:1fr;} }
+  .info-grid.cols-2{grid-template-columns:1fr 1fr;}
+  @media (max-width:620px){ .info-grid.cols-2{grid-template-columns:1fr;} }
+  .info-card{background:var(--card); border:1px solid var(--card-border); border-radius:20px; padding:22px 20px; box-shadow:0 10px 24px rgba(0,0,0,0.2);}
+  .info-card .k{font-weight:800; font-size:14px; color:#fff; margin-bottom:8px;}
+  .info-card .v{font-size:12.5px; color:var(--muted); line-height:1.55;}
+  .info-card.accent .k{color:#F3C9D3;}
+  .info-card.accent-honey .k{color:#F5D896;}
 
   .cta{margin-top:48px; background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 30px 60px rgba(0,0,0,0.3); position:relative; overflow:hidden;}
   .cta-avatar{width:52px; height:52px; margin:0 auto 14px;}
@@ -186,7 +142,6 @@
   .cta p{color:var(--muted); margin:0 0 20px; font-size:14px;}
   .cta a.btn{display:inline-block; background:var(--accent); color:var(--accent-ink); font-weight:800; font-size:14.5px; padding:15px 32px; border-radius:999px; text-decoration:none; transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 18px 36px rgba(243,130,154,0.3);}
   .cta a.btn:hover{transform:translateY(-1px); box-shadow:0 22px 42px rgba(243,130,154,0.38);}
-  .cta .trust-line{justify-content:center; color:var(--muted); margin-top:18px;}
 
   footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
   footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
@@ -237,7 +192,7 @@
       <h1>Get a Second Opinion Before the Hard Conversation.</h1>
       <p class="lede">A direct report needs tough feedback. Two people on your team can't work together. Or you're trying to understand how a conflict started. There's no neutral person to think it through with, and getting it wrong costs trust. Mend is that second opinion, privately, before you're in the room. <button type="button" class="lede-tip">Nothing is recorded*<span class="tooltip">Except when the law requires it: if what's being discussed meets the legal standard for harassment, discrimination, or a physical threat, the session automatically halts and routes to HR.</span></button>.</p>
       <div class="hero-ctas">
-        <a class="btn-top" href="/seam/">Start a Conversation &rarr;</a>
+        <a class="btn-top" href="seam-story.html">See How It Works &rarr;</a>
       </div>
     </div>
     <div class="hero-visual">
@@ -264,65 +219,46 @@
     </details>
   </section>
 
-  <section class="block" id="doors">
-    <h3 class="section-headline">Ways Managers Use Mend</h3>
-    <p class="section-sub">No invite required, and no menu to click through. Each one opens a new conversation with Thimble, the same facilitator employees use; just start talking, and it steers from what you say.</p>
-    <div class="door-grid">
-      <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="10" y="8" width="20" height="26" rx="3" stroke="#fff" stroke-width="2"/><path d="M15 8v-2a2 2 0 012-2h6a2 2 0 012 2v2" stroke="#fff" stroke-width="2"/><path d="M14 18h12M14 23h12M14 28h8" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg></div>
-        <div class="door-t">Team Conflict</div>
-        <div class="door-d">For a conflict between two people on your team. Work out what's actually driving it and land on a concrete plan, without you having to play judge.</div>
-      </div>
-      <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="5" y="9" width="16" height="12" rx="6" stroke="#fff" stroke-width="2"/><path d="M9 21v5l5-5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="19" width="16" height="12" rx="6" stroke="#fff" stroke-width="2" stroke-opacity=".6"/></svg></div>
-        <div class="door-t">Hard Conversation</div>
-        <div class="door-d">For a hard performance or conduct conversation with your own report. Practice it before you're actually in the room.</div>
-      </div>
-      <div class="door-card">
-        <div class="door-ico"><svg viewBox="0 0 40 40" fill="none"><rect x="6" y="8" width="28" height="24" rx="3" stroke="#fff" stroke-width="2"/><path d="M12 16h16M12 21h16M12 26h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <div class="door-t">Tone Check</div>
-        <div class="door-d">Before you hit send on a hard email or Slack message, get a second opinion on how it actually reads, not just how you meant it.</div>
-      </div>
-    </div>
-    <p class="door-footnote">Working through something on your own, not managing someone else? <button type="button" class="aside-link" style="margin-top:0;" onclick="document.getElementById('thimbleModal').classList.add('open')">Thimble is Mend's employee-facing app &rarr;</button></p>
-  </section>
-
   <section class="block">
-    <h2>Operational Discipline</h2>
-    <h3 class="section-headline">Standard Sprint Maintenance, Not an Escalation</h3>
-    <p class="section-sub">Working through peer tension isn't an emergency or a personal failing. It's proactive team hygiene that keeps projects shipping.</p>
-    <div class="why-columns">
-      <div class="why-col employee">
-        <div class="why-col-t">What You Get as a Manager</div>
-        <div class="why-item"><div class="why-k">Confidence Without Formal Training</div><div class="why-v">Nobody trained you to handle conflict between the people you manage. Mend is somewhere to think it through before you're in the room, without it reading as a gap in your skills.</div></div>
-        <div class="why-item"><div class="why-k">No People-Ops Meeting Required</div><div class="why-v">Work through an ordinary performance conversation or team friction on your own first, instead of booking time with HR for something that isn't a formal case yet.</div></div>
-        <div class="why-item"><div class="why-k">Full Autonomy</div><div class="why-v">You decide what to do with what you work out. Rehearse solo, check a message's tone, or hand a resolved case to the two people involved; nothing moves without you.</div></div>
+    <h2>Who this is for</h2>
+    <h3 class="section-headline">A direct report who needs tough feedback. Two people who can't work together. A message you're not sure about.</h3>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="k">A hard performance conversation</div>
+        <div class="v">You know you have to say something. You don't know how to say it without it going sideways.</div>
       </div>
-      <div class="why-col company">
-        <div class="why-col-t">Why HR &amp; Leadership Support This</div>
-        <div class="why-item"><div class="why-k">Protects Sprint Velocity</div><div class="why-v">Unresolved tension leaks into the entire room, pulling surrounding teammates into toxic backchannels and lost focus.</div></div>
-        <div class="why-item"><div class="why-k">Reclaims 2.8 Hours a Week</div><div class="why-v">Cuts the 2.8 hours each of your reports loses every week to circular avoidance, re-reading Slack messages, and context switching &mdash; time that comes straight out of your team's output.</div></div>
-        <div class="why-item"><div class="why-k">Frees HR for High-Value Strategy</div><div class="why-v">Shields People Ops and managers from spending 3&ndash;5 hours a week acting as informal arbiters for everyday communication bumps.</div></div>
+      <div class="info-card">
+        <div class="k">Two people who can't work together</div>
+        <div class="v">You weren't in the room for whatever happened, and you don't want to play judge.</div>
+      </div>
+      <div class="info-card">
+        <div class="k">A message you're not sure about</div>
+        <div class="v">Before you hit send, you want to know how it actually reads, not just how you meant it.</div>
       </div>
     </div>
   </section>
 
   <section class="block">
-    <h3 class="section-headline">Radical Zero-Trace Privacy</h3>
-    <p class="section-sub">Trust isn't a marketing tag. It is the technical foundation of the product.</p>
-    <div class="privacy-grid">
-      <div class="privacy-row"><span class="k">What is Recorded</span><span class="v">Nothing. Sessions run in volatile memory enclaves and are never written to disk. We don't "record then delete": it is never saved in the first place.</span></div>
-      <div class="privacy-row"><span class="k">What Managers See</span><span class="v">Zero visibility into voluntary sessions. For sessions formally assigned by a manager, they receive only a binary confirmation: "Resolved" or "Unresolved", never conversation content.</span></div>
-      <div class="privacy-row"><span class="k">Automatic Safety Protocols</span><span class="v">Total privacy for everyday peer friction, backed by an immutable legal boundary. If what's being discussed meets the legal standard for Title VII harassment, discrimination, or a physical threat, the session immediately halts and routes to corporate HR.</span></div>
+    <h2>Why it matters</h2>
+    <h3 class="section-headline">Getting it wrong costs more than the conversation.</h3>
+    <p class="section-sub">Nobody trained you to handle conflict between the people you manage. There's no feedback loop for how you're doing it &mdash; so the instinct is to avoid it, improvise it, or escalate it too early. Any of those costs the team more than the five minutes it would've taken to get it right.</p>
+    <div class="info-grid cols-2">
+      <div class="info-card accent">
+        <div class="k">For you</div>
+        <div class="v">Confidence without formal training, and full autonomy over what you do with what you work out.</div>
+      </div>
+      <div class="info-card accent-honey">
+        <div class="k">For the team</div>
+        <div class="v">Unresolved tension doesn't stay contained &mdash; it leaks into the room and drags on everyone's focus.</div>
+      </div>
     </div>
   </section>
 
   <div class="cta">
     <div class="cta-avatar" id="ctaAvatar"></div>
-    <h3 class="section-headline">Get Your Second Opinion</h3>
-    <p>Describe the conflict or the conversation you need to have in your own words, whatever stage you're at. Off the record, zero judgment, and completely confidential.</p>
-    <a class="btn" href="/seam/">Start the Conversation &rarr;</a>
-    <div class="trust-line">Testing Prototype: we want your honest take, on the pitch above as much as the session itself. Does the problem above match something you've experienced? Does "nothing is recorded, ever" read as credible? Was there a reason you hesitated before clicking Start?</div>
+    <h3 class="section-headline">See What Seam Actually Does</h3>
+    <p>The modes, a real walkthrough, and exactly what happens to what you type.</p>
+    <a class="btn" href="seam-story.html">See How It Works &rarr;</a>
   </div>
 
   <footer>
@@ -352,32 +288,16 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="thimbleModal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="thimbleTitle">
-    <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('thimbleModal').classList.remove('open')">&times;</button>
-    <h2 class="modal-title" id="thimbleTitle">Thimble, Mend's App for Employees</h2>
-    <p class="modal-sub">Same privacy model, same facilitator, built for the other side of the conversation.</p>
-    <p class="lead-line" style="margin:0 0 18px; padding-top:0; border-top:none; font-style:normal;">Get a second opinion before a hard conversation, prep for what's coming, or get insight into a conflict you're still making sense of, all without your manager or HR ever knowing you used it.</p>
-    <h3>What Thimble Is For</h3>
-    <ul>
-      <li><b>Understand what happened.</b> Map the hidden role pressures and competing priorities driving the other person's behavior, so you get real insight into why it happened.</li>
-      <li><b>Prep for what's coming.</b> Rehearse a hard conversation against a realistic AI colleague before you have the real one, with zero stakes.</li>
-      <li><b>Decide how to respond.</b> Build a clear, fair game plan for raising something, without it turning into a complaint waiting to happen.</li>
-    </ul>
-    <p style="margin-top:22px; display:flex; flex-wrap:wrap; gap:10px;">
-      <a class="btn-top" style="margin-top:0;" href="/intake/session">Start with Thimble &rarr;</a>
-      <a class="hr-link" style="display:inline-flex; align-items:center; gap:6px; margin:0; background:rgba(255,255,255,0.06); color:#fff; font-weight:700; font-size:13.5px; padding:10px 20px; border-radius:999px; text-decoration:none; border:1px solid var(--border);" href="story.html">Read the full Thimble story &rarr;</a>
-    </p>
-  </div>
-</div>
 <script>
 (function(){
-  // Manifesto + Thimble modals: Escape closes whichever is open, same as the
-  // backdrop-click handler inlined on each overlay itself.
+  // Manifesto modal: Escape closes it, same as the backdrop-click handler
+  // inlined on the overlay itself. (The Thimble modal that used to live
+  // here was removed -- Home no longer pitches Thimble directly, per the
+  // Who/Why vs. What/How restructure; the nav's own Thimble link still
+  // reaches story.html.)
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Escape') return;
     document.getElementById('manifestoModal').classList.remove('open');
-    document.getElementById('thimbleModal').classList.remove('open');
   });
 })();
 </script>
