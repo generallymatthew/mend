@@ -36,8 +36,6 @@
   .nav-links a:hover{color:#fff;}
   .nav-links a.active{color:#fff;}
   .nav-links a.active::after{content:''; position:absolute; left:0; right:0; bottom:-14px; height:2px; background:var(--accent-solid);}
-  .nav-links a.minor{font-weight:600; color:rgba(143,163,153,0.6); font-size:12.5px;}
-  .nav-links a.minor:hover{color:var(--muted);}
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
   .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .2s ease, transform .2s ease;}
   .nav-cta.visible{opacity:1; transform:translateY(0); pointer-events:auto;}
@@ -223,7 +221,7 @@
     <nav class="nav-links">
       <a href="index.html">Home</a>
       <a href="seam-story.html" class="active">Seam</a>
-      <a href="story.html" class="minor">Thimble</a>
+      <a href="story.html">Thimble</a>
       <a href="founder.html">Founder</a>
       <a href="index.html#manifesto">Approach</a>
     </nav>
