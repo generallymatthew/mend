@@ -383,6 +383,11 @@
     padding: 13px; border: none; border-radius: 999px; cursor: pointer; font-family: inherit;
   }
   #gate-modal .gate-submit:disabled { opacity: .55; cursor: default; }
+  #gate-modal .gate-skip {
+    display: block; width: 100%; background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 12.5px; color: var(--muted); text-decoration: underline;
+    padding: 10px 0 0; text-align: center;
+  }
 
   .messages {
     flex: 1; overflow: auto; padding: 22px 28px;
@@ -973,6 +978,7 @@
       </div>
       <div class="gate-foot">
         <button type="submit" class="gate-submit" id="gate-submit">Start testing Seam &rarr;</button>
+        <button type="button" class="gate-skip" id="gate-skip">Skip the survey</button>
       </div>
     </div>
   </form>
@@ -1353,6 +1359,14 @@ function wirePushToTalk(btn, targetEl) {
   btn.addEventListener("mouseenter", () => { if (!tipSeen()) showTip(); });
   btn.addEventListener("mouseleave", () => { if (!holding) hideTip(); });
   if (tipClose) tipClose.addEventListener("click", (e) => { e.stopPropagation(); hideTip(); markTipSeen(); });
+
+  // Hover alone doesn't teach anything -- most people click/tap the mic
+  // directly without hovering first (true on desktop too, not just touch),
+  // so the hover-only triggers above never got a chance to run before the
+  // first press. Show it proactively as soon as the composer renders
+  // instead, so there's something to read before the first touch/click
+  // rather than only right as it starts recording.
+  if (!tipSeen()) showTip();
 
   async function press() {
     if (mediaRecorder) return;
@@ -2137,6 +2151,13 @@ function gateRadio(name) {
   const el = document.querySelector(`#gate-modal input[name="${name}"]:checked`);
   return el ? el.value : null;
 }
+document.getElementById('gate-skip').addEventListener('click', () => {
+  // No fetch, no fabricated answers -- just let them in. Doesn't touch
+  // /api/survey at all, so a skip never shows up as a (fake) response row.
+  localStorage.setItem('seam_gate_completed', '1');
+  document.getElementById('gate-overlay').classList.remove('open');
+});
+
 document.getElementById('gate-modal').addEventListener('submit', async (e) => {
   e.preventDefault();
   const conflictFrequency = gateRadio('conflict_frequency');
