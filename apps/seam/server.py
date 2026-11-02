@@ -1252,7 +1252,7 @@ SURVEY_SHEET_HEADER = [
     "Useful: Conflicts (1-5)", "Would use: Conflicts",
     "Useful: Written (1-5)", "Would use: Written",
     "Useful: Meetings (1-5)", "Would use: Meetings",
-    "Team size", "Overall interest (1-5)", "Email", "Comments",
+    "Team size", "Overall interest (1-5)", "Email", "Comments", "Test",
 ]
 _sheet = None
 _sheet_init_failed = False
@@ -1328,6 +1328,7 @@ async def submit_survey(request: Request):
     email = str(data.get("email") or "")[:200]
     pressure_management = str(data.get("pressure_management") or "")[:4000]
     comments = str(data.get("comments") or "")[:4000]
+    is_test = bool(data.get("is_test"))
     record = {
         "ts": time.time(),
         **radios,
@@ -1335,6 +1336,7 @@ async def submit_survey(request: Request):
         "email": email,
         "pressure_management": pressure_management,
         "comments": comments,
+        "is_test": is_test,
     }
     sheet = get_survey_sheet()
     if sheet is not None:
@@ -1363,6 +1365,7 @@ async def submit_survey(request: Request):
                     scales["overall_interest"] if scales["overall_interest"] is not None else "",
                     email,
                     comments,
+                    "TEST" if is_test else "",
                 ],
                 table_range=f"A1:{chr(ord('A') + len(SURVEY_SHEET_HEADER) - 1)}1",
             )
@@ -1386,7 +1389,7 @@ SURVEY_POST_FILE = ROOT / "survey_responses_post.jsonl"
 SURVEY_POST_WORKSHEET_TITLE = "Seam Post-Use"
 SURVEY_POST_SHEET_HEADER = [
     "Timestamp", "Overall (1-5)", "Read felt right", "Changed approach",
-    "Plan panel value", "Would use for real case", "Issues", "Comments", "Email",
+    "Plan panel value", "Would use for real case", "Issues", "Comments", "Email", "Test",
 ]
 _sheet_post = None
 _sheet_post_init_failed = False
@@ -1448,6 +1451,7 @@ async def submit_survey_post(request: Request):
     issues = [str(i)[:40] for i in issues_raw][:10]
     comments = str(data.get("comments") or "")[:4000]
     email = str(data.get("email") or "")[:200]
+    is_test = bool(data.get("is_test"))
     record = {
         "ts": time.time(),
         "overall_rating": overall_rating,
@@ -1455,6 +1459,7 @@ async def submit_survey_post(request: Request):
         "issues": issues,
         "comments": comments,
         "email": email,
+        "is_test": is_test,
     }
     sheet = get_survey_post_sheet()
     if sheet is not None:
@@ -1471,6 +1476,7 @@ async def submit_survey_post(request: Request):
                     ", ".join(issues),
                     comments,
                     email,
+                    "TEST" if is_test else "",
                 ],
                 table_range=f"A1:{chr(ord('A') + len(SURVEY_POST_SHEET_HEADER) - 1)}1",
             )

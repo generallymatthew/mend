@@ -1000,6 +1000,16 @@
 </script>
 
 <script>
+  // Carries ?test=1 (see static/survey.html) through to the post-use
+  // survey so a tester's feedback gets tagged the same way their
+  // pre-use answers did, without them having to remember the param twice.
+  if (new URLSearchParams(location.search).get('test') === '1') {
+    const feedbackLink = document.getElementById('feedback-link');
+    if (feedbackLink) feedbackLink.href = 'survey/post?test=1';
+  }
+</script>
+
+<script>
 // First-run walkthrough: Thimble steps a brand-new manager through what
 // Seam is for, on a dismissible card that floats over the empty state
 // (the plain "Welcome to Seam" row + "What do you want to discuss today?"

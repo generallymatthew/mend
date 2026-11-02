@@ -242,6 +242,9 @@
 // same approach as index.html's BASE_PATH.
 const BASE_PATH = location.pathname.replace(/[^/]*$/, '');
 function apiPath(p) { return BASE_PATH.replace(/\/$/, '') + '/' + p.replace(/^\//, ''); }
+// ?test=1 on the URL tags the submission so it can be filtered out of the
+// Sheet later -- use this link for user-testing runs, not the plain one.
+const IS_TEST = new URLSearchParams(location.search).get('test') === '1';
 
 function wireScale(id) {
   let val = null;
@@ -301,6 +304,7 @@ submitBtn.addEventListener('click', async () => {
     overall_interest: getOverallInterest(),
     email: document.getElementById('email').value.trim(),
     comments: document.getElementById('comments').value.trim(),
+    is_test: IS_TEST,
   };
   try {
     const res = await fetch(apiPath('/api/survey'), {
