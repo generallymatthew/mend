@@ -11,5 +11,6 @@ apps/thimble/feedback_alert_state.json
 apps/thimble/feedback_alert_log.jsonl
 apps/thimble/tests/benchmark_results_*.json
 apps/seam/cases.db
+apps/seam/cases.db.bak.*
 apps/seam/survey_responses.jsonl
 .obsidian/
