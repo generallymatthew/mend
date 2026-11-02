@@ -819,9 +819,9 @@
           </div>
         </div>
         <div class="wrap">
-          <div class="msg-row assistant intro-msg" style="display:none">
+          <div class="msg-row assistant intro-msg">
             <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
-            <div class="bubble assistant">So, what's going on? Tell me about a conflict on your team, a message you need help wording, or a hard conversation you're prepping for.</div>
+            <div class="bubble assistant pending" id="intro-msg-bubble"><span class="typing-dots"><span></span><span></span><span></span></span></div>
           </div>
         </div>
       </div>
@@ -918,26 +918,16 @@
 
 <div id="gate-overlay">
   <form id="gate-modal">
-    <div class="gate-tabs" role="tablist">
-      <button type="button" class="gate-tab sel" id="gate-tab-intro" data-tab="intro">What to test</button>
-      <button type="button" class="gate-tab" id="gate-tab-survey" data-tab="survey">Quick survey</button>
-    </div>
-
     <div class="gate-pane" data-pane="intro">
-      <div class="gate-head">
-        <div class="gate-brand">
-          <svg class="mend-mark" width="22" height="16" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
-          <span class="brand-name">Mend</span>
-        </div>
-        <h1>Welcome, and thank you</h1>
-        <p class="gate-sub">We really appreciate you taking the time to test Seam.</p>
+      <div class="gate-head" style="border-bottom:none; padding-bottom:0">
+        <h1>Welcome and thanks for testing Seam</h1>
       </div>
       <div class="gate-body">
         <p class="gate-about">Seam is for managers dealing with conflict on their team. It helps you prep for a hard conversation, get the wording right on a tricky message, or work through tension between two people who report to you.</p>
         <ol class="gate-steps">
           <li>
             <div>
-              <b>A few things to test.</b> <span>Bring Seam a real situation from your team or use one of the sample scenarios below:</span>
+              <b>What to test.</b> <span>Bring Seam a real situation from your team or use one of the sample scenarios below:</span>
               <div class="gate-try-examples">
                 <div class="intro-example">"One of my reports keeps missing deadlines and I need to talk to them about it"</div>
                 <div class="intro-example">"Two people on my team aren't getting along"</div>
@@ -2037,6 +2027,19 @@ composerEl.addEventListener("input", () => {
   composerEl.style.height = composerEl.scrollHeight + "px";
 });
 wirePushToTalk(document.getElementById("mic-btn"), composerEl);
+
+// Opening bubble starts as a pending/typing-dots placeholder (same markup
+// appendBubble uses for a real pending reply) and only fills in with the
+// actual line after a short delay -- showing the full message instantly on
+// load reads as static page copy, not something Thimble actually "said."
+// A brief typing beat makes it look like a reply sent because you showed
+// up, not boilerplate that was always sitting there.
+setTimeout(() => {
+  const introBubble = document.getElementById("intro-msg-bubble");
+  if (!introBubble) return;
+  introBubble.classList.remove("pending");
+  renderBubbleText(introBubble, "So, what's going on? Tell me about a conflict on your team, a message you need help wording, or a hard conversation you're prepping for.");
+}, 900);
 
 // ---------------------------------------------------------------------
 // Help modal, mobile drawers
