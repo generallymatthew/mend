@@ -421,6 +421,16 @@ def add_seam_plan_steps(conn: sqlite3.Connection, case_id: str, texts: list[str]
 app = FastAPI()
 
 
+@app.on_event("startup")
+async def warm_whisper_model():
+    # get_whisper() used to lazy-load on the first /api/voice call, which
+    # meant whichever tester happened to be first after a deploy ate the
+    # ~20s model-instantiation cost live, with nothing in the UI to explain
+    # the wait. Loading it here instead pays that cost once at boot, before
+    # Render routes any traffic to this container.
+    await run_in_threadpool(get_whisper)
+
+
 @app.exception_handler(Exception)
 async def log_unhandled_exception(request: Request, exc: Exception):
     # Render only captures stdout/stderr as logs (see deploy/start.sh) -- an
