@@ -479,6 +479,11 @@
   }
   .mic-btn.recording { background: #E85D4A !important; color: #fff !important; }
   .mic-btn.conflicts-mic { background: #E8F0E9; color: #5F8569; }
+  /* Pressed, but getUserMedia hasn't actually opened the mic yet -- without
+     this the button gives zero feedback during that gap (same bug fixed in
+     Thimble's own composer mic, apps/thimble/static/session.html). */
+  .mic-btn.starting { animation: mic-btn-starting-pulse 1s ease-in-out infinite; }
+  @keyframes mic-btn-starting-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 
   .intro { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
   .intro .wrap { max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
@@ -1146,16 +1151,21 @@ function closeEmployeeTooltipOnOutsideClick(e) {
 function wirePushToTalk(btn, targetEl) {
   let mediaRecorder = null;
   let recordedChunks = [];
+  let releaseRequested = false;
 
   async function press() {
     if (mediaRecorder) return;
+    releaseRequested = false;
+    btn.classList.add("starting");
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
+      btn.classList.remove("starting");
       alert("Couldn't access the microphone.");
       return;
     }
+    btn.classList.remove("starting");
     recordedChunks = [];
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = (e) => {
@@ -1186,9 +1196,14 @@ function wirePushToTalk(btn, targetEl) {
     };
     mediaRecorder.start();
     btn.classList.add("recording");
+    // Released while getUserMedia was still resolving (release() below ran
+    // before mediaRecorder existed, so it had nothing to stop) -- honor
+    // that now instead of capturing audio the user already let go of.
+    if (releaseRequested) release();
   }
 
   function release() {
+    releaseRequested = true;
     if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
   }
 
