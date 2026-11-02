@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# Render start command: runs Spool + Thimble + Seam + manager-read-test
-# (unmodified) behind
-# Caddy on Render's injected $PORT. Mirrors ../run_all.sh's shape for
-# local dev, trimmed to the apps this deploy sends to testers, and using
-# render.Caddyfile instead of ../Caddyfile (fixed :8080 -> $PORT).
+# Render start command: runs Spool + Seam + manager-read-test (unmodified)
+# behind Caddy on Render's injected $PORT. Mirrors ../run_all.sh's shape
+# for local dev, trimmed to the apps this deploy sends to testers, and
+# using render.Caddyfile instead of ../Caddyfile (fixed :8080 -> $PORT).
+#
+# Thimble is deliberately NOT started here -- see render.Caddyfile's own
+# comment on why (shared-memory OOM risk from two processes each loading
+# their own Whisper model; Thimble isn't being tested right now, so it's
+# simplest not to carry that risk). Still runs fine locally via
+# ../run_all.sh, untouched.
 #
 # Every subprocess's output is tagged and sent to this script's own
 # stdout/stderr, not redirected to a file -- Render only captures the
@@ -32,7 +37,6 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 start_app spool         apps/spool                 8423
-start_app thimble       apps/thimble               8420
 start_app seam          apps/seam                  8460
 start_app manager-test  pitch/manager-read-test    8481
 

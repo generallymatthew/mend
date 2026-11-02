@@ -1,11 +1,25 @@
-# Render deploy variant of ../Caddyfile: same path-prefix scheme (Thimble
-# under /intake/, Seam under /seam/), but listens on Render's injected
-# $PORT instead of a fixed local port, and only proxies the apps this
-# deploy actually runs.
+# Render deploy variant of ../Caddyfile: same path-prefix scheme (Seam
+# under /seam/), but listens on Render's injected $PORT instead of a fixed
+# local port, and only proxies the apps this deploy actually runs.
 #
-# The index ("/") serves index.html -- the real Thimble/Seam landing page
-# -- not Spool. Spool is still reachable, just not at root; everything
-# that doesn't match an explicit handle below falls through to it.
+# Thimble (/intake/*) is deliberately not run here -- it and Seam each
+# load their own separate Whisper transcription model into memory, and
+# both processes used to share this one Render instance's RAM. Seam's
+# model had never actually loaded in production until its voice-memo UX
+# started working end to end; once it did, the combined memory of both
+# models loaded at once pushed the instance into OOM, and the kernel took
+# out whichever sibling process it picked (confirmed live: a real
+# transcription request against Seam's /api/voice 502'd the whole
+# container, Thimble included, recovering only after a restart). Thimble
+# isn't being tested right now, so it's simplest to just not run it here
+# rather than carry that shared-memory risk for a feature nobody's using.
+# The app itself is untouched -- apps/thimble/ and its entry in
+# ../run_all.sh + ../Caddyfile (local dev) are unchanged, so it can still
+# be run locally or re-added here later.
+#
+# The index ("/") serves index.html -- the real Seam landing page -- not
+# Spool. Spool is still reachable, just not at root; everything that
+# doesn't match an explicit handle below falls through to it.
 #
 # Repo-root static pages (story.html, testers.html, the Mend Pitch/ demo
 # assets they embed, etc.) are served directly from disk when the request
@@ -17,10 +31,6 @@
 # any existing /about links or bookmarks don't 404.
 
 :{$PORT} {
-	handle_path /intake/* {
-		reverse_proxy 127.0.0.1:8420
-	}
-
 	handle_path /seam/* {
 		reverse_proxy 127.0.0.1:8460
 	}
