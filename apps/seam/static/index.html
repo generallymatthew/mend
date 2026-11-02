@@ -1277,11 +1277,6 @@ function wirePushToTalk(btn, targetEl) {
       alert("Couldn't access the microphone.");
       return;
     }
-    // Hide the tip the instant real recording is confirmed, not just on
-    // release -- it was left showing through the whole first recording
-    // otherwise, sitting right on top of the in-field ticks below (reported
-    // live: "the pink stuff is hidden behind the tooltip").
-    hideTip();
     btn.classList.remove("starting");
     recordedChunks = [];
     mediaRecorder = new MediaRecorder(stream);
