@@ -348,7 +348,7 @@
      fire (see its own comment) and removed only once mediaRecorder.onstop
      actually runs, so the color tracks real mic state through the release
      grace delay too (composerScheduleStop), not just the button hold. */
-  .composer-mic-btn.active{transform:scale(.96);}
+  .composer-mic-btn.active{transform:scale(.96); animation:talk-mic-starting-pulse 1s ease-in-out infinite;}
   .composer-mic-btn.recording{background:#F3829A; border-color:#F3829A; color:var(--ink); animation:talk-mic-pulse 1.4s ease-in-out infinite;}
   .composer-mic-wrap{position:relative; flex-shrink:0; display:flex; align-items:center;}
   .mic-tip{position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); width:220px; background:var(--ink); color:var(--paper); font-size:12.5px; line-height:1.5; padding:10px 28px 10px 12px; border-radius:10px; box-shadow:0 4px 14px rgba(23,55,46,.2); z-index:5;}
@@ -363,7 +363,7 @@
      animation-delay per bar), not driven by real mic amplitude -- same
      tradeoff the existing talking-state ripples make, cheap and reads as
      "live" at a glance. */
-  .composer-mic-wave{position:absolute; right:calc(100% + 6px); top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:3px; height:20px; opacity:0; pointer-events:none; transition:opacity 120ms ease;}
+  .composer-mic-wave{position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:3px; height:20px; opacity:0; pointer-events:none; transition:opacity 120ms ease;}
   .composer-mic-wave.active{opacity:1;}
   .composer-mic-wave span{width:3px; height:6px; border-radius:2px; background:#F3829A; animation:composer-mic-wave-bounce 900ms ease-in-out infinite;}
   .composer-mic-wave span:nth-child(1){animation-delay:0ms;}
@@ -379,8 +379,13 @@
      getUserMedia setup gap right after press ("Starting...") and the
      brief moment right after release before "Transcribing..." (the
      chatInput placeholder, invisible if there's already text typed) takes
-     over ("Stopped"). Never shown at the same time as the waveform. */
-  .composer-mic-label{position:absolute; right:calc(100% + 6px); top:50%; transform:translateY(-50%); white-space:nowrap; font-size:11.5px; font-weight:600; color:var(--ink-soft);}
+     over ("Stopped"). Never shown at the same time as the waveform.
+     Positioned above the button, not to its left -- to the left put it
+     directly on top of/under the Send button on narrow composer rows
+     (confirmed: >80% overlap at 390px), making the one "it's warming up"
+     signal during the getUserMedia gap unreadable. Reported live as
+     "voice memo looks like it never started." */
+  .composer-mic-label{position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); white-space:nowrap; font-size:11.5px; font-weight:600; color:var(--ink-soft); background:var(--paper); padding:3px 8px; border-radius:6px; box-shadow:0 2px 8px rgba(23,55,46,.14);}
 
   /* Zoom-call style layout: the avatar + captions + controls are the main
      event, full attention like a video tile; the transcript is reference
