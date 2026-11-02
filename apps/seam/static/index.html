@@ -523,8 +523,8 @@
     white-space: nowrap; font-size: 11.5px; font-weight: 600; color: var(--muted);
     background: #fff; padding: 3px 8px; border-radius: 6px; box-shadow: 0 2px 8px rgba(23,55,46,.14); z-index: 4;
   }
-  .intro { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; overflow: auto; }
-  .intro .wrap { max-width: 480px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .intro { position: relative; flex: 1; display: flex; align-items: flex-start; justify-content: flex-start; padding: 22px 28px; overflow: auto; }
+  .intro .wrap { width: 100%; display: flex; flex-direction: column; gap: 20px; }
   .welcome-row { display: flex; align-items: flex-end; gap: 14px; }
   .welcome-row .bubble { text-align: left; }
   /* Onboarding card centers this row's column (align-items:center), and
@@ -538,7 +538,7 @@
      available .intro area (not sized to .wrap's own tight content box --
      reported live as "too small," needs real room for Thimble to actually
      explain the app) and floats *over* the empty state underneath it
-     (.wrap -- .intro-msg + .intro-examples), which stays fully rendered, completely untouched, the whole
+     (.wrap -- just .intro-msg), which stays fully rendered, completely untouched, the whole
      time -- so closing the card (the X) or finishing the last step reveals
      today's ordinary empty state exactly as it already was, nothing to
      restore. Centered independently of .wrap (left:50%/translateX, not
@@ -615,11 +615,8 @@
   .intro-msg { width: 100%; }
   .intro-msg .avatar { width: 40px; height: 40px; }
   .intro-msg .bubble { text-align: left; }
-  .intro-examples { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-  .intro-examples-label {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-    color: var(--faint); text-align: center; margin-bottom: 2px;
-  }
+  /* .intro-example (singular) is still used by the pre-use gate modal's
+     own try-examples list (.gate-try-examples .intro-example below). */
   .intro-example {
     border: 1px solid var(--border); border-radius: 12px; background: var(--bg);
     padding: 10px 16px; font-size: 13px; color: var(--muted); font-style: italic;
@@ -805,13 +802,6 @@
           <div class="msg-row assistant intro-msg">
             <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
             <div class="bubble assistant">So, what's going on? Tell me about a conflict on your team, a message you need help wording, or a hard conversation you're prepping for.</div>
-          </div>
-          <div class="intro-examples">
-            <div class="intro-examples-label">Things people bring here</div>
-            <div class="intro-example">"Prep for a hard conversation with a direct report"</div>
-            <div class="intro-example">"Help me answer a message where the wording really matters"</div>
-            <div class="intro-example">"Two of my direct reports aren't getting along"</div>
-            <div class="intro-example">"Tell my manager something they won't want to hear"</div>
           </div>
         </div>
       </div>
