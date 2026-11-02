@@ -929,3 +929,15 @@
 {"ts": 1793220751.9133089, "app": "thimble", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "stream_message_reply", "input_tokens": 21, "output_tokens": 277, "chars": null, "seconds": null, "cost_usd": 0.0042179999999999995}
 {"ts": 1793220752.5878289, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 75, "seconds": null, "cost_usd": 0.0011250000000000001}
 {"ts": 1793220753.627446, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 69, "seconds": null, "cost_usd": 0.0010350000000000001}
+{"ts": 1793644100.5257568, "app": "thimble", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 29, "output_tokens": 272, "chars": null, "seconds": null, "cost_usd": 0.0041670000000000006}
+{"ts": 1793644102.346627, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 19, "seconds": null, "cost_usd": 0.000285}
+{"ts": 1793644104.6748748, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 70, "seconds": null, "cost_usd": 0.00105}
+{"ts": 1793644105.218973, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 152, "seconds": null, "cost_usd": 0.00228}
+{"ts": 1793644231.1161878, "app": "thimble", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 29, "output_tokens": 272, "chars": null, "seconds": null, "cost_usd": 0.0041670000000000006}
+{"ts": 1793644233.004128, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 70, "seconds": null, "cost_usd": 0.00105}
+{"ts": 1793644233.0189261, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 19, "seconds": null, "cost_usd": 0.000285}
+{"ts": 1793644236.038372, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 152, "seconds": null, "cost_usd": 0.00228}
+{"ts": 1793644267.88549, "app": "thimble", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 29, "output_tokens": 272, "chars": null, "seconds": null, "cost_usd": 0.0041670000000000006}
+{"ts": 1793644269.597785, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 19, "seconds": null, "cost_usd": 0.000285}
+{"ts": 1793644270.3544478, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 70, "seconds": null, "cost_usd": 0.00105}
+{"ts": 1793644270.517788, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 152, "seconds": null, "cost_usd": 0.00228}
