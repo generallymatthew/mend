@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Thimble: Reset</title>
+<style>
+  :root {
+    --bg-page: #0f1412;
+    --modal-bg: #f6f3ee;
+    --text-primary: #192320;
+    --text-secondary: #6e7672;
+    --text-tertiary: #9ea5a0;
+    --status-dot: #f06a85;
+    --button-teal: #183935;
+    --accent-amber: #d89642;
+    --border-light: rgba(0,0,0,0.06);
+    --thimble-pink: #FF8CA3;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background-color: var(--bg-page);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .device-shell {
+    width: 100%;
+    max-width: 412px;
+    height: 100%;
+    max-height: 892px;
+    background-color: var(--modal-bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+  }
+
+  @media (min-width: 440px) {
+    .device-shell {
+      border-radius: 36px;
+      height: 94dvh;
+      border: 8px solid #202422;
+    }
+  }
+
+  /* Status Bar */
+  .system-status {
+    height: 38px;
+    padding: 10px 22px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+    z-index: 30;
+    position: relative;
+  }
+  .system-icons { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+
+  /* Header */
+  .app-header {
+    height: 48px;
+    padding: 4px 18px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 30;
+    position: relative;
+  }
+  .status-cluster { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; color: var(--text-primary); }
+  .status-dot { width: 8.5px; height: 8.5px; border-radius: 50%; background-color: var(--status-dot); animation: pulseGlow 2.4s ease-in-out infinite; }
+  .status-title strong { font-weight: 700; }
+  .header-actions { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); }
+  .header-actions svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; cursor: pointer; }
+
+  /* Carousel indicators now live inside each facet's own card, under its
+     title, instead of as fixed chrome above the stage. */
+  /* Card + pips stay as one tight group at the bottom -- without this
+     wrapper, .facet's justify-content:space-between (with breath-coach as
+     the other flex child) spread the card out to the vertical middle
+     instead of keeping it right above the pips. */
+  .facet-footer { display: flex; flex-direction: column; margin-top: auto; }
+  .facet-pips { display: flex; align-items: center; justify-content: center; gap: 6px; align-self: center; margin-top: 14px; }
+  .pip { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.14); transition: background 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); }
+  .pip.active { background: var(--button-teal); }
+
+  /* ---- Spindle stage: the drum fills the remaining viewport, Thimble
+     sits fixed at its center and shows through each facet's open middle. ---- */
+  .stage-container {
+    flex: 1;
+    position: relative;
+    touch-action: none;
+    overflow: hidden;
+    perspective: 2400px;
+  }
+
+  /* The real-world rig: an octagonal glass prism around a fixed Thimble.
+     overflow:hidden does not reliably clip 3D-rotated descendants (a real
+     browser limitation, not a radius/sizing bug), so the other 7 panes are
+     hidden with opaque covers rather than relying on clipping -- only the
+     pane facing you is ever visible. The pane's own border (on .facet,
+     below) is its frame, not a separate static overlay, since the frame
+     has to rotate with the glass, not sit fixed over it. */
+  .mask-cover {
+    position: absolute; top: 0; bottom: 0; width: 11%;
+    background: var(--modal-bg);
+    z-index: 4;
+    pointer-events: none;
+  }
+  .mask-cover.left { left: 0; }
+  .mask-cover.right { right: 0; }
+
+  .thimble-layer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .drum {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    z-index: 2;
+    cursor: grab;
+  }
+  .drum.dragging { cursor: grabbing; }
+
+  /* The glass itself: each facet is 100% clear -- no tint, no blur, no
+     fill. Thimble is seen through it untouched. What reads as "glass" is
+     just the pane's own frame: a light pink border, sized to the visible
+     window (matching .mask-cover's 11% insets) so the border lands inside
+     the frame, not hidden under the opaque covers at the stage edges. */
+  .facet {
+    position: absolute;
+    top: 0; bottom: 0; left: 11%; right: 11%;
+    display: flex;
+    flex-direction: column;
+    backface-visibility: hidden;
+    pointer-events: none;
+    padding: 14px 20px 18px;
+  }
+  /* .facet-footer uses margin-top:auto (above, in its own rule) instead of
+     .facet using justify-content:space-between -- space-between collapses
+     to flex-start when .breath-coach is display:none, which pinned the
+     label+pips to the top on every facet without a paced breath (most of
+     them). margin-top:auto keeps the footer bottom-anchored regardless of
+     whether the breath-coach sibling exists. */
+
+  .facet-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--accent-amber);
+  }
+
+  .facet-bottom {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 18px;
+    padding: 12px 16px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .facet-bottom .facet-text { min-width: 0; }
+  .facet-title { font-size: 15px; font-weight: 700; color: var(--text-primary); line-height: 1.25; }
+  .facet-info {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.06); color: var(--text-secondary);
+  }
+  .facet-info svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+  /* Breath coach: the instruction text + one-dot-per-second progress,
+     shown only on facets that actually pace a breath (box breath,
+     physiological sigh, the 0.1Hz RSA cycle) -- not a static "4-4-4-4"
+     label, but text that changes live with which phase Thimble is in. */
+  .breath-coach {
+    align-self: center;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 16px;
+    padding: 10px 18px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+  }
+  .breath-instruction { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .breath-instruction .suffix { font-weight: 500; color: var(--text-secondary); }
+  .breath-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+  .breath-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-light); background-color: rgba(0,0,0,0.12); transition: background-color 0.15s ease, transform 0.15s ease; }
+  .breath-dots .dot.filled { background-color: var(--accent-amber); transform: scale(1.1); }
+
+  /* ---- Thimble: the real avatar shape (ported from session.html's
+     thimble-avatar / thimble-core / thimble-ring / thimble-body chain),
+     not a drawn sewing-thimble dome. ---- */
+  .thimble-avatar { position: relative; width: 220px; height: 220px; pointer-events: none; }
+  .thimble-shadow {
+    position: absolute; left: 50%; top: calc(100% + 14px); width: 66%; height: 14px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,.34) 0%, rgba(23,55,46,.2) 50%, rgba(23,55,46,.07) 78%, rgba(23,55,46,0) 100%);
+    border-radius: 50%;
+  }
+  .thimble-core { position: absolute; inset: 0; transition: transform .5s cubic-bezier(.3,1.4,.5,1); }
+  /* The real app's idle/listening shape: a subtle egg (not a perfect
+     circle), paired with a lean tilt -- never the old wild border-radius
+     "blob" keyframe, which is dead/unused CSS in session.html (its own
+     comment: "No CSS blob anymore"). */
+  .thimble-ring { position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%; }
+  /* "Four-Color Bloom" fill, ported from session.html's real resting
+     (idle-weighted) blend: idle-blue/listening-teal/thinking-honey/
+     talking-pink all live at fixed corners all the time, not one flat
+     color -- this is the idle-state weighting (idle 46%, its two
+     neighbors 20% each, talking 14%), computed once since this prototype
+     has no listening/thinking/talking states to lerp toward. */
+  .thimble-body {
+    position: absolute; inset: 0; border-radius: inherit;
+    background-color: rgb(191, 192, 186);
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%),
+      radial-gradient(circle at 15% 15%, rgba(163,207,224,.81) 0%, transparent 66.6%),
+      radial-gradient(circle at 85% 15%, rgba(176,222,209,.52) 0%, transparent 38%),
+      radial-gradient(circle at 80% 85%, rgba(233,185,73,.45) 0%, transparent 31.4%),
+      radial-gradient(circle at 20% 85%, rgba(243,130,154,.52) 0%, transparent 38%);
+    box-shadow:
+      inset -15px -17px 20px -10px rgba(0,0,0,.22),
+      inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
+    overflow: hidden;
+    animation: thimble-idle-bounce 2.6s ease-in-out infinite;
+  }
+  .thimble-blend {
+    position: absolute; width: 80%; height: 80%; left: -38%; top: 30%; border-radius: 50%;
+    background: #E9B949; mix-blend-mode: multiply; opacity: 0; transition: opacity .8s ease;
+  }
+
+  @keyframes thimble-idle-bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-5%); }
+  }
+
+  /* Real app's mouth fill is a light cream (#F6F1E7), not a dark cavity --
+     a solid dark fill read as a void/orifice rather than a mouth. */
+  .thimble-mouth {
+    position: absolute; left: 50%; top: 66%;
+    transform: translate(-50%, -50%);
+    background: #F6F1E7;
+    border-radius: 50%;
+    transition: background .4s ease;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .thimble-eye {
+    height: 130%; aspect-ratio: 1 / 1; border-radius: 50%;
+    flex: none;
+    background: #ffffff;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(.5);
+    transition: opacity .35s ease, transform .35s ease;
+  }
+  .thimble-pupil {
+    width: 42%; height: 42%; border-radius: 50%; background: #A9B8A8;
+  }
+  .thimble-eye.visible { opacity: 1; transform: scale(1); }
+
+  /* The sweeping node Thimble's eye tracks during Bilateral Saccades. */
+  .saccade-ball {
+    position: absolute; left: 50%; top: 50%;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffcf8a, #f0872c 60%, #d9661f 100%);
+    box-shadow: 0 2px 6px rgba(166, 82, 23, .4);
+    transform: translate(-50%, -50%) translate(0, 90px);
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  .saccade-ball.visible { opacity: 1; }
+
+  /* Nose-breathing: the mouth hides and two small nostril holes take over
+     at the same spot, sized with the breath so inhale/exhale reads at the
+     nostrils instead of the mouth -- swapped back to the mouth the moment
+     the phase calls for breathing out through it. */
+  .thimble-nostrils {
+    position: absolute; left: 50%; top: 52%;
+    transform: translate(-50%, -50%);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    opacity: 0; transition: opacity .25s ease;
+  }
+  .thimble-nostrils.visible { opacity: 1; }
+  .thimble-nostril {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ffffff; opacity: .85;
+    transition: transform .15s ease;
+  }
+
+  /* Plain glyph, no button pill -- a bare arrow reads closer to the
+     wireframe's minimal chrome than a floating circular control. */
+  .edge-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer; z-index: 20;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+  .edge-nav:active { transform: translateY(-50%) scale(0.88); color: var(--text-primary); }
+  .edge-nav.prev { left: 14px; }
+  .edge-nav.next { right: 14px; }
+  .edge-nav svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  @keyframes pulseGlow {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.22); opacity: 0.55; }
+  }
+</style>
+</head>
+<body>
+
+<div class="device-shell">
+  <!-- System Status Bar -->
+  <div class="system-status">
+    <span>11:12 PM</span>
+    <div class="system-icons"><span>●</span><span>📶</span><span>54%</span></div>
+  </div>
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="status-cluster">
+      <div class="status-dot"></div>
+      <div class="status-title"><strong>Thimble</strong></div>
+    </div>
+    <div class="header-actions">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </div>
+  </div>
+
+  <!-- Spindle Stage -->
+  <div class="stage-container" id="stage">
+    <div class="thimble-layer">
+      <div class="thimble-avatar" id="thimbleAvatar">
+        <div class="thimble-shadow"></div>
+        <div class="thimble-core" id="thimbleCore">
+          <div class="thimble-ring">
+            <div class="thimble-body">
+              <div class="thimble-blend"></div>
+              <div class="thimble-mouth" id="thimbleMouth">
+                <div class="thimble-eye" id="thimbleEye"><div class="thimble-pupil" id="thimblePupil"></div></div>
+              </div>
+              <div class="thimble-nostrils" id="thimbleNostrils">
+                <div class="thimble-nostril" id="nostrilLeft"></div>
+                <div class="thimble-nostril" id="nostrilRight"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="saccade-ball" id="saccadeBall"></div>
+    </div>
+    <div class="drum" id="drum"></div>
+    <div class="mask-cover left"></div>
+    <div class="mask-cover right"></div>
+  </div>
+
+  <div class="edge-nav prev" id="prevBtn" title="Previous facet">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </div>
+  <div class="edge-nav next" id="nextBtn" title="Next facet">
+    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </div>
+</div>
+
+<script>
+// --- 8 SOMATIC NERVOUS SYSTEM PROTOCOLS ---
+// Each facet carries: its own window-frame copy (rendered on the rotating
+// facet), plus how Thimble itself should breathe/move while it's front-facing
+// (breathe = inhale amount 0..1 driving body scale + mouth openness,
+// readout = optional count/phase text, eye = whether the mouth shows an
+// eyeball instead of just opening, accent = optional canvas overlay near
+// Thimble for exercises that aren't breath-shaped).
+const FACETS = [
+  {
+    category: "Somatic Brake", name: "Box Breath Metronome", state: "4-4-4-4 Pacing",
+    desc: "4s Inhale · 4s Hold · 4s Exhale · 4s Hold. Lowers cardiac excitation baseline.",
+    eye: false,
+    breathe(t) {
+      const cycle = t % 16, seg = Math.floor(cycle / 4), local = cycle % 4;
+      const segs = [
+        { instruction: "Breathe in", suffix: "through your nose", nostril: true },
+        { instruction: "Hold", suffix: "", nostril: true },
+        { instruction: "Breathe out", suffix: "through your mouth", nostril: true },
+        { instruction: "Hold", suffix: "", nostril: true },
+      ];
+      let inhale;
+      if (seg === 0) inhale = local / 4;
+      else if (seg === 1) inhale = 1;
+      else if (seg === 2) inhale = 1 - local / 4;
+      else inhale = 0;
+      return { inhale, ...segs[seg], seconds: 4, elapsed: local };
+    }
+  },
+  {
+    category: "Acute Adrenaline Dump", name: "Physiological Sigh", state: "Double-In, Long-Out",
+    desc: "Two rapid nasal inhales + one extended oral sigh to re-inflate collapsed alveoli.",
+    eye: false,
+    breathe(t) {
+      // A continuous wave, not two independent ramps: the nose opens and
+      // closes as the chest fills, then the mouth opens and closes as it
+      // empties -- each phase its own smooth bump, never an abrupt cut.
+      const noseDur = 2.0, mouthDur = 4.6, total = noseDur + mouthDur;
+      const cycle = t % total;
+      if (cycle < noseDur) {
+        const p = cycle / noseDur;
+        const inhale = Math.sin(Math.PI / 2 * p); // rises 0 -> 1 as the nose breath fills
+        const nostrilEnv = Math.sin(Math.PI * p); // opens then closes
+        return { inhale, instruction: "Breathe in", suffix: "through your nose", seconds: noseDur, elapsed: cycle, nostril: true, nostrilEnv };
+      }
+      const p = (cycle - noseDur) / mouthDur;
+      const inhale = Math.cos(Math.PI / 2 * p); // falls 1 -> 0 as the sigh empties
+      const mouthEnv = Math.sin(Math.PI * p); // opens then closes
+      return { inhale, instruction: "Breathe out", suffix: "through your mouth", seconds: mouthDur, elapsed: cycle - noseDur, nostril: false, mouthOpen: mouthEnv * 0.65 };
+    }
+  },
+  {
+    category: "Breaking Visual Tunnel", name: "Bilateral Saccades", state: "Tracking Sweep",
+    desc: "Follow the sweeping node left-to-right to desensitize acute amygdala threat locks.",
+    cue: "Follow the dot back and forth with your eyes",
+    eye: true,
+    // Thimble's own eye tracks the sweep -- no separate dot overlay.
+    breathe(t) { return { inhale: 0.3 + Math.sin(t * 0.6) * 0.08, eyeX: Math.sin(t * 2.8) }; }
+  },
+  {
+    category: "Motor Rhythm Anchor", name: "Bilateral Thumb Tap", state: "Alternating L / R",
+    desc: "Alternating dual-pad rhythm grounds cognitive loops through somatic motor circuits.",
+    cue: "Tap your thumbs, alternating left and right",
+    eye: false,
+    // Thimble rocks side to side in time with the tap -- no separate L/R pads.
+    breathe(t) { return { inhale: 0.3 + Math.sin(t * 0.6) * 0.08, tap: Math.sin(t * 1.8 * Math.PI) }; }
+  },
+  {
+    category: "Trigeminal Unclench", name: "Masseter Release", state: "Jaw Drop",
+    desc: "Drop the tongue from roof of mouth. Slacken back molars to disarm clench reflex.",
+    cue: "Let your jaw drop and your tongue rest low",
+    eye: false,
+    breathe(t) { return { inhale: 0.2 + 0.1 * Math.sin(t * 0.5), jawDrop: (Math.sin(t * 1.1) + 1) * 0.5 }; }
+  },
+  {
+    category: "Peripheral Expansion", name: "Panoramic Horizon", state: "Soft Focus",
+    desc: "Soften focus to perceive room boundaries without moving gaze. Disables sympathetic focus.",
+    cue: "Soften your gaze and take in the whole room",
+    eye: true,
+    // Thimble himself widens (a gentle horizontal stretch) instead of
+    // drawing separate peripheral-marker dots beside him.
+    breathe(t) { return { inhale: 0.3 + Math.sin(t * 0.4) * 0.05, widen: (Math.sin(t * 1.2) + 1) * 0.5 }; }
+  },
+  {
+    category: "Cardiac Entrainment", name: "Sternum Hold", state: "60bpm Bone Conduction",
+    desc: "Rest phone against breastbone. Bone-conducted 60bpm pulse entrains heart rate deceleration.",
+    cue: "Rest your phone against your chest",
+    eye: false,
+    // The 60bpm beat already drives inhale (body scale) directly -- that
+    // pulse *is* Thimble doing the exercise, no separate chest glow needed.
+    breathe(t) { return { inhale: 0.28 + Math.pow(Math.sin(t * Math.PI), 8) * 0.12 }; }
+  },
+  {
+    category: "Vagal Brake", name: "0.1 Hz RSA Cycle", state: "4-In / 6-Out",
+    desc: "Inhale 4s, exhale 6s (~6bpm). Directly drives respiratory sinus arrhythmia amplitude.",
+    eye: false,
+    breathe(t) {
+      const cycle = t % 10, isInhale = cycle < 4;
+      const inhale = isInhale ? cycle / 4 : 1 - (cycle - 4) / 6;
+      return isInhale
+        ? { inhale, instruction: "Breathe in", suffix: "through your nose", seconds: 4, elapsed: cycle, nostril: true }
+        : { inhale, instruction: "Breathe out", suffix: "through your mouth", seconds: 6, elapsed: cycle - 4, nostril: true };
+    }
+  }
+];
+
+const drum = document.getElementById("drum");
+const stage = document.getElementById("stage");
+const thimbleCore = document.getElementById("thimbleCore");
+const thimbleMouth = document.getElementById("thimbleMouth");
+const thimbleEye = document.getElementById("thimbleEye");
+const thimblePupil = document.getElementById("thimblePupil");
+const thimbleNostrils = document.getElementById("thimbleNostrils");
+const nostrilLeft = document.getElementById("nostrilLeft");
+const nostrilRight = document.getElementById("nostrilRight");
+const saccadeBall = document.getElementById("saccadeBall");
+
+const count = FACETS.length;
+const step = 360 / count;
+let radius = 240;
+let currentAngle = 0;
+let activeFacet = 0;
+let dragStartX = null, dragStartAngle = 0;
+let startTime = performance.now();
+
+// Build facets (window frames) on the drum
+FACETS.forEach((f, i) => {
+  const el = document.createElement("div");
+  el.className = "facet";
+  el.style.transform = `rotateY(${-i * step}deg) translateZ(${-radius}px)`;
+  const paced = f.breathe(0).instruction != null;
+  const pipsHtml = FACETS.map((_, j) => `<div class="pip ${j === 0 ? "active" : ""}" data-i="${j}"></div>`).join("");
+  // Every facet gets an instruction, paced breaths get live phase text +
+  // dot progress; the rest (eye tracking, taps, jaw release, etc.) get a
+  // static cue instead of sitting blank where the coach would be.
+  el.innerHTML = `
+    <div class="breath-coach" ${paced || f.cue ? "" : "hidden"}>
+      <div class="breath-instruction"><span class="verb">${paced ? "" : (f.cue || "")}</span> <span class="suffix"></span></div>
+      <div class="breath-dots" ${paced ? "" : "hidden"}></div>
+    </div>
+    <div class="facet-footer">
+      <div class="facet-bottom">
+        <div class="facet-text">
+          <div class="facet-eyebrow">${i + 1}/${count} · ${f.category}</div>
+          <div class="facet-title">${f.name}</div>
+        </div>
+        <div class="facet-info" title="Learn more about this exercise">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        </div>
+      </div>
+      <div class="facet-pips">${pipsHtml}</div>
+    </div>`;
+  drum.appendChild(el);
+
+  el.querySelector(".facet-info").style.pointerEvents = "auto";
+  el.querySelector(".facet-info").style.cursor = "pointer";
+
+  el.querySelectorAll(".facet-pips .pip").forEach(p => {
+    p.style.pointerEvents = "auto";
+    p.style.cursor = "pointer";
+    p.onclick = () => settleTo(Number(p.dataset.i) * step);
+  });
+});
+
+const PERSPECTIVE = 2400; // must match .stage-container's CSS perspective
+
+function sizeDrum() {
+  const rect = stage.getBoundingClientRect();
+  radius = Math.round((rect.width / 2) / Math.tan(Math.PI / count));
+  // Each facet sits translateZ(-radius) behind the screen plane in its own
+  // local frame, so the ring reads at viewport scale; a deep perspective
+  // keeps that shrink small without over-enlarging the neighbors poking
+  // in at the edges (over-compensating made them bleed into view).
+  const compensate = (PERSPECTIVE + radius) / PERSPECTIVE;
+  [...drum.children].forEach((el, i) => {
+    el.style.transform = `rotateY(${-i * step}deg) translateZ(${-radius}px) scale(${compensate})`;
+  });
+}
+window.addEventListener("resize", sizeDrum);
+sizeDrum();
+
+function applyRotation(angle, withTransition) {
+  drum.style.transition = withTransition ? "transform .45s cubic-bezier(.2,.8,.2,1)" : "none";
+  drum.style.transform = `rotateY(${angle}deg)`;
+}
+
+function setActive(i) {
+  activeFacet = i;
+  drum.querySelectorAll(".facet-pips").forEach(row => {
+    [...row.children].forEach((d, idx) => d.classList.toggle("active", idx === i));
+  });
+  thimbleEye.classList.toggle("visible", !!FACETS[i].eye);
+  startTime = performance.now();
+}
+
+function settleTo(angle) {
+  const idx = (((Math.round(angle / step) % count) + count) % count);
+  currentAngle = idx * step;
+  applyRotation(currentAngle, true);
+  if (idx !== activeFacet) setActive(idx);
+  if (navigator.vibrate) navigator.vibrate(16);
+}
+
+applyRotation(currentAngle, false);
+setActive(0);
+
+function onDown(x) { dragStartX = x; dragStartAngle = currentAngle; drum.classList.add("dragging"); }
+function onMove(x) { if (dragStartX === null) return; applyRotation(dragStartAngle - (x - dragStartX) * 0.35, false); }
+function onUp(x) { if (dragStartX === null) return; const a = dragStartAngle - (x - dragStartX) * 0.35; dragStartX = null; drum.classList.remove("dragging"); settleTo(a); }
+
+stage.addEventListener("mousedown", e => onDown(e.clientX));
+window.addEventListener("mousemove", e => onMove(e.clientX));
+window.addEventListener("mouseup", e => onUp(e.clientX));
+stage.addEventListener("touchstart", e => onDown(e.touches[0].clientX), { passive: true });
+stage.addEventListener("touchmove", e => onMove(e.touches[0].clientX), { passive: true });
+stage.addEventListener("touchend", e => onUp(e.changedTouches[0].clientX));
+
+document.getElementById("prevBtn").addEventListener("click", () => settleTo(currentAngle - step));
+document.getElementById("nextBtn").addEventListener("click", () => settleTo(currentAngle + step));
+
+// --- Thimble's per-frame motion: he performs every exercise himself,
+// not a separate canvas overlay beside him. ---
+function render(now) {
+  const t = (now - startTime) * 0.001;
+  const f = FACETS[activeFacet];
+  const b = f.breathe(t);
+
+  // Body scale + mouth openness both ride the same inhale value, so
+  // Thimble's whole shape (not just a generic pulse) traces the pattern.
+  // tap rocks him side to side; widen stretches him horizontally -- both
+  // layer on top of the same base transform.
+  const scale = 0.86 + b.inhale * 0.22;
+  const tapX = (b.tap ?? 0) * 7;
+  const scaleX = scale * (1 + (b.widen ?? 0) * 0.05 + b.inhale * 0.025);
+  thimbleCore.style.transform = `translate(calc(2% + ${tapX}px),1%) scale(${scaleX}, ${scale})`;
+
+  const jaw = b.jawDrop ?? 0;
+  // When Thimble's mouth is carrying an eye instead of just breathing, hold
+  // it open wide enough for the eye to actually read, rather than following
+  // the (often thin) breath-driven openness.
+  const mouthOpen = f.eye ? 0.75 : (b.mouthOpen ?? Math.max(b.inhale * 0.5, jaw));
+  let w, h;
+  if (f.eye) {
+    // An eye reads as an eye only if its socket is a wide, flattened
+    // almond, not the mouth's round-ish opening.
+    w = 56; h = 24;
+  } else {
+    w = 29 + mouthOpen * 9.5;
+    h = 10 + mouthOpen * 32;
+  }
+  thimbleMouth.style.width = w + "px";
+  thimbleMouth.style.height = h + "px";
+  thimbleMouth.style.borderRadius = f.eye ? "50%" : (h > 24 ? "46%" : "50%");
+
+  // Nose-breathing: hide the mouth and flare two small nostril holes at
+  // the same spot instead, sized with the same inhale value, so airflow
+  // reads at the nostrils during a nose phase and at the mouth otherwise.
+  thimbleMouth.style.opacity = b.nostril ? 0 : 1;
+  thimbleNostrils.classList.toggle("visible", !!b.nostril);
+  if (b.nostril) {
+    const flare = 0.55 + (b.nostrilEnv ?? b.inhale) * 0.9;
+    nostrilLeft.style.transform = `scale(${flare})`;
+    nostrilRight.style.transform = `scale(${flare})`;
+  }
+
+  // The eye tracks a sweep (saccades) when the facet says so; otherwise
+  // leave it to the .visible class's own centered scale-in.
+  // The white eyeball drifts a little with the pupil (not the full
+  // distance) so it reads as the eye following the ball, while the
+  // pupil leads with the larger share of the motion -- not the eyeball
+  // sliding rigidly as one flat disc.
+  if (b.eyeX != null) {
+    thimbleEye.style.transform = `translateX(${b.eyeX * 4}px) scale(1)`;
+    thimblePupil.style.transform = `translateX(${b.eyeX * 7}px)`;
+  } else {
+    thimbleEye.style.transform = "";
+    thimblePupil.style.transform = "";
+  }
+
+  // The orange node Thimble's eye tracks, swept wide across the stage
+  // so the eye's small in-socket shift reads as genuine tracking.
+  saccadeBall.classList.toggle("visible", b.eyeX != null);
+  if (b.eyeX != null) {
+    saccadeBall.style.transform = `translate(-50%, -50%) translate(${b.eyeX * 110}px, 90px)`;
+  }
+
+  if (b.instruction != null) {
+    const coach = drum.children[activeFacet].querySelector(".breath-coach");
+    coach.querySelector(".verb").textContent = b.instruction;
+    coach.querySelector(".suffix").textContent = b.suffix || "";
+
+    const dotCount = Math.round(b.seconds);
+    const filled = Math.min(dotCount, Math.floor(b.elapsed) + 1);
+    const dotsEl = coach.querySelector(".breath-dots");
+    if (dotsEl.childElementCount !== dotCount) {
+      dotsEl.innerHTML = Array.from({ length: dotCount }, () => '<span class="dot"></span>').join("");
+    }
+    [...dotsEl.children].forEach((d, i) => d.classList.toggle("filled", i < filled));
+  }
+
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

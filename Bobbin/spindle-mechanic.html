@@ -1,0 +1,155 @@
+<title>Spindle Swipe Mechanic</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* layout: a vertical spindle at center; facet cards ring it in 3D and rotate on drag like a label on a rotating drum */
+  :root{
+    --bg:#0f1412; --surface:#f6f3ee; --surface-ink:#192320; --ink:#eef1ee; --ink-dim:#9ea5a0;
+    --spindle:#d89642; --accent:#f06a85; --ring: rgba(255,255,255,.08);
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){ --bg:#eef0ec; --ink:#192320; --ink-dim:#6e7672; --ring: rgba(0,0,0,.08); color-scheme: light; }
+  }
+  :root[data-theme="light"]{ --bg:#eef0ec; --ink:#192320; --ink-dim:#6e7672; --ring: rgba(0,0,0,.08); color-scheme: light; }
+  :root[data-theme="dark"]{ --bg:#0f1412; --ink:#eef1ee; --ink-dim:#9ea5a0; --ring: rgba(255,255,255,.08); color-scheme: dark; }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100%; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px;
+    padding-block:32px;
+    padding-left:max(16px, env(safe-area-inset-left,0px));
+    padding-right:max(16px, env(safe-area-inset-right,0px));
+    touch-action:pan-y;
+    -webkit-user-select:none; user-select:none;
+  }
+
+  h1{font-size:15px; font-weight:600; letter-spacing:.02em; margin:0; color:var(--ink-dim); text-transform:uppercase;}
+  .hint{font-size:12px; color:var(--ink-dim); margin:0;}
+
+  .stage{
+    position:relative; width:280px; height:360px;
+    perspective:900px;
+  }
+  .spindle-rod{
+    position:absolute; left:50%; top:-14px; bottom:-14px; width:3px;
+    transform:translateX(-50%); background:linear-gradient(var(--spindle), var(--spindle)) center/3px 100% no-repeat;
+    border-radius:3px; opacity:.55; z-index:0;
+  }
+  .drum{
+    position:absolute; inset:0; transform-style:preserve-3d; cursor:grab;
+  }
+  .drum.dragging{cursor:grabbing;}
+
+  .facet{
+    position:absolute; inset:0; border-radius:28px; background:var(--surface); color:var(--surface-ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    backface-visibility:hidden; box-shadow:0 18px 40px rgba(0,0,0,.35);
+    padding:24px;
+  }
+  .facet .n{font-size:11px; font-weight:700; letter-spacing:.08em; color:var(--accent); text-transform:uppercase;}
+  .facet .name{font-size:20px; font-weight:700;}
+  .facet .desc{font-size:13px; color:var(--surface-ink); opacity:.6; text-align:center; max-width:30ch;}
+  .facet .dot{width:54px; height:54px; border-radius:50%; background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.7), transparent 55%), var(--accent);}
+
+  .dots{display:flex; gap:7px;}
+  .dots span{width:6px; height:6px; border-radius:50%; background:var(--ring);}
+  .dots span.active{background:var(--accent); width:16px; border-radius:3px; transition:width .25s ease;}
+</style>
+
+<h1>Spindle facet switcher</h1>
+<p class="hint">Drag left/right — the drum turns on its rod, not a card slide</p>
+
+<div class="stage" id="stage">
+  <div class="spindle-rod"></div>
+  <div class="drum" id="drum"></div>
+</div>
+
+<div class="dots" id="dots"></div>
+
+<script>
+(function(){
+  const FACETS = [
+    {n:'1 / 4', name:'Box Breath', desc:'4-4-4-4 cycle to re-engage parasympathetic control.', hue:'#f06a85'},
+    {n:'2 / 4', name:'Physiological Sigh', desc:'Double inhale, long exhale. Fastest known down-shift.', hue:'#d89642'},
+    {n:'3 / 4', name:'Cold Exposure', desc:'Brief cold contact to spike then settle arousal.', hue:'#6a9ef0'},
+    {n:'4 / 4', name:'Humming Exhale', desc:'Vagal stimulation through vibration on the exhale.', hue:'#7bc47f'},
+  ];
+
+  const drum = document.getElementById('drum');
+  const dotsEl = document.getElementById('dots');
+  const stage = document.getElementById('stage');
+  const count = FACETS.length;
+  const step = 360 / count;
+  const radius = Math.round(200 / Math.tan(Math.PI / count)); // push faces out to stage half-width
+
+  FACETS.forEach((f, i) => {
+    const el = document.createElement('div');
+    el.className = 'facet';
+    el.style.transform = `rotateY(${i*step}deg) translateZ(${radius}px)`;
+    el.innerHTML = `
+      <div class="dot" style="background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.7), transparent 55%), ${f.hue}"></div>
+      <div class="n">${f.n}</div>
+      <div class="name">${f.name}</div>
+      <div class="desc">${f.desc}</div>
+    `;
+    drum.appendChild(el);
+
+    const d = document.createElement('span');
+    if (i === 0) d.className = 'active';
+    dotsEl.appendChild(d);
+  });
+
+  let currentAngle = 0;   // settled rotation
+  let dragStartX = null;
+  let dragStartAngle = 0;
+  let activeIndex = 0;
+
+  function applyRotation(angle, withTransition){
+    drum.style.transition = withTransition ? 'transform .45s cubic-bezier(.2,.8,.2,1)' : 'none';
+    drum.style.transform = `rotateY(${angle}deg)`;
+  }
+
+  function setActiveDot(i){
+    [...dotsEl.children].forEach((d, idx) => d.className = idx === i ? 'active' : '');
+  }
+
+  function settleTo(angle){
+    const idx = (((Math.round(-angle / step) % count) + count) % count);
+    currentAngle = -idx * step;
+    activeIndex = idx;
+    applyRotation(currentAngle, true);
+    setActiveDot(idx);
+  }
+
+  applyRotation(currentAngle, false);
+
+  function onDown(x){
+    dragStartX = x;
+    dragStartAngle = currentAngle;
+    drum.classList.add('dragging');
+  }
+  function onMove(x){
+    if (dragStartX === null) return;
+    const dx = x - dragStartX;
+    const dragAngle = dragStartAngle + dx * 0.35; // drag sensitivity: deg per px
+    applyRotation(dragAngle, false);
+  }
+  function onUp(x){
+    if (dragStartX === null) return;
+    const dx = x - dragStartX;
+    const dragAngle = dragStartAngle + dx * 0.35;
+    drum.classList.remove('dragging');
+    dragStartX = null;
+    settleTo(dragAngle);
+  }
+
+  stage.addEventListener('mousedown', e => onDown(e.clientX));
+  window.addEventListener('mousemove', e => onMove(e.clientX));
+  window.addEventListener('mouseup', e => onUp(e.clientX));
+
+  stage.addEventListener('touchstart', e => onDown(e.touches[0].clientX), {passive:true});
+  stage.addEventListener('touchmove', e => onMove(e.touches[0].clientX), {passive:true});
+  stage.addEventListener('touchend', e => onUp(e.changedTouches[0].clientX));
+})();
+</script>

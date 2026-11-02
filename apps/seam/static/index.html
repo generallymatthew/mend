@@ -934,12 +934,11 @@
   </form>
 </div>
 <script>
-  // Synchronous, right after the overlay exists in the DOM, so a
-  // completed tester never sees even a flash of the gate -- doesn't wait
-  // for the rest of the page or the bottom script block to parse.
-  if (!localStorage.getItem('seam_gate_completed')) {
-    document.getElementById('gate-overlay').classList.add('open');
-  }
+  // Synchronous, right after the overlay exists in the DOM, so it shows
+  // before the rest of the page or the bottom script block parses.
+  // Everyone hitting this build is a tester right now, so the gate shows
+  // on every visit rather than being suppressed after the first one.
+  document.getElementById('gate-overlay').classList.add('open');
 </script>
 
 <script>

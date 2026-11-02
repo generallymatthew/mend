@@ -91,7 +91,19 @@
   @keyframes typing-bounce{0%,60%,100%{transform:translateY(0); opacity:.4;} 30%{transform:translateY(-3px); opacity:1;}}
   @media (prefers-reduced-motion: reduce){ .typing-dot{animation:none; opacity:.7;} }
 
-  @media (max-width:600px){ .hero{gap:0;} }
+  @media (max-width:600px){
+    .hero{gap:0;}
+    /* Try Seam needs to clear the fold on a phone, so the CTA moves
+       ahead of the long lede paragraph (DOM order stays the same, for
+       reading order / SEO) and the space above it gets tightened. */
+    .topnav{margin-bottom:20px;}
+    .wrap{padding-top:28px;}
+    .hero-badge{margin-bottom:12px;}
+    h1{font-size:1.65rem; margin-bottom:14px;}
+    .hero-text h1{order:0;}
+    .hero-text .hero-ctas{order:1; margin-top:14px;}
+    .hero-text p.lede{order:2; margin-top:18px;}
+  }
 
   /* Thimble avatar: ported from thimble/static/index.html's current
      "Soft Dome" body (dome-wobble clip-path, ring/body/blend/mouth parts),
@@ -254,7 +266,7 @@
 
   <section class="block">
     <h2>Who this is for</h2>
-    <h3 class="section-headline">A direct report who needs tough feedback. Two people who can't work together. A message you're not sure about.</h3>
+    <h3 class="section-headline">Different situations. The same need: someone neutral to check it with first.</h3>
     <div class="info-grid">
       <div class="info-card">
         <div class="k">A hard performance conversation</div>
