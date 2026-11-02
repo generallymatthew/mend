@@ -529,6 +529,21 @@
     background: #fff; padding: 3px 8px; border-radius: 6px; box-shadow: 0 2px 8px rgba(23,55,46,.14); z-index: 4;
   }
   .intro { position: relative; flex: 1; display: flex; align-items: flex-start; justify-content: flex-start; padding: 22px 28px; overflow: auto; }
+  /* Fades content out before it reaches the composer, scoped to only apply
+     while the mic tip (.mic-tip, an absolutely positioned popup that
+     floats up from the composer) is actually visible -- see the
+     "mic-tip-open" class toggled in wirePushToTalk's showTip/hideTip.
+     Scroll padding alone doesn't help here: on a short viewport the
+     welcome text already fills the box at scrollTop 0, so reserved padding
+     past the end of the content is never what's visible. Applying the
+     fade unconditionally would also dim the last line of every real
+     conversation forever, long after the tip's been dismissed, which is
+     worse than the problem it fixes. 90px roughly matches the tip's own
+     height + clearance. */
+  body.mic-tip-open .intro, body.mic-tip-open .messages {
+    mask-image: linear-gradient(to bottom, black calc(100% - 90px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 90px), transparent 100%);
+  }
   .intro .wrap { width: 100%; display: flex; flex-direction: column; gap: 20px; }
   .welcome-row { display: flex; align-items: flex-end; gap: 14px; }
   .welcome-row .bubble { text-align: left; }
@@ -804,7 +819,7 @@
           </div>
         </div>
         <div class="wrap">
-          <div class="msg-row assistant intro-msg">
+          <div class="msg-row assistant intro-msg" style="display:none">
             <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
             <div class="bubble assistant">So, what's going on? Tell me about a conflict on your team, a message you need help wording, or a hard conversation you're prepping for.</div>
           </div>
@@ -1022,6 +1037,9 @@
   ];
 
   if (localStorage.getItem('seam_thimble_intro_seen')) return;
+  // Temporarily disabled -- overlapped the mic tip on short viewports,
+  // reported live. Remove this line to bring the walkthrough back.
+  return;
 
   const card = document.getElementById('onboard-card');
   const avatarEl = document.getElementById('onboard-avatar');
@@ -1348,8 +1366,8 @@ function wirePushToTalk(btn, targetEl) {
     waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
   }
 
-  function showTip() { tip.hidden = false; }
-  function hideTip() { tip.hidden = true; }
+  function showTip() { tip.hidden = false; document.body.classList.add("mic-tip-open"); }
+  function hideTip() { tip.hidden = true; document.body.classList.remove("mic-tip-open"); }
   function markTipSeen() { try { localStorage.setItem(MIC_TIP_SEEN_KEY, "1"); } catch (e) {} }
   function tipSeen() { try { return !!localStorage.getItem(MIC_TIP_SEEN_KEY); } catch (e) { return false; } }
 
