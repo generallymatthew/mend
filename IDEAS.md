@@ -9,6 +9,208 @@ Every entry also names its source file so the original writeup can be found.
 
 ---
 
+## Process: how to know if Thimble's conflict-management approach is actually right
+
+Raised directly by the user (not a feature idea): he has no formal ADR/
+mediation credentials, is building Thimble's conflict logic off instinct
+plus an LLM that's structurally biased to agree with whatever theory he
+proposes, and wants a real check on whether the approach is sound rather
+than just self-reinforcing.
+
+What his instincts have already gotten right, cross-checked against actual
+ADR/psych literature:
+- People reject the "conflict" label and want an operational plan or
+  communication buffer, not to admit they need "remediation" — matches how
+  defensiveness works in dispute resolution.
+- Peer-negotiated agreements stick better than management-imposed ones
+  (Self-Determination Theory, Deci & Ryan) — supports keeping Thimble
+  peer-owned rather than authority-driven.
+- Venting has to happen before problem-solving — an emotionally flooded
+  person can't negotiate rationally yet. Matches the existing split between
+  solo intake (Spool) and forward-looking alignment (Weft).
+
+Where gut-feel + an agreeable AI breaks down, specifically:
+- **Single-hammer trap**: an early insight ("conflict = competing KPIs")
+  got agreed with and then over-applied to every case, when real friction
+  is often bandwidth panic, status defense, or style mismatch instead.
+- **Clean-plan delusion**: product-designer instinct wants tidy 3-step
+  flowcharts; real conflict is messy, and forcing it into an SLA-shaped plan
+  makes users feel invalidated.
+- **Sycophancy blind spot**: the hard technical job isn't being agreeable,
+  it's being a fair mirror that can tell the user an uncomfortable truth
+  without triggering defensiveness — directly related to
+  [[feedback_interrogate_dont_placate]] in memory.
+
+Three concrete ways to actually test this instead of asking an LLM if the
+idea sounds good:
+1. **Real-friction transcript audit** — run 10-15 real, unfiltered
+   messages/scenarios from actual past tension (old jobs, trusted peers,
+   anonymized retros) through Thimble and judge the output with brutal
+   candor: does it sound like a patronizing HR bot forcing a generic
+   explanation, or like a grounded wingman giving the right two sentences?
+2. **End-of-session gut check with real users** — skip "did you like this"
+   and ask: did it feel like it was on your side vs. policing you; did it
+   tell you what you wanted to hear vs. help you see what was actually
+   going on; would you bring the next awkward Slack/meeting here first?
+3. **Anchor to established frameworks** — check Thimble's turns against
+   Principled Negotiation (separate people from problem, focus on
+   interests not positions), Attribution Theory / Fundamental Attribution
+   Error (does it catch the user assuming the other person is just evil),
+   and Nonviolent Communication (isolate observable facts before drafting
+   requests, rather than passing judgment).
+- Source: conversation 2026-11-03, pasted user writeup (unnamed, framed as
+  "how do I know I'm building Thimble right").
+- Where it could plug in: not a code change — this is a standing test
+  protocol to run against the coaching prompts and the overall product
+  direction periodically, especially before locking in any new Thimble
+  "insight" the way the KPI-hammer one got overapplied.
+- Why not active: no actual real-friction transcripts have been run
+  through Thimble yet under this protocol — flagged here so the three
+  tests get run deliberately rather than substituting more gut-check
+  conversations with an agreeable model.
+
+---
+
+## Thimble presence and personality
+
+### Homepage speaks as Thimble in first person, not as marketing copy about it
+Instead of a third-person brochure page explaining what Mend/Thimble is,
+the landing page itself talks directly to the visitor as Thimble, in its
+own voice, replacing standard marketing sections with first-person copy:
+- Above the fold: Thimble introduces itself directly ("I'm Thimble... I
+  don't lecture... nothing you say here ever gets logged"), followed by a
+  single input box and a few quick-prompt chips (e.g. "A message I want to
+  send without blowing things up").
+- "Why I Exist" replaces "About Us": frames conflict as an operational
+  pile-up between people under opposing pressures, and positions itself as
+  "the fourth option" beyond swallow-it / vent / escalate-to-HR.
+- "Whose Side I'm On" replaces "Our Values": explicit "yours, not your
+  company's" framing, using the thimble-as-finger-shield metaphor.
+- "How the Privacy Works" replaces "Security & Compliance": explains
+  zero-persistent-memory sessions in plain first-person language, with the
+  one named exception being a "strict legal floor for active threats and
+  overt abuse."
+- Closing CTA: no signup/corporate email required, just drop the draft.
+
+**Flag**: the user noted the most recent actual homepage tells the story
+from the manager's POV, which is a different narrator/audience than
+"Thimble talking directly to an employee venting" above — these two
+framings are in tension and would need to be reconciled (or deliberately
+kept as two different entry points) rather than assumed compatible.
+- Source: conversation 2026-11-03, pasted user writeup (unnamed).
+- Where it could plug in: whichever file renders the root marketing page
+  (`apps/spool` per the "Consolidate Spool into Seam" entry above, or
+  wherever the current manager-POV homepage copy lives).
+- Why not active: homepage copy, not written; also unresolved against the
+  current manager-POV homepage, per the flag above.
+
+### Living avatar with Reading/Thinking/Talking states, two-pane chat layout with transcript
+A proposal to make Thimble more visually present during actual chat
+sessions (not just the landing page), via a two-pane layout:
+- **Left pane**: Thimble's avatar occupies the main visual space and
+  animates through three states — Reading/Listening (grounded, relaxed,
+  "I'm holding space"), Thinking/Deliberating (warmer palette, slight
+  tilt, pensive pursed mouth, breathing slows), and Talking/Articulating
+  (rose bloom, body undulates with speech cadence, mouth articulates with
+  streaming text). A live, low-contrast speech bubble shows words as they
+  stream.
+- **Right pane**: a persistent chronological transcript. As Thimble
+  finishes a sentence, it "docks" into this transcript. When Thimble
+  identifies a concrete tactical ask (a script/message to send), it gets
+  pulled out into a separate "Framed Artifact Box" with a one-click "Copy
+  Clean Script" button, rather than staying buried in a chat bubble.
+- A rough HTML/canvas prototype was included in the writeup (state machine
+  driving a radial-gradient dome shape, mouth-cavity ellipse sized by
+  state, timed sequence reading -> thinking -> talking -> docking to
+  transcript).
+
+**Flag — check against [[feedback_no_polygon_ripple]]**: the writeup
+describes "harmonic acoustic ripples" tracing along the dome's outer rim
+in the Reading state. That memory says the user specifically rejected a
+faceted/polygonal clip-path "ear-ripple" effect and wants organic blurred
+glow pulses instead, not faceted ripples — this detail should be checked
+against that rejection before building, not assumed to be a new, different
+ripple.
+
+This also connects to the existing [[project_thimble_expressive_lab]]
+work (anticipation/backchannel/squash/mirroring prototype, squash strength
+confirmed at 50%) and [[project_thimble_voice_fragility]] (voice engine
+duplicated across 5 files, breaks easily) — a three-state avatar visible
+during ordinary text chat, not just the voice/expressive-lab prototype
+page, would mean whatever state logic exists needs to be surfaced in the
+main chat UI too, not just the lab page.
+- Source: conversation 2026-11-03, pasted user writeup (unnamed),
+  including an HTML/canvas prototype snippet.
+- Where it could plug in: Seam's main chat interface; would likely share
+  (or need to be reconciled with) whatever avatar/animation code already
+  exists from the expressive lab work.
+- Why not active: per [[feedback_design_review_before_building]], this
+  needs mockup/design review before any real UI file gets touched — not
+  yet reviewed as options, so nothing should be built from this directly
+  yet.
+
+---
+
+## Funding: grant-funded local inference hardware
+
+Idea floated 2026-11-03: apply for non-dilutive grants to buy a dedicated
+local-inference machine, instead of (or alongside) paying per-token for a
+commercial LLM API. Rationale and specifics below are speculative, not
+researched/verified by Claude — capture only, not a recommendation to act on
+without checking current grant terms and hardware pricing.
+
+**Grant angle**: foundations focused on digital rights / privacy / public
+infrastructure (named: NLnet Foundation, Prototype Fund, Mozilla Open
+Source Support, Sovereign Tech Fund) reportedly fund open hardware and
+localized software stacks, and would be pitched on a "zero-trace,
+air-gapped, open-weight mediation engine" framing — directly reinforces
+[[project_mend_moat_strategy]]'s zero-trace promise, but see
+[[project_zero_trace_gap_prototype]]: that promise doesn't fully hold yet
+even in the current cloud-based prototype, so any grant narrative built on
+it would need that gap closed first or stated honestly. Unrestricted
+micro-grant programs (Awesome Foundation, 1517 Fund Medici Project,
+Emergent Ventures) were also named as options with no capex restrictions.
+Corporate cloud credit programs (Google Cloud, AWS Activate, Azure) were
+flagged as NOT fitting this — they only give compute credits, never cash
+for hardware.
+
+**Customization upside of owning the hardware**: could fine-tune (LoRA/SFT)
+an open-weight base model (Qwen 2.5 32B/72B, Llama 3.3 70B) so ADR rules
+and de-biasing logic live in the weights instead of a long system prompt,
+run the Facilitator and the deterministic Watcher locally with no API rate
+limits, and get a genuinely air-gapped enclave with no external network
+dependency.
+
+**Hardware/cost reality check**: a 70B-class model needs ~40-48GB memory
+bandwidth (dual used RTX 3090 rig ~$2,200-2,600, or Apple Silicon Mac
+Studio 96-128GB unified RAM ~$3,600-4,800); anything smaller (8B-14B on a
+single 16GB GPU) was flagged as more prone to sycophancy and hallucination
+for nuanced mediation. One such machine handles only 1-2 concurrent users
+smoothly; concurrent load beyond that queues up without a request
+scheduler or more machines. Breakeven estimate given: roughly 3,000-5,000
+completed disputes vs. pure per-token API cost (~$0.47/100-turn cycle) to
+justify a ~$3,000 machine on cost grounds alone.
+
+**Staged approach suggested**: use API credits (e.g. Anthropic/Google
+startup credit tiers) to finish prompt/schema tuning with early users
+first, then apply for hardware-specific grants once the design is
+validated, then package the fine-tuned model + state machine as a
+self-hostable Docker/vLLM image for the open-source community.
+- Source: conversation 2026-11-03, pasted user writeup (unnamed).
+- Where it could plug in: infrastructure/deploy decisions, not product
+  code — would sit alongside whatever `deploy/start.sh` / `render.yaml`
+  setup exists once (if) a local-inference path is pursued; also connects
+  to [[project_epli_distribution_route]] and the broader moat strategy as
+  a cost/credibility lever.
+- Why not active: no grant applications written, no hardware purchased —
+  this is unvetted early-stage financial/strategic speculation generated by
+  an LLM in response to a one-line prompt, not something Claude verified
+  (pricing, grant eligibility, and token/dispute cost estimates above
+  should all be re-checked before being relied on). Flagged here so it
+  isn't lost, and so it doesn't get acted on without that verification.
+
+---
+
 ## App names
 
 Moved to the top-level `README.md` ("App names" section) — these are shipped,
@@ -799,6 +1001,60 @@ resolution and not neutral group voting).
 
 ## Open design questions
 
+### Safety-floor tone must branch on whether the user already knew it was harassment
+When the safety floor trips, the underlying mechanics don't change — same
+classifier, same halt, same Victim Agency Gate offering report-to-HR /
+export-locally / flush-memory. But the user arrives in one of two very
+different mental states, and Thimble's tone needs to match which one it is,
+not use one generic script for both:
+
+- **User already knows it's harassment**: they came in consciously seeking
+  self-defense, documentation, or a safe escalation path, scared mainly of
+  retaliation. The Agency Gate lands as an expected protective service —
+  it confirms their diagnosis and hands them the safety container they were
+  looking for. Thimble's role here is a documentation/reporting bridge; risk
+  of alienating them is low since they already expect formal boundaries.
+  Gate tone: "Here is the factual brief of what happened. You choose if it
+  goes anywhere."
+- **User thinks it's routine friction** (e.g. "my manager's being unfair
+  about my schedule, I just need a script to get them off my back"):
+  tripping the safety floor is a disorienting revelation — they came in
+  thinking it was a personality clash or their own communication problem,
+  and the system is telling them it's actually a statutory violation.
+  Thimble's role here is an objective reality mirror catching an invisible
+  boundary violation. Risk of alienation is high: if it sounds like an
+  alarmist HR cop, the user may panic, feel surveilled, and backpedal
+  ("wait no, don't report anything"). Gate tone needs to be calmer and more
+  reassuring: name the violation without inducing panic, emphasize nothing
+  has been sent yet and they have full control, before presenting choices.
+
+Framing implication: if Thimble is ever positioned/marketed as an
+"anonymous harassment tip line," it only catches people in the first
+bucket — the junior engineer who thinks a manager conditioning PR approval
+on personal calls is "just tech culture" will never open a harassment
+hotline. Framing it as a routine communication/sanity-check tool with an
+integrated safety floor is what catches both, since the second bucket only
+ever shows up by venting about something else first.
+- Source: conversation 2026-11-03, pasted user writeup framed as "what's
+  the difference between someone describing something and not knowing it
+  was harassment vs. already knowing."
+- Where it could plug in: whichever prompt renders the Victim Agency Gate
+  copy when the safety floor trips (ties directly into the "disclose
+  upfront vs. reactively" open question right below, and into the overall
+  Phase 3 consented/anonymized escalation design in `ROADMAP.md`) — would
+  need the classifier or surrounding context to carry some signal of which
+  bucket the user is in, not just that the floor tripped.
+- Why not active: tone/copy branch not yet written — flagged here so the
+  two-bucket distinction doesn't get flattened into one generic halt
+  message when this gets built.
+- **Status (2026-11-03): built.** Added a tone branch to the floor
+  disclosure in `facilitator-intake-system-prompt.md` (employee-conflict
+  path), right after the "order matters" paragraph: reads whether the
+  employee's own opening framing already treated this as mistreatment vs.
+  routine friction, and delivers the (unchanged) disclosure + choice
+  plainly in the first case, more slowly and reassuringly in the second.
+  Not yet tested against real transcripts.
+
 ### Disclose safety-floor screening upfront, or only reactively?
 Still explicitly unresolved: should Thimble state up front that it's
 screening conversations for safety-floor triggers, or only surface that
@@ -811,6 +1067,46 @@ source doc, not a settled decision.
 - Why not active: a judgment call worth deciding deliberately rather than
   drifting into by default — flagged here so it doesn't get silently decided
   by whichever way the prompt happens to read today.
+
+### Thimble reflection pattern: ask for their read, offer one concrete scenario, then follow their lead
+A specific conversational move for how Thimble should respond when a user is
+stuck or venting without a clear diagnosis yet (e.g. "my coworker just shut
+down on me"). Instead of guessing the cause or interrogating with multiple
+questions, Thimble does two things in one short reply: asks the user for
+their own read on what happened, then offers exactly one concrete, grounded
+hypothesis to react to ("Usually when someone shuts down like that, it's
+less about the work and more that they're underwater and triaging badly.
+Does that ring true, or is something else driving this?"). The user then
+either confirms it or corrects it, and Thimble's next line branches off
+whichever one they gave — no flattery ("trust your gut"), no multi-question
+menu, no claim to already know the answer.
+- Why one hypothesis and not a menu: a single testable guess is something a
+  brain can push against (confirm or correct); a multiple-choice list makes
+  an already-agitated user do analysis work instead of reacting.
+- Why ask for their read first: treats the user as the one with ground
+  truth, not someone to be diagnosed — this is the "mirror, not lecture"
+  posture generally wanted for Thimble.
+- Both branches (confirmed or corrected) should land on a concrete next
+  action in the same reply, not just validate the read and stop.
+- Source: conversation 2026-11-03, pasted user writeup titled "The
+  Two-Sentence Move."
+- Where it could plug in: whichever Thimble coaching prompt handles the
+  "user describes a stuck/frustrating interaction, cause unclear" case —
+  likely the same family as the Phase 1 coaching fork
+  (`facilitator-coaching-system-prompt.md` or similar, per recent commit
+  "fork Phase 1 between framing help and understanding why").
+- Why not active: this is a reusable response pattern/heuristic, not yet
+  written into any system prompt — flagged here so it can be deliberately
+  incorporated rather than reinvented ad hoc.
+- **Status (2026-11-03): built.** Added as its own guidance paragraph in
+  `facilitator-manager-coaching-system-prompt.md` Phase 1, right where the
+  manager picks the "help me understand why" branch: ask for the manager's
+  own read first, then offer exactly one concrete hypothesis, then branch
+  on confirm/correct. Only written into the manager-coaching prompt so far,
+  not into the employee-conflict path's beat 2 (which already has its own,
+  slightly different, driver-guessing mechanic in
+  `facilitator-case-plan-system-prompt.md`). Not yet tested against real
+  transcripts.
 
 ### Automatic names-only HR notification on safety-floor trip (competing design)
 An alternate, simpler, non-consent escalation design floated early on: when
