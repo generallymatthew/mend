@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seam — Thimble split layout (experiment)</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Tokens lifted directly from apps/seam/static/index.html -- this is an
+     experiment, not a change to that file. Nothing here is wired into the
+     real app. */
+  :root {
+    --ink: #17372E;
+    --bg: #FAFBFA;
+    --app-bg: #FFFFFF;
+    --sidebar-bg: #EEF2EE;
+    --chat-bg: #F7F9F7;
+    --panel-bg: #E7ECE7;
+    --border: #CBD3CD;
+    --rail-border: #B9C4BC;
+    --muted: #52605A;
+    --faint: #83928B;
+    --accent-pink: #F3829A;
+    --accent-pink-bg: #FCEEF0;
+    --accent-pink-active: #F9D9E1;
+    /* The stage behind Thimble's avatar -- ported from apps/thimble/static/
+       session.html's --stage-bg, a paler oat than Seam's own --chat-bg, so
+       the avatar pane reads as its own "stage" instead of just more chat
+       background. */
+    --stage-bg: #FBF8F3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: var(--app-bg);
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  #app { display: flex; flex: 1; min-height: 0; }
+
+  /* ---- Top nav: same brand row as Seam today, but the hamburger is now
+     the ONLY way into the conversation list, at every width -- not just
+     the mobile-only toggle it is in the real app. ---- */
+  .top-nav {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--app-bg);
+  }
+  .top-bar-brand { display: flex; align-items: center; gap: 9px; }
+  .top-bar-brand .brand-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  #sidebar-toggle {
+    width: 32px; height: 32px; border-radius: 999px; flex-shrink: 0;
+    background: var(--panel-bg); color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: none;
+  }
+  #sidebar-toggle:hover { background: var(--rail-border); }
+  .top-nav-actions { display: flex; align-items: center; gap: 8px; }
+  .privacy-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; letter-spacing: 0.02em; color: var(--ink);
+    background: #17372E14; border: none; font-family: inherit;
+    border-radius: 999px; padding: 8px 14px 8px 10px;
+  }
+  .privacy-chip svg { flex-shrink: 0; color: var(--ink); }
+
+  /* ---- Off-canvas history drawer: the sidebar content is unchanged from
+     Seam today (same item-row styling), just moved off the permanent rail
+     into a drawer that opens over the content instead of sitting beside it
+     all the time. ---- */
+  .panel-scrim {
+    display: none; position: fixed; inset: 0; top: 57px; background: rgba(23,55,46,.28); z-index: 29;
+  }
+  .panel-scrim.open { display: block; }
+  #sidebar {
+    position: fixed; top: 57px; bottom: 0; left: 0; z-index: 30;
+    width: 280px; border-right: 1px solid var(--border);
+    background:
+      radial-gradient(circle at 15% 12%, rgba(163,207,224,.24) 0%, transparent 46%),
+      radial-gradient(circle at 88% 15%, rgba(176,222,209,.16) 0%, transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(233,185,73,.16) 0%, transparent 42%),
+      radial-gradient(circle at 12% 92%, rgba(243,130,154,.18) 0%, transparent 42%),
+      var(--sidebar-bg);
+    display: flex; flex-direction: column;
+    transform: translateX(-100%); transition: transform .2s ease;
+  }
+  #sidebar.open { transform: translateX(0); box-shadow: 12px 0 32px rgba(23,55,46,.16); }
+  .sidebar-subheader { padding: 16px 14px 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .sidebar-subheader .label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .sidebar-new-btn { width: 22px; height: 22px; border-radius: 8px; border: none; font-size: 14px; line-height: 1; cursor: pointer; background: #E8F0E9; color: #5F8569; }
+  #convo-list { flex: 1; overflow: auto; }
+  .item-row { padding: 10px 12px 10px 10px; margin: 0 8px 2px 8px; display: flex; flex-direction: column; gap: 3px; border-radius: 10px; cursor: pointer; border-left: 3px solid transparent; }
+  .item-row:not(.active):hover { background: var(--panel-bg); }
+  .item-row.active { background: var(--app-bg); border-left-color: var(--ink); margin-left: 0; margin-right: 0; padding-left: 17px; padding-right: 20px; border-radius: 0; }
+  .item-row .top { display: flex; justify-content: space-between; gap: 8px; }
+  .item-row .name { font-size: 13px; font-weight: 600; }
+  .item-row .time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .item-row .preview { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .convo-type-tag { display: inline-flex; font-size: 10.5px; font-weight: 700; color: #5F8569; background: #E8F0E9; border-radius: 999px; padding: 1px 8px; margin-top: 2px; }
+
+  /* ---- Avatar stage: the space the sidebar used to take is now Thimble's
+     own stage, same proportions as apps/thimble/static/session.html's
+     .call-layout -- flex:1, paler oat background, state line in the same
+     spot its .state-pill sits. ---- */
+  .avatar-stage {
+    flex: 1 1 auto; min-width: 0; background: var(--stage-bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; position: relative;
+  }
+  .stage-state {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .stage-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-pink); animation: stage-dot-pulse 2.4s ease-in-out infinite; }
+  @keyframes stage-dot-pulse { 0%,100%{ transform: scale(1); opacity:.9; } 50%{ transform: scale(1.3); opacity:.5; } }
+
+  /* Thimble avatar, full size -- same four-color-bloom fill Seam already
+     uses at 150px (.onboard-card .avatar) and 28px (per-message .avatar),
+     just scaled up to match the thimble app's own call-stage size. */
+  @keyframes avatar-wobble { 0%, 100% { border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%; } 50% { border-radius: 48% 52% 50% 50% / 55% 55% 45% 45%; } }
+  .stage-avatar { position: relative; width: 260px; height: 260px; }
+  .stage-avatar .blob {
+    position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%;
+    animation: avatar-wobble 3.6s ease-in-out infinite;
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%),
+      radial-gradient(circle at 15% 15%, rgba(163,207,224,.81) 0%, transparent 66.6%),
+      radial-gradient(circle at 85% 15%, rgba(176,222,209,.52) 0%, transparent 38%),
+      radial-gradient(circle at 80% 85%, rgba(233,185,73,.45) 0%, transparent 31.4%),
+      radial-gradient(circle at 20% 85%, rgba(243,130,154,.52) 0%, transparent 38%);
+    background-color: rgb(191,192,186);
+    box-shadow: inset -15px -17px 20px -10px rgba(0,0,0,.22), inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
+  }
+  .stage-avatar .mouth { position: absolute; left: 50%; top: 60%; width: 36px; height: 22px; transform: translate(-50%,-50%); background: var(--stage-bg); border-radius: 50%; }
+  .stage-shadow {
+    width: 150px; height: 20px; border-radius: 50%;
+    background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,.22) 0%, rgba(23,55,46,.1) 55%, rgba(23,55,46,0) 100%);
+    margin-top: -8px;
+  }
+
+  /* Hold-to-talk dock: same spot and sizing as apps/thimble/static/
+     session.html's .hold-dock (bottom-right of the avatar pane, 104px
+     ring, 28px inset) -- the one mic affordance on the avatar side,
+     mirroring how the real app keeps it off the composer entirely on
+     desktop. */
+  .hold-dock { position: absolute; right: 28px; bottom: 28px; z-index: 3; }
+  .hold-wrap { position: relative; width: 104px; height: 104px; }
+  .hold-ring { position: absolute; inset: 0; pointer-events: none; }
+  .hold-ring circle { fill: none; stroke-width: 3; }
+  .hold-ring .track { stroke: var(--border); }
+  .hold-ring .progress { stroke: var(--accent-pink); stroke-linecap: round; transform-origin: 50% 50%; transform: rotate(-90deg); stroke-dasharray: 301.59; stroke-dashoffset: 211; }
+  .talk-mic-btn {
+    position: absolute; inset: 9px; border-radius: 50%; border: none;
+    background: var(--ink); color: var(--stage-bg);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .talk-mic-btn:hover { background: #0f2a22; }
+
+  /* ---- Chat column: Seam's own thread-col, unchanged bubble/composer
+     styling, just narrower -- a fixed side panel like the thimble app's
+     .chat-panel instead of the full remaining width. ---- */
+  .thread-col { flex: 0 0 400px; max-width: 420px; min-width: 320px; display: flex; flex-direction: column; min-height: 0; background: var(--chat-bg); border-left: 1px solid var(--border); }
+  .thread-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--app-bg); }
+  .thread-header .name { font-size: 15px; font-weight: 700; }
+  .thread-header .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  #close-case-btn { font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--rail-border); border-radius: 999px; padding: 6px 14px; cursor: pointer; white-space: nowrap; }
+  #close-case-btn:hover { background: var(--panel-bg); }
+
+  .messages { flex: 1; overflow: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .msg-row { display: flex; gap: 10px; align-items: flex-end; }
+  .msg-row.user { justify-content: flex-end; }
+  .avatar { position: relative; width: 24px; height: 24px; flex: 0 0 auto; }
+  .avatar .blob {
+    position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%;
+    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 55%), var(--accent-pink);
+    animation: avatar-wobble 3.6s ease-in-out infinite;
+  }
+  .avatar .mouth { position: absolute; left: 50%; top: 60%; width: 4px; height: 2.4px; transform: translate(-50%,-50%); background: var(--chat-bg); border-radius: 50%; }
+  .bubble { max-width: 280px; border-radius: 18px; padding: 11px 14px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  .bubble.assistant { background: var(--accent-pink-bg); border-radius: 18px 18px 18px 5px; }
+  .bubble.user { background: var(--ink); color: #fff; border-radius: 18px 18px 5px 18px; }
+
+  .composer-row { padding: 14px 20px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; background: var(--chat-bg); }
+  .composer-pill { flex: 1; display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 18px; padding: 8px 8px 8px 16px; border: 1px solid var(--border); }
+  .composer-pill textarea { flex: 1; width: 100%; border: none; background: transparent; outline: none; padding: 6px 0; font-size: 15px; color: var(--ink); resize: none; font-family: inherit; }
+  .send-btn { width: 34px; height: 34px; border-radius: 999px; border: none; background: var(--accent-pink-bg); color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+
+  @media (max-width: 860px) {
+    .thread-col { flex-basis: 100%; max-width: none; border-left: none; }
+    .avatar-stage { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="top-bar-brand">
+    <button id="sidebar-toggle" title="Conversations">
+      <svg width="15" height="11" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="0" y1="1" x2="24" y2="1"/><line x1="0" y1="9" x2="24" y2="9"/><line x1="0" y1="17" x2="24" y2="17"/></svg>
+    </button>
+    <svg width="24" height="17" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
+    <span class="brand-name">Seam</span>
+  </div>
+  <div class="top-nav-actions">
+    <button class="privacy-chip" type="button">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+      Anonymity enforced
+    </button>
+  </div>
+</div>
+
+<div id="app">
+  <div class="panel-scrim" id="panel-scrim"></div>
+  <div id="sidebar">
+    <div class="sidebar-subheader">
+      <span class="label">Conversations</span>
+      <button class="sidebar-new-btn" title="New conversation">+</button>
+    </div>
+    <div id="convo-list">
+      <div class="item-row active">
+        <div class="top"><span class="name">Prepping for Jordan 1:1</span><span class="time">2m</span></div>
+        <div class="preview">Jordan missed the deadline again and blamed the ticket being unclear.</div>
+        <span class="convo-type-tag">Conflict</span>
+      </div>
+      <div class="item-row">
+        <div class="top"><span class="name">Wording a hard email</span><span class="time">Yesterday</span></div>
+        <div class="preview">Draft for the PIP kickoff message to Alex</div>
+        <span class="convo-type-tag">Message</span>
+      </div>
+      <div class="item-row">
+        <div class="top"><span class="name">Two reports, same complaint</span><span class="time">Mon</span></div>
+        <div class="preview">Both say the other one is dropping handoffs</div>
+        <span class="convo-type-tag">Conflict</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="avatar-stage">
+    <div class="stage-state"><span class="dot"></span> Thimble · prepping for your 1:1 with Jordan</div>
+    <div class="stage-avatar"><div class="blob"></div><div class="mouth"></div></div>
+    <div class="stage-shadow"></div>
+    <div class="hold-dock">
+      <div class="hold-wrap">
+        <svg class="hold-ring" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
+          <circle class="track" cx="52" cy="52" r="48"></circle>
+          <circle class="progress" cx="52" cy="52" r="48"></circle>
+        </svg>
+        <button class="talk-mic-btn" type="button" title="Hold to record a voice memo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="thread-col">
+    <div class="thread-header">
+      <div>
+        <div class="name">Prepping for Jordan 1:1</div>
+        <div class="sub">Conflict · in progress</div>
+      </div>
+      <button id="close-case-btn">Close case</button>
+    </div>
+    <div class="messages">
+      <div class="msg-row assistant">
+        <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
+        <div class="bubble assistant">What's going on with Jordan?</div>
+      </div>
+      <div class="msg-row user">
+        <div class="bubble user">Jordan missed the deadline again and blamed the ticket being unclear. I don't buy it.</div>
+      </div>
+      <div class="msg-row assistant">
+        <div class="avatar"><div class="blob"></div><div class="mouth"></div></div>
+        <div class="bubble assistant">Was the ticket actually unclear, or is that a pattern with Jordan specifically?</div>
+      </div>
+    </div>
+    <div class="composer-row">
+      <div class="composer-pill">
+        <textarea rows="1" placeholder="Message"></textarea>
+        <button class="send-btn" title="Send">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#17372E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const sidebar = document.getElementById("sidebar");
+const scrim = document.getElementById("panel-scrim");
+const toggle = document.getElementById("sidebar-toggle");
+function closeDrawer(){ sidebar.classList.remove("open"); scrim.classList.remove("open"); }
+toggle.addEventListener("click", () => { sidebar.classList.toggle("open"); scrim.classList.toggle("open"); });
+scrim.addEventListener("click", closeDrawer);
+document.querySelectorAll(".item-row").forEach(row => row.addEventListener("click", closeDrawer));
+</script>
+</body>
+</html>
