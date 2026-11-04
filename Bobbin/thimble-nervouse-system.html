@@ -62,8 +62,8 @@
 
   /* Status Bar */
   .system-status {
-    height: 38px;
-    padding: 10px 22px 0;
+    height: 30px;
+    padding: 8px 22px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -78,8 +78,8 @@
 
   /* Header */
   .app-header {
-    height: 48px;
-    padding: 4px 18px 0;
+    height: 40px;
+    padding: 2px 18px 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -92,16 +92,11 @@
   .header-actions { display: flex; align-items: center; gap: 12px; color: var(--text-secondary); }
   .header-actions svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; cursor: pointer; }
 
-  /* Carousel indicators now live inside each facet's own card, under its
-     title, instead of as fixed chrome above the stage. */
-  /* Card + pips stay as one tight group at the bottom -- without this
-     wrapper, .facet's justify-content:space-between (with breath-coach as
-     the other flex child) spread the card out to the vertical middle
-     instead of keeping it right above the pips. */
-  .facet-footer { display: flex; flex-direction: column; margin-top: auto; }
-  .facet-pips { display: flex; align-items: center; justify-content: center; gap: 6px; align-self: center; margin-top: 14px; }
-  .pip { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.14); transition: background 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); }
-  .pip.active { background: var(--button-teal); }
+  /* Carousel progress pips live once in the fixed footer, below the title
+     (see .app-footer), not per-facet -- they track the active facet,
+     they don't need to rotate with the glass. */
+  .facet-pips { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .pip { width: 6px; height: 6px; border-radius: 50%; transition: background 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); }
 
   /* ---- Spindle stage: the drum fills the remaining viewport, Thimble
      sits fixed at its center and shows through each facet's open middle. ---- */
@@ -160,15 +155,8 @@
     flex-direction: column;
     backface-visibility: hidden;
     pointer-events: none;
-    padding: 14px 20px 18px;
+    padding: 10px 18px 14px;
   }
-  /* .facet-footer uses margin-top:auto (above, in its own rule) instead of
-     .facet using justify-content:space-between -- space-between collapses
-     to flex-start when .breath-coach is display:none, which pinned the
-     label+pips to the top on every facet without a paced breath (most of
-     them). margin-top:auto keeps the footer bottom-anchored regardless of
-     whether the breath-coach sibling exists. */
-
   .facet-eyebrow {
     font-size: 10px;
     font-weight: 700;
@@ -177,27 +165,75 @@
     color: var(--accent-amber);
   }
 
-  .facet-bottom {
-    background: rgba(255, 255, 255, 0.88);
+  /* True footer chrome: fixed below the stage (not part of the rotating
+     glass), so it spans the full device width edge-to-edge instead of
+     sitting inset as a floating card inside the 11%-89% glass window. */
+  .app-footer {
+    flex: none;
+    background: var(--button-teal);
+    padding: 22px 24px calc(22px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 25;
+    position: relative;
+  }
+  .app-footer .footer-row { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .facet-eyebrow { color: var(--accent-amber); text-align: center; }
+  .app-footer .title-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .facet-title { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.25; }
+  .app-footer .facet-pips { margin-top: 0; }
+  .app-footer .pip { background: rgba(255,255,255,0.25); }
+  .app-footer .pip.active { background: var(--accent-amber); }
+  .facet-info {
+    flex: none; display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.7); cursor: pointer;
+  }
+  .facet-info svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+  /* Explainer tooltip: tap the info glyph to see what the exercise does
+     and why -- anchored above the footer, tail pointing down at the
+     glyph, same frosted-card language as the breath-coach bubble. */
+  .info-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%) translateY(-6px);
+    width: min(280px, calc(100vw - 64px));
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border-radius: 18px;
-    padding: 12px 16px;
+    border-radius: 16px;
+    padding: 14px 18px;
     border: 1px solid var(--border-light);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    text-align: left;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    z-index: 40;
   }
-  .facet-bottom .facet-text { min-width: 0; }
-  .facet-title { font-size: 15px; font-weight: 700; color: var(--text-primary); line-height: 1.25; }
-  .facet-info {
-    flex: none; width: 24px; height: 24px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.06); color: var(--text-secondary);
+  .info-tooltip.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(-14px);
   }
-  .facet-info svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+  .info-tooltip::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    width: 13px;
+    height: 13px;
+    background: rgba(255, 255, 255, 0.96);
+    border-right: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    transform: translateX(-50%) rotate(45deg);
+    border-radius: 0 0 3px 0;
+    z-index: -1;
+  }
+  .info-tooltip-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .info-tooltip-desc { font-size: 13px; font-weight: 500; color: var(--text-secondary); line-height: 1.4; }
 
   /* Breath coach: the instruction text + one-dot-per-second progress,
      shown only on facets that actually pace a breath (box breath,
@@ -210,9 +246,27 @@
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-radius: 16px;
-    padding: 10px 18px;
+    padding: 7px 16px;
     border: 1px solid var(--border-light);
     box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    position: relative;
+  }
+  /* Speech-bubble tail pointing down at Thimble: a rotated square tucked
+     half behind the card's bottom edge, sharing its fill/border so the
+     border traces seamlessly from card into tail. */
+  .breath-coach::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    width: 13px;
+    height: 13px;
+    background: rgba(255, 255, 255, 0.88);
+    border-right: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    transform: translateX(-50%) rotate(45deg);
+    border-radius: 0 0 3px 0;
+    z-index: -1;
   }
   .breath-instruction { font-size: 15px; font-weight: 700; color: var(--text-primary); }
   .breath-instruction .suffix { font-weight: 500; color: var(--text-secondary); }
@@ -223,9 +277,9 @@
   /* ---- Thimble: the real avatar shape (ported from session.html's
      thimble-avatar / thimble-core / thimble-ring / thimble-body chain),
      not a drawn sewing-thimble dome. ---- */
-  .thimble-avatar { position: relative; width: 220px; height: 220px; pointer-events: none; }
+  .thimble-avatar { position: relative; width: 268px; height: 268px; pointer-events: none; }
   .thimble-shadow {
-    position: absolute; left: 50%; top: calc(100% + 14px); width: 66%; height: 14px;
+    position: absolute; left: 50%; top: calc(100% + 10px); width: 66%; height: 12px;
     transform: translateX(-50%);
     background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,.34) 0%, rgba(23,55,46,.2) 50%, rgba(23,55,46,.07) 78%, rgba(23,55,46,0) 100%);
     border-radius: 50%;
@@ -290,6 +344,18 @@
     width: 42%; height: 42%; border-radius: 50%; background: #A9B8A8;
   }
   .thimble-eye.visible { opacity: 1; transform: scale(1); }
+
+  /* The two alternating nodes for Bilateral Thumb Tap -- each one lights
+     up in turn on the side you should be tapping, Thimble himself rocks
+     gently toward whichever one is lit. */
+  .tap-dot {
+    position: absolute; left: 50%; top: 50%;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffb3c2, #ff6f8f 60%, #e2506f 100%);
+    box-shadow: 0 2px 6px rgba(226, 80, 111, .35);
+    opacity: 0;
+    pointer-events: none;
+  }
 
   /* The sweeping node Thimble's eye tracks during Bilateral Saccades. */
   .saccade-ball {
@@ -381,10 +447,30 @@
         </div>
       </div>
       <div class="saccade-ball" id="saccadeBall"></div>
+      <div class="tap-dot" id="tapDotLeft"></div>
+      <div class="tap-dot" id="tapDotRight"></div>
     </div>
     <div class="drum" id="drum"></div>
     <div class="mask-cover left"></div>
     <div class="mask-cover right"></div>
+  </div>
+
+  <!-- Fixed footer: title/category for the active facet, full device width -->
+  <div class="app-footer">
+    <div class="footer-row">
+      <div class="facet-eyebrow" id="footerEyebrow"></div>
+      <div class="title-row">
+        <div class="facet-title" id="footerTitle"></div>
+        <div class="facet-info" id="footerInfo" title="Learn more about this exercise">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        </div>
+      </div>
+    </div>
+    <div class="facet-pips" id="footerPips"></div>
+    <div class="info-tooltip" id="infoTooltip">
+      <div class="info-tooltip-title" id="infoTooltipTitle"></div>
+      <div class="info-tooltip-desc" id="infoTooltipDesc"></div>
+    </div>
   </div>
 
   <div class="edge-nav prev" id="prevBtn" title="Previous facet">
@@ -457,10 +543,18 @@ const FACETS = [
   {
     category: "Motor Rhythm Anchor", name: "Bilateral Thumb Tap", state: "Alternating L / R",
     desc: "Alternating dual-pad rhythm grounds cognitive loops through somatic motor circuits.",
-    cue: "Tap your thumbs, alternating left and right",
+    cue: "Tap in time with the lit side, alternating left and right",
     eye: false,
-    // Thimble rocks side to side in time with the tap -- no separate L/R pads.
-    breathe(t) { return { inhale: 0.3 + Math.sin(t * 0.6) * 0.08, tap: Math.sin(t * 1.8 * Math.PI) }; }
+    // Two dots either side of Thimble light up in turn, one full L/R cycle
+    // every 1.12s; Thimble himself rocks a little toward whichever is lit.
+    breathe(t) {
+      const halfPeriod = 0.56, period = halfPeriod * 2;
+      const cycle = t % period;
+      const side = cycle < halfPeriod ? "left" : "right";
+      const local = side === "left" ? cycle : cycle - halfPeriod;
+      const env = Math.sin(Math.PI * (local / halfPeriod)); // 0 -> 1 -> 0 within that side's window
+      return { inhale: 0.3 + Math.sin(t * 0.6) * 0.08, tapSide: side, tapEnv: env };
+    }
   },
   {
     category: "Trigeminal Unclench", name: "Masseter Release", state: "Jaw Drop",
@@ -511,6 +605,14 @@ const thimbleNostrils = document.getElementById("thimbleNostrils");
 const nostrilLeft = document.getElementById("nostrilLeft");
 const nostrilRight = document.getElementById("nostrilRight");
 const saccadeBall = document.getElementById("saccadeBall");
+const footerEyebrow = document.getElementById("footerEyebrow");
+const footerTitle = document.getElementById("footerTitle");
+const footerInfo = document.getElementById("footerInfo");
+const infoTooltip = document.getElementById("infoTooltip");
+const infoTooltipTitle = document.getElementById("infoTooltipTitle");
+const infoTooltipDesc = document.getElementById("infoTooltipDesc");
+const tapDotLeft = document.getElementById("tapDotLeft");
+const tapDotRight = document.getElementById("tapDotRight");
 
 const count = FACETS.length;
 const step = 360 / count;
@@ -526,7 +628,6 @@ FACETS.forEach((f, i) => {
   el.className = "facet";
   el.style.transform = `rotateY(${-i * step}deg) translateZ(${-radius}px)`;
   const paced = f.breathe(0).instruction != null;
-  const pipsHtml = FACETS.map((_, j) => `<div class="pip ${j === 0 ? "active" : ""}" data-i="${j}"></div>`).join("");
   // Every facet gets an instruction, paced breaths get live phase text +
   // dot progress; the rest (eye tracking, taps, jaw release, etc.) get a
   // static cue instead of sitting blank where the coach would be.
@@ -534,36 +635,29 @@ FACETS.forEach((f, i) => {
     <div class="breath-coach" ${paced || f.cue ? "" : "hidden"}>
       <div class="breath-instruction"><span class="verb">${paced ? "" : (f.cue || "")}</span> <span class="suffix"></span></div>
       <div class="breath-dots" ${paced ? "" : "hidden"}></div>
-    </div>
-    <div class="facet-footer">
-      <div class="facet-bottom">
-        <div class="facet-text">
-          <div class="facet-eyebrow">${i + 1}/${count} · ${f.category}</div>
-          <div class="facet-title">${f.name}</div>
-        </div>
-        <div class="facet-info" title="Learn more about this exercise">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-        </div>
-      </div>
-      <div class="facet-pips">${pipsHtml}</div>
     </div>`;
   drum.appendChild(el);
+});
 
-  el.querySelector(".facet-info").style.pointerEvents = "auto";
-  el.querySelector(".facet-info").style.cursor = "pointer";
-
-  el.querySelectorAll(".facet-pips .pip").forEach(p => {
-    p.style.pointerEvents = "auto";
-    p.style.cursor = "pointer";
-    p.onclick = () => settleTo(Number(p.dataset.i) * step);
-  });
+// Progress pips now live once in the fixed footer (not rotating with the
+// glass), under the title, so they read against the footer's dark bg.
+const footerPips = document.getElementById("footerPips");
+footerPips.innerHTML = FACETS.map((_, j) => `<div class="pip ${j === 0 ? "active" : ""}" data-i="${j}"></div>`).join("");
+footerPips.querySelectorAll(".pip").forEach(p => {
+  p.style.cursor = "pointer";
+  p.onclick = () => settleTo(Number(p.dataset.i) * step);
 });
 
 const PERSPECTIVE = 2400; // must match .stage-container's CSS perspective
+let edgeOffset = 150; // how far the tap dots / saccade ball travel from center, kept inside the visible glass by sizeDrum()
 
 function sizeDrum() {
   const rect = stage.getBoundingClientRect();
   radius = Math.round((rect.width / 2) / Math.tan(Math.PI / count));
+  // Visible glass is the stage width minus the two 11% mask-cover columns
+  // (the same columns the nav arrows sit in) -- cap how far the tap dots
+  // and saccade ball travel so they never slide out under those columns.
+  edgeOffset = Math.min(150, rect.width * 0.39 - 18);
   // Each facet sits translateZ(-radius) behind the screen plane in its own
   // local frame, so the ring reads at viewport scale; a deep perspective
   // keeps that shrink small without over-enlarging the neighbors poking
@@ -583,12 +677,25 @@ function applyRotation(angle, withTransition) {
 
 function setActive(i) {
   activeFacet = i;
-  drum.querySelectorAll(".facet-pips").forEach(row => {
-    [...row.children].forEach((d, idx) => d.classList.toggle("active", idx === i));
-  });
+  [...footerPips.children].forEach((d, idx) => d.classList.toggle("active", idx === i));
   thimbleEye.classList.toggle("visible", !!FACETS[i].eye);
+  footerEyebrow.textContent = `${i + 1}/${count} · ${FACETS[i].category}`;
+  footerTitle.textContent = FACETS[i].name;
+  infoTooltipTitle.textContent = FACETS[i].name;
+  infoTooltipDesc.textContent = FACETS[i].desc;
+  closeTooltip();
   startTime = performance.now();
 }
+
+// Tap the info glyph for a plain-language explainer of what the active
+// exercise is and why it works; tap again, pick a new facet, or tap
+// anywhere else on the page to close it.
+function closeTooltip() { infoTooltip.classList.remove("visible"); }
+footerInfo.addEventListener("click", (e) => {
+  e.stopPropagation();
+  infoTooltip.classList.toggle("visible");
+});
+document.addEventListener("click", closeTooltip);
 
 function settleTo(angle) {
   const idx = (((Math.round(angle / step) % count) + count) % count);
@@ -627,7 +734,7 @@ function render(now) {
   // tap rocks him side to side; widen stretches him horizontally -- both
   // layer on top of the same base transform.
   const scale = 0.86 + b.inhale * 0.22;
-  const tapX = (b.tap ?? 0) * 7;
+  const tapX = b.tapSide ? (b.tapSide === "left" ? -1 : 1) * (b.tapEnv ?? 0) * 6 : 0;
   const scaleX = scale * (1 + (b.widen ?? 0) * 0.05 + b.inhale * 0.025);
   thimbleCore.style.transform = `translate(calc(2% + ${tapX}px),1%) scale(${scaleX}, ${scale})`;
 
@@ -678,7 +785,22 @@ function render(now) {
   // so the eye's small in-socket shift reads as genuine tracking.
   saccadeBall.classList.toggle("visible", b.eyeX != null);
   if (b.eyeX != null) {
-    saccadeBall.style.transform = `translate(-50%, -50%) translate(${b.eyeX * 110}px, 90px)`;
+    saccadeBall.style.transform = `translate(-50%, -50%) translate(${b.eyeX * edgeOffset * 0.733}px, 90px)`;
+  }
+
+  // Bilateral tap dots: whichever side is "on" scales up and brightens,
+  // the other stays dim -- the alternation itself is the metronome, no
+  // separate countdown or label needed.
+  if (b.tapSide) {
+    const env = b.tapEnv ?? 0;
+    const leftOn = b.tapSide === "left";
+    tapDotLeft.style.transform = `translate(calc(-50% - ${edgeOffset}px), -50%) scale(${leftOn ? 0.8 + env * 0.6 : 0.75})`;
+    tapDotLeft.style.opacity = leftOn ? 0.5 + env * 0.5 : 0.3;
+    tapDotRight.style.transform = `translate(calc(-50% + ${edgeOffset}px), -50%) scale(${!leftOn ? 0.8 + env * 0.6 : 0.75})`;
+    tapDotRight.style.opacity = !leftOn ? 0.5 + env * 0.5 : 0.3;
+  } else {
+    tapDotLeft.style.opacity = 0;
+    tapDotRight.style.opacity = 0;
   }
 
   if (b.instruction != null) {
