@@ -137,7 +137,7 @@
   /* While the picker's up, Thimble shrinks to leave clear room for the
      question above him and the two answers below -- same stage, no
      separate layout, just less of it. */
-  #stage.picker-open .thimble-layer { transform: scale(0.66) translateY(28%); }
+  #stage.picker-open .thimble-layer { transform: scale(0.92) translateY(28%); }
   /* The active facet's own breath-coach/round-pill sit right where the
      question bubble sits -- hide that facet's content while the picker's
      up so the two don't visually stack. */
@@ -344,6 +344,22 @@
     box-shadow: 0 10px 28px rgba(0,0,0,0.07);
     display: flex; flex-direction: column; gap: 14px;
     pointer-events: auto;
+    position: relative;
+  }
+  /* Same speech-bubble tail trick as .breath-coach: a rotated square
+     tucked half behind the card's bottom edge, sharing its fill/border so
+     it traces seamlessly out of the card, pointing down at Thimble. */
+  .picker-card::after {
+    content: "";
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    width: 15px; height: 15px;
+    background: #fff;
+    border-right: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    transform: translateX(-50%) rotate(45deg);
+    border-radius: 0 0 3px 0;
   }
   .picker-question {
     font-size: 15px; font-weight: 700; color: var(--text-primary);
@@ -546,7 +562,7 @@
          separate screen. -->
     <div class="state-picker" id="statePicker">
       <div class="picker-card">
-        <div class="picker-question">Do you want help calming your...</div>
+        <div class="picker-question">Do you want help calming your</div>
         <div class="picker-options">
           <div class="picker-option" data-facet="0">Body</div>
           <div class="picker-option" data-facet="3">Mind</div>
