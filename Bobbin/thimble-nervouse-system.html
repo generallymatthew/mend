@@ -132,7 +132,16 @@
     justify-content: center;
     z-index: 1;
     pointer-events: none;
+    transition: transform .35s cubic-bezier(.3,1.2,.4,1);
   }
+  /* While the picker's up, Thimble shrinks to leave clear room for the
+     question above him and the two answers below -- same stage, no
+     separate layout, just less of it. */
+  #stage.picker-open .thimble-layer { transform: scale(0.66); }
+  /* The active facet's own breath-coach/round-pill sit right where the
+     question bubble sits -- hide that facet's content while the picker's
+     up so the two don't visually stack. */
+  #stage.picker-open .facet { visibility: hidden; }
 
   .drum {
     position: absolute;
@@ -273,6 +282,77 @@
   .breath-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
   .breath-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-light); background-color: rgba(0,0,0,0.12); transition: background-color 0.15s ease, transform 0.15s ease; }
   .breath-dots .dot.filled { background-color: var(--accent-amber); transform: scale(1.1); }
+
+  /* Round pill: "2 left" above the breath-coach bubble, only on facets
+     that declare maxRounds. Sits as its own floating chip rather than
+     inside the bubble, so it doesn't push the bubble's own padding/width
+     around as the digit count changes between "4" and "1". */
+  .round-pill {
+    align-self: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+    background: var(--button-teal);
+    padding: 5px 12px; border-radius: 20px;
+    letter-spacing: 0.2px;
+    margin-bottom: 8px;
+  }
+
+  /* Stop state: replaces the breath-coach bubble in place once maxRounds
+     is reached -- same slot, one pill button, no card. The same button
+     plays the first run and replays every run after, so its state is just
+     its label/icon swapping between "Play" and "Replay" -- never two
+     separate controls. */
+  .round-replay {
+    align-self: center;
+    display: flex; align-items: center; gap: 7px;
+    background: var(--button-teal); color: #fff;
+    font-size: 13px; font-weight: 700;
+    padding: 10px 20px; border-radius: 24px;
+    border: none; cursor: pointer; pointer-events: auto;
+    box-shadow: 0 8px 20px rgba(24,57,53,0.22);
+  }
+  .round-replay[hidden] { display: none; }
+  .round-replay:active { transform: scale(0.96); }
+  .round-replay svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
+
+  /* State picker: Thimble asks this himself -- no modal over him. Same
+     stage area as the breath-coach bubble, but transparent, so Thimble
+     stays visible behind the question (top) and the two answers (bottom);
+     only those two pieces are actually painted. */
+  .state-picker {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    background: none;
+    z-index: 50;
+    display: flex; flex-direction: column; justify-content: flex-start;
+    align-items: center; gap: 12px;
+    padding: 10px 18px 14px;
+    pointer-events: none;
+    transition: opacity .3s ease, visibility .3s ease;
+  }
+  .state-picker.hidden { opacity: 0; visibility: hidden; }
+  /* Same frosted-card-with-tail language as .breath-coach, so this reads
+     as Thimble speaking, not a different kind of UI. */
+  .picker-bubble {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 16px;
+    padding: 12px 20px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    font-size: 15px; font-weight: 700; color: var(--text-primary);
+    text-align: center; line-height: 1.4; max-width: 260px;
+  }
+  .picker-bubble strong { color: var(--button-teal); }
+  .picker-options { display: flex; gap: 10px; width: 100%; pointer-events: auto; }
+  .picker-option {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 16px; background: #fff; border: 1px solid var(--border-light);
+    padding: 16px 10px; font-size: 15px; font-weight: 700; color: var(--text-primary);
+    cursor: pointer; transition: transform .12s ease;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+  .picker-option:active { transform: scale(0.96); background: var(--modal-bg); }
 
   /* ---- Thimble: the real avatar shape (ported from session.html's
      thimble-avatar / thimble-core / thimble-ring / thimble-body chain),
@@ -427,7 +507,7 @@
   </div>
 
   <!-- Spindle Stage -->
-  <div class="stage-container" id="stage">
+  <div class="stage-container picker-open" id="stage">
     <div class="thimble-layer">
       <div class="thimble-avatar" id="thimbleAvatar">
         <div class="thimble-shadow"></div>
@@ -453,6 +533,19 @@
     <div class="drum" id="drum"></div>
     <div class="mask-cover left"></div>
     <div class="mask-cover right"></div>
+
+    <!-- State picker: Thimble asks this himself. Fills the stage only (not
+         header/footer) so he stays visible behind the question and answers;
+         tapping one settles the drum straight to that facet and fades the
+         picker out -- this is the self-reported routing step, not a
+         separate screen. -->
+    <div class="state-picker" id="statePicker">
+      <div class="picker-bubble">Do you want help calming your...</div>
+      <div class="picker-options">
+        <div class="picker-option" data-facet="0">Body</div>
+        <div class="picker-option" data-facet="3">Mind</div>
+      </div>
+    </div>
   </div>
 
   <!-- Fixed footer: title/category for the active facet, full device width -->
@@ -494,6 +587,7 @@ const FACETS = [
     category: "Somatic Brake", name: "Box Breath Metronome", state: "4-4-4-4 Pacing",
     desc: "4s Inhale · 4s Hold · 4s Exhale · 4s Hold. Lowers cardiac excitation baseline.",
     eye: false,
+    maxRounds: 4, roundSeconds: 16,
     breathe(t) {
       const cycle = t % 16, seg = Math.floor(cycle / 4), local = cycle % 4;
       const segs = [
@@ -514,6 +608,7 @@ const FACETS = [
     category: "Acute Adrenaline Dump", name: "Physiological Sigh", state: "Double-In, Long-Out",
     desc: "Two rapid nasal inhales + one extended oral sigh to re-inflate collapsed alveoli.",
     eye: false,
+    maxRounds: 3, roundSeconds: 6.6,
     breathe(t) {
       // A continuous wave, not two independent ramps: the nose opens and
       // closes as the chest fills, then the mouth opens and closes as it
@@ -585,6 +680,7 @@ const FACETS = [
     category: "Vagal Brake", name: "0.1 Hz RSA Cycle", state: "4-In / 6-Out",
     desc: "Inhale 4s, exhale 6s (~6bpm). Directly drives respiratory sinus arrhythmia amplitude.",
     eye: false,
+    maxRounds: 9, roundSeconds: 10,
     breathe(t) {
       const cycle = t % 10, isInhale = cycle < 4;
       const inhale = isInhale ? cycle / 4 : 1 - (cycle - 4) / 6;
@@ -632,11 +728,26 @@ FACETS.forEach((f, i) => {
   // dot progress; the rest (eye tracking, taps, jaw release, etc.) get a
   // static cue instead of sitting blank where the coach would be.
   el.innerHTML = `
+    ${f.maxRounds ? '<div class="round-pill" hidden></div>' : ""}
     <div class="breath-coach" ${paced || f.cue ? "" : "hidden"}>
       <div class="breath-instruction"><span class="verb">${paced ? "" : (f.cue || "")}</span> <span class="suffix"></span></div>
       <div class="breath-dots" ${paced ? "" : "hidden"}></div>
-    </div>`;
+    </div>
+    ${f.maxRounds ? `<button class="round-replay" hidden>
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <span>Replay</span>
+    </button>` : ""}`;
   drum.appendChild(el);
+});
+
+// Round limit: only facets with maxRounds track this -- one button, always
+// labeled "Replay" here since it only ever appears after a full run (tap
+// resets startTime, which the render loop reads to restart the count).
+drum.addEventListener("click", (e) => {
+  const btn = e.target.closest(".round-replay");
+  if (!btn) return;
+  e.stopPropagation();
+  startTime = performance.now();
 });
 
 // Progress pips now live once in the fixed footer (not rotating with the
@@ -708,6 +819,23 @@ function settleTo(angle) {
 applyRotation(currentAngle, false);
 setActive(0);
 
+// State picker: Thimble asks on load, shrunk to leave room for his own
+// question. Tapping "Body" or "Mind" settles the drum straight to that
+// facet (no transition animation -- it should feel like landing there,
+// not scrolling past everything between), fades the question out, and
+// grows Thimble back to full size.
+const statePicker = document.getElementById("statePicker");
+statePicker.querySelectorAll(".picker-option").forEach(opt => {
+  opt.addEventListener("click", () => {
+    const idx = Number(opt.dataset.facet);
+    currentAngle = idx * step;
+    applyRotation(currentAngle, false);
+    setActive(idx);
+    statePicker.classList.add("hidden");
+    stage.classList.remove("picker-open");
+  });
+});
+
 function onDown(x) { dragStartX = x; dragStartAngle = currentAngle; drum.classList.add("dragging"); }
 function onMove(x) { if (dragStartX === null) return; applyRotation(dragStartAngle - (x - dragStartX) * 0.35, false); }
 function onUp(x) { if (dragStartX === null) return; const a = dragStartAngle - (x - dragStartX) * 0.35; dragStartX = null; drum.classList.remove("dragging"); settleTo(a); }
@@ -725,8 +853,30 @@ document.getElementById("nextBtn").addEventListener("click", () => settleTo(curr
 // --- Thimble's per-frame motion: he performs every exercise himself,
 // not a separate canvas overlay beside him. ---
 function render(now) {
-  const t = (now - startTime) * 0.001;
+  let t = (now - startTime) * 0.001;
   const f = FACETS[activeFacet];
+  const facetEl = drum.children[activeFacet];
+  const pillEl = facetEl.querySelector(".round-pill");
+  const replayEl = facetEl.querySelector(".round-replay");
+
+  if (f.maxRounds) {
+    const stopAt = f.maxRounds * f.roundSeconds;
+    const stopped = t >= stopAt;
+    if (stopped) {
+      t = stopAt - 0.001; // freeze Thimble's pose at the last breath instead of snapping to t=0
+      facetEl.querySelector(".breath-coach").hidden = true;
+      pillEl.hidden = true;
+      replayEl.hidden = false;
+    } else {
+      const round = Math.floor(t / f.roundSeconds) + 1;
+      const left = f.maxRounds - round + 1;
+      facetEl.querySelector(".breath-coach").hidden = false;
+      pillEl.hidden = false;
+      pillEl.textContent = `${left} left`;
+      replayEl.hidden = true;
+    }
+  }
+
   const b = f.breathe(t);
 
   // Body scale + mouth openness both ride the same inhale value, so
