@@ -137,11 +137,15 @@
   /* While the picker's up, Thimble shrinks to leave clear room for the
      question above him and the two answers below -- same stage, no
      separate layout, just less of it. */
-  #stage.picker-open .thimble-layer { transform: scale(0.66); }
+  #stage.picker-open .thimble-layer { transform: scale(0.66) translateY(28%); }
   /* The active facet's own breath-coach/round-pill sit right where the
      question bubble sits -- hide that facet's content while the picker's
      up so the two don't visually stack. */
   #stage.picker-open .facet { visibility: hidden; }
+  /* The footer's exercise name/pips are meaningless before a choice is
+     made -- collapsing it hands that space to the stage (flex:1), which
+     is what actually gives Thimble more room to sit lower. */
+  #stage.picker-open ~ .app-footer { display: none; }
 
   .drum {
     position: absolute;
@@ -314,45 +318,46 @@
   .round-replay:active { transform: scale(0.96); }
   .round-replay svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
 
-  /* State picker: Thimble asks this himself -- no modal over him. Same
-     stage area as the breath-coach bubble, but transparent, so Thimble
-     stays visible behind the question (top) and the two answers (bottom);
-     only those two pieces are actually painted. */
+  /* State picker: Thimble asks this himself -- no modal over him. The
+     stage background stays transparent so Thimble (pushed down, see
+     above) is visible below the one dialog card; only the card itself
+     is actually painted. */
   .state-picker {
     position: absolute; left: 0; right: 0; top: 0; bottom: 0;
     background: none;
     z-index: 50;
     display: flex; flex-direction: column; justify-content: flex-start;
-    align-items: center; gap: 12px;
+    align-items: center;
     padding: 10px 18px 14px;
     pointer-events: none;
     transition: opacity .3s ease, visibility .3s ease;
   }
   .state-picker.hidden { opacity: 0; visibility: hidden; }
-  /* Same frosted-card-with-tail language as .breath-coach, so this reads
-     as Thimble speaking, not a different kind of UI. */
-  .picker-bubble {
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-radius: 16px;
-    padding: 12px 20px;
+  /* One dialog: question and both answers live in the same white card,
+     not a bubble plus two separate floating buttons. */
+  .picker-card {
+    width: 100%; max-width: 300px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px 16px 16px;
     border: 1px solid var(--border-light);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
-    font-size: 15px; font-weight: 700; color: var(--text-primary);
-    text-align: center; line-height: 1.4; max-width: 260px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.07);
+    display: flex; flex-direction: column; gap: 14px;
+    pointer-events: auto;
   }
-  .picker-bubble strong { color: var(--button-teal); }
-  .picker-options { display: flex; gap: 10px; width: 100%; pointer-events: auto; }
+  .picker-question {
+    font-size: 15px; font-weight: 700; color: var(--text-primary);
+    text-align: center; line-height: 1.4;
+  }
+  .picker-options { display: flex; gap: 10px; }
   .picker-option {
     flex: 1;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 16px; background: #fff; border: 1px solid var(--border-light);
-    padding: 16px 10px; font-size: 15px; font-weight: 700; color: var(--text-primary);
-    cursor: pointer; transition: transform .12s ease;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    border-radius: 14px; background: var(--modal-bg); border: 1px solid var(--border-light);
+    padding: 14px 10px; font-size: 15px; font-weight: 700; color: var(--text-primary);
+    cursor: pointer; transition: transform .12s ease, background .12s ease;
   }
-  .picker-option:active { transform: scale(0.96); background: var(--modal-bg); }
+  .picker-option:active { transform: scale(0.96); background: var(--border-light); }
 
   /* ---- Thimble: the real avatar shape (ported from session.html's
      thimble-avatar / thimble-core / thimble-ring / thimble-body chain),
@@ -540,10 +545,12 @@
          picker out -- this is the self-reported routing step, not a
          separate screen. -->
     <div class="state-picker" id="statePicker">
-      <div class="picker-bubble">Do you want help calming your...</div>
-      <div class="picker-options">
-        <div class="picker-option" data-facet="0">Body</div>
-        <div class="picker-option" data-facet="3">Mind</div>
+      <div class="picker-card">
+        <div class="picker-question">Do you want help calming your...</div>
+        <div class="picker-options">
+          <div class="picker-option" data-facet="0">Body</div>
+          <div class="picker-option" data-facet="3">Mind</div>
+        </div>
       </div>
     </div>
   </div>
