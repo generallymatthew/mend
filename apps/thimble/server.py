@@ -23,6 +23,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 import uuid
 from email.message import EmailMessage
 from pathlib import Path
@@ -179,7 +180,7 @@ async def submit_access(request: Request):
 # LLM API (or Tavus video minutes) is an open invitation to run up the bill.
 # Simple in-memory fixed-window limiter per client IP -- no new dependency,
 # consistent with every other app's in-memory-only state.
-RATE_LIMIT_MAX = int(os.environ.get("RATE_LIMIT_MAX", "20"))
+RATE_LIMIT_MAX = int(os.environ.get("RATE_LIMIT_MAX", "40"))
 RATE_LIMIT_WINDOW = int(os.environ.get("RATE_LIMIT_WINDOW", "60"))
 _rate_hits: dict[str, list[float]] = {}
 # /api/voice/partial calls local Whisper only -- never a paid API, exactly
@@ -587,6 +588,8 @@ def facilitator_reply(conversation: list[dict], synthesize: bool = False) -> dic
             messages=with_cache_breakpoint(conversation),
         )
     except Exception as e:
+        print(f"[claude_error] facilitator_reply failed, turns={len(conversation)}: {e!r}", flush=True)
+        traceback.print_exc()
         conversation.pop()
         return {"reply": f"(server error calling Claude: {e})", "signal": None}
     log_usage("thimble", "anthropic", MODEL, "facilitator_reply",
@@ -1141,6 +1144,8 @@ def stream_message_reply(conversation: list[dict], session_id: str, turn: int):
             log_usage("thimble", "anthropic", MODEL, "stream_message_reply",
                       input_tokens=u.input_tokens, output_tokens=u.output_tokens)
     except Exception as e:
+        print(f"[claude_error] stream_message_reply failed, turns={len(conversation)}: {e!r}", flush=True)
+        traceback.print_exc()
         conversation.pop()
         yield _sse({"error": f"server error calling Claude: {e}"})
         return

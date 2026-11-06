@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Thimble Prototype: Parametric Shape & Expression Studio</title>
+<style>
+  :root {
+    --bg-page: #0f1412;
+    --card-bg: #f6f3ee;
+    --text-primary: #192320;
+    --text-secondary: #5a635f;
+    --accent-teal: #183935;
+    --status-dot: #f06a85;
+    --panel-border: rgba(0,0,0,0.08);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg-page);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Split Layout */
+  .studio-container {
+    width: 100%;
+    max-width: 1100px;
+    height: 94vh;
+    display: flex;
+    gap: 24px;
+    padding: 16px;
+  }
+
+  /* Left Modal Frame (Phone Presentation) */
+  .thimble-modal {
+    flex: 1.1;
+    max-width: 440px;
+    height: 100%;
+    background-color: var(--card-bg);
+    border-radius: 36px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    border: 6px solid #202422;
+  }
+
+  /* Mobile Status Bar */
+  .sys-bar {
+    height: 38px;
+    padding: 10px 22px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Header */
+  .thimble-header {
+    height: 48px;
+    padding: 4px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .status-cluster {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14.5px;
+    font-weight: 500;
+  }
+  .status-dot {
+    width: 8.5px;
+    height: 8.5px;
+    border-radius: 50%;
+    background-color: var(--status-dot);
+    animation: pulseGlow 2s infinite ease-in-out;
+  }
+  .action-hub {
+    position: absolute;
+    bottom: 22px;
+    right: 22px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #e8e3d9;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .hub-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--accent-teal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hub-target {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hub-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ffffff;
+  }
+
+  .canvas-stage {
+    flex: 1;
+    position: relative;
+    touch-action: none;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+  }
+
+  /* Right Control Panel */
+  .control-panel {
+    flex: 1.2;
+    background: #171d1a;
+    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    color: #e2e8f0;
+    overflow-y: auto;
+  }
+  .panel-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+    color: #f8fafc;
+  }
+  .panel-desc {
+    font-size: 12.5px;
+    color: #8b9992;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #5eead4;
+    margin: 14px 0 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: 4px;
+  }
+
+  .pill-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .pill-btn {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .pill-btn.active, .pill-btn:hover {
+    background: #14b8a6;
+    color: #0d1217;
+    border-color: #14b8a6;
+  }
+
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+  }
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: rgba(255,255,255,0.12);
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #14b8a6;
+    cursor: pointer;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.25); opacity: 0.5; }
+  }
+
+  @media (max-width: 860px) {
+    .studio-container { flex-direction: column; height: 100vh; overflow-y: auto; }
+    .thimble-modal { max-width: 100%; height: 520px; }
+    .control-panel { height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="studio-container">
+  <!-- Thimble Mobile Modal -->
+  <div class="thimble-modal">
+    <div class="sys-bar">
+      <span>11:12 PM</span>
+      <span>● 📶 54%</span>
+    </div>
+
+    <div class="thimble-header">
+      <div class="status-cluster">
+        <div class="status-dot"></div>
+        <div><strong>Thimble</strong>: <span id="headerStateLabel">Waiting</span></div>
+      </div>
+      <span style="font-size: 18px; color: var(--text-secondary); cursor: pointer;">✕</span>
+    </div>
+
+    <div class="canvas-stage" id="stage">
+      <canvas id="thimbleCanvas"></canvas>
+    </div>
+
+    <div class="action-hub" id="cycleStateBtn" title="Cycle System State">
+      <div class="hub-inner">
+        <div class="hub-target">
+          <div class="hub-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Parametric Studio Panel -->
+  <div class="control-panel">
+    <div class="panel-title">Thimble Kinematics Studio</div>
+    <div class="panel-desc">Drag sliders or click directly on Thimble to sculpt contour vertices and mouth aperture geometry.</div>
+
+    <div class="section-label">Target Geometry Silhouette</div>
+    <div class="pill-row">
+      <button class="pill-btn active" onclick="setShapeTarget('dome')">Thimble Dome</button>
+      <button class="pill-btn" onclick="setShapeTarget('ball')">Ball (Sphere)</button>
+      <button class="pill-btn" onclick="setShapeTarget('hex')">Hexagon</button>
+    </div>
+
+    <div class="section-label">System State & Palette</div>
+    <div class="pill-row">
+      <button class="pill-btn active" id="btnWait" onclick="setState('waiting')">Waiting</button>
+      <button class="pill-btn" id="btnThink" onclick="setState('thinking')">Thinking</button>
+      <button class="pill-btn" id="btnTalk" onclick="setState('talking')">Talking</button>
+    </div>
+
+    <div class="section-label">Body Geometry Controls</div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Postural Lean / Tilt</span><span id="valLean">0.00</span></div>
+      <input type="range" id="slLean" min="-0.35" max="0.35" step="0.01" value="0.0" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Audio Voice Ripple Amplitude</span><span id="valRipples">0.00</span></div>
+      <input type="range" id="slRipples" min="0" max="1" step="0.02" value="0.0" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Ripple Count (Lobes)</span><span id="valRippleCount">6</span></div>
+      <input type="range" id="slRippleCount" min="2" max="12" step="1" value="6" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Ripple Speed</span><span id="valRippleSpeed">3.00</span></div>
+      <input type="range" id="slRippleSpeed" min="0" max="8" step="0.1" value="3.0" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Breathing Frequency (RSA 0.1Hz)</span><span id="valBreath">1.00x</span></div>
+      <input type="range" id="slBreath" min="0" max="2" step="0.1" value="1.0" />
+    </div>
+
+    <div class="section-label">Aperture & Expression Controls</div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Curvature (Smile / Pout)</span><span id="valCurv">0.00</span></div>
+      <input type="range" id="slCurv" min="-1" max="1" step="0.05" value="0.0" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Pursing (Wide ↔ 'o' Aperture)</span><span id="valPurse">0.00</span></div>
+      <input type="range" id="slPurse" min="0" max="1" step="0.05" value="0.0" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Asymmetric Corner Tilt / Head-Cock</span><span id="valTilt">0.00</span></div>
+      <input type="range" id="slTilt" min="-1" max="1" step="0.05" value="0.0" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Aperture Openness & Depth</span><span id="valOpen">0.25</span></div>
+      <input type="range" id="slOpen" min="0.05" max="1" step="0.05" value="0.25" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span>Eye Emergence Socket Dilation</span><span id="valEye">0.00</span></div>
+      <input type="range" id="slEye" min="0" max="1" step="0.02" value="0.0" />
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("thimbleCanvas");
+const ctx = canvas.getContext("2d");
+const stage = document.getElementById("stage");
+
+// State & Sliders
+let sysState = 'waiting';
+let shapeTarget = 'dome'; // 'dome', 'ball', 'hex'
+let shapeMorph = { dome: 1, ball: 0, hex: 0 };
+
+const params = {
+  lean: 0,
+  ripples: 0,
+  rippleCount: 6,
+  rippleSpeed: 3,
+  breathSpeed: 1,
+  curvature: 0,
+  purseness: 0,
+  tilt: 0,
+  openness: 0.25,
+  eyeEmergence: 0
+};
+
+// UI Elements
+const el = {
+  lean: document.getElementById('slLean'),
+  ripples: document.getElementById('slRipples'),
+  rippleCount: document.getElementById('slRippleCount'),
+  rippleSpeed: document.getElementById('slRippleSpeed'),
+  breath: document.getElementById('slBreath'),
+  curv: document.getElementById('slCurv'),
+  purse: document.getElementById('slPurse'),
+  tilt: document.getElementById('slTilt'),
+  open: document.getElementById('slOpen'),
+  eye: document.getElementById('slEye'),
+  headerLabel: document.getElementById('headerStateLabel')
+};
+
+function bindSlider(id, key, valId, format = (v) => (+v).toFixed(2)) {
+  const input = el[id];
+  const label = document.getElementById(valId);
+  input.addEventListener('input', (e) => {
+    params[key] = parseFloat(e.target.value);
+    label.innerText = format(params[key]);
+  });
+}
+
+bindSlider('lean', 'lean', 'valLean');
+bindSlider('ripples', 'ripples', 'valRipples');
+bindSlider('rippleCount', 'rippleCount', 'valRippleCount', v => `${Math.round(+v)}`);
+bindSlider('rippleSpeed', 'rippleSpeed', 'valRippleSpeed');
+bindSlider('breath', 'breathSpeed', 'valBreath', v => `${(+v).toFixed(1)}x`);
+bindSlider('curv', 'curvature', 'valCurv');
+bindSlider('purse', 'purseness', 'valPurse');
+bindSlider('tilt', 'tilt', 'valTilt');
+bindSlider('open', 'openness', 'valOpen');
+bindSlider('eye', 'eyeEmergence', 'valEye');
+
+function setShapeTarget(target) {
+  shapeTarget = target;
+  document.querySelectorAll('.control-panel .pill-row:first-of-type .pill-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.innerText.toLowerCase().includes(target));
+  });
+}
+
+function setState(s) {
+  sysState = s;
+  el.headerLabel.innerText = s.charAt(0).toUpperCase() + s.slice(1) + "...";
+  document.getElementById('btnWait').classList.toggle('active', s === 'waiting');
+  document.getElementById('btnThink').classList.toggle('active', s === 'thinking');
+  document.getElementById('btnTalk').classList.toggle('active', s === 'talking');
+}
+
+const statesList = ['waiting', 'thinking', 'talking'];
+document.getElementById('cycleStateBtn').onclick = () => {
+  const next = statesList[(statesList.indexOf(sysState) + 1) % statesList.length];
+  setState(next);
+};
+
+// Canvas Resize
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = stage.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Direct Drag Sculpting
+let isDragging = false;
+stage.addEventListener('pointerdown', (e) => {
+  isDragging = true;
+});
+window.addEventListener('pointermove', (e) => {
+  if (!isDragging) return;
+  const rect = stage.getBoundingClientRect();
+  const relX = (e.clientX - rect.left) / rect.width - 0.5;
+  const relY = (e.clientY - rect.top) / rect.height - 0.5;
+  
+  params.curvature = Math.max(-1, Math.min(1, -relY * 2.5));
+  params.tilt = Math.max(-1, Math.min(1, relX * 2.5));
+  el.curv.value = params.curvature;
+  el.tilt.value = params.tilt;
+  document.getElementById('valCurv').innerText = params.curvature.toFixed(2);
+  document.getElementById('valTilt').innerText = params.tilt.toFixed(2);
+});
+window.addEventListener('pointerup', () => isDragging = false);
+
+// "Four-Color Bloom" constants, copied verbatim from live Thimble
+// (apps/thimble/static/session.html) so the body color blend matches
+// exactly -- see the fill code in draw() below for how these are used.
+function thimbleHexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return {r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255};
+}
+const THIMBLE_BLOOM_ORDER = ['idle', 'listening', 'thinking', 'talking'];
+const THIMBLE_BLOOM_COLOR = {idle: '#A3CFE0', listening: '#b0ded1', thinking: '#E9B949', talking: '#F3829A'};
+const THIMBLE_BLOOM_RGB = Object.fromEntries(THIMBLE_BLOOM_ORDER.map(k => [k, thimbleHexToRgb(THIMBLE_BLOOM_COLOR[k])]));
+const THIMBLE_BLOOM_POS = {
+  idle:      {hx: 15, hy: 15},
+  listening: {hx: 85, hy: 15},
+  thinking:  {hx: 80, hy: 85},
+  talking:   {hx: 20, hy: 85},
+};
+const THIMBLE_BLOOM_WEIGHTS = {
+  idle:      {idle: .46, listening: .20, thinking: .14, talking: .20},
+  listening: {idle: .20, listening: .46, thinking: .20, talking: .14},
+  thinking:  {idle: .14, listening: .20, thinking: .46, talking: .20},
+  talking:   {idle: .20, listening: .14, thinking: .20, talking: .46},
+};
+const THIMBLE_BLOOM_ACTIVE_POS = {
+  idle: 'idle', listening: 'listening', thinking: 'thinking', talking: 'talking',
+};
+
+// Mathematical Polygon Generation
+const NUM_PTS = 120;
+function getBodyVertex(theta, w, h, t) {
+  // 1. Thimble Dome Model (arch top, flaring walls, flat base)
+  let cosT = Math.cos(theta);
+  let sinT = Math.sin(theta);
+  
+  // Base circle radius
+  let rBase = (w * 0.48);
+  
+  // Dome silhouette modifier -- a true per-quadrant ellipse radius matching
+  // the live app's own DOME_RADIUS exactly (apps/thimble/static/session.html:
+  // '50% 50% 50% 50% / 58% 58% 42% 42%', i.e. cap/top vertical radius 58% of
+  // box, rim/bottom vertical radius 42%, horizontal 50% both sides), instead
+  // of this prototype's original ad hoc top/bottom coefficients. r(theta) =
+  // (rx*ry)/sqrt((ry*cosT)^2+(rx*sinT)^2) is the standard ellipse polar
+  // radius formula for whichever quadrant's own (rx,ry) apply.
+  const rx = rBase; // 50% horizontal, same baseline as rBase's own 50%-of-box scale
+  const ry = sinT < 0 ? rBase * (58 / 50) : rBase * (42 / 50); // cap (top) vs rim (bottom)
+  const domeDenom = Math.sqrt((ry * cosT) ** 2 + (rx * sinT) ** 2) || 1;
+  let rDome = (rx * ry) / domeDenom;
+
+  // 2. Ball (pure sphere)
+  let rBall = rBase * 0.92;
+
+  // 3. Organic Hexagon (modular polar math)
+  let hexMod = (theta % (Math.PI / 3)) - (Math.PI / 6);
+  let rHex = (rBase * 0.85) / Math.cos(hexMod);
+
+  // Blend targets
+  let r = rDome * shapeMorph.dome + rBall * shapeMorph.ball + rHex * shapeMorph.hex;
+
+  // Ripples
+  if (params.ripples > 0.01) {
+    const wave = Math.sin(theta * params.rippleCount) * Math.sin(t * params.rippleSpeed);
+    r += wave * (params.ripples * 14);
+  }
+
+  // No extra vertical stretch here -- the cap/rim split above already
+  // encodes the real proportions from DOME_RADIUS, and the live avatar's
+  // own box is a plain square (200x200), not elongated.
+  return {
+    x: r * cosT,
+    y: r * sinT
+  };
+}
+
+// Render Loop
+let startTime = performance.now();
+function render(now) {
+  const t = (now - startTime) * 0.001;
+  const rect = stage.getBoundingClientRect();
+  const width = rect.width;
+  const height = rect.height;
+
+  ctx.clearRect(0, 0, width, height);
+
+  // Smooth Shape Morph
+  const targetDome = shapeTarget === 'dome' ? 1 : 0;
+  const targetBall = shapeTarget === 'ball' ? 1 : 0;
+  const targetHex = shapeTarget === 'hex' ? 1 : 0;
+  shapeMorph.dome += (targetDome - shapeMorph.dome) * 0.08;
+  shapeMorph.ball += (targetBall - shapeMorph.ball) * 0.08;
+  shapeMorph.hex += (targetHex - shapeMorph.hex) * 0.08;
+
+  // 0.1 Hz RSA Breathing Cadence
+  const breath = Math.sin(t * 0.628 * params.breathSpeed) * 0.035;
+  const cx = width / 2;
+  const cy = height / 2 - 12;
+  const baseW = Math.min(width * 0.62, 230) * (1 + breath);
+  const baseH = baseW * 1.18 * (1 - breath * 0.6);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(params.lean);
+
+  // 1. Oval Ground Shadow
+  ctx.save();
+  const shadowGrad = ctx.createRadialGradient(0, baseH * 0.48, 4, 0, baseH * 0.48, baseW * 0.58);
+  shadowGrad.addColorStop(0, "rgba(50, 42, 35, 0.24)");
+  shadowGrad.addColorStop(0.5, "rgba(50, 42, 35, 0.07)");
+  shadowGrad.addColorStop(1, "rgba(50, 42, 35, 0)");
+  ctx.fillStyle = shadowGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, baseH * 0.49, baseW * 0.52, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Talking Bloom Aura
+  if (sysState === 'talking') {
+    ctx.save();
+    const bloom = ctx.createRadialGradient(0, 0, baseW * 0.3, 0, 0, baseW * 0.72);
+    // rgba of live Thimble's own talking color, THIMBLE_COLORS.talking = #F3829A
+    bloom.addColorStop(0, "rgba(243, 130, 154, 0.28)");
+    bloom.addColorStop(1, "rgba(243, 130, 154, 0)");
+    ctx.fillStyle = bloom;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseW * 0.72, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 2. Continuous Parametric Body Path
+  ctx.beginPath();
+  for (let i = 0; i <= NUM_PTS; i++) {
+    const theta = (i / NUM_PTS) * Math.PI * 2;
+    const pt = getBodyVertex(theta, baseW, baseH, t);
+    if (i === 0) ctx.moveTo(pt.x, pt.y);
+    else ctx.lineTo(pt.x, pt.y);
+  }
+  ctx.closePath();
+
+  // 3. "Four-Color Bloom" fill -- a direct port of updateThimbleMotion's own
+  // fill technique (apps/thimble/static/session.html), not a flat per-state
+  // gradient. All 4 state colors (idle-blue, listening-mint, thinking-honey,
+  // talking-pink) stay visible at fixed home corners all the time; only
+  // their WEIGHT (how much each contributes) shifts with sysState, so the
+  // body is always a blend, same as the real avatar's always-slightly-
+  // multicolor look, not a single flat hue. THIMBLE_BLOOM_* below are
+  // copied verbatim from that file; sysState's 3 values (waiting/thinking/
+  // talking) map onto its idle/thinking/talking weight rows.
+  const bloomState = sysState === 'waiting' ? 'idle' : sysState;
+  const w = THIMBLE_BLOOM_WEIGHTS[bloomState] || THIMBLE_BLOOM_WEIGHTS.idle;
+  let baseR8 = 0, baseG8 = 0, baseB8 = 0;
+  THIMBLE_BLOOM_ORDER.forEach(k => {
+    const c = THIMBLE_BLOOM_RGB[k];
+    baseR8 += c.r * w[k]; baseG8 += c.g * w[k]; baseB8 += c.b * w[k];
+  });
+  ctx.fillStyle = `rgb(${Math.round(baseR8)}, ${Math.round(baseG8)}, ${Math.round(baseB8)})`;
+  ctx.fill();
+  // pct(x,y) maps a THIMBLE_BLOOM_POS percent position (of the CSS box) to
+  // this canvas's local coords -- box spans -baseW/2..+baseW/2 both axes,
+  // matching getBodyVertex's own baseW-only radius convention.
+  const toLocal = (pctX, pctY) => [(pctX / 100 - 0.5) * baseW, (pctY / 100 - 0.5) * baseW];
+  THIMBLE_BLOOM_ORDER.forEach(k => {
+    const weight = w[k], c = THIMBLE_BLOOM_RGB[k], pos = THIMBLE_BLOOM_POS[k];
+    const [bx, by] = toLocal(pos.hx, pos.hy);
+    const radiusPx = (16 + weight * 110) / 100 * baseW;
+    const alpha = Math.min(1, 0.3 + weight * 1.1);
+    const blob = ctx.createRadialGradient(bx, by, 0, bx, by, radiusPx);
+    blob.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`);
+    blob.addColorStop(1, `rgba(${c.r}, ${c.g}, ${c.b}, 0)`);
+    ctx.fillStyle = blob;
+    ctx.fill();
+  });
+  // Specular highlight anchored to the active state's own corner, same as
+  // THIMBLE_BLOOM_ACTIVE_POS.
+  const activePos = THIMBLE_BLOOM_POS[THIMBLE_BLOOM_ACTIVE_POS[bloomState] || 'idle'];
+  const [sx, sy] = toLocal(activePos.hx, activePos.hy);
+  const specRadius = 0.16 * baseW;
+  const spec = ctx.createRadialGradient(sx, sy, 0, sx, sy, specRadius);
+  spec.addColorStop(0, "rgba(255, 255, 255, 0.7)");
+  spec.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = spec;
+  ctx.fill();
+
+  // Thinking Orbital Nodes
+  if (sysState === 'thinking') {
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const angle = t * 2.2 + (i * Math.PI * 2 / 3);
+      const orX = Math.cos(angle) * (baseW * 0.24);
+      const orY = -baseH * 0.15 + Math.sin(angle) * 14;
+      // Live Thimble's own brain-dot colors (session.html's thimbleDotA/B/C).
+      ctx.fillStyle = i === 0 ? "#F3829A" : (i === 1 ? "#b0ded1" : "#A3CFE0");
+      ctx.beginPath();
+      ctx.arc(orX, orY, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // 4. Expressive Sculpted 3D Mouth Cavity & Ghibli Eye
+  const mY = baseH * 0.06;
+  const purseMod = 1 - params.purseness * 0.65;
+  const mW = Math.max(12, 38 * purseMod);
+  let mH = Math.max(3, 16 * params.openness * (1 + params.purseness * 0.5));
+  if (sysState === 'talking') {
+    mH += Math.abs(Math.sin(t * 8)) * 8;
+  }
+
+  ctx.save();
+  ctx.translate(0, mY);
+
+  // Outer Light Bevel
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  const cY = params.curvature * 14;
+  const tY = params.tilt * 10;
+  ctx.moveTo(-mW, -tY);
+  ctx.quadraticCurveTo(0, cY + mH * 0.5 + 2, mW, tY);
+  ctx.stroke();
+
+  // Hollow Cavity Path
+  ctx.beginPath();
+  ctx.moveTo(-mW, -tY);
+  ctx.bezierCurveTo(-mW * 0.5, -mH - tY * 0.5, mW * 0.5, -mH + tY * 0.5, mW, tY);
+  ctx.bezierCurveTo(mW * 0.5, mH + cY + tY * 0.5, -mW * 0.5, mH + cY - tY * 0.5, -mW, -tY);
+  ctx.closePath();
+
+  // Cavity Dark Gradient & Inner Shadow
+  const cavGrad = ctx.createLinearGradient(0, -mH, 0, mH + cY);
+  cavGrad.addColorStop(0, "rgba(20, 25, 28, 0.88)");
+  cavGrad.addColorStop(0.6, "rgba(28, 35, 38, 0.72)");
+  cavGrad.addColorStop(1, "rgba(45, 52, 55, 0.5)");
+  ctx.fillStyle = cavGrad;
+  ctx.fill();
+
+  // Inner Cast Shadow Occlusion Rim
+  ctx.strokeStyle = "rgba(10, 15, 18, 0.6)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 5. Emerging Frosted Dewdrop / Ghibli Eye
+  if (params.eyeEmergence > 0.02) {
+    const eyeScale = params.eyeEmergence;
+    ctx.save();
+    ctx.scale(eyeScale, eyeScale);
+
+    // Dewdrop frosted cornea
+    const eyeR = 15;
+    const eyeGrad = ctx.createRadialGradient(-3, -4, 2, 0, 0, eyeR);
+    eyeGrad.addColorStop(0, "#ffffff");
+    eyeGrad.addColorStop(0.6, "#cfd8d2");
+    eyeGrad.addColorStop(1, "#94a3b8");
+    ctx.fillStyle = eyeGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, eyeR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Studio Ghibli Marble Pupil
+    const pupilGrad = ctx.createRadialGradient(-2, -2, 1, 0, 0, 8.5);
+    pupilGrad.addColorStop(0, "#2c1810");
+    pupilGrad.addColorStop(0.7, "#1a0b1c");
+    pupilGrad.addColorStop(1, "#d97706");
+    ctx.fillStyle = pupilGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 8.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Warm Anime Catchlights
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(-3, -3, 3, 0, Math.PI * 2);
+    ctx.arc(3.5, 2.5, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  ctx.restore(); // Mouth translate
+  ctx.restore(); // Main Thimble translate
+
+  requestAnimationFrame(render);
+}
+
+requestAnimationFrame(render);
+</script>
+</body>
+</html>

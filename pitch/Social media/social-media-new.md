@@ -1,6 +1,19 @@
 # Mend: 10-Part Social Narrative Arc & Content Guide
 *Scripts, essays, and core insights tracing the shift from personal friction to structural alignment.*
 
+## Source Index
+Numbered sources referenced as `[S#]` under each LinkedIn essay below (distinct from the pre-existing `[cite: N]` markers, which are internal draft annotations, not linked citations).
+
+1. **[S1]** CPP Inc., *"Workplace Conflict and How Businesses Can Harness It to Thrive"* (2008 global human capital report, 5,000 full-time employees across 9 countries): https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf
+2. **[S2]** Edward E. Jones & Richard E. Nisbett, *"The Actor and the Observer: Divergent Perceptions of the Causes of Behavior"* (General Learning Press, 1971); related Fundamental Attribution Error work, Lee Ross (1977): https://explore.psychsafety.com/n/ross-1977/
+3. **[S3]** Richard E. Walton & John M. Dutton, *"The Management of Interdepartmental Conflict"* (Administrative Science Quarterly, 1969): https://doi.org/10.2307/2391364
+4. **[S4]** Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (Administrative Science Quarterly, 1995): https://doi.org/10.2307/2393638
+5. **[S5]** Arlie R. Hochschild, *The Managed Heart: Commercialization of Human Feeling* (1983): https://www.ucpress.edu/books/the-managed-heart/paper
+6. **[S6]** Alicia A. Grandey, *"Emotion Regulation in the Workplace"* (Journal of Occupational Health Psychology, 2000): https://doi.org/10.1037/1076-8998.5.1.95
+7. **[S7]** Edward L. Deci & Richard M. Ryan, *"The 'What' and 'Why' of Goal Pursuits: Human Needs and the Self-Determination of Behavior"* (Psychological Inquiry, 2000): https://doi.org/10.1207/S15327965PLI1104_01
+8. **[S8]** Danielle M. Ravid et al., *"A Meta-Analysis of the Effects of Electronic Performance Monitoring on Work Outcomes"* (Personnel Psychology, 2023): https://gwern.net/doc/sociology/technology/2022-ravid.pdf
+9. **[S9]** Michael I. Norton, Daniel Mochon, & Dan Ariely, *"The IKEA Effect: When Labor Leads to Love"* (Journal of Consumer Psychology, 2012): https://people.duke.edu/~dandan/webfiles/PapersUpside/Ikea%20Effect.pdf
+
 ---
 
 ## Post 1: The Origin · A Designer, Not a Diplomat
@@ -41,6 +54,10 @@ Over the next few weeks, I’m going to share 10 lessons and counter-intuitive i
 
 If you're a founder, design leader, or someone who's ever lost sleep over an awkward Slack dynamic, I'd love to connect[cite: 12].
 
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+
+**Source: [S1]** CPP Inc., *"Workplace Conflict and How Businesses Can Harness It to Thrive"* (2008 global human capital report, 5,000 full-time employees across 9 countries): https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf
+
 ---
 
 ## Post 2: The Validation Trap · Why Good Friends Make Bad Career Counselors
@@ -71,6 +88,8 @@ That felt great for an hour[cite: 8, 19]. But it came with a steep hidden tax:
 * **The Reactive Backfire:** Walking into a meeting armed with pure emotional vindication almost always leads to defensive behavior that makes *you* look like the problem[cite: 8, 11].
 
 When you're dealing with acute workplace friction, you don't need someone to validate your anger[cite: 3, 8]. You need a neutral, private mirror that lets you drop the filter, reality-check the situation, and map out your next move before stepping back into the room[cite: 8].
+
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
 
 ---
 
@@ -107,6 +126,10 @@ Start asking: *"What metric does their boss chew them out for if it slips?"*[cit
 
 The moment you map the opposing metrics, the malice disappears[cite: 3, 4, 10].
 
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+
+**Sources: [S2]** Edward E. Jones & Richard E. Nisbett, *"The Actor and the Observer: Divergent Perceptions of the Causes of Behavior"* (General Learning Press, 1971); related Fundamental Attribution Error work, Lee Ross (1977): https://explore.psychsafety.com/n/ross-1977/. **[S3]** Structural (not personal) roots of intergroup conflict: Richard E. Walton & John M. Dutton, *"The Management of Interdepartmental Conflict"* (Administrative Science Quarterly, 1969): https://doi.org/10.2307/2391364
+
 ---
 
 ## Post 4: The 55% Myth · How Corporations Shift the Blame
@@ -138,6 +161,10 @@ People default to blaming personality because human beings are visible, while in
 
 And organizations gladly accept that conclusion[cite: 4]. Blaming an individual's "attitude" allows a company to preserve its org chart, stack-ranking policies, and opposing quotas[cite: 4]. Treating operational friction as an individual moral flaw isn't leadership—it’s abdication[cite: 4, 6].
 
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+
+**Sources: [S1]** CPP Inc., *"Workplace Conflict and How Businesses Can Harness It to Thrive"* (2008): https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf. **[S4]** Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (Administrative Science Quarterly, 1995): https://doi.org/10.2307/2393638
+
 ---
 
 ## Post 5: Friction as Kinetic Energy · De-Stigmatizing Disagreement
@@ -156,17 +183,22 @@ An absence of conflict in a workplace rarely signals harmony; it signals apathy,
   "Conflict isn’t an HR red flag—it’s proof of investment[cite: 4]. The goal shouldn't be to stamp out friction[cite: 4]. The goal is building tools that help teams channel that energy into better operational agreements[cite: 4]."
 
 ### LinkedIn Mini-Essay
-**A team with zero conflict isn't healthy. It’s disengaged[cite: 4].**
+**A team with zero conflict isn't healthy: it's disengaged.**
 
-In knowledge work, we often treat workplace friction like an infectious disease—something to be suppressed, smoothed over, or handed to HR[cite: 4].
+In knowledge work, we often treat workplace friction like an infectious disease: something to be suppressed, smoothed over, or handed off to HR.
 
-Organizational research (most notably Karen Jehn's work on team taxonomy) paints a completely different picture:
-* **Task Conflict:** Debating technical architecture, feature scope, and data interpretation[cite: 4]. High-performing teams consistently demonstrate high levels of task debate[cite: 4]. It eliminates groupthink and surfaces critical bugs before launch[cite: 4].
-* **The Cost of Polite Avoidance:** When team members stop raising objections, it rarely means consensus[cite: 4]. It usually means they've calculated that caring isn't worth the political friction[cite: 4].
+Organizational research (most notably Karen Jehn's work on team conflict taxonomy) paints a completely different picture:
 
-Friction is simply the kinetic energy of people who give a damn[cite: 4]. High-performing teams don't fail because they experience friction; they fail because they lack the neutral scaffolding to process task debate cleanly, allowing it to degenerate into personal resentment[cite: 4].
+* Task Conflict: Debating technical architecture, feature scope, and data interpretation. High-performing teams consistently demonstrate high levels of task debate to eliminate groupthink and surface critical bugs before launch.
+* The Cost of Polite Avoidance: When team members stop raising objections, it rarely signals consensus. It usually means they have calculated that caring isn't worth the political friction.
 
-Stop trying to build frictionless teams[cite: 4]. Start building resilient teams that know how to disagree, align, and execute[cite: 4].
+Friction is simply the kinetic energy of people who give a damn. High-performing teams do not fail because they experience friction; they fail because they lack the neutral scaffolding to process task debate cleanly, allowing it to degenerate into personal resentment.
+
+Stop trying to build frictionless teams. Start building resilient teams that know how to disagree, align, and execute.
+
+This is why I'm building Mend. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+
+**Source: [S4]** Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (Administrative Science Quarterly, 1995): https://doi.org/10.2307/2393638
 
 ---
 
@@ -186,19 +218,24 @@ Modern corporate "professionalism" is often weaponized shorthand for human erasu
   "Real professionalism isn't pretending you never get angry or petty[cite: 8, 12]. It's having an unmonitored space to process those feelings honestly in private, so you can walk into the room as a clear-headed adult[cite: 8, 12]."
 
 ### LinkedIn Mini-Essay
-**"Be professional" is often corporate shorthand for "suppress your humanity."[cite: 8, 12]**
+**"Be professional" is often corporate shorthand for "suppress your humanity".**
 
-Historically, corporate professionalism has functioned like an emotional gag order: check your nervous system at the door, smile through broken processes, and treat relational fatigue like an HR infraction[cite: 8, 12].
+Historically, corporate professionalism has functioned like an emotional gag order: check your nervous system at the door, smile through broken processes, and treat relational fatigue like an HR infraction.
 
-This forces workers into an unworkable binary[cite: 8]:
-1. **The Corporate Cog:** Emotional suppression, polite smiles on Zoom, and chronic burnout[cite: 8, 12].
-2. **Unfiltered Chaos:** Letting raw frustration bleed into Slack channels and toxic backchannels[cite: 8, 12].
+This forces workers into an unworkable binary:
 
-We need a third path: **Grounded Human Maturity[cite: 8].**
+1. The Corporate Cog: Emotional suppression, polite smiles on Zoom, and chronic burnout.
+2. Unfiltered Chaos: Letting raw frustration bleed into public channels and toxic backchannel gossip.
 
-Being professional shouldn't mean turning into an appliance[cite: 12]. Adults have bad days, communication mismatches, and finite emotional bandwidth[cite: 12]. 
+We need a third path: Grounded Human Maturity.
 
-True professionalism means having a safe, off-the-record outlet to be messy, angry, or petty in private—so you can process the emotional charge, uncover the root issue, and step back into the room focused on the work[cite: 8, 12].
+Being professional shouldn't mean turning into an appliance. Adults have bad days, communication mismatches, and finite emotional bandwidth.
+
+True professionalism means having a safe, off-the-record outlet to be messy, angry, or petty in private; that way, you can process the emotional charge, uncover the root issue, and step back into the room focused on the work.
+
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+
+**Sources: [S5]** Arlie R. Hochschild, *The Managed Heart: Commercialization of Human Feeling* (1983): https://www.ucpress.edu/books/the-managed-heart/paper. **[S6]** Alicia A. Grandey, *"Emotion Regulation in the Workplace"* (Journal of Occupational Health Psychology, 2000): https://doi.org/10.1037/1076-8998.5.1.95
 
 ---
 
@@ -218,18 +255,21 @@ You can have institutional surveillance, or you can have honest conflict resolut
   "People will only drop their guard and acknowledge their mistakes when they know their words can't be logged on a performance review[cite: 10, 11]. You can have surveillance, or you can have resolution[cite: 11]. You cannot have both[cite: 11]."
 
 ### LinkedIn Mini-Essay
-**Why traditional conflict mediation consistently backfires in tech orgs[cite: 4, 11]:**
+**Why traditional conflict mediation consistently backfires in tech orgs:**
 
-When peer friction escalates, the corporate reflex is to bring in an "adult"—a frontline lead or an HRBP[cite: 4].
+When peer friction escalates, the corporate reflex is to bring in an "adult" (a frontline lead or an HRBP). Decades of Alternative Dispute Resolution (ADR) and neuroscience research show why this fails:
 
-Decades of Alternative Dispute Resolution (ADR) and neuroscience research show why this fails[cite: 4]:
-* **The Triadic Status Threat:** The presence of an evaluative authority triggers the brain's social threat circuitry[cite: 4]. Employees subconsciously realize: *"This dispute is now tied to my performance review."*[cite: 2, 4]
-* **Controlled Compliance vs. Buy-in:** Under authority surveillance, people optimize for impression management[cite: 4]. They agree to performative compromises to appease the manager, but without genuine agency, the agreement falls apart within weeks[cite: 4].
-* **The "Culture Risk" Stigma:** Employees who raise relational concerns are frequently tagged as "difficult" or "high-maintenance."[cite: 11, 12]
+* The Triadic Status Threat: The presence of an evaluative authority triggers the brain's social threat circuitry. Employees subconsciously realize: "This dispute is now tied to my performance review".
+* Controlled Compliance vs. Buy-in: Under authority surveillance, people optimize for impression management. They agree to performative compromises to appease the manager, but without genuine agency, the agreement falls apart within weeks.
+* The "Culture Risk" Stigma: Employees who raise relational concerns are frequently tagged as "difficult" or "high-maintenance".
 
-The thesis behind Mend is simple: **Outcomes Over Surveillance[cite: 11].**
+The thesis behind Mend is simple: Outcomes Over Surveillance.
 
-If companies want high-performing, resilient squads, they have to give up the need to police every interaction[cite: 11]. Radical privacy isn't about hiding bad behavior; it's the baseline precondition for honest alignment[cite: 4, 10, 11].
+If companies want high-performing, resilient squads, they have to give up the need to police every interaction. Radical privacy is not about hiding bad behavior; it is the baseline precondition for honest alignment.
+
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+
+**Source: [S7]** Edward L. Deci & Richard M. Ryan, *"The 'What' and 'Why' of Goal Pursuits: Human Needs and the Self-Determination of Behavior"* (Psychological Inquiry, 2000): https://doi.org/10.1207/S15327965PLI1104_01
 
 ---
 
@@ -249,20 +289,23 @@ Software built for human relationships should act like a surgical dissolving sut
   "Software for human relationships shouldn't build permanent records[cite: 10, 11]. It should do its job, heal the dynamic, and disappear[cite: 1, 10, 11]."
 
 ### LinkedIn Mini-Essay
-**Most B2B software is built on surveillance. We designed Mend around the concept of a dissolving suture[cite: 1, 5, 11].**
+**Most B2B software is built on surveillance. We designed Mend around the concept of a dissolving suture.**
 
-In surgical medicine, a dissolvable stitch serves a singular purpose: it stabilizes divided tissue just long enough for the body's natural healing process to take over, and then it vanishes completely[cite: 1, 5, 11]. It leaves no foreign material and no permanent scar tissue behind[cite: 1, 10, 11].
+In surgical medicine, a dissolvable stitch serves a singular purpose: it stabilizes divided tissue just long enough for the body's natural healing process to take over, and then it vanishes completely. It leaves no foreign material and no permanent scar tissue behind.
 
 Contrast that with corporate enterprise software:
-* Everything is indexed, stored, and searchable[cite: 4, 10].
-* A minor disagreement over a code review lives forever in Jira comments, Slack threads, and manager 1-on-1 notes[cite: 4, 12, 13].
-* The permanent paper trail makes people defensive, guarded, and terrified of being honest[cite: 4, 11].
 
-To solve this, Mend uses Confidential Computing and volatile memory enclaves[cite: 4, 13, 14]. 
+* Everything is indexed, stored, and searchable.
+* A minor disagreement over a code review lives forever in Jira comments, Slack threads, and manager 1-on-1 notes.
+* The permanent paper trail makes people defensive, guarded, and terrified of being honest.
 
-Conversations are never written to disk[cite: 4, 14]. Once two colleagues calibrate their working dynamic and establish their operating boundaries, the session disappears[cite: 4, 10, 11]. 
+To solve this, Mend uses Confidential Computing and volatile memory enclaves. Conversations are never written to disk. Once two colleagues calibrate their working dynamic and establish their operating boundaries, the session dissolves completely.
 
-The tool holds the team together while it heals, then gets out of the way[cite: 1, 11, 18].
+The tool holds the team together while it heals, then gets out of the way.
+
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+
+**Source: [S8]** Danielle M. Ravid et al., *"A Meta-Analysis of the Effects of Electronic Performance Monitoring on Work Outcomes"* (Personnel Psychology, 2023): https://gwern.net/doc/sociology/technology/2022-ravid.pdf
 
 ---
 
@@ -282,20 +325,24 @@ Employees will rarely voluntarily invite a colleague to "mediate an argument" wi
   "Even if you never do a joint session, you still walk away with a rehearsal and a game plan for yourself[cite: 3, 13]. Products have to meet people where their comfort levels actually are[cite: 3, 13]."
 
 ### LinkedIn Mini-Essay
-**The biggest design flaw in traditional dispute mediation is requiring both people to opt in on day one[cite: 2, 3].**
+**The biggest design flaw in traditional dispute mediation is requiring both people to opt in on day one.**
 
-When an employee is dealing with a difficult peer dynamic, the perceived social cost of asking for mediation is massive[cite: 2, 3]:
-* It triggers impression anxiety (*"Will I look fragile or incompetent?"*)[cite: 2, 3]
-* It risks peer retaliation (*"Are you accusing me of being the problem?"*)[cite: 2, 3]
+When an employee is dealing with a difficult peer dynamic, the perceived social cost of asking for mediation is massive:
 
-If a platform requires mutual consensus just to open the door, adoption will hover between 3% and 5% (the historical benchmark for voluntary corporate mediation)[cite: 2, 6].
+* It triggers impression anxiety ("Will I look fragile or incompetent?").
+* It risks peer retaliation ("Are you accusing me of being the problem?").
 
-To solve the adoption hurdle, Mend is built **solo-first[cite: 3, 6]**:
-1. **The Solo Caucus (The Spool):** An employee uses the tool strictly for themselves—to vent without tone-policing, uncover the other person's hidden pressures, and sanity-check their own reactions[cite: 3, 10, 13].
-2. **Immediate Standalone Utility:** The user can run private roleplays and generate communication cheat sheets without ever notifying their colleague[cite: 3, 13].
-3. **Low-Stakes Bridge:** Only after an employee experiences the psychological safety of the private session do they decide whether an asynchronous, structured joint session makes sense[cite: 3, 13].
+If a platform requires mutual consensus just to open the door, adoption will collapse under the weight of social friction.
 
-Software shouldn't demand bravery from vulnerable users; it should provide scaffolding that builds agency safely[cite: 2, 3, 4].
+To solve this adoption hurdle, Mend is built solo-first:
+
+1. The Solo Caucus (The Spool): An employee uses the tool strictly for themselves; they can vent without tone-policing, uncover the other person's hidden pressures, and sanity-check their own reactions.
+2. Immediate Standalone Utility: The user can run private roleplays and generate communication cheat sheets without ever notifying their colleague.
+3. Low-Stakes Bridge: Only after an employee experiences the psychological safety of the private session do they decide whether an asynchronous, structured joint session makes sense.
+
+Software shouldn't demand bravery from vulnerable users; it should provide scaffolding that builds agency safely.
+
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
 
 ---
 
@@ -315,13 +362,18 @@ The ultimate destination isn't remedial "conflict resolution" or compulsory corp
   "Workplace tools shouldn't force emotional performance[cite: 4, 12]. They should give people their agency back, reclaim lost focus, and leave human dignity completely intact[cite: 4, 12, 13]."
 
 ### LinkedIn Mini-Essay
-**Why we need to retire the term "Conflict Resolution" in modern product teams[cite: 4, 12]:**
+**Why we need to retire the term "Conflict Resolution" in modern product teams:**
 
-"Conflict resolution" carries an institutional sting[cite: 4, 12]. It sounds punitive, clinical, and embarrassing—implying that employees couldn't handle basic professionalism and require remedial intervention[cite: 4, 12].
+"Conflict resolution" carries an institutional sting. It sounds punitive, clinical, and embarrassing; it implies that employees could not handle basic professionalism and require remedial intervention.
 
-At Mend, we reframe the entire conversation around **Operational Calibration[cite: 4, 12]:**
-* **Standard Sprint Hygiene:** Calibrating working relationships is no different than running a code linter, refactoring technical debt, or running a sprint retrospective[cite: 4, 12].
-* **Compulsory Friendship is Rejected:** We don't demand forced apologies, corporate toxic positivity, or performative smiles[cite: 4, 10, 12]. Interpersonal warmth is a welcome byproduct, but clear, functional operating boundaries are completely valid[cite: 4, 10, 12].
-* **Restoring Human Agency:** When two teammates author their own working agreements peer-to-peer—away from managerial surveillance—they build genuine resilience[cite: 4, 10, 11].
+At Mend, we reframe the entire conversation around Operational Calibration:
 
-Teams don't need another HR compliance policy[cite: 3, 11]. They need private operational scaffolding to turn friction into clarity, reclaim their sprint focus, and stay human in modern workplaces[cite: 4, 12, 13].
+* Standard Sprint Hygiene: Calibrating working relationships is no different than running a code linter, refactoring technical debt, or running a sprint retrospective.
+* Compulsory Friendship is Rejected: We do not demand forced apologies, corporate toxic positivity, or performative smiles. Interpersonal warmth is a welcome byproduct, but clear, functional operating boundaries are completely valid.
+* Restoring Human Agency: When two teammates author their own working agreements peer-to-peer (away from managerial surveillance), they build genuine resilience.
+
+Teams do not need another HR compliance policy. They need private operational scaffolding to turn friction into clarity, reclaim their sprint focus, and stay human in modern workplaces.
+
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+
+**Source: [S9]** Michael I. Norton, Daniel Mochon, & Dan Ariely, *"The IKEA Effect: When Labor Leads to Love"* (Journal of Consumer Psychology, 2012): https://people.duke.edu/~dandan/webfiles/PapersUpside/Ikea%20Effect.pdf

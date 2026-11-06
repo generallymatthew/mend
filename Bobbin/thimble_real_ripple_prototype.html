@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Thimble Real Ripple Prototype</title>
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #0e0f12;
+    color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 32px 16px 64px;
+    box-sizing: border-box;
+  }
+  h1 { font-size: 15px; font-weight: 600; opacity: 0.7; margin: 0; }
+  .stage {
+    width: 320px;
+    height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thimble-body {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    background: linear-gradient(160deg, #6fd3c7 0%, #3f9e94 55%, #2a7b74 100%);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .panel {
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #17181c;
+    border: 1px solid #2a2c33;
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .row-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    opacity: 0.85;
+  }
+  input[type="range"] { width: 100%; }
+  .note { font-size: 11.5px; opacity: 0.55; line-height: 1.5; max-width: 340px; }
+</style>
+</head>
+<body>
+  <h1>Real Thimble wobble engine, with ripple count/speed exposed</h1>
+  <div class="stage">
+    <div class="thimble-body" id="body"></div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div class="row-head"><span>Audio Level (lvl)</span><span id="valLvl">0.60</span></div>
+      <input type="range" id="slLvl" min="0" max="1" step="0.01" value="0.6" />
+    </div>
+    <div class="row">
+      <div class="row-head"><span>Ripple Count</span><span id="valCount">6</span></div>
+      <input type="range" id="slCount" min="2" max="14" step="1" value="6" />
+    </div>
+    <div class="row">
+      <div class="row-head"><span>Ripple Speed</span><span id="valSpeed">5.00</span></div>
+      <input type="range" id="slSpeed" min="0" max="12" step="0.1" value="5" />
+    </div>
+  </div>
+
+  <p class="note">
+    This is `thimblePolygon()` lifted straight from
+    <code>apps/thimble/static/session.html</code> (the hexagon/dome clip-path
+    engine the real app renders) with `g` and `facets`/`spinSpeed` fixed to
+    talking's own values, and the two jitter sine terms' frequency and speed
+    pulled out to the two sliders above instead of the hardcoded 6 / 5 / 3.2.
+    Nothing in the real app is touched yet.
+  </p>
+
+<script>
+const body = document.getElementById('body');
+const el = {
+  lvl: document.getElementById('slLvl'),
+  count: document.getElementById('slCount'),
+  speed: document.getElementById('slSpeed'),
+};
+const val = {
+  lvl: document.getElementById('valLvl'),
+  count: document.getElementById('valCount'),
+  speed: document.getElementById('valSpeed'),
+};
+const params = { lvl: 0.6, rippleCount: 6, rippleSpeed: 5 };
+
+function bind(key, fmt) {
+  el[key].addEventListener('input', () => {
+    const v = +el[key].value;
+    params[key === 'count' ? 'rippleCount' : key === 'speed' ? 'rippleSpeed' : 'lvl'] = v;
+    val[key].textContent = fmt ? fmt(v) : v.toFixed(2);
+  });
+}
+bind('lvl');
+bind('count', v => `${Math.round(v)}`);
+bind('speed');
+
+// Direct port of thimblePolygon() from apps/thimble/static/session.html,
+// with g/facets/spinSpeed/maxDepth fixed to talking's own call, and the
+// jitter terms' frequency/speed exposed as rippleCount/rippleSpeed instead
+// of the hardcoded N / 5 / 3.2.
+const THIMBLE_WOBBLE_AMOUNT = 2.6;
+const DOME_WOBBLE_BIAS = 0.22;
+function thimblePolygon(t, g, lvl, facets, spinSpeed, maxDepth, rippleCount, rippleSpeed) {
+  const N = facets, M = 120, seg = (2 * Math.PI) / N, raw = [];
+  const phi = t * spinSpeed + 0.15 * Math.sin(t * 1.7);
+  const poly = th => { const m = (((th - phi) % seg) + seg) % seg; return Math.cos(seg / 2) / Math.cos(m - seg / 2); };
+  const rawDepth = g * Math.min(1, 0.55 + lvl * 0.6) * THIMBLE_WOBBLE_AMOUNT;
+  const depth = Math.min(maxDepth == null ? 1 : maxDepth, rawDepth);
+  const jitterScale = rawDepth > 0 ? depth / rawDepth : 1;
+  for (let i = 0; i < M; i++) {
+    const th = (i / M) * 2 * Math.PI;
+    let sum = 0; for (let w = -6; w <= 6; w++) sum += poly(th + (w / 6) * seg * 0.32);
+    const smooth = sum / 13;
+    const jitter = 1 + jitterScale * (
+      0.05 * g * lvl * Math.sin(th * rippleCount + t * rippleSpeed) +
+      0.03 * g * lvl * Math.sin(th * rippleCount * 0.5 - t * rippleSpeed * 0.64)
+    );
+    const dome = 1 - DOME_WOBBLE_BIAS * Math.max(0, -Math.sin(th));
+    const r = 50 * (1 - depth * (1 - smooth)) * jitter * dome;
+    raw.push([50 + r * Math.cos(th), 50 + r * Math.sin(th)]);
+  }
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [x, y] of raw) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+  const dx = 50 - (minX + maxX) / 2, dy = 50 - (minY + maxY) / 2;
+  const pts = raw.map(([x, y]) => `${(x + dx).toFixed(2)}% ${(y + dy).toFixed(2)}%`);
+  return `polygon(${pts.join(',')})`;
+}
+
+let start = performance.now();
+function frame(now) {
+  const t = (now - start) / 1000;
+  // talking's own call shape: g=0.8, facets=6, spinSpeed=0.25, maxDepth=0.5
+  const clip = thimblePolygon(t, 0.8, params.lvl, 6, 0.25, 0.5, params.rippleCount, params.rippleSpeed);
+  body.style.clipPath = clip;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
