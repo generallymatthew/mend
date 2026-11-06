@@ -11,7 +11,12 @@ Working names for the apps in the shipped codebase, so references to them can us
 - **Seam** — the manager app: solo coaching/practice for a manager preparing for or rehearsing a hard conversation with a direct report, or a case-management space for a manager working through conflict between two members of their team. Maps to `apps/seam`. The standalone `manager-coaching-app` prototype that used to cover the rehearsal half of this was removed as redundant; that path is folded into Thimble's own system prompt instead (see `facilitator-intake-system-prompt.md`).
 - **Spool** — the sign-up/invite entry point, where a visitor picks a flow and gets routed into Thimble, Suture, or Seam. Maps to `apps/spool` (renamed from `apps/demo-app` on 2026-10-23).
 - **Splice** — live group consensus-building over a real Zoom call. Maps to `apps/splice`.
-- **Swatch**, **Loom**, **Hem** — not yet built; see `IDEAS.md` for the concepts.
+- **Loom** — pattern-only project retro: a private 1:1 interview with each
+  team member after a sprint/project wraps, distilled across the whole team
+  into structural patterns, never individual names or call-outs. Maps to
+  `apps/loom`. Only the per-person interview phase is built so far; the
+  across-the-team distillation step is not yet built.
+- **Swatch**, **Hem** — not yet built; see `IDEAS.md` for the concepts.
 
 Note the naming layers don't collapse to one meaning: Seam is the user-facing app, Thimble is also the AI persona discovered inside the app (not just the app name), and Mend is the company name, currently invisible to users since there's no LLC or revenue yet.
 
@@ -41,6 +46,7 @@ Local FastAPI apps, all under `apps/`, each its own venv and `.env` (see each `R
 | `apps/joint-session-audio/` | 8424 | Standalone proof of the real audio delay buffer (LiveKit + streaming STT + the real hard-cut classifier) — not yet integrated with `suture/`'s conversational logic. Needs `brew install livekit` and its own `agent.py` worker in addition to uvicorn; see its `README.md`. |
 | `apps/seam/` | — | Case management for a manager working through conflict between two of their team members — a persisted, role-anonymized running action plan, distinct from `thimble`'s manager-coaching path above (that's solo rehearsal; this is an ongoing case). Can hand off into a real `suture` room. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
 | `apps/splice/` | — | Live group consensus-building over a real Zoom call (companion panel via the Zoom Apps SDK): shared room, chat, proposals, voting, Thimble as a visible named participant. Opposite trust model from the apps above — no safety floor, no confidentiality, driving an explicit visible group decision instead. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
+| `apps/loom/` | 8425 | Private 1:1 retro interview, one team member at a time, text only. Intake phase only — no across-the-team pattern distillation yet. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
 | `apps/classifier/` | — | Fine-tuned toxic-bert model for the real-time hard-cut tier of the joint session; not a web app, see its own `README.md`. |
 
 **Run the core four at once:** `./run_all.sh` from the repo root starts `spool`, `thimble`, `suture`, and `post-session-app` (each in its own venv) plus a local Caddy reverse proxy, and puts the whole walkthrough behind one address: **http://localhost:8080/**. Requires `caddy` (`brew install caddy`) and each app's own venv/dependencies already set up per its `README.md`. Ctrl-C stops everything together. `seam` and `splice` aren't part of this walkthrough yet — run them standalone.

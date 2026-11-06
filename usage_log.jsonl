@@ -1108,3 +1108,5 @@
 {"ts": 1793914971.1373818, "app": "thimble", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 182, "output_tokens": 178, "chars": null, "seconds": null, "cost_usd": 0.003216}
 {"ts": 1793914973.121331, "app": "thimble", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 182, "output_tokens": 178, "chars": null, "seconds": null, "cost_usd": 0.003216}
 {"ts": 1793914975.247835, "app": "thimble", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 182, "output_tokens": 178, "chars": null, "seconds": null, "cost_usd": 0.003216}
+{"ts": 1793997125.758933, "app": "loom", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 1958, "output_tokens": 127, "chars": null, "seconds": null, "cost_usd": 0.0077789999999999995}
+{"ts": 1793997147.673861, "app": "loom", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 2142, "output_tokens": 203, "chars": null, "seconds": null, "cost_usd": 0.009471}

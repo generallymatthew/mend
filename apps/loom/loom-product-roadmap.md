@@ -8,8 +8,7 @@ rationale: naming names in a shared report makes people vulnerable to
 blame, which suppresses honesty; stripping identity out and reporting only
 patterns is what lets people actually tell the truth.
 
-No code exists yet — this folder is a placeholder. Full writeup:
-`../../IDEAS.md`'s "Pattern-only project retro" section.
+Full writeup: `../../IDEAS.md`'s "Pattern-only project retro" section.
 
 Note: "Loom" is also used elsewhere in this repo as a sewing/textile
 metaphor for the ephemeral runtime enclave (see
@@ -25,14 +24,17 @@ patterns, e.g. "team's overworked, that's why PRs slip" — not anonymization
 of blame, root-cause diagnosis), but furthest from built of the ranked apps
 and lower-stakes pain than the top three.
 
-## Phase 0 — Concept, not yet built
+## Phase 0 — Concept
 
-- [ ] Scope the interview flow: what Loom asks each team member,
-      separately, after a project/sprint wraps
+- [x] Scope the interview flow: what Loom asks each team member,
+      separately, after a project/sprint wraps (`apps/facilitator-loom-intake-system-prompt.md`)
+- [x] Per-person interview prototype, text only, local (`server.py` +
+      `static/index.html`), browser-pane verified end to end
 - [ ] Build the distillation/pattern-extraction logic (reuse the existing
       LLM-facilitator interview pattern and the "anonymized aggregate,
       never per-person" principle already used elsewhere in this repo's
-      org-level usage dashboard idea)
+      org-level usage dashboard idea) — reads multiple people's
+      `<loom_signal>` findings, not built yet
 - [ ] Decide the minimum team size before "patterns" stop being traceable
       back to an individual by elimination — a 2-person team can't
       actually anonymize, so this needs a real floor before launch, not
