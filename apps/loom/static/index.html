@@ -93,6 +93,7 @@ const input = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
 const statusEl = document.getElementById('status');
 const signalEl = document.getElementById('signal');
+let sessionId = null;
 
 function appendMsg(sender, text) {
   const wrap = document.createElement('div');
@@ -125,6 +126,7 @@ async function send(path, body) {
       body: JSON.stringify(body || {}),
     });
     const data = await res.json();
+    if (data.session_id) sessionId = data.session_id;
     if (data.reply) appendMsg('facilitator', data.reply);
     showSignal(data.signal);
     statusEl.textContent = '';
@@ -144,10 +146,10 @@ startBtn.addEventListener('click', async () => {
 
 sendBtn.addEventListener('click', async () => {
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || !sessionId) return;
   appendMsg('person', text);
   input.value = '';
-  await send('/api/message', {text});
+  await send('/api/message', {session_id: sessionId, text});
 });
 
 input.addEventListener('keydown', (e) => {

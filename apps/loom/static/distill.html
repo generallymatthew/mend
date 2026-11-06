@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loom distillation (dev test view)</title>
+<style>
+  body{font-family:-apple-system,sans-serif; max-width:640px; margin:40px auto; padding:0 16px; color:#17372E;}
+  input{padding:8px 10px; font-size:14px; width:300px;}
+  button{padding:8px 16px; font-size:14px; margin-left:8px; cursor:pointer;}
+  pre{white-space:pre-wrap; background:#F6F1E7; border:1px solid #17372E1F; border-radius:10px; padding:16px; font-family:inherit; font-size:14px; line-height:1.5;}
+  .note{font-size:12px; color:#3C4C49; margin-top:4px;}
+</style>
+</head>
+<body>
+<h2>Loom distillation (dev test view, not the real product UI)</h2>
+<p>Runs <code>/api/distill?sprint=...</code> against whatever completed, confirmed interviews exist in this server's memory for that sprint name.</p>
+<input id="sprint" placeholder="Sprint name, exact match">
+<button id="go">Run distillation</button>
+<div class="note" id="note"></div>
+<pre id="out"></pre>
+<script>
+document.getElementById('go').addEventListener('click', async () => {
+  const sprint = document.getElementById('sprint').value.trim();
+  const out = document.getElementById('out');
+  const note = document.getElementById('note');
+  out.textContent = '';
+  note.textContent = 'running...';
+  try {
+    const res = await fetch('/api/distill?sprint=' + encodeURIComponent(sprint));
+    const data = await res.json();
+    if (!res.ok) {
+      note.textContent = data.error + ` (${data.contributors}/${data.min_contributors} completed interviews)`;
+      return;
+    }
+    note.textContent = `${data.contributors} completed interview(s) fed into this report.`;
+    out.textContent = data.report;
+  } catch (e) {
+    note.textContent = 'error: ' + e;
+  }
+});
+</script>
+</body>
+</html>
