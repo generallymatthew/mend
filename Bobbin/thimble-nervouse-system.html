@@ -134,10 +134,20 @@
     pointer-events: none;
     transition: transform .35s cubic-bezier(.3,1.2,.4,1);
   }
-  /* While the picker's up, Thimble shrinks to leave clear room for the
-     question above him and the two answers below -- same stage, no
-     separate layout, just less of it. */
-  #stage.picker-open .thimble-layer { transform: scale(0.92) translateY(-10%); }
+  /* While the picker's up, the question card and Thimble stack as ONE
+     group (card above, Thimble below, touching) inside this same
+     full-height, already-centered layer -- so the pair is vertically
+     centered in the viewport as a single object, the way the speech
+     bubble + Thimble always worked, not two independently-positioned
+     pieces. */
+  #stage.picker-open .thimble-layer {
+    flex-direction: column;
+    gap: 0;
+  }
+  #stage.picker-open .thimble-avatar {
+    transform: scale(0.92);
+    margin-top: -6px;
+  }
   /* The active facet's own breath-coach/round-pill sit right where the
      question bubble sits -- hide that facet's content while the picker's
      up so the two don't visually stack. */
@@ -146,6 +156,8 @@
      made -- collapsing it hands that space to the stage (flex:1), which
      is what actually gives Thimble more room to sit lower. */
   #stage.picker-open ~ .app-footer { display: none; }
+  /* Swiping between exercises isn't the point of this screen. */
+  #stage.picker-open ~ .edge-nav { display: none; }
 
   .drum {
     position: absolute;
@@ -323,15 +335,14 @@
      above) is visible below the one dialog card; only the card itself
      is actually painted. */
   .state-picker {
-    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
-    background: none;
-    z-index: 50;
-    display: flex; flex-direction: column; justify-content: flex-start;
-    align-items: center;
-    padding: 10px 18px 14px;
+    display: none;
+    width: 100%;
+    justify-content: center;
+    padding: 0 18px 14px;
     pointer-events: none;
     transition: opacity .3s ease, visibility .3s ease;
   }
+  #stage.picker-open .state-picker { display: flex; }
   .state-picker.hidden { opacity: 0; visibility: hidden; }
   /* One dialog: question and both answers live in the same white card,
      not a bubble plus two separate floating buttons. */
@@ -369,11 +380,11 @@
   .picker-option {
     flex: 1;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 14px; background: var(--modal-bg); border: 1px solid var(--border-light);
-    padding: 14px 10px; font-size: 15px; font-weight: 700; color: var(--text-primary);
-    cursor: pointer; transition: transform .12s ease, background .12s ease;
+    border-radius: 14px; background: var(--button-teal); border: none;
+    padding: 14px 10px; font-size: 15px; font-weight: 700; color: #fff;
+    cursor: pointer; transition: transform .12s ease, opacity .12s ease;
   }
-  .picker-option:active { transform: scale(0.96); background: var(--border-light); }
+  .picker-option:active { transform: scale(0.96); opacity: 0.85; }
 
   /* ---- Thimble: the real avatar shape (ported from session.html's
      thimble-avatar / thimble-core / thimble-ring / thimble-body chain),
@@ -530,6 +541,21 @@
   <!-- Spindle Stage -->
   <div class="stage-container picker-open" id="stage">
     <div class="thimble-layer">
+      <!-- State picker: Thimble asks this himself. Lives inside the same
+           layer as his avatar so the question card and Thimble stack and
+           center together as one object, not two separately positioned
+           pieces. Tapping an option settles the drum straight to that
+           facet and fades the picker out -- this is the self-reported
+           routing step, not a separate screen. -->
+      <div class="state-picker" id="statePicker">
+        <div class="picker-card">
+          <div class="picker-question">Do you want help calming your</div>
+          <div class="picker-options">
+            <div class="picker-option" data-facet="0">Body</div>
+            <div class="picker-option" data-facet="3">Mind</div>
+          </div>
+        </div>
+      </div>
       <div class="thimble-avatar" id="thimbleAvatar">
         <div class="thimble-shadow"></div>
         <div class="thimble-core" id="thimbleCore">
@@ -554,21 +580,6 @@
     <div class="drum" id="drum"></div>
     <div class="mask-cover left"></div>
     <div class="mask-cover right"></div>
-
-    <!-- State picker: Thimble asks this himself. Fills the stage only (not
-         header/footer) so he stays visible behind the question and answers;
-         tapping one settles the drum straight to that facet and fades the
-         picker out -- this is the self-reported routing step, not a
-         separate screen. -->
-    <div class="state-picker" id="statePicker">
-      <div class="picker-card">
-        <div class="picker-question">Do you want help calming your</div>
-        <div class="picker-options">
-          <div class="picker-option" data-facet="0">Body</div>
-          <div class="picker-option" data-facet="3">Mind</div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Fixed footer: title/category for the active facet, full device width -->
@@ -878,11 +889,12 @@ document.getElementById("nextBtn").addEventListener("click", () => settleTo(curr
 function render(now) {
   let t = (now - startTime) * 0.001;
   const f = FACETS[activeFacet];
+  const pickerOpen = stage.classList.contains("picker-open");
   const facetEl = drum.children[activeFacet];
   const pillEl = facetEl.querySelector(".round-pill");
   const replayEl = facetEl.querySelector(".round-replay");
 
-  if (f.maxRounds) {
+  if (!pickerOpen && f.maxRounds) {
     const stopAt = f.maxRounds * f.roundSeconds;
     const stopped = t >= stopAt;
     if (stopped) {
@@ -900,7 +912,11 @@ function render(now) {
     }
   }
 
-  const b = f.breathe(t);
+  // While the picker's up, Thimble just rests -- a plain closed mouth and
+  // the CSS idle-bounce (already always running on .thimble-body), not
+  // whatever the active facet (Box Breath, by default) would otherwise be
+  // doing to his mouth/scale/nostrils behind the question.
+  const b = pickerOpen ? { inhale: 0 } : f.breathe(t);
 
   // Body scale + mouth openness both ride the same inhale value, so
   // Thimble's whole shape (not just a generic pulse) traces the pattern.
