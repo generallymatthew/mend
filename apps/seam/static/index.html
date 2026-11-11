@@ -123,13 +123,6 @@
   }
   #layout-toggle:hover { background: var(--rail-border); }
   #layout-toggle.active { background: var(--accent-pink-active); color: var(--ink); }
-  #plan-toggle {
-    display: none;
-    font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--rail-border);
-    border-radius: 999px; padding: 6px 14px; cursor: pointer;
-    white-space: nowrap; flex-shrink: 0;
-  }
-  #plan-toggle:hover { background: var(--panel-bg); }
   .panel-scrim { display: none; }
 
   /* Sidebar: one shared column, section-specific content swapped inside */
@@ -229,7 +222,7 @@
   .section-view.active { display: flex; }
 
   /* Thread (shared look for conflicts + meetings) */
-  .thread-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--chat-bg); }
+  .thread-col { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--chat-bg); }
   .thread-header {
     padding: 18px 28px; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -669,11 +662,50 @@
   }
   .send-btn:disabled { opacity: 0.5; cursor: default; }
 
-  /* Side panel: plan (conflicts) / strategy points (meetings) */
-  .side-panel {
-    width: 250px; min-width: 210px; border-left: 1px solid var(--border);
-    background: var(--app-bg); display: flex; flex-direction: column; padding: 20px 18px;
+  /* Glance strip: the one-line always-visible summary of the plan/strategy,
+     sitting right above the composer. Tapping it (or the Esc-style chevron
+     on the sheet it opens) toggles .side-panel below -- Option C of
+     Bobbin's chat+plan layout exploration (2026-11-11): the plan is never
+     its own permanent column, just this line plus an on-demand sheet. */
+  .plan-strip {
+    display: none; align-items: center; gap: 10px; width: 100%; flex-shrink: 0;
+    font: inherit; text-align: left; border: none; cursor: pointer;
+    background: var(--app-bg); border-top: 1px solid var(--border);
+    padding: 10px 20px; color: inherit;
   }
+  .plan-strip.applicable { display: flex; }
+  .plan-strip-dot { width: 15px; height: 15px; border-radius: 999px; border: 1.5px solid #C1D6C8; flex: 0 0 auto; }
+  .plan-strip-dot.all-done { background: #5F8569; border-color: #5F8569; }
+  .plan-strip-text {
+    flex: 1; min-width: 0; font-size: 12.5px; color: var(--ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .plan-strip-badge {
+    font-size: 10px; font-weight: 700; background: var(--panel-bg); color: var(--muted);
+    border-radius: 999px; padding: 2px 8px; flex-shrink: 0;
+  }
+  .plan-strip-badge:empty { display: none; }
+  .plan-strip-chevron { flex-shrink: 0; color: var(--faint); transition: transform .18s ease; }
+  .plan-strip.open .plan-strip-chevron { transform: rotate(180deg); }
+
+  /* Side panel: plan (conflicts) / strategy points (meetings) -- an overlay
+     sheet docked to the bottom of .thread-col (which needs position:
+     relative, set above), not a permanent side column. Opened only by its
+     .plan-strip; see togglePlanSheet. */
+  .side-panel {
+    display: none; flex-direction: column; padding: 16px 18px 20px;
+    position: absolute; left: 0; right: 0; bottom: 0; top: 46%; z-index: 5;
+    border-top: 1px solid var(--border); border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 24px rgba(23,55,46,.14);
+    background: var(--app-bg);
+  }
+  .side-panel.open { display: flex; }
+  .side-panel-collapse {
+    align-self: flex-end; width: 26px; height: 26px; border-radius: 50%; margin-bottom: -8px;
+    border: none; background: var(--panel-bg); color: var(--muted);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .side-panel-collapse:hover { background: var(--rail-border); }
   .side-panel-inner {
     flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; overflow: auto;
   }
@@ -729,8 +761,9 @@
   .strategy-point .t { font-size: 13.5px; line-height: 1.55; }
   .strategy-placeholder { font-size: 13px; color: var(--faint); font-style: italic; }
 
-  /* Mobile: the sidebar becomes an off-canvas drawer; the relevant side
-     panel (plan / strategy) becomes the other. */
+  /* Mobile: the sidebar becomes an off-canvas drawer. The plan/strategy
+     sheet (.side-panel) is already an overlay at every width (see above),
+     so it needs no mobile-specific treatment of its own anymore. */
   @media (max-width: 860px) {
     #app { position: relative; overflow: hidden; }
 
@@ -742,18 +775,9 @@
     }
     #sidebar.closed { transform: translateX(-100%); }
 
-    .side-panel {
-      position: absolute; top: 0; bottom: 0; right: 0;
-      width: 85%; max-width: 340px; z-index: 30;
-      box-shadow: -2px 0 16px rgba(23,55,46,0.16);
-      transform: translateX(100%); transition: transform .25s ease;
-    }
-    .side-panel.open { transform: translateX(0); }
-
     .thread-col { width: 100%; }
 
     #sidebar-toggle { display: flex; }
-    #plan-toggle { display: inline-block; }
 
     .panel-scrim.show {
       display: block; position: absolute; inset: 0;
@@ -967,7 +991,6 @@
         <span class="closed-badge" id="closed-badge" style="display:none">Closed</span>
         <div class="actions">
           <button id="handoff-chip" title="Peer session">Create peer session</button>
-          <button id="plan-toggle">Plan</button>
           <button id="close-case-btn">Close case</button>
         </div>
       </div>
@@ -991,6 +1014,24 @@
         </div>
       </div>
       <div class="messages" id="messages" style="display:none"></div>
+      <!-- Glance strip: the plan/strategy is always just this one line above
+           the composer, never a permanent column (see .side-panel below,
+           Option C of Bobbin's layout exploration) -- tap it to expand the
+           full plan as a sheet over the lower half of the thread, tap again
+           (or the chevron) to collapse back to chat. Only one of these two
+           is ever .applicable at a time (showPanelsForType), matching
+           which track the active conversation is. -->
+      <button class="plan-strip" id="plan-strip" type="button">
+        <span class="plan-strip-dot"></span>
+        <span class="plan-strip-text" id="plan-strip-text">No action items yet</span>
+        <span class="plan-strip-badge" id="plan-strip-badge"></span>
+        <svg class="plan-strip-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button class="plan-strip" id="meeting-strip" type="button">
+        <span class="plan-strip-dot"></span>
+        <span class="plan-strip-text" id="meeting-strip-text">Strategy</span>
+        <svg class="plan-strip-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
       <div class="composer-row" id="composer-row">
         <div class="composer-pill">
           <div class="composer-input-wrap">
@@ -1016,8 +1057,11 @@
       </div>
     </div>
 
-    <div class="side-panel" id="plan-panel" style="display:none">
+    <div class="side-panel" id="plan-panel">
       <div class="side-panel-inner">
+        <button class="side-panel-collapse" id="plan-collapse" type="button" title="Back to chat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+        </button>
         <div class="side-panel-title">What's next</div>
         <div id="incident-section">
           <div class="title">Inciting incident</div>
@@ -1032,8 +1076,11 @@
       </div>
     </div>
 
-    <div class="side-panel" id="meeting-plan-panel" style="display:none">
+    <div class="side-panel" id="meeting-plan-panel">
       <div class="side-panel-inner">
+        <button class="side-panel-collapse" id="meeting-collapse" type="button" title="Back to chat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+        </button>
         <div class="side-panel-title">Strategy</div>
         <div id="meeting-goal-section">
           <div class="title">Goal for this meeting</div>
@@ -1739,35 +1786,24 @@ function renderConvoList() {
 // stays display:flex and just slides off-canvas. At desktop widths there's
 // no such CSS, so .open has to drive display directly or the Plan/Strategy
 // toggle button has nothing to do.
-function setPanelApplicable(panelEl, applicable) {
-  if (!applicable) {
-    panelEl.classList.remove("open");
-    panelEl.style.display = "none";
-    return;
-  }
-  panelEl.style.display = "flex";
-  // On mobile the panel is an off-canvas drawer: becoming applicable just
-  // means the Plan/Strategy toggle now works, it shouldn't slide the panel
-  // into view on its own (e.g. right after the first message gets
-  // classified). On desktop there's no drawer -- "open" is the only thing
-  // that makes it visible, so it has to be applied immediately here.
-  if (isMobile()) {
-    panelEl.classList.remove("open");
-  } else {
-    panelEl.classList.add("open");
-  }
+// panelEl/stripEl always start closed when they become applicable -- the
+// glance strip is the only thing that's ever on by default now (Option C of
+// Bobbin's chat+plan layout exploration); the sheet itself only opens from
+// a tap on the strip (or its own collapse button), never automatically.
+function setPanelApplicable(panelEl, stripEl, applicable) {
+  panelEl.classList.remove("open");
+  stripEl.classList.remove("open");
+  stripEl.classList.toggle("applicable", applicable);
 }
 
 function showPanelsForType(type) {
   document.getElementById("closed-badge").style.display = "none";
-  setPanelApplicable(document.getElementById("plan-panel"), CASE_LIKE_TYPES.includes(type));
-  setPanelApplicable(document.getElementById("meeting-plan-panel"), type === "meeting");
+  setPanelApplicable(document.getElementById("plan-panel"), document.getElementById("plan-strip"), CASE_LIKE_TYPES.includes(type));
+  setPanelApplicable(document.getElementById("meeting-plan-panel"), document.getElementById("meeting-strip"), type === "meeting");
   // Hand-off/peer session is conflict-only: coaching never leads to one (the
   // direct report is never brought into Mend for this track).
   document.getElementById("handoff-chip").style.display = type === "conflict" ? "inline-flex" : "none";
   document.getElementById("close-case-btn").style.display = CASE_LIKE_TYPES.includes(type) ? "inline-block" : "none";
-  document.getElementById("plan-toggle").style.display = type === "written" ? "none" : "inline-block";
-  document.getElementById("plan-toggle").textContent = type === "meeting" ? "Strategy" : "Plan";
 }
 
 // A case/coaching thread that's closed is read-only: no new peer session,
@@ -1793,8 +1829,8 @@ function newConversation() {
   messagesEl.style.display = "flex";
   messagesEl.innerHTML = "";
   appendBubble(messagesEl, "assistant", "Tell me what's going on.");
-  setPanelApplicable(document.getElementById("plan-panel"), false);
-  setPanelApplicable(document.getElementById("meeting-plan-panel"), false);
+  setPanelApplicable(document.getElementById("plan-panel"), document.getElementById("plan-strip"), false);
+  setPanelApplicable(document.getElementById("meeting-plan-panel"), document.getElementById("meeting-strip"), false);
   renderConvoList();
   closeSidebarOnMobile();
   document.getElementById("composer").focus();
@@ -1851,8 +1887,35 @@ function renderMeetingGoal(session) {
   }
 }
 
+// Keeps the glance strip (always-visible, see .plan-strip CSS) in sync
+// with the sheet it opens -- called from every renderStrategyPoints and
+// renderPlan, which is itself already called after every mutation (check
+// a step, edit its text/note, add one), so this never needs its own wiring.
+function updateMeetingStrip(session) {
+  document.getElementById("meeting-strip-text").textContent =
+    session.strategy_text ? "Strategy ready" : "Not ready yet -- keep talking it through";
+}
+
+function updatePlanStrip(steps) {
+  const textEl = document.getElementById("plan-strip-text");
+  const badgeEl = document.getElementById("plan-strip-badge");
+  const dotEl = document.querySelector("#plan-strip .plan-strip-dot");
+  if (!steps.length) {
+    textEl.textContent = "No action items yet";
+    badgeEl.textContent = "";
+    dotEl.classList.remove("all-done");
+    return;
+  }
+  const done = steps.filter((s) => s.done).length;
+  const next = steps.find((s) => !s.done);
+  textEl.textContent = next ? `Next: ${next.text}` : "All steps done";
+  badgeEl.textContent = `${done}/${steps.length}`;
+  dotEl.classList.toggle("all-done", !next);
+}
+
 function renderStrategyPoints(session) {
   const wrap = document.getElementById("strategy-points-wrap");
+  updateMeetingStrip(session);
   if (!session.strategy_text) {
     wrap.innerHTML = `<div class="strategy-placeholder">Not ready yet -- keep talking it through, the final strategy lands here.</div>`;
     return;
@@ -1866,6 +1929,7 @@ function renderStrategyPoints(session) {
 function renderPlan(steps) {
   const container = document.getElementById("plan-steps");
   container.innerHTML = "";
+  updatePlanStrip(steps);
   if (!steps.length) {
     container.innerHTML = `<div class="strategy-placeholder">No action items yet -- keep talking it through, or add one below.</div>`;
     return;
@@ -2269,18 +2333,26 @@ function sidebarIsDrawer() {
   return isMobile() || isSplitLayout();
 }
 
+// The plan/strategy sheet (.side-panel) is an overlay docked inside
+// .thread-col now, not a full-screen drawer competing with the sidebar --
+// see setPanelApplicable/togglePlanSheet below -- so it no longer touches
+// the sidebar or the scrim at all.
 function activeSidePanel() {
   return activeConvo && activeConvo.type === "meeting" ? meetingPlanPanelEl : planPanelEl;
 }
 
+function activeStrip() {
+  return activeConvo && activeConvo.type === "meeting"
+    ? document.getElementById("meeting-strip")
+    : document.getElementById("plan-strip");
+}
+
 function updateScrim() {
-  const open = !sidebarEl.classList.contains("closed") || activeSidePanel().classList.contains("open");
-  scrimEl.classList.toggle("show", sidebarIsDrawer() && open);
+  scrimEl.classList.toggle("show", sidebarIsDrawer() && !sidebarEl.classList.contains("closed"));
 }
 
 function toggleSidebar() {
   sidebarEl.classList.toggle("closed");
-  if (!sidebarEl.classList.contains("closed")) activeSidePanel().classList.remove("open");
   updateScrim();
 }
 
@@ -2289,21 +2361,21 @@ function closeSidebarOnMobile() {
   updateScrim();
 }
 
-function toggleSidePanel() {
+function togglePlanSheet() {
   const panel = activeSidePanel();
+  const strip = activeStrip();
   const nowOpen = !panel.classList.contains("open");
   panel.classList.toggle("open", nowOpen);
-  if (!isMobile()) panel.style.display = nowOpen ? "flex" : "none";
-  sidebarEl.classList.add("closed");
-  updateScrim();
+  strip.classList.toggle("open", nowOpen);
 }
 
 document.getElementById("sidebar-toggle").onclick = toggleSidebar;
-document.getElementById("plan-toggle").onclick = toggleSidePanel;
+document.getElementById("plan-strip").onclick = togglePlanSheet;
+document.getElementById("meeting-strip").onclick = togglePlanSheet;
+document.getElementById("plan-collapse").onclick = togglePlanSheet;
+document.getElementById("meeting-collapse").onclick = togglePlanSheet;
 scrimEl.onclick = () => {
   sidebarEl.classList.add("closed");
-  planPanelEl.classList.remove("open");
-  meetingPlanPanelEl.classList.remove("open");
   updateScrim();
 };
 // ---------------------------------------------------------------------
