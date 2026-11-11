@@ -20,13 +20,13 @@ python3 -m http.server 8000
 
 | Page | Local | Live |
 |---|---|---|
-| Spool | [localhost:8080/](http://localhost:8080/) | [mend-mvp.onrender.com/](https://mend-mvp.onrender.com/) |
-| Thimble | [localhost:8080/intake/](http://localhost:8080/intake/) | [mend-mvp.onrender.com/intake/](https://mend-mvp.onrender.com/intake/) |
+| Spool | [localhost:8080/](http://localhost:8080/) | [trymend.solutions/](https://trymend.solutions/) |
+| Thimble | [localhost:8080/intake/](http://localhost:8080/intake/) | [trymend.solutions/intake/](https://trymend.solutions/intake/) |
 | Joint session · Employee A | [localhost:8080/joint/?code=links&role=a](http://localhost:8080/joint/?code=links&role=a) | — not deployed |
 | Joint session · Employee B | [localhost:8080/joint/?code=links&role=b](http://localhost:8080/joint/?code=links&role=b) | — not deployed |
 | Post-session check-in | [localhost:8080/post/](http://localhost:8080/post/) | — not deployed |
 | Joint session · audio (opt-in, needs LiveKit) | [localhost:8080/joint-audio/](http://localhost:8080/joint-audio/) | — not deployed |
-| About (why this matters) | [localhost:8080/about](http://localhost:8080/about) or [localhost:8000/index.html](http://localhost:8000/index.html) (about.html retired, duplicated index.html) | [mend-mvp.onrender.com/about](https://mend-mvp.onrender.com/about) |
+| About (why this matters) | [localhost:8080/about](http://localhost:8080/about) or [localhost:8000/index.html](http://localhost:8000/index.html) (about.html retired, duplicated index.html) | [trymend.solutions/about](https://trymend.solutions/about) |
 
 Only spool + thimble are in the live Render deploy (`render.yaml`/`deploy/start.sh`) — everything else above only exists locally. Open both Employee A and Employee B links (two tabs, or send B to someone else) for a real two-person joint session.
 
@@ -34,7 +34,7 @@ Only spool + thimble are in the live Render deploy (`render.yaml`/`deploy/start.
 
 | Page | Local | Live |
 |---|---|---|
-| Launchpad (this same link list, as a page) | [localhost:8080/launchpad](http://localhost:8080/launchpad) or [localhost:8000/launchpad.html](http://localhost:8000/launchpad.html) | [mend-mvp.onrender.com/launchpad](https://mend-mvp.onrender.com/launchpad) |
+| Launchpad (this same link list, as a page) | [localhost:8080/launchpad](http://localhost:8080/launchpad) or [localhost:8000/launchpad.html](http://localhost:8000/launchpad.html) | [trymend.solutions/launchpad](https://trymend.solutions/launchpad) |
 | Phrase review (classifier training-data labeling tool) | [localhost:8000/apps/classifier/data/review_page.html](<http://localhost:8000/apps/classifier/data/review_page.html>) | — local only |
 
 ## Documents
@@ -42,10 +42,10 @@ Only spool + thimble are in the live Render deploy (`render.yaml`/`deploy/start.
 | Page | Local | Live |
 |---|---|---|
 | Product spec | [localhost:8000/product-spec.html](http://localhost:8000/product-spec.html) | — not deployed (see the claude.ai artifact below instead) |
-| Pitch page | [localhost:8000/Mend Pitch/Mend Pitch v2.dc.html](<http://localhost:8000/Mend Pitch/Mend Pitch v2.dc.html>) | [mend-mvp.onrender.com/pitch](https://mend-mvp.onrender.com/pitch) |
+| Pitch page | [localhost:8000/Mend Pitch/Mend Pitch v2.dc.html](<http://localhost:8000/Mend Pitch/Mend Pitch v2.dc.html>) | [trymend.solutions/pitch](https://trymend.solutions/pitch) |
 | Roadmap | [localhost:8000/ROADMAP.md](http://localhost:8000/ROADMAP.md) | — local only |
 | Status | [localhost:8000/STATUS.md](http://localhost:8000/STATUS.md) | — local only |
-| Public links page (Spool's own, not this file) | — | [mend-mvp.onrender.com/links](https://mend-mvp.onrender.com/links) |
+| Public links page (Spool's own, not this file) | — | [trymend.solutions/links](https://trymend.solutions/links) |
 
 ## Design handoffs
 
