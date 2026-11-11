@@ -601,7 +601,10 @@
      so this is a mouth-flap keyframe toggled on/off around the typewriter
      reveal below, not driven by an actual audio amplitude. */
   @keyframes onboard-mouth-talk { 0%, 100% { transform: translate(-50%,-50%) scaleY(1); } 50% { transform: translate(-50%,-50%) scaleY(.35); } }
-  .onboard-card .avatar.talking .mouth { animation: onboard-mouth-talk .32s ease-in-out infinite; }
+  /* Not onboard-card-only: reused for any .avatar.talking, including a
+     real reply's per-message avatar while its text is being revealed
+     (see revealReply) and the split layout's stage avatar above. */
+  .avatar.talking .mouth { animation: onboard-mouth-talk .32s ease-in-out infinite; }
   /* "Four-Color Bloom" fill -- the real thimble app's own current avatar
      style (apps/thimble/static/session.html, ported 2026-10-24: idle,
      listening, thinking and talking each own a fixed corner, blended by
@@ -800,19 +803,46 @@
   .stage-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-pink); animation: stage-dot-pulse 2.4s ease-in-out infinite; }
   @keyframes stage-dot-pulse { 0%,100%{ transform: scale(1); opacity:.9; } 50%{ transform: scale(1.3); opacity:.5; } }
   .stage-avatar { position: relative; width: 260px; height: 260px; }
+  /* "Four-Color Bloom" fill, same system as apps/thimble/static/session.html
+     (THIMBLE_BLOOM_WEIGHTS/COLOR/POS there): idle-blue, listening-teal,
+     thinking-honey and talking-pink each sit at a fixed corner and are
+     always present -- a state change only shifts each one's *weight*
+     (opacity here, since Seam has no per-frame render loop to lerp a
+     canvas/SVG fill), not which colors exist. setStageState below drives
+     the four .bloom opacities; this is the idle resting weight (.46/.20/
+     .14/.20), same as the old frozen single-background-image snapshot. */
   .stage-avatar .blob {
     position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%;
     animation: avatar-wobble 3.6s ease-in-out infinite;
-    background-image:
-      radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%),
-      radial-gradient(circle at 15% 15%, rgba(163,207,224,.81) 0%, transparent 66.6%),
-      radial-gradient(circle at 85% 15%, rgba(176,222,209,.52) 0%, transparent 38%),
-      radial-gradient(circle at 80% 85%, rgba(233,185,73,.45) 0%, transparent 31.4%),
-      radial-gradient(circle at 20% 85%, rgba(243,130,154,.52) 0%, transparent 38%);
     background-color: rgb(191,192,186);
     box-shadow: inset -15px -17px 20px -10px rgba(0,0,0,.22), inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
+    overflow: hidden;
   }
-  .stage-avatar .mouth { position: absolute; left: 50%; top: 60%; width: 36px; height: 22px; transform: translate(-50%,-50%); background: var(--stage-bg); border-radius: 50%; }
+  .stage-avatar .blob::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%);
+  }
+  .stage-avatar .bloom {
+    position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    transition: opacity .6s ease;
+  }
+  .stage-avatar .bloom-idle      { background: radial-gradient(circle at 15% 15%, rgba(163,207,224,.95) 0%, transparent 66.6%); opacity: .46; }
+  .stage-avatar .bloom-listening { background: radial-gradient(circle at 85% 15%, rgba(176,222,209,.95) 0%, transparent 60%);   opacity: .20; }
+  .stage-avatar .bloom-thinking  { background: radial-gradient(circle at 80% 85%, rgba(233,185,73,.95) 0%, transparent 55%);    opacity: .14; }
+  .stage-avatar .bloom-talking   { background: radial-gradient(circle at 20% 85%, rgba(243,130,154,.95) 0%, transparent 60%);   opacity: .20; }
+  .stage-avatar .mouth { position: absolute; left: 50%; top: 60%; width: 36px; height: 22px; transform: translate(-50%,-50%); background: var(--stage-bg); border-radius: 50%; z-index: 1; }
+  /* Listening: mic is open and recording -- a brisk pulse on the whole
+     avatar reads as "I'm hearing you" without needing a live mic-level
+     feed (Seam's recording is push-to-talk-to-text, not a continuous
+     stream Thimble could meter). */
+  @keyframes stage-avatar-listen-pulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.035); } }
+  .stage-avatar.listening .blob { animation: avatar-wobble 3.6s ease-in-out infinite, stage-avatar-listen-pulse 1.1s ease-in-out infinite; }
+  /* Thinking: mouth rests instead of flapping, dimmed slightly -- paired
+     with the thinking-weighted honey bloom above. */
+  .stage-avatar.thinking .mouth { opacity: .55; }
+  /* Talking: same mouth-flap keyframe the per-message/onboard avatars use
+     (see .avatar.talking .mouth below) while a reply is being revealed. */
+  .stage-avatar.talking .mouth { animation: onboard-mouth-talk .32s ease-in-out infinite; }
   .stage-shadow {
     width: 150px; height: 20px; border-radius: 50%;
     background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,.22) 0%, rgba(23,55,46,.1) 55%, rgba(23,55,46,0) 100%);
@@ -907,7 +937,15 @@
 
   <div class="avatar-stage" id="avatar-stage">
     <div class="stage-state"><span class="dot"></span> <span id="stage-state-label">Thimble</span></div>
-    <div class="stage-avatar"><div class="blob"></div><div class="mouth"></div></div>
+    <div class="stage-avatar" id="stage-avatar">
+      <div class="blob">
+        <div class="bloom bloom-idle" id="stage-bloom-idle"></div>
+        <div class="bloom bloom-listening" id="stage-bloom-listening"></div>
+        <div class="bloom bloom-thinking" id="stage-bloom-thinking"></div>
+        <div class="bloom bloom-talking" id="stage-bloom-talking"></div>
+      </div>
+      <div class="mouth"></div>
+    </div>
     <div class="stage-shadow"></div>
     <div class="hold-dock">
       <div class="hold-wrap">
@@ -1505,6 +1543,7 @@ function wirePushToTalk(btn, targetEl, extraBtn) {
     if (mediaRecorder) return;
     holding = true;
     releaseRequested = false;
+    setStageState("listening");
     if (!tipSeen()) { showTip(); markTipSeen(); }
     btn.classList.add("starting");
     if (extraBtn) extraBtn.classList.add("starting");
@@ -1517,6 +1556,7 @@ function wirePushToTalk(btn, targetEl, extraBtn) {
       if (extraBtn) extraBtn.classList.remove("starting");
       hideLabel();
       hideTip();
+      setStageState("idle");
       alert("Couldn't access the microphone.");
       return;
     }
@@ -1536,8 +1576,9 @@ function wirePushToTalk(btn, targetEl, extraBtn) {
       playMicBeep(440, 110);
       const blob = new Blob(recordedChunks, { type: "audio/webm" });
       mediaRecorder = null;
-      if (blob.size < 1000) { hideLabel(); return; }
+      if (blob.size < 1000) { hideLabel(); setStageState("idle"); return; }
       showLabel("Transcribing…");
+      setStageState("thinking");
       const form = new FormData();
       form.append("file", blob, "clip.webm");
       btn.disabled = true;
@@ -1556,6 +1597,7 @@ function wirePushToTalk(btn, targetEl, extraBtn) {
         btn.disabled = false;
         if (extraBtn) extraBtn.disabled = false;
         hideLabel();
+        setStageState("idle");
       }
     };
     mediaRecorder.start();
@@ -2054,6 +2096,7 @@ async function sendMessage() {
   messagesEl.style.display = "flex";
   const userBubble = appendBubble(messagesEl, "user", text);
   document.getElementById("send-btn").disabled = true;
+  setStageState("thinking");
 
   try {
     // A real person doesn't start typing the instant your message lands --
@@ -2063,7 +2106,7 @@ async function sendMessage() {
       const pending = appendBubble(messagesEl, "assistant", "...", true);
       const body = await sendRealMessage(activeConvo.type, activeConvo.id, text);
       pending.closest(".msg-row").remove();
-      appendBubble(messagesEl, "assistant", body.reply);
+      await revealReply(messagesEl, body.reply);
       applyConvoResult(activeConvo.type, body);
       if (body.user_message_redacted && body.user_message_redacted !== text) {
         renderBubbleText(userBubble, body.user_message_redacted);
@@ -2102,7 +2145,7 @@ async function sendMessage() {
       });
       const { reply } = await genRes.json();
       genPending.closest(".msg-row").remove();
-      appendBubble(messagesEl, "assistant", reply);
+      await revealReply(messagesEl, reply);
       pendingHistory.push({ role: "assistant", content: reply });
       return;
     }
@@ -2131,11 +2174,12 @@ async function sendMessage() {
     const realPending = appendBubble(messagesEl, "assistant", "...", true);
     const realBody = await sendRealMessage(type, obj.id, text);
     realPending.closest(".msg-row").remove();
-    appendBubble(messagesEl, "assistant", realBody.reply);
+    await revealReply(messagesEl, realBody.reply);
     applyConvoResult(type, realBody);
     await loadConversations();
   } finally {
     document.getElementById("send-btn").disabled = false;
+    setStageState("idle");
   }
 }
 
@@ -2290,14 +2334,99 @@ layoutToggleBtn.onclick = () => {
   applyLayout(next);
 };
 
-// Mirrors the active conversation's title onto the avatar stage's status
-// line (matches the mockup's "Thimble · <what we're doing>" line) without
-// touching the three call sites that set #thread-title directly.
+// ---------------------------------------------------------------------
+// Thimble engagement state: idle / listening / thinking / talking. Same
+// four-color-bloom weight table as apps/thimble/static/session.html's
+// THIMBLE_BLOOM_WEIGHTS (idle-blue/listening-teal/thinking-honey/talking-
+// pink, each state gets 46% of its own color, its two neighbors 20% each,
+// the opposite 14%) -- just applied as a CSS opacity on four fixed divs
+// instead of that engine's per-frame canvas/SVG lerp, since Seam has no
+// live mic-level or TTS-amplitude feed to drive a continuous animation
+// off of; push-to-talk and request/response are the only real engagement
+// signals available here. Drives the stage avatar's bloom + mouth (only
+// visible in split layout) and the status line underneath it.
+// ---------------------------------------------------------------------
+const STAGE_BLOOM_WEIGHTS = {
+  idle:      { idle: .46, listening: .20, thinking: .14, talking: .20 },
+  listening: { idle: .20, listening: .46, thinking: .20, talking: .14 },
+  thinking:  { idle: .14, listening: .20, thinking: .46, talking: .20 },
+  talking:   { idle: .20, listening: .14, thinking: .20, talking: .46 },
+};
+const STAGE_STATE_VERB = { listening: "listening", thinking: "thinking", talking: "responding" };
+const stageAvatarEl = document.getElementById("stage-avatar");
+const stageBlooms = {
+  idle: document.getElementById("stage-bloom-idle"),
+  listening: document.getElementById("stage-bloom-listening"),
+  thinking: document.getElementById("stage-bloom-thinking"),
+  talking: document.getElementById("stage-bloom-talking"),
+};
 const stageStateLabel = document.getElementById("stage-state-label");
+let stageState = "idle";
+let stageThreadTitle = "";
+
+function renderStageLabel() {
+  const verb = STAGE_STATE_VERB[stageState];
+  if (verb) { stageStateLabel.textContent = `Thimble · ${verb}…`; return; }
+  stageStateLabel.textContent = stageThreadTitle ? `Thimble · ${stageThreadTitle}` : "Thimble";
+}
+
+function setStageState(state) {
+  if (state === stageState) return;
+  stageState = state;
+  const weights = STAGE_BLOOM_WEIGHTS[state] || STAGE_BLOOM_WEIGHTS.idle;
+  Object.keys(stageBlooms).forEach((k) => { stageBlooms[k].style.opacity = weights[k]; });
+  stageAvatarEl.classList.toggle("listening", state === "listening");
+  stageAvatarEl.classList.toggle("thinking", state === "thinking");
+  stageAvatarEl.classList.toggle("talking", state === "talking");
+  renderStageLabel();
+}
+
+// Mirrors the active conversation's title onto the status line (matches
+// the mockup's "Thimble · <what we're doing>" line) without touching the
+// three call sites that set #thread-title directly; stageState (above)
+// takes priority over the title whenever Thimble is actively doing
+// something, same convention apps/thimble's own status line uses.
 new MutationObserver(() => {
-  const title = document.getElementById("thread-title").textContent;
-  stageStateLabel.textContent = title ? `Thimble · ${title}` : "Thimble";
+  stageThreadTitle = document.getElementById("thread-title").textContent;
+  renderStageLabel();
 }).observe(document.getElementById("thread-title"), { childList: true, characterData: true, subtree: true });
+
+// Typed reveal for a real assistant reply, replacing the old instant
+// appendBubble(messagesEl, "assistant", text): gives Thimble's per-message
+// avatar (and, in split layout, the stage avatar) a "talking" beat --
+// mouth flapping, bloom weighted toward talking-pink -- instead of a
+// reply just appearing fully formed. Same typewriter approach the (now
+// disabled) onboarding walkthrough used, generalized to every real reply.
+const STAGE_REVEAL_MAX_MS = 1400;
+function revealReply(messagesEl, text) {
+  const row = document.createElement("div");
+  row.className = "msg-row assistant";
+  row.innerHTML = avatarSvg();
+  const avatarEl = row.querySelector(".avatar");
+  const b = document.createElement("div");
+  b.className = "bubble assistant";
+  row.appendChild(b);
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  avatarEl.classList.add("talking");
+  setStageState("talking");
+  const stepMs = Math.max(6, Math.min(22, STAGE_REVEAL_MAX_MS / Math.max(1, text.length)));
+  let i = 0;
+  return new Promise((resolve) => {
+    const timer = setInterval(() => {
+      i += 1;
+      renderBubbleText(b, text.slice(0, i));
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      if (i >= text.length) {
+        clearInterval(timer);
+        avatarEl.classList.remove("talking");
+        setStageState("idle");
+        resolve(b);
+      }
+    }, stepMs);
+  });
+}
 
 if (sidebarIsDrawer()) sidebarEl.classList.add("closed");
 updateScrim();
