@@ -34,6 +34,11 @@
     --accent-pink: #F3829A;
     --accent-pink-bg: #FCEEF0;
     --accent-pink-active: #F9D9E1;
+    /* Paler oat than --chat-bg, so Thimble's avatar stage (split layout,
+       Bobbin/seam_thimble_split_mockup.html) reads as its own "stage"
+       instead of just more chat background. Ported from
+       apps/thimble/static/session.html's --stage-bg. */
+    --stage-bg: #FBF8F3;
   }
   * { box-sizing: border-box; }
   body {
@@ -106,6 +111,18 @@
     display: none; align-items: center; justify-content: center;
     font-size: 15px; cursor: pointer; border: none;
   }
+  /* Split-layout toggle: switches #app's data-layout between the classic
+     single-column chat and the Thimble-avatar-stage layout prototyped in
+     Bobbin/seam_thimble_split_mockup.html. Both stay fully functional --
+     this just flips which one renders. */
+  #layout-toggle {
+    width: 28px; height: 28px; border-radius: 999px; flex-shrink: 0;
+    background: var(--panel-bg); color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: none;
+  }
+  #layout-toggle:hover { background: var(--rail-border); }
+  #layout-toggle.active { background: var(--accent-pink-active); color: var(--ink); }
   #plan-toggle {
     display: none;
     font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--rail-border);
@@ -760,6 +777,81 @@
     .composer-pill textarea { font-size: 17px; padding: 8px 0; }
     .mic-btn { width: 40px; height: 40px; }
   }
+
+  /* ---- Split layout (Bobbin/seam_thimble_split_mockup.html wired in) ----
+     Opt-in via #layout-toggle; persisted in localStorage. Thimble's avatar
+     stage takes the space the sidebar used to sit in, the sidebar becomes
+     an off-canvas drawer at every width (not just mobile), and the thread
+     column narrows to a fixed side panel. The composer's existing mic
+     button is the one real push-to-talk control; #stage-mic-btn is a
+     second control wired to the same handler (see wirePushToTalk), not a
+     separate recorder. */
+  .avatar-stage { display: none; }
+  body[data-layout="split"] .avatar-stage {
+    flex: 1 1 auto; min-width: 0; background: var(--stage-bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; position: relative;
+  }
+  .stage-state {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .stage-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-pink); animation: stage-dot-pulse 2.4s ease-in-out infinite; }
+  @keyframes stage-dot-pulse { 0%,100%{ transform: scale(1); opacity:.9; } 50%{ transform: scale(1.3); opacity:.5; } }
+  .stage-avatar { position: relative; width: 260px; height: 260px; }
+  .stage-avatar .blob {
+    position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%;
+    animation: avatar-wobble 3.6s ease-in-out infinite;
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%),
+      radial-gradient(circle at 15% 15%, rgba(163,207,224,.81) 0%, transparent 66.6%),
+      radial-gradient(circle at 85% 15%, rgba(176,222,209,.52) 0%, transparent 38%),
+      radial-gradient(circle at 80% 85%, rgba(233,185,73,.45) 0%, transparent 31.4%),
+      radial-gradient(circle at 20% 85%, rgba(243,130,154,.52) 0%, transparent 38%);
+    background-color: rgb(191,192,186);
+    box-shadow: inset -15px -17px 20px -10px rgba(0,0,0,.22), inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
+  }
+  .stage-avatar .mouth { position: absolute; left: 50%; top: 60%; width: 36px; height: 22px; transform: translate(-50%,-50%); background: var(--stage-bg); border-radius: 50%; }
+  .stage-shadow {
+    width: 150px; height: 20px; border-radius: 50%;
+    background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,.22) 0%, rgba(23,55,46,.1) 55%, rgba(23,55,46,0) 100%);
+    margin-top: -8px;
+  }
+  .hold-dock { position: absolute; right: 28px; bottom: 28px; z-index: 3; }
+  .hold-wrap { position: relative; width: 104px; height: 104px; }
+  .hold-ring { position: absolute; inset: 0; pointer-events: none; }
+  .hold-ring circle { fill: none; stroke-width: 3; }
+  .hold-ring .track { stroke: var(--border); }
+  .hold-ring .progress { stroke: var(--accent-pink); stroke-linecap: round; transform-origin: 50% 50%; transform: rotate(-90deg); stroke-dasharray: 301.59; stroke-dashoffset: 211; }
+  .talk-mic-btn {
+    position: absolute; inset: 9px; border-radius: 50%; border: none;
+    background: var(--ink); color: var(--stage-bg);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .talk-mic-btn:hover { background: #0f2a22; }
+  .talk-mic-btn.starting { animation: mic-btn-starting-pulse 1s ease-in-out infinite; }
+  .talk-mic-btn.recording { background: #E85D4A !important; }
+
+  body[data-layout="split"] #sidebar {
+    position: fixed; top: 57px; bottom: 0; left: 0; z-index: 30;
+    width: 280px; max-width: 85%;
+    box-shadow: none;
+    transform: translateX(-100%); transition: transform .2s ease;
+  }
+  body[data-layout="split"] #sidebar:not(.closed) {
+    transform: translateX(0); box-shadow: 12px 0 32px rgba(23,55,46,.16);
+  }
+  body[data-layout="split"] #sidebar-toggle { display: flex; }
+  body[data-layout="split"] .thread-col {
+    flex: 0 0 400px; max-width: 420px; min-width: 320px;
+    border-left: 1px solid var(--border);
+  }
+  @media (max-width: 860px) {
+    body[data-layout="split"] .avatar-stage { display: none; }
+    body[data-layout="split"] .thread-col { flex-basis: 100%; max-width: none; border-left: none; }
+  }
 </style>
 </head>
 <body>
@@ -775,6 +867,9 @@
     <button id="install-btn" title="Install Seam as an app">Install app</button>
     <a id="feedback-link" href="survey/post" title="Done testing? Leave feedback">Give feedback</a>
     <button id="help-btn" title="How this works">?</button>
+    <button id="layout-toggle" title="Switch layout" aria-label="Switch between classic and split layout" aria-pressed="false">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="14" y1="4" x2="14" y2="20"/></svg>
+    </button>
     <button class="privacy-chip" id="privacy-chip" type="button" aria-describedby="privacy-tooltip" aria-label="Anonymity enforced">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
       <span class="privacy-chip-label">Anonymity enforced</span>
@@ -800,6 +895,23 @@
   </div>
 
   <div class="panel-scrim" id="panel-scrim"></div>
+
+  <div class="avatar-stage" id="avatar-stage">
+    <div class="stage-state"><span class="dot"></span> <span id="stage-state-label">Thimble</span></div>
+    <div class="stage-avatar"><div class="blob"></div><div class="mouth"></div></div>
+    <div class="stage-shadow"></div>
+    <div class="hold-dock">
+      <div class="hold-wrap">
+        <svg class="hold-ring" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
+          <circle class="track" cx="52" cy="52" r="48"></circle>
+          <circle class="progress" cx="52" cy="52" r="48"></circle>
+        </svg>
+        <button class="talk-mic-btn" id="stage-mic-btn" type="button" title="Hold to record a voice memo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div class="section-view active">
     <div class="thread-col">
@@ -1254,7 +1366,7 @@ const MIC_TIP_SEEN_KEY = "seam_mic_tip_seen";
 const WAVE_BAR_PITCH = 6;
 const WAVE_SAMPLE_INTERVAL_MS = 70;
 
-function wirePushToTalk(btn, targetEl) {
+function wirePushToTalk(btn, targetEl, extraBtn) {
   const wrap = btn.closest(".mic-wrap");
   const tip = wrap.querySelector(".mic-tip");
   const tipClose = wrap.querySelector("#micTipClose");
@@ -1386,18 +1498,21 @@ function wirePushToTalk(btn, targetEl) {
     releaseRequested = false;
     if (!tipSeen()) { showTip(); markTipSeen(); }
     btn.classList.add("starting");
+    if (extraBtn) extraBtn.classList.add("starting");
     showLabel("Starting…");
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
       btn.classList.remove("starting");
+      if (extraBtn) extraBtn.classList.remove("starting");
       hideLabel();
       hideTip();
       alert("Couldn't access the microphone.");
       return;
     }
     btn.classList.remove("starting");
+    if (extraBtn) extraBtn.classList.remove("starting");
     recordedChunks = [];
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = (e) => {
@@ -1406,6 +1521,7 @@ function wirePushToTalk(btn, targetEl) {
     mediaRecorder.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
       btn.classList.remove("recording");
+      if (extraBtn) extraBtn.classList.remove("recording");
       ticks.classList.remove("active");
       stopWaveform();
       playMicBeep(440, 110);
@@ -1416,6 +1532,7 @@ function wirePushToTalk(btn, targetEl) {
       const form = new FormData();
       form.append("file", blob, "clip.webm");
       btn.disabled = true;
+      if (extraBtn) extraBtn.disabled = true;
       try {
         const res = await fetch(apiPath("/api/voice"), { method: "POST", body: form });
         const data = await res.json();
@@ -1428,11 +1545,13 @@ function wirePushToTalk(btn, targetEl) {
         // silent: dictation failing shouldn't block typing instead
       } finally {
         btn.disabled = false;
+        if (extraBtn) extraBtn.disabled = false;
         hideLabel();
       }
     };
     mediaRecorder.start();
     btn.classList.add("recording");
+    if (extraBtn) extraBtn.classList.add("recording");
     ticks.classList.add("active");
     startWaveform(stream);
     hideLabel();
@@ -1455,6 +1574,17 @@ function wirePushToTalk(btn, targetEl) {
   btn.addEventListener("mouseleave", release);
   btn.addEventListener("touchstart", (e) => { e.preventDefault(); press(); }, { passive: false });
   btn.addEventListener("touchend", (e) => { e.preventDefault(); release(); }, { passive: false });
+
+  // extraBtn (the avatar-stage's hold-dock mic, split layout only) drives
+  // the SAME press/release -- one real MediaRecorder, two affordances --
+  // rather than a second recorder wired independently.
+  if (extraBtn) {
+    extraBtn.addEventListener("mousedown", (e) => { e.preventDefault(); press(); });
+    extraBtn.addEventListener("mouseup", release);
+    extraBtn.addEventListener("mouseleave", release);
+    extraBtn.addEventListener("touchstart", (e) => { e.preventDefault(); press(); }, { passive: false });
+    extraBtn.addEventListener("touchend", (e) => { e.preventDefault(); release(); }, { passive: false });
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -2032,7 +2162,7 @@ composerEl.addEventListener("input", () => {
   composerEl.style.height = "auto";
   composerEl.style.height = composerEl.scrollHeight + "px";
 });
-wirePushToTalk(document.getElementById("mic-btn"), composerEl);
+wirePushToTalk(document.getElementById("mic-btn"), composerEl, document.getElementById("stage-mic-btn"));
 
 // Opening bubble starts as a pending/typing-dots placeholder (same markup
 // appendBubble uses for a real pending reply) and only fills in with the
@@ -2076,13 +2206,23 @@ function isMobile() {
   return window.matchMedia(MOBILE_QUERY).matches;
 }
 
+// Split layout (see body[data-layout="split"] CSS) puts the sidebar in an
+// off-canvas drawer at every width, same as mobile does at narrow widths --
+// so anywhere "is the sidebar a drawer right now" matters, check both.
+function isSplitLayout() {
+  return document.body.dataset.layout === "split";
+}
+function sidebarIsDrawer() {
+  return isMobile() || isSplitLayout();
+}
+
 function activeSidePanel() {
   return activeConvo && activeConvo.type === "meeting" ? meetingPlanPanelEl : planPanelEl;
 }
 
 function updateScrim() {
   const open = !sidebarEl.classList.contains("closed") || activeSidePanel().classList.contains("open");
-  scrimEl.classList.toggle("show", isMobile() && open);
+  scrimEl.classList.toggle("show", sidebarIsDrawer() && open);
 }
 
 function toggleSidebar() {
@@ -2092,7 +2232,7 @@ function toggleSidebar() {
 }
 
 function closeSidebarOnMobile() {
-  if (isMobile()) sidebarEl.classList.add("closed");
+  if (sidebarIsDrawer()) sidebarEl.classList.add("closed");
   updateScrim();
 }
 
@@ -2113,7 +2253,44 @@ scrimEl.onclick = () => {
   meetingPlanPanelEl.classList.remove("open");
   updateScrim();
 };
-if (isMobile()) sidebarEl.classList.add("closed");
+// ---------------------------------------------------------------------
+// Split layout toggle: flips #app's data-layout between the classic
+// single-column chat and the Thimble-avatar-stage layout prototyped in
+// Bobbin/seam_thimble_split_mockup.html. Both stay fully wired -- this
+// only changes which one is visible. Persisted per-browser so the choice
+// survives a reload.
+// ---------------------------------------------------------------------
+const LAYOUT_PREF_KEY = "seam_layout_pref";
+const layoutToggleBtn = document.getElementById("layout-toggle");
+
+function applyLayout(mode) {
+  document.body.dataset.layout = mode;
+  layoutToggleBtn.classList.toggle("active", mode === "split");
+  layoutToggleBtn.setAttribute("aria-pressed", mode === "split" ? "true" : "false");
+  if (mode === "split") sidebarEl.classList.add("closed");
+  updateScrim();
+}
+
+let savedLayout = "classic";
+try { savedLayout = localStorage.getItem(LAYOUT_PREF_KEY) || "classic"; } catch (e) {}
+applyLayout(savedLayout);
+
+layoutToggleBtn.onclick = () => {
+  const next = document.body.dataset.layout === "split" ? "classic" : "split";
+  try { localStorage.setItem(LAYOUT_PREF_KEY, next); } catch (e) {}
+  applyLayout(next);
+};
+
+// Mirrors the active conversation's title onto the avatar stage's status
+// line (matches the mockup's "Thimble · <what we're doing>" line) without
+// touching the three call sites that set #thread-title directly.
+const stageStateLabel = document.getElementById("stage-state-label");
+new MutationObserver(() => {
+  const title = document.getElementById("thread-title").textContent;
+  stageStateLabel.textContent = title ? `Thimble · ${title}` : "Thimble";
+}).observe(document.getElementById("thread-title"), { childList: true, characterData: true, subtree: true });
+
+if (sidebarIsDrawer()) sidebarEl.classList.add("closed");
 updateScrim();
 
 // ---------------------------------------------------------------------
