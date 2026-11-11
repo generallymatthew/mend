@@ -844,12 +844,21 @@
     transform: translateX(0); box-shadow: 12px 0 32px rgba(23,55,46,.16);
   }
   body[data-layout="split"] #sidebar-toggle { display: flex; }
+  /* .section-view wraps .thread-col plus the side panels and is normally
+     flex:1 so .thread-col (itself flex:1) fills the whole remaining row.
+     In split layout .thread-col becomes a fixed-width column instead, so
+     .section-view has to stop being greedy too -- otherwise it and
+     .avatar-stage each claim half the remaining space, stranding the
+     400px thread-col on the left of a too-wide section-view and leaving
+     blank space on the right. */
+  body[data-layout="split"] .section-view { flex: 0 0 auto; }
   body[data-layout="split"] .thread-col {
     flex: 0 0 400px; max-width: 420px; min-width: 320px;
     border-left: 1px solid var(--border);
   }
   @media (max-width: 860px) {
     body[data-layout="split"] .avatar-stage { display: none; }
+    body[data-layout="split"] .section-view { flex: 1; }
     body[data-layout="split"] .thread-col { flex-basis: 100%; max-width: none; border-left: none; }
   }
 </style>
