@@ -241,6 +241,45 @@ a separate service.
 
 ---
 
+## Working relationship compact (human-first coworker norms)
+
+A set of coworker "operating norms" research-backed in structure (Jehn's
+task/process/relationship conflict split, Deci & Ryan's self-determination
+theory on peer-authored vs. imposed rules, Fundamental Attribution Error in
+async text channels) but explicitly reframed away from the standard
+corporate version of the same mechanics. First pass used the normal
+"SLAs/channels/escalation" framing and the user flagged it as building
+"efficient worker bees" rather than something for the employee's own
+benefit — the correction matters more than the content: the same three
+pillars (structural empathy, operational boundaries, de-stigmatized
+redress) only count as on-brand for Mend if they're framed as protective
+equipment for the person (the right to feel what you feel, the right to
+log off without eggshell-walking, the right to flag friction without it
+becoming an HR event), not as productivity infrastructure that happens to
+also make people feel nice. Directly reinforces
+[[project_mend_core_philosophy]] (institutions not people) and
+[[feedback_no_eq_term]]'s instinct that soft HR language undersells what
+this actually does.
+
+Includes a ready peer-to-peer kickoff script ("Default to Grace" / "Protect
+Our Sanity" / "Pebble in the Shoe") written in first-person, human voice —
+closer to how Thimble itself might talk than how an HR document would.
+- Source: conversation 2026-11-10 (pasted chat, unnamed), full summary in
+  `summerizing-conversations.md`'s template, applied ad hoc to this chat.
+- Where it could plug in: could become actual onboarding/kickoff copy
+  surfaced inside Seam or Thimble (e.g. a "start this working relationship
+  off right" prompt a manager or peer can send), or could inform the
+  "Why I Exist" / "Whose Side I'm On" homepage copy already proposed under
+  "Thimble presence and personality" above — same worker-protective framing
+  problem, same fix.
+- Why not active: never asked for as a feature — this was pure discussion/
+  framing work, no product surface decided, no copy drafted for a specific
+  screen yet. The two next steps floated (customize for a specific
+  cross-functional dynamic; tie into Spool's reassurance copy) were offered
+  but not accepted by the user.
+
+---
+
 ## Narrative / positioning
 
 ### Reframe "professionalism" as human maturity, not human erasure
@@ -252,6 +291,82 @@ biological limits and stress responses, not erasing them.
 - Where it could plug in: pitch deck opener, landing page hero copy, sales narrative.
 - Why not active: needs to be distilled to a few lines that survive contact
   with an HR buyer, not the full essay version.
+- Supporting evidence (not yet source-verified, needs citation check before
+  using in external-facing copy): organizational psychology research backs
+  the claim that masking has a real output cost, not just a wellbeing cost.
+  Gross's emotion-regulation work shows expressive suppression taxes
+  prefrontal/working-memory resources, which collapses "integrative
+  complexity" (holding competing perspectives, trade-offs) into rigid,
+  checklist-style thinking. Kahn's 1990 "psychological presence" framework
+  and Amabile's creativity research tie genuine emotional engagement
+  directly to divergent thinking and discretionary creative effort; Gross
+  also connects suppression to reduced empathic accuracy and worse reading
+  of others' nonverbal cues. Grandey's surface-acting research adds that
+  counterparts detect the physiological "flatness" of forced suppression,
+  which erodes trust rather than protecting it. Net argument for the pitch:
+  masking doesn't just cost the employee, it visibly degrades the nuance,
+  creativity, and empathy of the work itself, which gives "professionalism
+  as human maturity" a performance argument, not just a wellbeing one.
+
+### ADR (Alternative Dispute Resolution) framework research — Thimble's model vs. named mediation styles
+Background research (2026-11-11) mapping Thimble's actual behavior against the
+established mediation frameworks, to sanity-check scope and borrow credible
+language for the pitch.
+
+Four named ADR models, mediator's role vs. what "success" looks like:
+- **Facilitative** (classic Fisher & Ury / *Getting to Yes*): mediator is a
+  neutral process manager only, no opinion on outcome, draws out each side's
+  real interests (not stated positions) so they can find a mutually workable
+  option. Broadest default model (HR mediation, community mediation, divorce
+  mediation).
+- **Evaluative**: mediator (often a retired judge/expert) gives an opinion on
+  likely legal/financial outcome to push parties toward realistic settlement.
+  Trades neutrality for expertise. Needs a real external baseline (a court
+  outcome) to work — common in commercial/legal/insurance disputes, doesn't
+  map to workplace interpersonal conflict.
+- **Transformative** (Bush & Folger, *The Promise of Mediation*, 1994):
+  settlement isn't the goal, "empowerment and recognition" is — mediator
+  reflects back without steering, success = both people feel heard and
+  capable, agreement is a side effect not the target.
+- **Narrative** (Winslade & Monk, drawing on narrative therapy): reframes a
+  dispute as two incompatible stories each party is living in, and helps them
+  author a new shared story. Technique: "externalize the problem" (name the
+  conflict as a separate entity — "the tension between you two" — rather than
+  a trait of either person), so both parties fight the problem instead of
+  each other.
+
+Fairness has two distinct components in ADR theory, worth keeping separate in
+any pitch copy:
+- **Procedural fairness** (Tyler): did the process treat both sides equally,
+  did each person get heard, understand what was happening. People judge an
+  outcome as fair mostly by *how* they were treated, not by who technically
+  won.
+- **Substantive fairness**: is the outcome fair on the merits, anchored to
+  objective criteria (market rate, precedent, comparable cases) rather than
+  whoever negotiated harder.
+- Gap: classic mediation theory mostly assumes symmetric power between two
+  individuals. Workplace disputes usually aren't symmetric (manager vs.
+  report, tenured vs. new hire). A process can be procedurally fair and still
+  produce an inequitable result if the power asymmetry is never named, just
+  smoothed over.
+
+How this maps onto Thimble: closest to **facilitative + narrative** — it stays
+neutral on who's "right" (facilitative) and surfaces structural pressure as a
+reframe of why someone is resisting, which is a narrative-style move
+(see [[project_structural_misalignment_reframe]]). It is deliberately not
+evaluative (no verdicts, matches the zero-blame philosophy in
+[[project_mend_core_philosophy]]) and not quite transformative (the point is
+a workable message, not emotional recognition as the end goal). The
+pitch-relevant insight: most ADR process design optimizes for procedural
+fairness but leaves structural/power asymmetry unaddressed. Naming the real
+institutional constraint (what Thimble already does) is a form of substantive
+fairness that classic facilitative mediation leaves to chance.
+- Where it could plug in: positioning/credibility section of the pitch (gives
+  Mend's approach academic grounding instead of sounding invented), possibly
+  informs how "fairness" gets defined in product copy.
+- Why not active: pure background research, no copy drafted, not yet decided
+  whether referencing named ADR frameworks helps or just adds jargon for a
+  buyer who doesn't care about mediation theory.
 
 ### Corporate-buzzword translation table
 A side-by-side table translating corporate euphemisms ("executing an
@@ -996,6 +1111,148 @@ resolution and not neutral group voting).
    major platform (Grammarly, Gmail, Slack) already ships tone/rewrite AI
    natively, and the OS-level text-capture engineering lift is unrelated to
    anything already in this repo.
+
+---
+
+## Thimble for proactive collaboration, not just conflict (2026-11-10)
+
+### Collaboration/negotiation/conflict as one continuum, applied upfront instead of reactively
+Framing: collaboration, negotiation, and conflict are the same underlying
+dynamic (interdependent parties, colliding constraints) differentiated mainly
+by nervous-system state — regulated people treat colliding constraints as a
+shared puzzle (collaboration/negotiation), dysregulated people treat them as
+personal threat (conflict). Follows directly from
+[[project_structural_misalignment_reframe]] (memory): structural pressure is
+the one thing Thimble surfaces, before and after open conflict, not a
+separate "collaboration mode" vs. "conflict mode."
+
+Implication: the same dispute-resolution arc Thimble already runs reactively
+(private intake → surface constraints → joint framing → co-authored
+deliverable → decoupled async consent) works just as well run proactively, at
+a project/sprint kickoff, before any friction exists — producing a team
+working agreement (SLAs, review turnaround, escalation path) instead of a
+conflict resolution. Rationale for doing it upfront: nervous systems aren't
+already flooded, so it's easier than doing the same work after conflict hits.
+
+### Team feedback harvester — synthesize a whole squad's private feedback into shared, depersonalized themes
+Extends the existing solo-intake → deflective-reframing → synthesis pipeline
+from two people to a whole team. Each member gives Thimble raw, private
+feedback (including character-level venting); Thimble strips labels/attacks
+in real time and extracts the underlying operational friction; outputs are
+anonymized (writing-style/fingerprint stripped, not just names) and grouped
+into shared structural themes ("release-readiness tension between
+Product/Design wanting fast iteration and Platform protecting stability")
+rather than per-person call-outs; raw inputs are purged after synthesis, same
+zero-trace posture as the rest of Mend. Final output is a team "Seam"
+artifact — concrete working agreements — pushed to retro/wiki/backlog, not a
+vague culture report.
+- Why this over a normal 360/retro survey: traditional anonymous surveys
+  either produce toothless praise (social risk) or unfiltered toxic venting
+  (paranoia/witch-hunts); routing everything through Thimble's reframing step
+  before synthesis avoids both failure modes.
+
+### Gut-to-heuristic translator — specific to design critique
+A narrower sub-case of the same reframing mechanic, aimed at the specific
+failure mode where designers struggle to be honest without being negative.
+Reviewer dumps their raw, unfiltered gut reaction to Thimble privately
+("I hate this design"); Thimble doesn't tone-police, it asks why — 1-2 short
+probing turns — until the gut reaction resolves into an objective design
+heuristic (cognitive load, visual hierarchy, progressive disclosure, etc.),
+then hands back a reframed version the reviewer can actually send. The
+designer being reviewed never hears "I hate this"; they get a concrete,
+outward-focused question about the artifact instead of a verdict on their
+competence.
+- Source: conversation 2026-11-10, user-initiated pasted brainstorm
+  ("Talk to me about how collaboration negotiation and conflict are
+  similar" → team feedback harvester → design-critique variant).
+- Where it could plug in: the team feedback harvester would be closest in
+  shape to [[project_oss_maintainer_use_case]]'s sibling idea "Loom" (pattern-
+  only project retro, anonymized, no individual call-outs) above — likely the
+  same app/engine rather than a fourth standalone tool; the design-critique
+  variant could be a Swatch-specific reframing step (Swatch already runs
+  structured peer design sessions, see "Swatch" above) rather than new
+  infrastructure. The upfront-agreement framing is a system-prompt framing
+  change, not new code — would extend whichever prompt handles Thimble's
+  kickoff/handoff coaching, not add a new flow.
+- Why not active: entirely conceptual, no prompts written, no decision on
+  whether this is a new feature of Loom, a new mode of Swatch, or a fourth
+  thing. Open question raised but not answered in the source conversation:
+  should team-wide harvesting run as an async per-sprint check-in, or a
+  periodic (quarterly/milestone) 360-style ritual — per
+  [[feedback_interrogate_dont_placate]], worth asking the user directly
+  rather than assuming either answer.
+
+---
+
+## Suture/Loom convergence + real-time audio decision (2026-11-11)
+
+### Suture and Loom are one intake engine, parameterized by context
+Resolves the open question left at the end of the 2026-11-10 entry above
+(team feedback harvester vs. a Swatch mode vs. a fourth thing). Conclusion:
+intake's job is the same regardless of context — (1) triage: is this safe
+to run in the declared format, or does it need to escalate/reclassify
+(harassment screening is conflict's version of this; a retro or critique
+intake needs the same ability to catch something more serious hiding
+under a lower-stakes label), and (2) help the person frame their real
+reaction authentically. The actual obstacle is the same across conflict,
+retro, and critique: stating a true reaction to someone/something in
+front of them carries social cost that makes people flatten or withhold
+it (fear of retaliation, fear of blame landing on a teammate, fear of
+hurting the designer's feelings) — not anonymity for its own sake.
+
+What varies by context (conflict/retro/critique/etc.) is the question set
+and the escalation triggers, not the mechanism. The declared mode, picked
+by whoever creates the session link ("not sure" as a fallback), is a soft
+starting hypothesis that steers the first questions, not a locked
+category — intake should be able to reclassify mid-flow if what it's
+hearing doesn't fit the declared mode.
+
+Does NOT overturn the "family note, not a merge" distinction above between
+Suture/Splice/Swatch's live-session trust models (two-party private
+resolution vs. public group vote vs. warmth-building collaboration) — what
+a live session resolves into still forks by context. This is specifically
+about the *intake* step underneath all of them being one shared mechanism.
+
+### Seam case model: case = recurring arc, a session is an event inside it
+A Suture session (or a retro/critique session, once those exist) should
+not create a new Seam case by default. A case is the ongoing arc — a
+specific conflicting pair, or "Team X's sprint retros," or a design team's
+critique cadence — and each live session is an event logged against that
+case, contributing to its running plan/pattern log the same way plan
+steps accumulate today. New case only for a genuinely new arc (different
+people, different team, different stated goal), not one case per session,
+which would lose the cross-session pattern that Loom-style synthesis
+exists for in the first place.
+- Schema implication, not yet built: `cases` currently assumes one
+  continuous plan; would need a way to tag which session/sprint each plan
+  step or pattern came from to support multiple sessions per case.
+
+### Real-time layer: audio through Thimble, video is bring-your-own (decided 2026-11-11)
+Considered and rejected: embedding Suture/group sessions as a panel
+inside Zoom/Teams/Slack, the pattern Splice already uses for Zoom.
+Rejected for two reasons: (1) it's not one build — Zoom Apps SDK, Teams
+meeting extensions, and Slack (which has no real equivalent; its Calls
+API registers third-party call providers, it doesn't let you embed a UI
+inside a Huddle) are three incompatible integration surfaces, each its
+own dev-account/certification effort; (2) for conflict mode specifically,
+running inside the employer's Zoom/Teams tenant undermines the zero-
+trace/neutral-party promise the trust model depends on (admin-controlled
+cloud recording, retention policy, legal hold).
+
+Decided instead: Thimble owns the full two-way audio channel itself,
+maturing the existing `joint-session-audio` LiveKit + streaming-STT +
+hard-cut-classifier prototype (not yet integrated with `suture/`'s
+conversational logic). This also solves a problem embedding couldn't:
+Thimble speaking/interjecting live has nowhere to go if it isn't actually
+in the audio path. Video is explicitly NOT owned by Mend for now —
+participants may keep their own Zoom/Teams/whatever open, muted, just to
+see each other's faces. Two known frictions with that workaround, not
+blockers: A/V sync drift (video and audio ride two independent
+transports with their own jitter/buffering) and echo/double-audio if
+someone forgets to mute their video tool's mic. Applies to conflict mode
+now; the same owned-audio approach is the default starting point for
+retro/critique sessions too, rather than reopening the platform-embedding
+question per mode.
 
 ---
 

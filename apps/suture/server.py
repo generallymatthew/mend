@@ -51,7 +51,6 @@ Run:
     uvicorn server:app --reload --port 8421
 """
 import asyncio
-import json
 import logging
 import os
 import re
@@ -86,6 +85,12 @@ INTAKE_SYSTEM_PROMPT_FILE = ROOT.parent / "facilitator-suture-intake-system-prom
 # the classifier import just below.
 sys.path.insert(0, str(ROOT.parent.parent))
 from usage_log import log_usage
+
+# Shared intake/facilitator-call primitive (../mend_intake.py), used
+# identically by loom -- see that module's docstring and IDEAS.md's
+# "Suture/Loom convergence..." entry (2026-11-11).
+sys.path.insert(0, str(ROOT.parent))
+from mend_intake import call_facilitator, parse_signal_json
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger("mend.joint_session")
@@ -276,17 +281,6 @@ def get_session(code: str) -> Session:
     return SESSIONS.setdefault(code, Session(code))
 
 
-def strip_signal(reply_text: str) -> tuple[str, dict | None]:
-    match = re.search(r"<mend_signal>(.*?)</mend_signal>", reply_text, re.S)
-    visible = re.sub(r"<mend_signal>.*?</mend_signal>", "", reply_text, flags=re.S).strip()
-    if not match:
-        return visible, None
-    try:
-        return visible, json.loads(match.group(1).strip())
-    except json.JSONDecodeError:
-        return visible, None
-
-
 def synthesize_speech_openai(text: str) -> str | None:
     """Speaks `text` with OpenAI's TTS, saves the returned mp3, and returns
     a URL path to fetch it. Returns None on any failure so the caller falls
@@ -352,32 +346,13 @@ def facilitator_reply(session: Session) -> dict:
     the text reply immediately and fires audio synthesis as a background
     task, pushing a separate "audio" event once it's ready instead of
     making both participants wait on voice to see the text."""
-    if client is None:
-        session.conversation.pop()
-        return {"reply": "(server error: ANTHROPIC_API_KEY is not set -- see README)", "signal": None}
-    try:
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=8192,
-            system=SYSTEM_PROMPT,
-            messages=session.conversation,
-        )
-    except Exception as e:
-        session.conversation.pop()
-        return {"reply": f"(server error calling Claude: {e})", "signal": None}
-    log_usage("suture", "anthropic", MODEL, "facilitator_reply",
-              input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
-    raw = "".join(block.text for block in response.content if block.type == "text")
-    if not raw:
-        session.conversation.pop()
-        return {
-            "reply": f"(server error: no text in response, stop_reason={response.stop_reason} -- "
-                     f"likely ran out of max_tokens mid-thinking; try again or raise the limit)",
-            "signal": None,
-        }
-    visible, signal = strip_signal(raw)
-    session.conversation.append({"role": "assistant", "content": raw})
-    return {"reply": visible, "signal": signal, "audio_url": None}
+    result = call_facilitator(
+        client, MODEL, SYSTEM_PROMPT, session.conversation,
+        tag="mend_signal", app="suture", reply_kind="facilitator_reply",
+    )
+    result["signal"] = parse_signal_json(result["signal"])
+    result["audio_url"] = None
+    return result
 
 
 def intake_facilitator_reply(session: Session, role: str) -> dict:
@@ -388,31 +363,13 @@ def intake_facilitator_reply(session: Session, role: str) -> dict:
     latest turn just appended to session.intake_conversation[role] is a
     user turn; caller must hold session.lock."""
     convo = session.intake_conversation[role]
-    if client is None:
-        convo.pop()
-        return {"reply": "(server error: ANTHROPIC_API_KEY is not set -- see README)", "signal": None}
-    try:
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=4096,
-            system=INTAKE_SYSTEM_PROMPT,
-            messages=convo,
-        )
-    except Exception as e:
-        convo.pop()
-        return {"reply": f"(server error calling Claude: {e})", "signal": None}
-    log_usage("suture", "anthropic", MODEL, "intake_facilitator_reply",
-              input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
-    raw = "".join(block.text for block in response.content if block.type == "text")
-    if not raw:
-        convo.pop()
-        return {
-            "reply": f"(server error: no text in response, stop_reason={response.stop_reason})",
-            "signal": None,
-        }
-    visible, signal = strip_signal(raw)
-    convo.append({"role": "assistant", "content": raw})
-    return {"reply": visible, "signal": signal}
+    result = call_facilitator(
+        client, MODEL, INTAKE_SYSTEM_PROMPT, convo,
+        tag="mend_signal", app="suture", reply_kind="intake_facilitator_reply",
+        max_tokens=4096,
+    )
+    result["signal"] = parse_signal_json(result["signal"])
+    return result
 
 
 async def send_audio_followup(session: Session, recipients: list[str], text: str) -> None:

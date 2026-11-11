@@ -16,7 +16,7 @@ Run:
     cp ../thimble/.env .env
     uvicorn server:app --reload --port 8425
 """
-import json
+import logging
 import os
 import re
 import sys
@@ -38,6 +38,12 @@ ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT.parent.parent))
 from usage_log import log_usage
 
+# Shared intake/facilitator-call primitive (../mend_intake.py), used
+# identically by suture -- see that module's docstring and IDEAS.md's
+# "Suture/Loom convergence..." entry (2026-11-11).
+sys.path.insert(0, str(ROOT.parent))
+from mend_intake import call_facilitator, parse_signal_json
+
 INTAKE_PROMPT_FILE = ROOT.parent / "facilitator-loom-intake-system-prompt.md"
 DISTILL_PROMPT_FILE = ROOT.parent / "facilitator-loom-distillation-system-prompt.md"
 MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
@@ -53,6 +59,9 @@ MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
 MIN_CONTRIBUTORS = int(os.environ.get("LOOM_MIN_CONTRIBUTORS", "4"))
 
 load_dotenv(ROOT / ".env")
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
+logger = logging.getLogger("mend.loom")
 
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
@@ -95,55 +104,35 @@ sessions: dict[str, dict] = {}
 completed_by_sprint: dict[str, list[list[dict]]] = {}
 
 
-def strip_signal(reply_text: str, tag: str) -> tuple[str, str | None]:
-    match = re.search(rf"<{tag}>(.*?)</{tag}>", reply_text, re.S)
-    signal = match.group(1).strip() if match else None
-    visible = re.sub(rf"<{tag}>.*?</{tag}>", "", reply_text, flags=re.S).strip()
-    return visible, signal
-
-
 def facilitator_reply_blocking(session: dict) -> dict:
     conversation = session["conversation"]
-    if client is None:
-        conversation.pop()
-        return {"reply": "(server error: ANTHROPIC_API_KEY is not set -- see README)", "signal": None}
-    try:
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=4096,
-            system=INTAKE_PROMPT,
-            messages=conversation,
-        )
-    except Exception as e:
-        conversation.pop()
-        return {"reply": f"(server error calling Claude: {e})", "signal": None}
-    log_usage("loom", "anthropic", MODEL, "facilitator_reply",
-              input_tokens=response.usage.input_tokens, output_tokens=response.usage.output_tokens)
-    raw = "".join(block.text for block in response.content if block.type == "text")
-    if not raw:
-        conversation.pop()
-        return {
-            "reply": f"(server error: no text in response, stop_reason={response.stop_reason})",
-            "signal": None,
-        }
-    visible, signal_text = strip_signal(raw, "loom_signal")
-    conversation.append({"role": "assistant", "content": raw})
-    if signal_text:
-        try:
-            parsed = json.loads(signal_text)
-        except json.JSONDecodeError:
-            parsed = None
-        if parsed:
-            session["last_findings"] = parsed.get("findings") or []
-            # Only ever record findings the person actually confirmed in
-            # Phase 3 of the intake prompt -- phase=="done" alone is not
-            # enough, confirmed must also be true, since the model could in
-            # principle report phase done without that explicit approval.
-            if parsed.get("confirmed") is True and not session.get("recorded"):
-                sprint = session["sprint_name"] or "(unnamed sprint)"
-                completed_by_sprint.setdefault(sprint, []).append(session["last_findings"])
-                session["recorded"] = True
-    return {"reply": visible, "signal": signal_text}
+    result = call_facilitator(
+        client, MODEL, INTAKE_PROMPT, conversation,
+        tag="loom_signal", app="loom", reply_kind="facilitator_reply",
+        max_tokens=4096,
+    )
+    parsed = parse_signal_json(result["signal"])
+    if parsed:
+        session["last_findings"] = parsed.get("findings") or []
+        # Only ever record findings the person actually confirmed in
+        # Phase 3 of the intake prompt -- phase=="done" alone is not
+        # enough, confirmed must also be true, since the model could in
+        # principle report phase done without that explicit approval.
+        if parsed.get("confirmed") is True and not session.get("recorded"):
+            sprint = session["sprint_name"] or "(unnamed sprint)"
+            completed_by_sprint.setdefault(sprint, []).append(session["last_findings"])
+            session["recorded"] = True
+        # Never folded into findings/completed_by_sprint -- it must never
+        # reach the anonymized team report. This is the only durable
+        # surface for it right now (no operator UI exists yet); logging
+        # it loudly beats losing it in a debug panel that scrolls away.
+        escalation = parsed.get("escalation_flagged")
+        if escalation and not session.get("escalation_logged"):
+            logger.warning("Loom escalation flagged, session=%s sprint=%s reason=%s",
+                            session.get("id"), session.get("sprint_name"), escalation.get("reason"))
+            session["escalation_logged"] = True
+        session["escalation_flagged"] = escalation
+    return result
 
 
 @app.post("/api/start")
@@ -151,7 +140,7 @@ async def start(payload: dict):
     """payload: {sprint_name: str, optional} -> {session_id, reply, signal}"""
     sprint_name = (payload.get("sprint_name") or "").strip()
     session_id = uuid.uuid4().hex
-    session = {"conversation": [], "sprint_name": sprint_name, "last_findings": [], "recorded": False}
+    session = {"id": session_id, "conversation": [], "sprint_name": sprint_name, "last_findings": [], "recorded": False}
     sessions[session_id] = session
     kickoff = (
         f"(Begin the retro interview now, per your instructions."
