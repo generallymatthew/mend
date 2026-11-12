@@ -877,7 +877,7 @@
   .hold-ring { position: absolute; inset: 0; pointer-events: none; }
   .hold-ring circle { fill: none; stroke-width: 3; }
   .hold-ring .track { stroke: var(--border); }
-  .hold-ring .progress { stroke: var(--accent-pink); stroke-linecap: round; transform-origin: 50% 50%; transform: rotate(-90deg); stroke-dasharray: 301.59; stroke-dashoffset: 211; }
+  .hold-ring .progress { stroke: var(--border); stroke-linecap: round; transform-origin: 50% 50%; transform: rotate(-90deg); stroke-dasharray: 301.59; stroke-dashoffset: 211; }
   .talk-mic-btn {
     position: absolute; inset: 9px; border-radius: 50%; border: none;
     background: var(--ink); color: var(--stage-bg);
@@ -910,10 +910,15 @@
     flex: 0 0 400px; max-width: 420px; min-width: 320px;
     border-left: 1px solid var(--border);
   }
+  /* The composer's own mic is redundant in split layout -- the avatar
+     stage already has its own hold-to-talk dock as the real push-to-talk
+     control (wirePushToTalk wires both to the same handlers either way). */
+  body[data-layout="split"] .mic-wrap { display: none; }
   @media (max-width: 860px) {
     body[data-layout="split"] .avatar-stage { display: none; }
     body[data-layout="split"] .section-view { flex: 1; }
     body[data-layout="split"] .thread-col { flex-basis: 100%; max-width: none; border-left: none; }
+    body[data-layout="split"] .mic-wrap { display: flex; }
   }
 </style>
 </head>
