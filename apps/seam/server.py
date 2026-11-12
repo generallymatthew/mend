@@ -279,6 +279,32 @@ def init_db():
             conn.execute("ALTER TABLE cases ADD COLUMN closing_check_result TEXT")
         if "closing_check_want" not in existing_cols:
             conn.execute("ALTER TABLE cases ADD COLUMN closing_check_want TEXT")
+        # A case is a recurring arc (a pairing, or a team's retro/critique
+        # cadence); a case_sessions row is one discrete live session inside
+        # it -- see IDEAS.md's 2026-11-11 "Suture/Loom convergence..." entry.
+        # Deliberately additive, not a move: `cases`' own tension_summary/
+        # last_action/next_action/closing_check_* columns above are left in
+        # place and keep being written exactly as before (facilitator_reply
+        # mirrors the same update into both), so nothing that already reads
+        # a case's fields directly breaks. `current_session_id` is the only
+        # new column on `cases` itself.
+        if "current_session_id" not in existing_cols:
+            conn.execute("ALTER TABLE cases ADD COLUMN current_session_id TEXT")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS case_sessions (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL REFERENCES cases(id),
+                status TEXT NOT NULL DEFAULT 'open',
+                tension_summary TEXT,
+                last_action TEXT,
+                next_action TEXT,
+                closing_check_result TEXT,
+                closing_check_want TEXT,
+                started_at REAL NOT NULL,
+                ended_at REAL,
+                updated_at REAL NOT NULL
+            )
+        """)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS plan_steps (
                 id TEXT PRIMARY KEY,
@@ -295,6 +321,8 @@ def init_db():
         existing_step_cols = {row["name"] for row in conn.execute("PRAGMA table_info(plan_steps)")}
         if "added_by" not in existing_step_cols:
             conn.execute("ALTER TABLE plan_steps ADD COLUMN added_by TEXT NOT NULL DEFAULT 'user'")
+        if "session_id" not in existing_step_cols:
+            conn.execute("ALTER TABLE plan_steps ADD COLUMN session_id TEXT REFERENCES case_sessions(id)")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS meeting_sessions (
                 id TEXT PRIMARY KEY,
@@ -326,7 +354,33 @@ def init_db():
         """)
 
 
-init_db()
+def backfill_case_sessions():
+    """One-time migration, run once at startup, idempotent: any case that
+    predates case_sessions (current_session_id IS NULL) gets one implicit
+    session created for it, snapshotting whatever's currently on the case
+    row, and its existing plan_steps are attributed to that session. Never
+    touches a case that already has a current_session_id."""
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM cases WHERE current_session_id IS NULL").fetchall()
+        for row in rows:
+            case = case_row_to_dict(row)
+            session_id = str(uuid.uuid4())
+            conn.execute(
+                "INSERT INTO case_sessions (id, case_id, status, tension_summary, last_action, "
+                "next_action, closing_check_result, closing_check_want, started_at, ended_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    session_id, case["id"], case["status"], case["tension_summary"], case["last_action"],
+                    case["next_action"], case["closing_check_result"], case["closing_check_want"],
+                    case["created_at"], case["updated_at"] if case["status"] == "closed" else None,
+                    case["updated_at"],
+                ),
+            )
+            conn.execute("UPDATE cases SET current_session_id = ? WHERE id = ?", (session_id, case["id"]))
+            conn.execute(
+                "UPDATE plan_steps SET session_id = ? WHERE case_id = ? AND session_id IS NULL",
+                (session_id, case["id"]),
+            )
 
 
 def log_event(conn: sqlite3.Connection, session_id: str, mode: str, event_type: str, turn_number: int | None = None) -> None:
@@ -354,6 +408,7 @@ def case_row_to_dict(row: sqlite3.Row) -> dict:
         "handoff_code": row["handoff_code"],
         "closing_check_result": row["closing_check_result"],
         "closing_check_want": row["closing_check_want"],
+        "current_session_id": row["current_session_id"],
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
@@ -362,6 +417,10 @@ def case_row_to_dict(row: sqlite3.Row) -> dict:
 def get_case(conn: sqlite3.Connection, case_id: str) -> dict | None:
     row = conn.execute("SELECT * FROM cases WHERE id = ?", (case_id,)).fetchone()
     return case_row_to_dict(row) if row else None
+
+
+init_db()
+backfill_case_sessions()
 
 
 def get_plan_steps(conn: sqlite3.Connection, case_id: str) -> list[dict]:
@@ -377,6 +436,7 @@ def get_plan_steps(conn: sqlite3.Connection, case_id: str) -> list[dict]:
             "note": r["note"],
             "position": r["position"],
             "added_by": r["added_by"],
+            "session_id": r["session_id"],
         }
         for r in rows
     ]
@@ -387,11 +447,17 @@ def insert_plan_step(conn: sqlite3.Connection, case_id: str, text: str, added_by
         "SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM plan_steps WHERE case_id = ?",
         (case_id,),
     ).fetchone()
+    # Stamped with whichever session is current on the case right now, for
+    # provenance -- a step still belongs to the case as a whole (the plan
+    # stays one flat accumulating list, position is still case-scoped, see
+    # get_plan_steps), this is purely "which session surfaced this."
+    session_row = conn.execute("SELECT current_session_id FROM cases WHERE id = ?", (case_id,)).fetchone()
+    session_id = session_row["current_session_id"] if session_row else None
     now = time.time()
     conn.execute(
-        "INSERT INTO plan_steps (id, case_id, text, done, note, position, added_by, created_at, updated_at) "
-        "VALUES (?, ?, ?, 0, NULL, ?, ?, ?, ?)",
-        (str(uuid.uuid4()), case_id, text, row["next_pos"], added_by, now, now),
+        "INSERT INTO plan_steps (id, case_id, text, done, note, position, added_by, session_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, 0, NULL, ?, ?, ?, ?, ?)",
+        (str(uuid.uuid4()), case_id, text, row["next_pos"], added_by, session_id, now, now),
     )
     conn.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (now, case_id))
 
@@ -414,6 +480,46 @@ def add_seam_plan_steps(conn: sqlite3.Connection, case_id: str, texts: list[str]
             continue
         insert_plan_step(conn, case_id, text, added_by="seam")
         existing.add(text.lower())
+
+
+def start_new_session_row(conn: sqlite3.Connection, case_id: str) -> str:
+    """Creates a fresh case_sessions row for an existing case and points
+    cases.current_session_id at it. Used both at case creation and by
+    POST /api/cases/{case_id}/sessions (an explicit new session on an
+    arc that already has one, e.g. the next sprint's retro, or a
+    follow-up conflict conversation)."""
+    now = time.time()
+    session_id = str(uuid.uuid4())
+    conn.execute(
+        "INSERT INTO case_sessions (id, case_id, status, started_at, updated_at) "
+        "VALUES (?, ?, 'open', ?, ?)",
+        (session_id, case_id, now, now),
+    )
+    conn.execute("UPDATE cases SET current_session_id = ?, updated_at = ? WHERE id = ?",
+                 (session_id, now, case_id))
+    return session_id
+
+
+def get_case_sessions(conn: sqlite3.Connection, case_id: str) -> list[dict]:
+    rows = conn.execute(
+        "SELECT * FROM case_sessions WHERE case_id = ? ORDER BY started_at ASC",
+        (case_id,),
+    ).fetchall()
+    return [
+        {
+            "id": r["id"],
+            "status": r["status"],
+            "tension_summary": r["tension_summary"],
+            "last_action": r["last_action"],
+            "next_action": r["next_action"],
+            "closing_check_result": r["closing_check_result"],
+            "closing_check_want": r["closing_check_want"],
+            "started_at": r["started_at"],
+            "ended_at": r["ended_at"],
+            "updated_at": r["updated_at"],
+        }
+        for r in rows
+    ]
 
 
 # --- App ---------------------------------------------------------------
@@ -621,6 +727,7 @@ async def create_case(body: CaseCreate = CaseCreate()):
             "INSERT INTO cases (id, status, kind, stage, created_at, updated_at) VALUES (?, 'open', ?, NULL, ?, ?)",
             (case_id, body.kind, now, now),
         )
+        start_new_session_row(conn, case_id)
         log_event(conn, case_id, body.kind, "session_start")
         case = get_case(conn, case_id)
     CONVERSATIONS[case_id] = []
@@ -652,13 +759,56 @@ async def update_case_status(case_id: str, body: StatusUpdate):
     if body.status not in ("open", "closed"):
         return JSONResponse({"error": "status must be 'open' or 'closed'"}, status_code=400)
     with db() as conn:
-        if get_case(conn, case_id) is None:
+        case = get_case(conn, case_id)
+        if case is None:
             return JSONResponse({"error": "no such case"}, status_code=404)
+        now = time.time()
         conn.execute(
             "UPDATE cases SET status = ?, updated_at = ? WHERE id = ?",
-            (body.status, time.time(), case_id),
+            (body.status, now, case_id),
         )
+        # Closing the case also closes whichever session is currently open
+        # on it -- reopening (status back to "open") does NOT reopen that
+        # session; it's left closed, a fresh one starts the next time
+        # /sessions is called, same as the plain "continue this arc" flow.
+        if body.status == "closed" and case["current_session_id"]:
+            conn.execute(
+                "UPDATE case_sessions SET status = 'closed', ended_at = ?, updated_at = ? WHERE id = ?",
+                (now, now, case["current_session_id"]),
+            )
         return get_case(conn, case_id)
+
+
+@app.get("/api/cases/{case_id}/sessions")
+async def list_case_sessions(case_id: str):
+    with db() as conn:
+        if get_case(conn, case_id) is None:
+            return JSONResponse({"error": "no such case"}, status_code=404)
+        return get_case_sessions(conn, case_id)
+
+
+@app.post("/api/cases/{case_id}/sessions")
+async def create_case_session(case_id: str):
+    """Starts a new session on an existing case/arc -- the next sprint's
+    retro, or a follow-up conflict conversation -- instead of creating a
+    whole new case. Closes whatever session is currently open first (if
+    any), same as closing the case does, then opens a fresh one. Does not
+    touch CONVERSATIONS -- the in-memory conversation thread keyed by case
+    id is unaffected; this only starts a new durable history row for
+    tension_summary/last_action/next_action/closing_check_* to accumulate
+    into going forward."""
+    with db() as conn:
+        case = get_case(conn, case_id)
+        if case is None:
+            return JSONResponse({"error": "no such case"}, status_code=404)
+        now = time.time()
+        if case["current_session_id"]:
+            conn.execute(
+                "UPDATE case_sessions SET status = 'closed', ended_at = ?, updated_at = ? WHERE id = ? AND status != 'closed'",
+                (now, now, case["current_session_id"]),
+            )
+        new_session_id = start_new_session_row(conn, case_id)
+        return {"session_id": new_session_id, "case": get_case(conn, case_id)}
 
 
 def strip_signal(reply_text: str) -> tuple[str, dict | None]:
@@ -744,6 +894,23 @@ def facilitator_reply(case_id: str, conn: sqlite3.Connection, kind: str = "confl
             )
         else:
             conn.execute("UPDATE cases SET updated_at = ? WHERE id = ?", (time.time(), case_id))
+        # Mirror the per-session subset of those same fields onto the case's
+        # *current* session row -- `cases` stays the live snapshot nothing
+        # else has to change to keep reading (see case_sessions' own comment
+        # in init_db), case_sessions is what accumulates real history across
+        # sessions over time.
+        session_fields = {k: v for k, v in fields.items() if k in
+                           ("tension_summary", "last_action", "next_action", "closing_check_result", "closing_check_want")}
+        if session_fields:
+            current_session_id = conn.execute(
+                "SELECT current_session_id FROM cases WHERE id = ?", (case_id,)
+            ).fetchone()["current_session_id"]
+            if current_session_id:
+                set_clause = ", ".join(f"{k} = ?" for k in session_fields)
+                conn.execute(
+                    f"UPDATE case_sessions SET {set_clause}, updated_at = ? WHERE id = ?",
+                    (*session_fields.values(), time.time(), current_session_id),
+                )
         merge_names(case_id, signal.get("names"))
         add_seam_plan_steps(conn, case_id, signal.get("plan_steps_to_add"))
     # Defense in depth: the prompt already tells the model never to use a
