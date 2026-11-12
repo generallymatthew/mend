@@ -64,6 +64,9 @@ os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 
+import io
+
+import av
 import httpx
 from dotenv import load_dotenv
 from livekit import api, rtc
@@ -344,6 +347,24 @@ class ParticipantBridge:
         asyncio.create_task(self._out_source.capture_frame(frame))
 
 
+def decode_audio_to_pcm(data: bytes) -> bytes:
+    """Decodes an arbitrary compressed audio clip (mp3/m4a -- the same
+    bytes ../suture's /api/audio/{filename} serves) into raw mono 16-bit
+    PCM at SAMPLE_RATE, matching the format every other AudioFrame in
+    this room already uses (see ParticipantBridge._publish_release and
+    the breakout track in _apply_breakout_state below). Pure/blocking,
+    no LiveKit dependency -- run it off the event loop (run_in_executor)
+    at the call site, same as the classifier call in delay_buffer.py."""
+    container = av.open(io.BytesIO(data))
+    resampler = av.AudioResampler(format="s16", layout="mono", rate=SAMPLE_RATE)
+    pcm = bytearray()
+    for frame in container.decode(audio=0):
+        for resampled in resampler.resample(frame):
+            pcm += bytes(resampled.planes[0])
+    container.close()
+    return bytes(pcm)
+
+
 def other_of(identity: str) -> str | None:
     # Room convention: exactly two employee identities, "employee_a" and
     # "employee_b" -- matches ../suture/server.py's ROLE_SLUGS.
@@ -359,6 +380,51 @@ async def entrypoint(ctx: JobContext):
     room = ctx.room
     classifier = ctx.proc.userdata["classifier"]
     bridges: dict[str, ParticipantBridge] = {}
+
+    # Facilitator's own voice in the open room (Phase C, IDEAS.md
+    # 2026-11-11) -- published once, unrestricted, so both employees get
+    # it by default the same way any other unrestricted track in a room
+    # with can_subscribe=True grants would reach them (see server.py's
+    # /api/token). Separate from the per-target private check-in track
+    # below: subscription permissions are per-track, "reaches both" and
+    # "reaches one person only" can't be the same track.
+    facilitator_open_source = rtc.AudioSource(SAMPLE_RATE, 1)
+    facilitator_open_track = rtc.LocalAudioTrack.create_audio_track("facilitator-open", facilitator_open_source)
+    await room.local_participant.publish_track(
+        facilitator_open_track, rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE)
+    )
+
+    _speak_executor = ThreadPoolExecutor(max_workers=2)
+
+    async def speak_facilitator_audio(audio_url: str, target: str) -> None:
+        """Fetches the clip suture's synthesize_speech already produced,
+        decodes it off the event loop, and publishes it into whichever
+        track `target` actually reaches. Mirrors ParticipantBridge.
+        _publish_release's own one-shot capture_frame call -- same
+        AudioFrame shape, same reliance on capture_frame's own internal
+        pacing, just fed from a decoded clip instead of a live mic
+        segment."""
+        if target == "both":
+            source = facilitator_open_source
+        else:
+            # Only meaningful while a private check-in track for exactly
+            # this target is currently open (see _apply_breakout_state
+            # below) -- suture's own state machine should never send a
+            # targeted facilitator_speak outside a check-in, but a stale
+            # or out-of-order message is a silent no-op here, not a crash.
+            if checkin_pub.get("target") != target or "source" not in checkin_pub:
+                logger.warning("facilitator_speak for %s with no matching open check-in track -- dropped", target)
+                return
+            source = checkin_pub["source"]
+        try:
+            resp = await _prosody_http.get(audio_url)
+            resp.raise_for_status()
+            pcm = await asyncio.get_running_loop().run_in_executor(_speak_executor, decode_audio_to_pcm, resp.content)
+        except Exception:
+            logger.exception("couldn't fetch/decode facilitator audio from %s", audio_url)
+            return
+        frame = rtc.AudioFrame(data=pcm, sample_rate=SAMPLE_RATE, num_channels=1, samples_per_channel=len(pcm) // 2)
+        await source.capture_frame(frame)
 
     # Video parity: video is NOT bridged through this agent the way audio
     # is -- there's no content-moderation need for it (see video_parity.py
@@ -430,12 +496,14 @@ async def entrypoint(ctx: JobContext):
                 if bridge:
                     bridge.paused = True
             # A private, subscription-restricted track for `target` alone --
-            # inert for now (no facilitator TTS wired in, deliberately out
-            # of scope, see breakout_gate.py's module docstring), this just
-            # proves the isolation mechanism itself: the same
-            # set_track_subscription_permissions call ParticipantBridge.publish
-            # already uses for the human-to-human bridge tracks, applied here
-            # to reserve a private channel only `target` can subscribe to.
+            # the same set_track_subscription_permissions call
+            # ParticipantBridge.publish already uses for the human-to-human
+            # bridge tracks, applied here to reserve a private channel only
+            # `target` can subscribe to. Was inert (reserved the channel,
+            # nothing ever published into it); speak_facilitator_audio above
+            # now pushes the facilitator's TTS into this same source via
+            # checkin_pub["source"] whenever a targeted facilitator_speak
+            # arrives while this track is open.
             source = rtc.AudioSource(SAMPLE_RATE, 1)
             track = rtc.LocalAudioTrack.create_audio_track(f"facilitator-checkin-{target}", source)
             options = rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE)
@@ -452,6 +520,8 @@ async def entrypoint(ctx: JobContext):
                     ],
                 )
                 checkin_pub["sid"] = publication.sid
+                checkin_pub["source"] = source
+                checkin_pub["target"] = target
             except Exception:
                 logger.exception("failed to open private check-in track for %s", target)
             try:
@@ -467,6 +537,8 @@ async def entrypoint(ctx: JobContext):
                 if bridge:
                     bridge.paused = False
             sid = checkin_pub.pop("sid", None)
+            checkin_pub.pop("source", None)
+            checkin_pub.pop("target", None)
             if sid:
                 try:
                     await room.local_participant.unpublish_track(sid)
@@ -498,6 +570,14 @@ async def entrypoint(ctx: JobContext):
                 breakout_gate.enter_checkin(target)
         elif msg.get("type") == "breakout_resume":
             breakout_gate.resume()
+        elif msg.get("type") == "facilitator_speak":
+            # See server.py's POST /api/room/{code}/facilitator-speak --
+            # ../suture's speak_in_room sends this with every facilitator
+            # reply's TTS clip once the joint room is open.
+            audio_url = msg.get("audio_url")
+            target = msg.get("target", "both")
+            if audio_url:
+                asyncio.create_task(speak_facilitator_audio(audio_url, target))
 
     @room.on("track_subscribed")
     def on_track_subscribed(track: rtc.Track, publication, participant: rtc.RemoteParticipant):

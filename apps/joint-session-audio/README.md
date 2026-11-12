@@ -340,11 +340,28 @@ rejected, the original target holds.
   livekit`) aren't set up yet -- not unwired.
 - No re-enable-after-drop flow, and no video content moderation -- both
   deliberately out of scope, see the plan's "Scope boundaries".
-- The breakout room's private track is inert (no facilitator TTS), and
-  nothing here decides when a check-in should happen -- that decision
-  lives entirely in `../suture`'s facilitator LLM today, over
-  text/WebSocket, with no live connection to this app. Wiring the two
-  together is a separate, larger integration, deliberately out of scope.
+- **Suture <-> this app wiring (2026-11-11)**: `../suture`'s STT path now
+  calls `POST /api/room/{code}/voice-message` with each finalized
+  segment's text (instead of only the one-directional prosody signal that
+  existed before), and Suture's own facilitator replies now call
+  `POST /api/room/{code}/facilitator-speak` (new, routes to the agent via
+  the room data channel) so the breakout check-in track is no longer
+  inert -- a check-in reply targets just that employee's private track,
+  everything else goes out on a new always-open `facilitator-open` track.
+  `agent.py`'s `speak_facilitator_audio` decodes the fetched clip with
+  PyAV (`decode_audio_to_pcm`) and publishes it via `capture_frame`.
+  Verified so far: Suture's `handle_joint_message`/voice-message endpoint
+  live against the real Anthropic API, `decode_audio_to_pcm` against a
+  real TTS-produced audio file, and `facilitator-speak`'s request
+  validation. **Not yet verified**: an actual LiveKit publish/subscribe
+  round trip for this new path -- attempted live against `livekit-server
+  --dev` + `agent.py dev` on 2026-11-11, but the agent's job never got a
+  worker (`RuntimeError: no process became available after 3 attempts`,
+  the same failure mode documented above, this time under heavier
+  concurrent load from this machine's other running apps -- not a defect
+  in the new code). Re-attempt on a quieter machine, or with
+  `initialize_process_timeout` raised further, before calling this path
+  live-proven.
 - **Prosody (see "Prosody / tone signal" above) is validated against real
   synthesized speech, not real human speech** -- `tests/validate_prosody_real_speech.py`
   confirmed pitch/energy/rate tracking behave correctly on genuine speech

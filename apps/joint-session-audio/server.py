@@ -132,3 +132,26 @@ async def trigger_resume(code: str):
         )
     )
     return {"sent": "breakout_resume"}
+
+
+# --- Facilitator audio out --------------------------------------------------
+# Same "this process never joins a room, only reaches the agent via the
+# room's own data channel" pattern as checkin/resume above. ../suture's
+# server.py (speak_in_room) calls this with each facilitator reply's TTS
+# clip -- see agent.py's on_data_received for the fetch-decode-publish side.
+@app.post("/api/room/{code}/facilitator-speak")
+async def facilitator_speak(code: str, payload: dict):
+    audio_url = payload.get("audio_url")
+    target = payload.get("target", "both")
+    if not audio_url:
+        raise HTTPException(status_code=400, detail="audio_url required")
+    if target != "both" and target not in ("employee_a", "employee_b"):
+        raise HTTPException(status_code=400, detail="target must be 'both', 'employee_a', or 'employee_b'")
+    room_name = f"joint-audio-{code}"
+    await get_lkapi().room.send_data(
+        api.SendDataRequest(
+            room=room_name,
+            data=json.dumps({"type": "facilitator_speak", "audio_url": audio_url, "target": target}).encode(),
+        )
+    )
+    return {"sent": "facilitator_speak", "target": target}

@@ -166,6 +166,17 @@ ROLE_SLUGS = {"a": "employee_a", "b": "employee_b"}
 SPEAKER_LABEL = {"employee_a": "Employee A", "employee_b": "Employee B"}
 OTHER_ROLE = {"employee_a": "employee_b", "employee_b": "employee_a"}
 
+# ../joint-session-audio owning the room's real-time audio (Phase C,
+# IDEAS.md 2026-11-11): this app's own URL, so joint-session-audio can fetch
+# back the TTS clip synthesize_speech just produced (it only gets a
+# relative /api/audio/... path otherwise), and that app's own URL, so this
+# app can tell its agent to speak. Same best-effort, no-shared-discovery
+# posture as the existing prosody-signal wire -- see
+# _speak_in_room's own docstring below.
+PUBLIC_BASE_URL = os.environ.get("SUTURE_PUBLIC_URL", "http://localhost:8421")
+JOINT_SESSION_AUDIO_APP_URL = os.environ.get("JOINT_SESSION_AUDIO_APP_URL", "http://localhost:8424")
+_audio_room_http = httpx.AsyncClient(timeout=3.0)
+
 # --- Rate limiting --------------------------------------------------------
 # Same reasoning as ../thimble/server.py, but there's no per-request HTTP
 # endpoint to hook here -- every real message is a WebSocket frame, so the
@@ -372,13 +383,41 @@ def intake_facilitator_reply(session: Session, role: str) -> dict:
     return result
 
 
+async def speak_in_room(session: Session, recipients: list[str], audio_url: str) -> None:
+    """Best-effort only, same posture as POST /api/room/{code}/prosody-
+    signal's own send side -- a joint-session-audio room for this code
+    not existing (or not running) is expected, not exceptional, and must
+    never affect the browser-UI audio path above. `recipients` is the
+    same list broadcast_result/send_audio_followup already computed
+    (both employees, or just checkin_target during a private check-in),
+    translated into the one `target` joint-session-audio's facilitator-
+    speak endpoint understands: "both" or a single identity -- there is
+    no third case, recipients here is always either both roles or one."""
+    target = "both" if len(recipients) != 1 else recipients[0]
+    try:
+        resp = await _audio_room_http.post(
+            f"{JOINT_SESSION_AUDIO_APP_URL}/api/room/{session.code}/facilitator-speak",
+            json={"audio_url": f"{PUBLIC_BASE_URL}{audio_url}", "target": target},
+        )
+        resp.raise_for_status()
+    except Exception as e:
+        logger.info("couldn't deliver facilitator-speak to joint-session-audio (%s): %s",
+                    JOINT_SESSION_AUDIO_APP_URL, e)
+
+
 async def send_audio_followup(session: Session, recipients: list[str], text: str) -> None:
     """Fired via asyncio.create_task, not awaited by broadcast_result --
     synthesizes audio for a reply that's already been sent as text, then
     pushes a separate "audio" event to the exact same recipient(s) the
     text message went to. Recipients are passed in explicitly rather than
     recomputed here so this can never drift from broadcast_result's own
-    privacy-sensitive routing (checkin_target-only vs. both employees)."""
+    privacy-sensitive routing (checkin_target-only vs. both employees).
+
+    Also best-effort relays the same clip into a live joint-session-audio
+    room for this code, if one exists and the joint room is actually open
+    -- see speak_in_room above. Private intake (session.started still
+    False) is excluded on purpose: it has no open-room or check-in track
+    on the audio side to speak into yet, only the joint room does."""
     if not text:
         return
     audio_url = synthesize_speech(text)
@@ -386,6 +425,8 @@ async def send_audio_followup(session: Session, recipients: list[str], text: str
         return
     for role in recipients:
         await send_to(session, role, {"type": "audio", "audio_url": audio_url})
+    if session.started:
+        await speak_in_room(session, recipients, audio_url)
 
 
 async def send_to(session: Session, role: str, payload: dict) -> None:
@@ -626,6 +667,87 @@ async def prosody_signal(code: str, payload: dict):
     return {"ok": True}
 
 
+async def handle_joint_message(session: Session, role: str, text: str) -> None:
+    """Runs one role's turn in the already-open joint room: turn-gating
+    (private check-in / whose-turn-it-is), the real-time hard-cut
+    classifier, the facilitator call, and broadcasting the result.
+    Factored out of the websocket loop below so the voice-message HTTP
+    endpoint (fed by ../joint-session-audio's streaming STT, see
+    POST /api/room/{code}/voice-message) can run the exact same turn
+    logic a typed message would -- audio is just another way text
+    reaches this function, not a separate code path. Caller is
+    responsible for intake/not-started gating; this assumes the room is
+    already open."""
+    current_state = session.state.get("session_state", "active")
+    checkin_target = session.state.get("checkin_target")
+    next_speaker = session.state.get("next_speaker", "either")
+    if current_state == "paused_checkin" and role != checkin_target:
+        await send_to(session, role, {"type": "error", "error": "session is paused for the other participant"})
+        return
+    if current_state != "paused_checkin" and next_speaker not in ("either", role):
+        await send_to(session, role, {"type": "error", "error": "not your turn yet"})
+        return
+
+    # Only the open room needs the real-time cut: a private check-in
+    # already withholds everything from the other party, so there's
+    # nothing left for the classifier to protect there.
+    cut = False
+    if CLASSIFIER_MODEL is not None and current_state != "paused_checkin":
+        cut, scores = CLASSIFIER_MODEL.should_cut(text)
+        logger.info("classifier scores for %s's message: cut=%s scores=%s", role, cut, scores)
+
+    for r in ("employee_a", "employee_b"):
+        await send_to(session, r, {"type": "thinking"})
+
+    async with session.lock:
+        # Real prosody signal (see POST /api/room/{code}/prosody-signal
+        # above), if this speaker has one pending -- consumed here, not
+        # left for a later turn, so it lands on the message it was
+        # actually about. Format matches
+        # ../suture/poc_prosody_in_prompt.py's proof-of-concept exactly
+        # (same annotation shape, real data now instead of hand-
+        # constructed).
+        pending_flags = session.pending_prosody.pop(role, None)
+        speaker_label = SPEAKER_LABEL[role]
+        if pending_flags:
+            speaker_label += f", voice: {', '.join(pending_flags)} relative to their own earlier baseline"
+        session.conversation.append({"role": "user", "content": f"[{speaker_label}]: {text}"})
+        if cut:
+            session.conversation.append({
+                "role": "user",
+                "content": (
+                    f"(Orchestration layer: a real-time cut was just triggered on {SPEAKER_LABEL[role]}'s "
+                    "message above, before it reached the other participant. external_cut_reported=true. "
+                    "Treat this as a tier-3 cut per your instructions: move to winding_down now.)"
+                ),
+            })
+        result = facilitator_reply(session)
+    await broadcast_result(session, sender_role=role, sender_text=text, result=result, cut=cut)
+
+
+@app.post("/api/room/{code}/voice-message")
+async def post_voice_message(code: str, payload: dict):
+    """Real transport for ../joint-session-audio's streaming STT --
+    that app's agent.py calls here with each finalized transcript segment
+    instead of (or alongside) suture's own typed-message websocket path.
+    Same manual code-pairing caveat as POST /api/room/{code}/prosody-
+    signal above: no shared session-discovery layer, the operator must
+    have started both apps under the same code."""
+    speaker = payload.get("speaker")
+    text = (payload.get("text") or "").strip()
+    if speaker not in ("employee_a", "employee_b"):
+        return JSONResponse({"error": "speaker must be employee_a or employee_b"}, status_code=400)
+    if not text:
+        return JSONResponse({"error": "text must be non-empty"}, status_code=400)
+    session = get_session(code)
+    if not session.intake_done[speaker]:
+        return JSONResponse({"error": "this role hasn't finished their private intake yet"}, status_code=409)
+    if not session.started:
+        return JSONResponse({"error": "joint room hasn't opened yet"}, status_code=409)
+    await handle_joint_message(session, speaker, text)
+    return {"ok": True}
+
+
 @app.websocket("/ws/{code}/{role_slug}")
 async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
     role = ROLE_SLUGS.get(role_slug)
@@ -693,51 +815,7 @@ async def joint_session_ws(websocket: WebSocket, code: str, role_slug: str):
                 await send_to(session, role, {"type": "error", "error": "waiting for the other participant to finish their own intake"})
                 continue
 
-            current_state = session.state.get("session_state", "active")
-            checkin_target = session.state.get("checkin_target")
-            next_speaker = session.state.get("next_speaker", "either")
-            if current_state == "paused_checkin" and role != checkin_target:
-                await send_to(session, role, {"type": "error", "error": "session is paused for the other participant"})
-                continue
-            if current_state != "paused_checkin" and next_speaker not in ("either", role):
-                await send_to(session, role, {"type": "error", "error": "not your turn yet"})
-                continue
-
-            # Only the open room needs the real-time cut: a private
-            # check-in already withholds everything from the other party,
-            # so there's nothing left for the classifier to protect there.
-            cut = False
-            if CLASSIFIER_MODEL is not None and current_state != "paused_checkin":
-                cut, scores = CLASSIFIER_MODEL.should_cut(text)
-                logger.info("classifier scores for %s's message: cut=%s scores=%s", role, cut, scores)
-
-            for r in ("employee_a", "employee_b"):
-                await send_to(session, r, {"type": "thinking"})
-
-            async with session.lock:
-                # Real prosody signal (see POST /api/room/{code}/prosody-signal
-                # above), if this speaker has one pending -- consumed here,
-                # not left for a later turn, so it lands on the message it
-                # was actually about. Format matches
-                # ../suture/poc_prosody_in_prompt.py's proof-of-
-                # concept exactly (same annotation shape, real data now
-                # instead of hand-constructed).
-                pending_flags = session.pending_prosody.pop(role, None)
-                speaker_label = SPEAKER_LABEL[role]
-                if pending_flags:
-                    speaker_label += f", voice: {', '.join(pending_flags)} relative to their own earlier baseline"
-                session.conversation.append({"role": "user", "content": f"[{speaker_label}]: {text}"})
-                if cut:
-                    session.conversation.append({
-                        "role": "user",
-                        "content": (
-                            f"(Orchestration layer: a real-time cut was just triggered on {SPEAKER_LABEL[role]}'s "
-                            "message above, before it reached the other participant. external_cut_reported=true. "
-                            "Treat this as a tier-3 cut per your instructions: move to winding_down now.)"
-                        ),
-                    })
-                result = facilitator_reply(session)
-            await broadcast_result(session, sender_role=role, sender_text=text, result=result, cut=cut)
+            await handle_joint_message(session, role, text)
     except WebSocketDisconnect:
         if session.sockets.get(role) is websocket:
             del session.sockets[role]
