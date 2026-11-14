@@ -1411,6 +1411,46 @@ along the way, both worth keeping:
   governance, not a liability argument, and it doesn't need a lawyer to
   confirm it's true.
 
+**Supporting data (pulled 2026-11-14), both sides of the claim:**
+
+Employees already do this, in volume:
+- TELUS Digital (Jan 2025, 1,000 US employees at large firms): ~57%
+  entered confidential company data into tools like ChatGPT; 68% access
+  GenAI through non-corporate/personal accounts; 22% use a personal
+  account even when a company-approved tool exists.
+- Cybernews (Aug 2025): 59% use unapproved AI tools at work; 89% say they
+  understand the risk, with data breaches as the top concern — not
+  ignorance, habit.
+- Zapier/Centiment (~1,005 workers): 89% have entered company data into
+  AI tools; 43% of personal-account users specifically want to keep that
+  usage hidden from their employer.
+- ASIS Cybersecurity Attitudes and Behaviors Report 2025-26: 43% share
+  sensitive workplace info with AI tools without employer knowledge.
+- ManageEngine: 93% of employees admit inputting information into AI
+  tools without approval.
+
+HR/IT already sees this as a live, unmanaged problem:
+- Komprise (200 IT directors/execs, US): ~80% say their org has already
+  suffered negative consequences from employee GenAI use; 90% worried
+  about shadow AI specifically from a privacy/security angle.
+- Cato Networks (600+ IT leaders): 61% found unauthorized AI tools
+  already running in their environment; only 26% have any monitoring in
+  place for it.
+- ManageEngine (350 ITDMs, US/Canada): 85% say employees adopt AI faster
+  than IT can assess it.
+- Freshworks: unauthorized AI usage reported as high as 71% by
+  mid-market IT leaders.
+- Huntress: 43% of knowledge workers got zero AI security training from
+  their employer; 26% have no written AI policy at all — the gap isn't
+  being closed by training or policy alone.
+
+Caveat: most of these are vendor-sponsored security/governance surveys,
+sample sizes and "shadow AI" definitions vary, so no single percentage
+should be quoted as precise. The direction is consistent across
+independent sources though: high personal-account usage, high HR/IT
+concern, low actual control. That consistency is what makes the
+positioning above defensible, not any one stat.
+
 This also connects to [[project_epli_distribution_route]] (memory): the
 insurance/EPLI angle is a *third* reason this buyer pays, on top of the
 governance one above, and it has its own, much lower bar (see below).
