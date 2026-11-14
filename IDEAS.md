@@ -1376,3 +1376,163 @@ built by accident instead of the already-decided design.
 - Source: `docs/pitch-strategy/03_TECHNICAL_ARCHITECTURE_AND_WATCHER.md`
 - Why not active: superseded by the Phase 3 design in `ROADMAP.md`, which
   deliberately chose consent + anonymization over this simpler version.
+
+---
+
+## HR as a second, funded buyer for Thimble — and a verified-real distribution mechanism to make the trust claim true, not just asserted (2026-11-13/14)
+
+Marked by the user as a major positioning shift, not a minor framing tweak.
+Why it matters this much: the "App concept strength ranking" entry above
+names Thimble's specific weakness as "soft buyer economics — individual
+employee, no budget line." This conversation gives Thimble a second,
+funded buyer (HR/insurance), without breaking the employee-side trust
+promise that makes Thimble work in the first place — and, unlike most
+privacy claims in this space, the "no ties to the employer" piece was
+actually worked through as a real mechanism, not just asserted copy. That
+also resolves the standing tension flagged under "Thimble presence and
+personality" above (manager-POV vs. employee-POV homepage framing) at the
+architecture level instead of just picking one narrator.
+
+### The positioning: HR can't ban personal AI, so it needs a sanctioned alternative
+Managers already use personal AI (ChatGPT) to help frame things like a PIP,
+or how to handle a conflict with a report, without realizing it puts
+sensitive employee information on an unvetted outside platform with no
+contract or data-handling terms. HR can see this happening and can't
+realistically ban it (unenforceable, people will anyway) — so a sanctioned,
+good-enough substitute is something they'd pay for. Two corrections made
+along the way, both worth keeping:
+- The claim is **not** "this prevents wrongful-termination lawsuits" — too
+  strong, needs a lawyer/HR person to back up, not yet verified.
+- The claim is **not** "this prevents personal-AI use" — nothing technical
+  stops someone from also using ChatGPT. The honest, defensible claim is
+  narrower: HR prefers sensitive employee data go to a vendor they have an
+  actual contract and data-handling terms with, instead of an employee's
+  personal AI account with no contract at all. That's normal vendor
+  governance, not a liability argument, and it doesn't need a lawyer to
+  confirm it's true.
+
+This also connects to [[project_epli_distribution_route]] (memory): the
+insurance/EPLI angle is a *third* reason this buyer pays, on top of the
+governance one above, and it has its own, much lower bar (see below).
+
+### Two different internal buyers, two different bars — don't conflate them
+- **Insurance/broker**: wants to see the program exists and is available to
+  every employee (same logic as an EAP discount). Doesn't need usage data
+  at all, just a contract and a seat count.
+- **HR/VP renewing the budget**: wants something to point to when asked
+  "what are we paying for." This bar is satisfied by a single aggregate
+  number — a usage count ("used X times this quarter") — and nothing more
+  granular. Content barely matters as long as it's clearly non-identifying;
+  it's budget-justification theater, not a real analytics need.
+- The report to HR should stay a plain usage count, delivered as a PDF via
+  email, deliberately **not** a dashboard login — a login implies an
+  account/profile persisting on Mend's servers tied to the company, which
+  costs trust for no real gain over an emailed PDF.
+
+### Distribution mechanism: how a company gets access without anyone being able to tell who's using it
+The real engineering problem underneath all of this: if a company pays for
+every employee to have access, how do you avoid creating a record anywhere
+— on Mend's side or HR's — of *which* employees actually signed up or
+activated it. An optional/opt-in install, or any per-employee code, turns
+the act of requesting access into a signal (HR could infer "this person is
+dealing with something" just from an install/signup list), which defeats
+the whole point even if session content is never seen.
+
+Rejected approaches, in the order they were worked through, each for a
+specific reason:
+- **Mandatory install pushed by HR/IT, including on personal phones, as a
+  trust-builder** ("HR vetted it so hard they let it on your phone"):
+  rejected — borrows credibility from the exact party employees already
+  distrust; doesn't work on anyone who doesn't already trust HR, and
+  corporate-mandated install on a personal device reads as surveillance to
+  a skeptic, the opposite of the intended effect. Also, IT pushing the
+  install at all puts corporate IT back in the deployment chain, which
+  undercuts "not corporate" regardless of what the app does with data.
+- **Per-employee activation codes**, even if Mend never logs who redeemed
+  one: the *distribution* channel (e.g. HR emailing "here's your code" to
+  each employee) is itself the leak, independent of what Mend stores.
+- **A live widget embedded in the company intranet** that fetches the
+  current code from Mend's servers (to solve manual code-rotation going
+  stale): rejected — this creates a new, constant data flow (every
+  intranet pageload pings Mend), which is a bigger and more continuous
+  privacy exposure than anything else considered, and the kind of
+  third-party embedded script corporate security teams often refuse
+  outright.
+- **TOTP-style self-rotating code** (secret given once, code recomputed
+  locally from secret + time, no network call): solves the live-widget
+  privacy problem but still requires the company to install a code snippet
+  on their intranet — too much engineering lift for a small company with
+  no spare technical capacity.
+- **Self-serve "regenerate" via a company-ID lookup page**: workable (no
+  persistent login, stateless lookup) but still a request/response flow,
+  which reopens a spoofing question.
+- **A persistent company admin login/dashboard**: explicitly rejected by
+  the user — "I don't want them to have a login into our service, it loses
+  trust" — even though it would have been the easiest way to give a company
+  self-serve control.
+
+**Landed design**: Mend pushes a single, shared company-wide code to one
+named contact at the company — once at signup, and/or automatically on a
+schedule (e.g. monthly) — through whatever channel the company already
+uses internally to tell employees about it (Slack post, email, intranet
+page they maintain themselves, a sign in the breakroom). No code or
+integration required on the company's side. Key properties:
+- **No request endpoint exists, so there's nothing to spoof.** Rotation is
+  pushed on a schedule, not pulled on demand — removing the self-serve
+  "ask for a new code" flow also removes the attack surface that flow would
+  have created. (Confirmed detail: even a spoofed request wouldn't let an
+  attacker receive the new code anyway, since the reply routes to the real
+  mailbox at that domain, not the spoofer — but the push model sidesteps
+  the question entirely rather than relying on that.)
+- **Abuse is bounded by a seat cap, not by code secrecy.** A leaked code
+  can't be used past however many seats the company paid for; additional
+  logins past the cap are just blocked. This is what makes "good enough,
+  not airtight" an acceptable bar for eligibility — a leaked/shared code
+  costs nothing beyond a blocked login attempt.
+- **Early rotation trigger uses only an aggregate count, never identity or
+  IP/location.** If activation volume spikes well past a company's normal
+  baseline relative to its seat count, that alone (pure arithmetic on a
+  count Mend already has for billing) triggers an off-schedule resend.
+  Explicitly rejected: IP-based anomaly detection ("does this look like
+  the company's usual network") — rejected both because it reintroduces
+  real tracking/correlation, and because it wouldn't even work: the whole
+  architecture is personal-device, off-corporate-network by design, so
+  there's no stable per-company IP baseline to compare against in the
+  first place.
+- **The client relationship itself is not anonymous, and that's fine.**
+  Mend already knows who the paying company is; a record of "company X
+  requested/received a new code on this date" is not a privacy problem,
+  because it was never the employee side of the relationship. The entire
+  design only needs to prevent correlation between the company and
+  *individual employee* usage — not between Mend and the company itself.
+- **No per-employee identity verification at all.** The design accepts
+  "good enough to deter randoms" rather than "proof of employment,"
+  consistent with the seat-cap bounding above.
+
+### Why this had to be verified before being used in the pitch, not deferred
+Initially flagged (by Claude) as possibly premature engineering for a
+pre-revenue, no-LLC company — the user corrected this directly: claiming
+"no ties to the employer" in marketing copy or a pitch before confirming
+it's actually buildable would be a false claim, not an aspirational one,
+and the kind that destroys the whole trust moat (see
+[[project_mend_moat_strategy]]) if a technical buyer or journalist ever
+checked it. Verifying the mechanism is real, before saying it out loud, is
+the correct order of operations for a company whose entire moat is a trust
+claim — not a detail to defer to a later engineering phase.
+- Source: conversation 2026-11-13/14 (live brainstorm, not a pasted
+  writeup) — started from "I finally think I have such a good positioning
+  for Thimble" (the HR-liability wedge) and worked forward through the
+  distribution mechanism in real time.
+- Where it could plug in: the HR-buyer pitch/positioning materials
+  (`docs/pitch-strategy/`) for the governance/EPLI angle; a new,
+  small piece of backend infrastructure (one shared code per company,
+  seat-cap enforcement, scheduled push delivery, aggregate-count anomaly
+  check) once this is actually being built — not yet started.
+- Why not active: pure positioning + mechanism-design conversation, no
+  copy drafted, no backend code written, no company contact-collection
+  flow built. The report-to-HR PDF, the seat-cap billing logic, and the
+  scheduled-push delivery job are all unbuilt. Worth revisiting once
+  there's an actual first HR/insurance-motivated prospect to design the
+  real thing against, same "no real pilot yet" caveat as the aggregate
+  org-level usage dashboard idea above — this is its distribution-layer
+  prerequisite.

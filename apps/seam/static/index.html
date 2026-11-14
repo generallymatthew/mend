@@ -99,7 +99,7 @@
     padding: 7px 14px; white-space: nowrap;
   }
   #feedback-link:hover { background: var(--rail-border); }
-  #help-btn {
+  #help-btn, #reset-tool-btn {
     width: 28px; height: 28px; border-radius: 999px;
     background: var(--panel-bg); color: var(--muted);
     display: flex; align-items: center; justify-content: center;
@@ -196,6 +196,242 @@
     float: right; border: none; background: none; color: var(--faint);
     font-size: 18px; cursor: pointer; line-height: 1; margin-left: 12px;
   }
+
+  /* Reset tool -- ported from Bobbin/thimble-nervouse-system.html (a
+     standalone prototype of a Thimble-guided somatic regulation picker:
+     8 body/mind exercises on a 3D rotating drum, Thimble performing each
+     one himself). Everything below is scoped under #reset-overlay so its
+     own CSS vars/class names never touch the rest of the page; markup,
+     ids and behavior are otherwise unchanged from the prototype. */
+  #reset-overlay {
+    --bg-page: #0f1412; --modal-bg: #f6f3ee; --text-primary: #192320;
+    --text-secondary: #6e7672; --text-tertiary: #9ea5a0; --status-dot: #f06a85;
+    --button-teal: #183935; --accent-amber: #d89642; --border-light: rgba(0,0,0,0.06);
+    display: none; position: fixed; inset: 0; background: rgba(15,20,18,0.6);
+    align-items: center; justify-content: center; z-index: 60;
+  }
+  #reset-overlay.open { display: flex; }
+  #reset-overlay * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  #reset-overlay .device-shell {
+    width: 100%; max-width: 412px; height: min(92vh, 860px);
+    background-color: var(--modal-bg);
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+    border-radius: 28px; box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  /* Docked to the avatar-stage box on desktop (dockResetOverlay() sets
+     #reset-overlay's own top/left/width/height inline to that box's rect)
+     -- same mobile design as above, just stretched edge to edge to fill
+     it instead of floating as a centered card over the whole app. */
+  #reset-overlay.docked .device-shell {
+    max-width: none; width: 100%; height: 100%; border-radius: 0; box-shadow: none;
+  }
+  #reset-overlay .app-header {
+    height: 40px; padding: 14px 18px 0; display: grid;
+    grid-template-columns: 1fr auto 1fr; align-items: center; z-index: 30; position: relative;
+  }
+  #reset-overlay .status-cluster { grid-column: 2; display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; color: var(--text-primary); }
+  #reset-overlay .status-dot { width: 8.5px; height: 8.5px; border-radius: 50%; background-color: var(--status-dot); animation: reset-pulseGlow 2.4s ease-in-out infinite; }
+  #reset-overlay .status-title strong { font-weight: 700; }
+  #reset-overlay .header-actions { grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 12px; color: var(--text-secondary); }
+  #reset-overlay .header-actions svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; cursor: pointer; }
+  @keyframes reset-pulseGlow { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.22); opacity: 0.55; } }
+
+  #reset-overlay .facet-pips { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  #reset-overlay .pip { width: 6px; height: 6px; border-radius: 50%; transition: background 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); }
+
+  #reset-overlay .stage-container { flex: 1; position: relative; touch-action: none; overflow: hidden; perspective: 2400px; }
+  #reset-overlay .mask-cover { position: absolute; top: 0; bottom: 0; width: 11%; background: var(--modal-bg); z-index: 4; pointer-events: none; }
+  #reset-overlay .mask-cover.left { left: 0; }
+  #reset-overlay .mask-cover.right { right: 0; }
+
+  #reset-overlay .thimble-layer {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    z-index: 1; pointer-events: none; transition: transform .35s cubic-bezier(.3,1.2,.4,1);
+  }
+  #reset-overlay #stage.picker-open .thimble-layer { flex-direction: column; gap: 0; }
+  #reset-overlay #stage.picker-open .thimble-avatar { transform: scale(0.92); margin-top: -6px; }
+  #reset-overlay #stage.picker-open .facet { visibility: hidden; }
+  #reset-overlay #stage.picker-open ~ .app-footer { display: none; }
+  #reset-overlay #stage.picker-open ~ .edge-nav { display: none; }
+
+  #reset-overlay .drum { position: absolute; inset: 0; transform-style: preserve-3d; z-index: 2; cursor: grab; }
+  #reset-overlay .drum.dragging { cursor: grabbing; }
+  #reset-overlay .facet {
+    position: absolute; top: 0; bottom: 0; left: 11%; right: 11%;
+    display: flex; flex-direction: column; backface-visibility: hidden;
+    pointer-events: none; padding: 10px 18px 14px;
+  }
+  /* 3D occlusion (mask-cover + backface-visibility above) hides neighbor
+     facets on a narrow phone-shaped glass, but not reliably once the glass
+     is stretched to an arbitrary desktop box -- their own bubble/pill sit
+     at a fixed height regardless of width, so they can peek past the mask
+     mid-rotation. Belt-and-suspenders: only the active facet's ever shows. */
+  #reset-overlay .facet:not(.active-facet) .breath-coach,
+  #reset-overlay .facet:not(.active-facet) .round-pill,
+  #reset-overlay .facet:not(.active-facet) .round-replay {
+    visibility: hidden;
+  }
+  #reset-overlay .facet-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--accent-amber); }
+
+  #reset-overlay .app-footer {
+    flex: none; background: var(--button-teal); padding: 22px 24px calc(22px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column; gap: 16px; z-index: 25; position: relative;
+  }
+  #reset-overlay .app-footer .footer-row { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  #reset-overlay .app-footer .facet-eyebrow { color: var(--accent-amber); text-align: center; }
+  #reset-overlay .app-footer .title-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  #reset-overlay .facet-title { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.25; }
+  #reset-overlay .app-footer .facet-pips { margin-top: 0; }
+  #reset-overlay .app-footer .pip { background: rgba(255,255,255,0.25); }
+  #reset-overlay .app-footer .pip.active { background: var(--accent-amber); }
+  #reset-overlay .facet-info { flex: none; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7); cursor: pointer; }
+  #reset-overlay .facet-info svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+  #reset-overlay .info-tooltip {
+    position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%) translateY(-6px);
+    width: min(280px, calc(100vw - 64px)); background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 16px;
+    padding: 14px 18px; border: 1px solid var(--border-light); box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    text-align: left; opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; z-index: 40;
+  }
+  #reset-overlay .info-tooltip.visible { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(-14px); }
+  #reset-overlay .info-tooltip::after {
+    content: ""; position: absolute; bottom: -6px; left: 50%; width: 13px; height: 13px;
+    background: rgba(255, 255, 255, 0.96); border-right: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+    transform: translateX(-50%) rotate(45deg); border-radius: 0 0 3px 0; z-index: -1;
+  }
+  #reset-overlay .info-tooltip-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  #reset-overlay .info-tooltip-desc { font-size: 13px; font-weight: 500; color: var(--text-secondary); line-height: 1.4; }
+
+  #reset-overlay .breath-coach {
+    align-self: center; text-align: center; background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 16px;
+    padding: 7px 16px; border: 1px solid var(--border-light); box-shadow: 0 8px 24px rgba(0,0,0,0.04); position: relative;
+  }
+  #reset-overlay .breath-coach::after {
+    content: ""; position: absolute; bottom: -6px; left: 50%; width: 13px; height: 13px;
+    background: rgba(255, 255, 255, 0.88); border-right: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+    transform: translateX(-50%) rotate(45deg); border-radius: 0 0 3px 0; z-index: -1;
+  }
+  #reset-overlay .breath-instruction { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  #reset-overlay .breath-instruction .suffix { font-weight: 500; color: var(--text-secondary); }
+  #reset-overlay .breath-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+  #reset-overlay .breath-dots .dot { width: 8px; height: 8px; border-radius: 50%; background-color: rgba(0,0,0,0.12); transition: background-color 0.15s ease, transform 0.15s ease; }
+  #reset-overlay .breath-dots .dot.filled { background-color: var(--accent-amber); transform: scale(1.1); }
+
+  /* Lives inside .breath-coach (its first child) as plain text, not a
+     pill -- the bubble's own text-align:center centers it. */
+  #reset-overlay .round-pill {
+    font-size: 11px; font-weight: 700; color: var(--text-primary);
+    letter-spacing: 0.2px; margin-bottom: 4px;
+  }
+  #reset-overlay .round-replay {
+    align-self: center; display: flex; align-items: center; gap: 7px;
+    background: var(--button-teal); color: #fff; font-size: 13px; font-weight: 700;
+    padding: 10px 20px; border-radius: 24px; border: none; cursor: pointer; pointer-events: auto;
+    box-shadow: 0 8px 20px rgba(24,57,53,0.22);
+  }
+  #reset-overlay .round-replay[hidden] { display: none; }
+  #reset-overlay .round-replay:active { transform: scale(0.96); }
+  #reset-overlay .round-replay svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
+
+  #reset-overlay .state-picker {
+    display: none; width: 100%; justify-content: center; padding: 0 18px 14px;
+    pointer-events: none; transition: opacity .3s ease, visibility .3s ease;
+  }
+  #reset-overlay #stage.picker-open .state-picker { display: flex; }
+  #reset-overlay .state-picker.hidden { opacity: 0; visibility: hidden; }
+  #reset-overlay .picker-card {
+    width: 100%; max-width: 300px; background: #fff; border-radius: 20px; padding: 20px 16px 16px;
+    border: 1px solid var(--border-light); box-shadow: 0 10px 28px rgba(0,0,0,0.07);
+    display: flex; flex-direction: column; gap: 14px; pointer-events: auto; position: relative;
+  }
+  #reset-overlay .picker-card::after {
+    content: ""; position: absolute; bottom: -7px; left: 50%; width: 15px; height: 15px; background: #fff;
+    border-right: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+    transform: translateX(-50%) rotate(45deg); border-radius: 0 0 3px 0;
+  }
+  #reset-overlay .picker-welcome { font-size: 12px; font-weight: 700; color: var(--text-tertiary); text-align: center; margin-bottom: -4px; }
+  #reset-overlay .picker-question { font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: center; line-height: 1.4; }
+  #reset-overlay .picker-options { display: flex; gap: 10px; }
+  #reset-overlay .picker-option {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 14px; background: var(--button-teal); border: none;
+    padding: 14px 10px; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  #reset-overlay .picker-option:active { transform: scale(0.96); opacity: 0.85; }
+
+  #reset-overlay .thimble-avatar { position: relative; width: 268px; height: 268px; pointer-events: none; }
+  #reset-overlay .thimble-shadow {
+    position: absolute; left: 50%; top: calc(100% + 10px); width: 66%; height: 12px; transform: translateX(-50%);
+    background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,.34) 0%, rgba(23,55,46,.2) 50%, rgba(23,55,46,.07) 78%, rgba(23,55,46,0) 100%);
+    border-radius: 50%;
+  }
+  #reset-overlay .thimble-core { position: absolute; inset: 0; transition: transform .5s cubic-bezier(.3,1.4,.5,1); }
+  #reset-overlay .thimble-ring { position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%; }
+  #reset-overlay .thimble-body {
+    position: absolute; inset: 0; border-radius: inherit;
+    background-color: rgb(191, 192, 186);
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%),
+      radial-gradient(circle at 15% 15%, rgba(163,207,224,.81) 0%, transparent 66.6%),
+      radial-gradient(circle at 85% 15%, rgba(176,222,209,.52) 0%, transparent 38%),
+      radial-gradient(circle at 80% 85%, rgba(233,185,73,.45) 0%, transparent 31.4%),
+      radial-gradient(circle at 20% 85%, rgba(243,130,154,.52) 0%, transparent 38%);
+    box-shadow: inset -15px -17px 20px -10px rgba(0,0,0,.22), inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
+    overflow: hidden; animation: reset-thimble-idle-bounce 2.6s ease-in-out infinite;
+  }
+  #reset-overlay .thimble-blend {
+    position: absolute; width: 80%; height: 80%; left: -38%; top: 30%; border-radius: 50%;
+    background: #E9B949; mix-blend-mode: multiply; opacity: 0; transition: opacity .8s ease;
+  }
+  @keyframes reset-thimble-idle-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5%); } }
+
+  #reset-overlay .thimble-mouth {
+    position: absolute; left: 50%; top: 66%; transform: translate(-50%, -50%);
+    background: #F6F1E7; border-radius: 50%; transition: background .4s ease;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  #reset-overlay .thimble-eye {
+    height: 130%; aspect-ratio: 1 / 1; border-radius: 50%; flex: none; background: #ffffff;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(.5); transition: opacity .35s ease, transform .35s ease;
+  }
+  #reset-overlay .thimble-pupil { width: 42%; height: 42%; border-radius: 50%; background: #A9B8A8; }
+  #reset-overlay .thimble-eye.visible { opacity: 1; transform: scale(1); }
+
+  #reset-overlay .tap-dot {
+    position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffb3c2, #ff6f8f 60%, #e2506f 100%);
+    box-shadow: 0 2px 6px rgba(226, 80, 111, .35); opacity: 0; pointer-events: none;
+  }
+  #reset-overlay .saccade-ball {
+    position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffcf8a, #f0872c 60%, #d9661f 100%);
+    box-shadow: 0 2px 6px rgba(166, 82, 23, .4);
+    transform: translate(-50%, -50%) translate(0, 90px); opacity: 0; transition: opacity .4s ease;
+  }
+  #reset-overlay .saccade-ball.visible { opacity: 1; }
+
+  #reset-overlay .thimble-nostrils {
+    position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    opacity: 0; transition: opacity .25s ease;
+  }
+  #reset-overlay .thimble-nostrils.visible { opacity: 1; }
+  #reset-overlay .thimble-nostril { width: 7px; height: 7px; border-radius: 50%; background: #ffffff; opacity: .85; transition: transform .15s ease; }
+
+  #reset-overlay .edge-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); cursor: pointer; z-index: 20; transition: color 0.15s ease, transform 0.15s ease;
+  }
+  #reset-overlay .edge-nav:active { transform: translateY(-50%) scale(0.88); color: var(--text-primary); }
+  #reset-overlay .edge-nav.prev { left: 14px; }
+  #reset-overlay .edge-nav.next { right: 14px; }
+  #reset-overlay .edge-nav svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
   #convo-list { flex: 1; overflow: auto; }
   .item-row {
     padding: 10px 12px 10px 10px; margin: 0 8px 2px 8px;
@@ -888,6 +1124,11 @@
   .talk-mic-btn.starting { animation: mic-btn-starting-pulse 1s ease-in-out infinite; }
   .talk-mic-btn.recording { background: #E85D4A !important; }
 
+  /* Reset modal, docked to the avatar-stage box on desktop -- see the
+     #reset-overlay.docked rule near the modal's own CSS: same mobile
+     design, just resized to fill the stage instead of floating centered
+     over the whole app. No separate styling lives here. */
+
   body[data-layout="split"] #sidebar {
     position: fixed; top: 57px; bottom: 0; left: 0; z-index: 30;
     width: 280px; max-width: 85%;
@@ -935,6 +1176,9 @@
     <button id="install-btn" title="Install Seam as an app">Install app</button>
     <a id="feedback-link" href="survey/post" title="Done testing? Leave feedback">Give feedback</a>
     <button id="help-btn" title="How this works">?</button>
+    <button id="reset-tool-btn" title="Reset: a guided body/mind regulation exercise">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36"/><path d="M3 4v5h5"/></svg>
+    </button>
     <button id="layout-toggle" title="Switch layout" aria-label="Switch between classic and split layout" aria-pressed="false">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="14" y1="4" x2="14" y2="20"/></svg>
     </button>
@@ -1107,6 +1351,84 @@
     </div>
     <h1>How it works</h1>
     <div id="help-modal-body"></div>
+  </div>
+</div>
+
+<!-- Reset tool -- ported from Bobbin/thimble-nervouse-system.html, see the
+     CSS comment above for what it is and why it's scoped this way. -->
+<div id="reset-overlay">
+  <div class="device-shell">
+    <div class="app-header">
+      <div class="status-cluster">
+        <div class="status-dot"></div>
+        <div class="status-title"><strong>Thimble</strong></div>
+      </div>
+      <div class="header-actions">
+        <svg id="reset-close-btn" viewBox="0 0 24 24" title="Close"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </div>
+    </div>
+
+    <div class="stage-container picker-open" id="stage">
+      <div class="thimble-layer">
+        <div class="state-picker" id="statePicker">
+          <div class="picker-card">
+            <div class="picker-welcome">Welcome</div>
+            <div class="picker-question">What do you want to reset?</div>
+            <div class="picker-options">
+              <div class="picker-option" data-facet="0">Body</div>
+              <div class="picker-option" data-facet="3">Mind</div>
+            </div>
+          </div>
+        </div>
+        <div class="thimble-avatar" id="thimbleAvatar">
+          <div class="thimble-shadow"></div>
+          <div class="thimble-core" id="thimbleCore">
+            <div class="thimble-ring">
+              <div class="thimble-body">
+                <div class="thimble-blend"></div>
+                <div class="thimble-mouth" id="thimbleMouth">
+                  <div class="thimble-eye" id="thimbleEye"><div class="thimble-pupil" id="thimblePupil"></div></div>
+                </div>
+                <div class="thimble-nostrils" id="thimbleNostrils">
+                  <div class="thimble-nostril" id="nostrilLeft"></div>
+                  <div class="thimble-nostril" id="nostrilRight"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="saccade-ball" id="saccadeBall"></div>
+        <div class="tap-dot" id="tapDotLeft"></div>
+        <div class="tap-dot" id="tapDotRight"></div>
+      </div>
+      <div class="drum" id="drum"></div>
+      <div class="mask-cover left"></div>
+      <div class="mask-cover right"></div>
+    </div>
+
+    <div class="app-footer">
+      <div class="footer-row">
+        <div class="facet-eyebrow" id="footerEyebrow"></div>
+        <div class="title-row">
+          <div class="facet-title" id="footerTitle"></div>
+          <div class="facet-info" id="footerInfo" title="Learn more about this exercise">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          </div>
+        </div>
+      </div>
+      <div class="facet-pips" id="footerPips"></div>
+      <div class="info-tooltip" id="infoTooltip">
+        <div class="info-tooltip-title" id="infoTooltipTitle"></div>
+        <div class="info-tooltip-desc" id="infoTooltipDesc"></div>
+      </div>
+    </div>
+
+    <div class="edge-nav prev" id="prevBtn" title="Previous facet">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </div>
+    <div class="edge-nav next" id="nextBtn" title="Next facet">
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
   </div>
 </div>
 
@@ -2307,6 +2629,439 @@ document.querySelector("#help-modal .close-help").onclick = closeHelp;
 document.getElementById("help-overlay").addEventListener("click", (e) => {
   if (e.target.id === "help-overlay") closeHelp();
 });
+
+// ---------------------------------------------------------------------
+// Reset tool -- ported from Bobbin/thimble-nervouse-system.html (see the
+// CSS comment near #reset-overlay for what it is). initResetTool() builds
+// the drum/facets and starts the render loop the first time the overlay
+// opens; the loop stops while it's closed instead of running forever in
+// the background, since (unlike the standalone prototype) this page has
+// a lot more going on than just this screen.
+// ---------------------------------------------------------------------
+// --- 8 SOMATIC NERVOUS SYSTEM PROTOCOLS -- each facet carries its own
+// window-frame copy, plus how Thimble breathes/moves while it's
+// front-facing (breathe = inhale amount 0..1 driving body scale + mouth
+// openness, readout = optional count/phase text, eye = whether the mouth
+// shows an eyeball instead of just opening).
+const RESET_FACETS = [
+  {
+      category: "Somatic Brake", name: "Box Breath Metronome", state: "4-4-4-4 Pacing",
+      desc: "4s Inhale · 4s Hold · 4s Exhale · 4s Hold. Lowers cardiac excitation baseline.",
+      eye: false,
+      maxRounds: 4, roundSeconds: 16,
+      breathe(t) {
+        const cycle = t % 16, seg = Math.floor(cycle / 4), local = cycle % 4;
+        const segs = [
+          { instruction: "Breathe in", suffix: "through your nose", nostril: true },
+          { instruction: "Hold", suffix: "", nostril: true },
+          { instruction: "Breathe out", suffix: "through your mouth", nostril: true },
+          { instruction: "Hold", suffix: "", nostril: true },
+        ];
+        let inhale;
+        if (seg === 0) inhale = local / 4;
+        else if (seg === 1) inhale = 1;
+        else if (seg === 2) inhale = 1 - local / 4;
+        else inhale = 0;
+        return { inhale, ...segs[seg], seconds: 4, elapsed: local };
+      }
+    },
+    {
+      category: "Acute Adrenaline Dump", name: "Physiological Sigh", state: "Double-In, Long-Out",
+      desc: "Two rapid nasal inhales + one extended oral sigh to re-inflate collapsed alveoli.",
+      eye: false,
+      maxRounds: 3, roundSeconds: 6.6,
+      breathe(t) {
+        // A continuous wave, not two independent ramps: the nose opens and
+        // closes as the chest fills, then the mouth opens and closes as it
+        // empties -- each phase its own smooth bump, never an abrupt cut.
+        const noseDur = 2.0, mouthDur = 4.6, total = noseDur + mouthDur;
+        const cycle = t % total;
+        if (cycle < noseDur) {
+          const p = cycle / noseDur;
+          const inhale = Math.sin(Math.PI / 2 * p); // rises 0 -> 1 as the nose breath fills
+          const nostrilEnv = Math.sin(Math.PI * p); // opens then closes
+          return { inhale, instruction: "Breathe in", suffix: "through your nose", seconds: noseDur, elapsed: cycle, nostril: true, nostrilEnv };
+        }
+        const p = (cycle - noseDur) / mouthDur;
+        const inhale = Math.cos(Math.PI / 2 * p); // falls 1 -> 0 as the sigh empties
+        const mouthEnv = Math.sin(Math.PI * p); // opens then closes
+        return { inhale, instruction: "Breathe out", suffix: "through your mouth", seconds: mouthDur, elapsed: cycle - noseDur, nostril: false, mouthOpen: mouthEnv * 0.65 };
+      }
+    },
+    {
+      category: "Breaking Visual Tunnel", name: "Bilateral Saccades", state: "Tracking Sweep",
+      desc: "Follow the sweeping node left-to-right to desensitize acute amygdala threat locks.",
+      cue: "Follow the dot back and forth with your eyes",
+      eye: true,
+      // Thimble's own eye tracks the sweep -- no separate dot overlay.
+      breathe(t) { return { inhale: 0.3 + Math.sin(t * 0.6) * 0.08, eyeX: Math.sin(t * 2.8) }; }
+    },
+    {
+      category: "Motor Rhythm Anchor", name: "Bilateral Thumb Tap", state: "Alternating L / R",
+      desc: "Alternating dual-pad rhythm grounds cognitive loops through somatic motor circuits.",
+      cue: "Tap in time with the lit side, alternating left and right",
+      eye: false,
+      // Two dots either side of Thimble light up in turn, one full L/R cycle
+      // every 1.12s; Thimble himself rocks a little toward whichever is lit.
+      breathe(t) {
+        const halfPeriod = 0.56, period = halfPeriod * 2;
+        const cycle = t % period;
+        const side = cycle < halfPeriod ? "left" : "right";
+        const local = side === "left" ? cycle : cycle - halfPeriod;
+        const env = Math.sin(Math.PI * (local / halfPeriod)); // 0 -> 1 -> 0 within that side's window
+        return { inhale: 0.3 + Math.sin(t * 0.6) * 0.08, tapSide: side, tapEnv: env };
+      }
+    },
+    {
+      category: "Trigeminal Unclench", name: "Masseter Release", state: "Jaw Drop",
+      desc: "Drop the tongue from roof of mouth. Slacken back molars to disarm clench reflex.",
+      cue: "Let your jaw drop and your tongue rest low",
+      eye: false,
+      breathe(t) { return { inhale: 0.2 + 0.1 * Math.sin(t * 0.5), jawDrop: (Math.sin(t * 1.1) + 1) * 0.5 }; }
+    },
+    {
+      category: "Peripheral Expansion", name: "Panoramic Horizon", state: "Soft Focus",
+      desc: "Soften focus to perceive room boundaries without moving gaze. Disables sympathetic focus.",
+      cue: "Soften your gaze and take in the whole room",
+      eye: true,
+      // Thimble himself widens (a gentle horizontal stretch) instead of
+      // drawing separate peripheral-marker dots beside him.
+      breathe(t) { return { inhale: 0.3 + Math.sin(t * 0.4) * 0.05, widen: (Math.sin(t * 1.2) + 1) * 0.5 }; }
+    },
+    {
+      category: "Cardiac Entrainment", name: "Sternum Hold", state: "60bpm Bone Conduction",
+      desc: "Rest phone against breastbone. Bone-conducted 60bpm pulse entrains heart rate deceleration.",
+      cue: "Rest your phone against your chest",
+      eye: false,
+      // The 60bpm beat already drives inhale (body scale) directly -- that
+      // pulse *is* Thimble doing the exercise, no separate chest glow needed.
+      breathe(t) { return { inhale: 0.28 + Math.pow(Math.sin(t * Math.PI), 8) * 0.12 }; }
+    },
+    {
+      category: "Vagal Brake", name: "0.1 Hz RSA Cycle", state: "4-In / 6-Out",
+      desc: "Inhale 4s, exhale 6s (~6bpm). Directly drives respiratory sinus arrhythmia amplitude.",
+      eye: false,
+      maxRounds: 9, roundSeconds: 10,
+      breathe(t) {
+        const cycle = t % 10, isInhale = cycle < 4;
+        const inhale = isInhale ? cycle / 4 : 1 - (cycle - 4) / 6;
+        return isInhale
+          ? { inhale, instruction: "Breathe in", suffix: "through your nose", seconds: 4, elapsed: cycle, nostril: true }
+          : { inhale, instruction: "Breathe out", suffix: "through your mouth", seconds: 6, elapsed: cycle - 4, nostril: true };
+      }
+    }
+];
+
+// initResetTool() builds the drum/facets and starts the render loop the
+// first time the modal opens; the loop stops while it's closed instead of
+// running forever in the background.
+let resetToolInited = false;
+let resetToolRaf = null;
+let resetToolResume = () => {};
+
+// On desktop (split layout, wide enough that the avatar stage is actually
+// showing -- the same >860px breakpoint that hides it on narrow
+// viewports), the exact same modal docks into the stage's own box instead
+// of floating centered over the whole app: same design, same drum/facets/
+// Thimble clone, just resized to fill that box edge to edge. Recomputed
+// on every open (and on resize, while open) from the stage's current
+// layout rect.
+function dockResetOverlay() {
+  const overlay = document.getElementById("reset-overlay");
+  const avatarStage = document.getElementById("avatar-stage");
+  const docked = getComputedStyle(avatarStage).display !== "none";
+  overlay.classList.toggle("docked", docked);
+  if (docked) {
+    const r = avatarStage.getBoundingClientRect();
+    overlay.style.top = r.top + "px";
+    overlay.style.left = r.left + "px";
+    overlay.style.width = r.width + "px";
+    overlay.style.height = r.height + "px";
+  } else {
+    overlay.style.top = overlay.style.left = overlay.style.width = overlay.style.height = "";
+  }
+}
+
+function openResetTool() {
+  const overlay = document.getElementById("reset-overlay");
+  dockResetOverlay();
+  window.addEventListener("resize", dockResetOverlay);
+  overlay.classList.add("open");
+  if (!resetToolInited) {
+    resetToolInited = true;
+    initResetTool();
+  } else {
+    resetToolResume();
+  }
+}
+
+function closeResetTool() {
+  document.getElementById("reset-overlay").classList.remove("open");
+  window.removeEventListener("resize", dockResetOverlay);
+  if (resetToolRaf != null) cancelAnimationFrame(resetToolRaf);
+  resetToolRaf = null;
+}
+
+document.getElementById("reset-tool-btn").onclick = openResetTool;
+document.getElementById("reset-close-btn").addEventListener("click", closeResetTool);
+document.getElementById("reset-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "reset-overlay") closeResetTool();
+});
+
+function initResetTool() {
+  const drum = document.getElementById("drum");
+  const stage = document.getElementById("stage");
+  const thimbleCore = document.getElementById("thimbleCore");
+  const thimbleMouth = document.getElementById("thimbleMouth");
+  const thimbleEye = document.getElementById("thimbleEye");
+  const thimblePupil = document.getElementById("thimblePupil");
+  const thimbleNostrils = document.getElementById("thimbleNostrils");
+  const nostrilLeft = document.getElementById("nostrilLeft");
+  const nostrilRight = document.getElementById("nostrilRight");
+  const saccadeBall = document.getElementById("saccadeBall");
+  const footerEyebrow = document.getElementById("footerEyebrow");
+  const footerTitle = document.getElementById("footerTitle");
+  const footerInfo = document.getElementById("footerInfo");
+  const infoTooltip = document.getElementById("infoTooltip");
+  const infoTooltipTitle = document.getElementById("infoTooltipTitle");
+  const infoTooltipDesc = document.getElementById("infoTooltipDesc");
+  const tapDotLeft = document.getElementById("tapDotLeft");
+  const tapDotRight = document.getElementById("tapDotRight");
+
+  const count = RESET_FACETS.length;
+  const step = 360 / count;
+  let radius = 240;
+  let currentAngle = 0;
+  let activeFacet = 0;
+  let dragStartX = null, dragStartAngle = 0;
+  let startTime = performance.now();
+
+  // Build facets (window frames) on the drum
+  RESET_FACETS.forEach((f, i) => {
+    const el = document.createElement("div");
+    el.className = "facet";
+    el.style.transform = `rotateY(${-i * step}deg) translateZ(${-radius}px)`;
+    const paced = f.breathe(0).instruction != null;
+    el.innerHTML = `
+      <div class="breath-coach" ${paced || f.cue ? "" : "hidden"}>
+        ${f.maxRounds ? '<div class="round-pill" hidden></div>' : ""}
+        <div class="breath-instruction"><span class="verb">${paced ? "" : (f.cue || "")}</span> <span class="suffix"></span></div>
+        <div class="breath-dots" ${paced ? "" : "hidden"}></div>
+      </div>
+      ${f.maxRounds ? `<button class="round-replay" hidden>
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <span>Replay</span>
+      </button>` : ""}`;
+    drum.appendChild(el);
+  });
+
+  drum.addEventListener("click", (e) => {
+    const btn = e.target.closest(".round-replay");
+    if (!btn) return;
+    e.stopPropagation();
+    startTime = performance.now();
+  });
+
+  const footerPips = document.getElementById("footerPips");
+  footerPips.innerHTML = RESET_FACETS.map((_, j) => `<div class="pip ${j === 0 ? "active" : ""}" data-i="${j}"></div>`).join("");
+  footerPips.querySelectorAll(".pip").forEach(p => {
+    p.style.cursor = "pointer";
+    p.onclick = () => settleTo(Number(p.dataset.i) * step);
+  });
+
+  const PERSPECTIVE = 2400; // must match .stage-container's CSS perspective
+  let edgeOffset = 150;
+
+  function sizeDrum() {
+    const rect = stage.getBoundingClientRect();
+    if (!rect.width) return; // overlay not visible yet -- nothing to size against
+    radius = Math.round((rect.width / 2) / Math.tan(Math.PI / count));
+    edgeOffset = Math.min(150, rect.width * 0.39 - 18);
+    const compensate = (PERSPECTIVE + radius) / PERSPECTIVE;
+    [...drum.children].forEach((el, i) => {
+      el.style.transform = `rotateY(${-i * step}deg) translateZ(${-radius}px) scale(${compensate})`;
+    });
+  }
+  window.addEventListener("resize", sizeDrum);
+
+  function applyRotation(angle, withTransition) {
+    drum.style.transition = withTransition ? "transform .45s cubic-bezier(.2,.8,.2,1)" : "none";
+    drum.style.transform = `rotateY(${angle}deg)`;
+  }
+
+  function setActive(i) {
+    activeFacet = i;
+    // Belt-and-suspenders on top of the 3D occlusion (mask-cover + the
+    // facet's own backface-visibility): on a stage this stretched (full
+    // desktop width/height instead of a narrow phone card), two neighbor
+    // facets' own breath-coach bubbles are visible past the mask for a
+    // moment mid-rotation, since they sit at a fixed height regardless of
+    // how wide the glass is. Hiding every non-active facet's bubble/pill
+    // outright means only the one for the exercise actually facing you
+    // ever shows, whatever the aspect ratio.
+    [...drum.children].forEach((el, idx) => el.classList.toggle("active-facet", idx === i));
+    [...footerPips.children].forEach((d, idx) => d.classList.toggle("active", idx === i));
+    thimbleEye.classList.toggle("visible", !!RESET_FACETS[i].eye);
+    footerEyebrow.textContent = `${i + 1}/${count} · ${RESET_FACETS[i].category}`;
+    footerTitle.textContent = RESET_FACETS[i].name;
+    infoTooltipTitle.textContent = RESET_FACETS[i].name;
+    infoTooltipDesc.textContent = RESET_FACETS[i].desc;
+    closeTooltip();
+    startTime = performance.now();
+  }
+
+  function closeTooltip() { infoTooltip.classList.remove("visible"); }
+  footerInfo.addEventListener("click", (e) => {
+    e.stopPropagation();
+    infoTooltip.classList.toggle("visible");
+  });
+  document.getElementById("reset-overlay").addEventListener("click", closeTooltip);
+
+  function settleTo(angle) {
+    const idx = (((Math.round(angle / step) % count) + count) % count);
+    currentAngle = idx * step;
+    applyRotation(currentAngle, true);
+    if (idx !== activeFacet) setActive(idx);
+    if (navigator.vibrate) navigator.vibrate(16);
+  }
+
+  applyRotation(currentAngle, false);
+  setActive(0);
+
+  const stageEl = stage;
+  const statePicker = document.getElementById("statePicker");
+  statePicker.querySelectorAll(".picker-option").forEach(opt => {
+    opt.addEventListener("click", () => {
+      const idx = Number(opt.dataset.facet);
+      currentAngle = idx * step;
+      applyRotation(currentAngle, false);
+      setActive(idx);
+      statePicker.classList.add("hidden");
+      stageEl.classList.remove("picker-open");
+    });
+  });
+
+  function onDown(x) { dragStartX = x; dragStartAngle = currentAngle; drum.classList.add("dragging"); }
+  function onMove(x) { if (dragStartX === null) return; applyRotation(dragStartAngle - (x - dragStartX) * 0.35, false); }
+  function onUp(x) { if (dragStartX === null) return; const a = dragStartAngle - (x - dragStartX) * 0.35; dragStartX = null; drum.classList.remove("dragging"); settleTo(a); }
+
+  stageEl.addEventListener("mousedown", e => onDown(e.clientX));
+  window.addEventListener("mousemove", e => onMove(e.clientX));
+  window.addEventListener("mouseup", e => onUp(e.clientX));
+  stageEl.addEventListener("touchstart", e => onDown(e.touches[0].clientX), { passive: true });
+  stageEl.addEventListener("touchmove", e => onMove(e.touches[0].clientX), { passive: true });
+  stageEl.addEventListener("touchend", e => onUp(e.changedTouches[0].clientX));
+
+  document.getElementById("prevBtn").addEventListener("click", () => settleTo(currentAngle - step));
+  document.getElementById("nextBtn").addEventListener("click", () => settleTo(currentAngle + step));
+
+  // --- Thimble's per-frame motion: he performs every exercise himself,
+  // not a separate canvas overlay beside him. ---
+  function render(now) {
+    let t = (now - startTime) * 0.001;
+    const f = RESET_FACETS[activeFacet];
+    const pickerOpen = stageEl.classList.contains("picker-open");
+    const facetEl = drum.children[activeFacet];
+    const pillEl = facetEl.querySelector(".round-pill");
+    const replayEl = facetEl.querySelector(".round-replay");
+
+    if (!pickerOpen && f.maxRounds) {
+      const stopAt = f.maxRounds * f.roundSeconds;
+      const stopped = t >= stopAt;
+      if (stopped) {
+        t = stopAt - 0.001; // freeze Thimble's pose at the last breath instead of snapping to t=0
+        facetEl.querySelector(".breath-coach").hidden = true;
+        pillEl.hidden = true;
+        replayEl.hidden = false;
+      } else {
+        const round = Math.floor(t / f.roundSeconds) + 1;
+        const left = f.maxRounds - round + 1;
+        facetEl.querySelector(".breath-coach").hidden = false;
+        pillEl.hidden = false;
+        pillEl.textContent = `${left} left`;
+        replayEl.hidden = true;
+      }
+    }
+
+    const b = pickerOpen ? { inhale: 0 } : f.breathe(t);
+
+    const scale = 0.86 + b.inhale * 0.22;
+    const tapX = b.tapSide ? (b.tapSide === "left" ? -1 : 1) * (b.tapEnv ?? 0) * 6 : 0;
+    const scaleX = scale * (1 + (b.widen ?? 0) * 0.05 + b.inhale * 0.025);
+    thimbleCore.style.transform = `translate(calc(2% + ${tapX}px),1%) scale(${scaleX}, ${scale})`;
+
+    const jaw = b.jawDrop ?? 0;
+    const mouthOpen = f.eye ? 0.75 : (b.mouthOpen ?? Math.max(b.inhale * 0.5, jaw));
+    let w, h;
+    if (f.eye) {
+      w = 56; h = 24;
+    } else {
+      w = 29 + mouthOpen * 9.5;
+      h = 10 + mouthOpen * 32;
+    }
+    thimbleMouth.style.width = w + "px";
+    thimbleMouth.style.height = h + "px";
+    thimbleMouth.style.borderRadius = f.eye ? "50%" : (h > 24 ? "46%" : "50%");
+
+    thimbleMouth.style.opacity = b.nostril ? 0 : 1;
+    thimbleNostrils.classList.toggle("visible", !!b.nostril);
+    if (b.nostril) {
+      const flare = 0.55 + (b.nostrilEnv ?? b.inhale) * 0.9;
+      nostrilLeft.style.transform = `scale(${flare})`;
+      nostrilRight.style.transform = `scale(${flare})`;
+    }
+
+    if (b.eyeX != null) {
+      thimbleEye.style.transform = `translateX(${b.eyeX * 4}px) scale(1)`;
+      thimblePupil.style.transform = `translateX(${b.eyeX * 7}px)`;
+    } else {
+      thimbleEye.style.transform = "";
+      thimblePupil.style.transform = "";
+    }
+
+    saccadeBall.classList.toggle("visible", b.eyeX != null);
+    if (b.eyeX != null) {
+      saccadeBall.style.transform = `translate(-50%, -50%) translate(${b.eyeX * edgeOffset * 0.733}px, 90px)`;
+    }
+
+    if (b.tapSide) {
+      const env = b.tapEnv ?? 0;
+      const leftOn = b.tapSide === "left";
+      tapDotLeft.style.transform = `translate(calc(-50% - ${edgeOffset}px), -50%) scale(${leftOn ? 0.8 + env * 0.6 : 0.75})`;
+      tapDotLeft.style.opacity = leftOn ? 0.5 + env * 0.5 : 0.3;
+      tapDotRight.style.transform = `translate(calc(-50% + ${edgeOffset}px), -50%) scale(${!leftOn ? 0.8 + env * 0.6 : 0.75})`;
+      tapDotRight.style.opacity = !leftOn ? 0.5 + env * 0.5 : 0.3;
+    } else {
+      tapDotLeft.style.opacity = 0;
+      tapDotRight.style.opacity = 0;
+    }
+
+    if (b.instruction != null) {
+      const coach = facetEl.querySelector(".breath-coach");
+      coach.querySelector(".verb").textContent = b.instruction;
+      coach.querySelector(".suffix").textContent = b.suffix || "";
+
+      const dotCount = Math.round(b.seconds);
+      const filled = Math.min(dotCount, Math.floor(b.elapsed) + 1);
+      const dotsEl = coach.querySelector(".breath-dots");
+      if (dotsEl.childElementCount !== dotCount) {
+        dotsEl.innerHTML = Array.from({ length: dotCount }, () => '<span class="dot"></span>').join("");
+      }
+      [...dotsEl.children].forEach((d, i) => d.classList.toggle("filled", i < filled));
+    }
+
+    resetToolRaf = requestAnimationFrame(render);
+  }
+
+  resetToolResume = () => {
+    sizeDrum();
+    startTime = performance.now();
+    resetToolRaf = requestAnimationFrame(render);
+  };
+  // sizeDrum() needs the overlay actually laid out -- it only just gained
+  // .open in openResetTool(), so this first call happens after that's live.
+  resetToolResume();
+}
 
 // Anonymity pill: hover shows the tooltip on desktop (CSS); tap toggles it
 // here, since touch devices have no hover state.
