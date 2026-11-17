@@ -40,8 +40,7 @@
   .nav-dropdown-menu a:hover{background:rgba(255,255,255,0.07); color:#fff;}
   .nav-dropdown-menu a.active{color:#fff;}
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
-  .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .2s ease, transform .2s ease;}
-  .nav-cta.visible{opacity:1; transform:translateY(0); pointer-events:auto;}
+  .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25);}
   .nav-cta.secondary{color:var(--ink-soft); background:none; border:1px solid var(--border); box-shadow:none;}
   @media (max-width:680px){ .nav-links{display:none;} }
 
@@ -205,18 +204,6 @@
       ddToggle.setAttribute('aria-expanded', 'false');
     }
   });
-})();
-</script>
-<script>
-(function(){
-  var navCtas = document.querySelectorAll('.nav-cta');
-  if (!navCtas.length) return;
-  var heroCta = document.querySelector('.hero .btn-top');
-  if (!heroCta) { navCtas.forEach(function(el){ el.classList.add('visible'); }); return; }
-  var observer = new IntersectionObserver(function(entries){
-    navCtas.forEach(function(el){ el.classList.toggle('visible', !entries[0].isIntersecting); });
-  }, { threshold: 0, rootMargin: '-' + (document.querySelector('.topnav').offsetHeight + 4) + 'px 0px 0px 0px' });
-  observer.observe(heroCta);
 })();
 </script>
 </body>
