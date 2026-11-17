@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mend &middot; get a second opinion before the hard conversation</title>
+<title>Thimble &middot; get a second opinion before the hard conversation</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -36,9 +36,20 @@
   .nav-links a:hover{color:#fff;}
   .nav-links a.active{color:#fff;}
   .nav-links a.active::after{content:''; position:absolute; left:0; right:0; bottom:-14px; height:2px; background:var(--accent-solid);}
+  .nav-dropdown{position:relative;}
+  .nav-dropdown-toggle{background:none; border:none; font:inherit; font-weight:700; font-size:13.5px; color:var(--muted); cursor:pointer; padding:6px 0; display:inline-flex; align-items:center; gap:4px;}
+  .nav-dropdown-toggle:hover{color:#fff;}
+  .nav-dropdown.active .nav-dropdown-toggle{color:#fff;}
+  .nav-dropdown-caret{font-size:9px;}
+  .nav-dropdown-menu{position:absolute; top:100%; left:0; margin-top:14px; background:rgba(10,24,19,0.97); border:1px solid var(--border); border-radius:14px; padding:6px; min-width:150px; display:none; flex-direction:column; box-shadow:0 16px 32px rgba(0,0,0,0.4); z-index:40;}
+  .nav-dropdown.open .nav-dropdown-menu{display:flex;}
+  .nav-dropdown-menu a{display:block; padding:9px 12px; border-radius:9px; font-size:13.5px; font-weight:700; color:var(--muted); text-decoration:none; white-space:nowrap;}
+  .nav-dropdown-menu a:hover{background:rgba(255,255,255,0.07); color:#fff;}
+  .nav-dropdown-menu a.active{color:#fff;}
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
   .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .2s ease, transform .2s ease;}
   .nav-cta.visible{opacity:1; transform:translateY(0); pointer-events:auto;}
+  .nav-cta.secondary{color:var(--ink-soft); background:none; border:1px solid var(--border); box-shadow:none;}
   @media (max-width:680px){ .nav-links{display:none;} }
 
   .nav-toggle{display:none; align-items:center; justify-content:center; width:34px; height:34px; background:none; border:none; cursor:pointer; padding:0; flex-shrink:0;}
@@ -175,6 +186,12 @@
   .info-card .v{font-size:12.5px; color:var(--muted); line-height:1.55;}
   .info-card.accent .k{color:#F3C9D3;}
   .info-card.accent-honey .k{color:#F5D896;}
+  a.info-card.link{display:flex; flex-direction:column; gap:10px; text-decoration:none; transition:transform .15s ease, border-color .15s ease;}
+  a.info-card.link:hover{transform:translateY(-2px); border-color:rgba(255,255,255,0.28);}
+  a.info-card.link .go{margin-top:auto; font-size:12.5px; font-weight:800;}
+  a.info-card.link.pink .go{color:#F3829A;}
+  a.info-card.link.honey .go{color:#E9B949;}
+  a.info-card.link.soft .go{color:var(--ink-soft);}
 
   .cta{margin-top:48px; background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:20px; padding:32px 28px; text-align:center; box-shadow:0 30px 60px rgba(0,0,0,0.3); position:relative; overflow:hidden;}
   .cta-avatar{width:52px; height:52px; margin:0 auto 14px;}
@@ -206,24 +223,34 @@
 <header class="topnav">
   <div class="topnav-inner">
     <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><span></span></button>
-    <a class="topnav-brand" href="index.html"><div class="mark"></div><div class="wordmark">Mend</div></a>
+    <a class="topnav-brand" href="index.html"><div class="mark"></div><div class="wordmark">Thimble</div></a>
     <nav class="nav-links">
       <a href="index.html" class="active">Home</a>
-      <a href="seam-story.html">Seam</a>
-      <a href="story.html">Thimble</a>
+      <div class="nav-dropdown" id="audienceDropdown">
+        <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">for Managers <span class="nav-dropdown-caret">&#9662;</span></button>
+        <div class="nav-dropdown-menu">
+          <a href="for-managers.html">for Managers</a>
+          <a href="for-workers.html">for Workers</a>
+          <a href="for-hr.html">for HR</a>
+        </div>
+      </div>
       <a href="founder.html">Founder</a>
       <a href="index.html#manifesto" onclick="event.preventDefault(); document.getElementById('manifestoModal').classList.add('open');">Approach</a>
     </nav>
     <div class="nav-right">
-      <a class="nav-cta" href="/seam/">Try Seam &rarr;</a>
+      <a class="nav-cta secondary" href="/seam/">Try a demo</a>
+      <a class="nav-cta" href="buy.html">Buy now &rarr;</a>
     </div>
   </div>
   <nav class="mobile-menu" id="mobileMenu">
     <a href="index.html" class="active">Home</a>
-    <a href="seam-story.html">Seam</a>
-    <a href="story.html">Thimble</a>
+    <a href="for-managers.html">for Managers</a>
+    <a href="for-workers.html">for Workers</a>
+    <a href="for-hr.html">for HR</a>
     <a href="founder.html">Founder</a>
     <a href="index.html#manifesto" onclick="event.preventDefault(); document.getElementById('manifestoModal').classList.add('open'); document.getElementById('mobileMenu').classList.remove('open');">Approach</a>
+    <a href="/seam/">Try a demo</a>
+    <a href="buy.html">Buy now</a>
   </nav>
 </header>
 <div class="wrap">
@@ -232,9 +259,9 @@
     <div class="hero-badge"><span class="dot"></span>Private &middot; never recorded &middot; never shared</div>
     <div class="hero-text">
       <h1>Get a Second Opinion Before the Hard Conversation.</h1>
-      <p class="lede">A direct report needs tough feedback. Two people on your team can't work together. Or you're trying to understand how a conflict started. There's no neutral person to think it through with, and getting it wrong costs trust. Mend is that second opinion, privately, before you're in the room. <button type="button" class="lede-tip">Nothing is recorded*<span class="tooltip">Except when the law requires it: if what's being discussed meets the legal standard for harassment, discrimination, or a physical threat, the session automatically halts and routes to HR.</span></button>.</p>
+      <p class="lede">Someone needs to hear something hard. You and a coworker can't see eye to eye. Or you're just trying to understand how a conflict actually started. There's no neutral person to think it through with, and getting it wrong costs trust. Thimble is that second opinion, privately, before you're in the room. <button type="button" class="lede-tip">Nothing is recorded*<span class="tooltip">Except when the law requires it: if what's being discussed meets the legal standard for harassment, discrimination, or a physical threat, the session automatically halts and routes to HR.</span></button>.</p>
       <div class="hero-ctas">
-        <a class="btn-top" href="/seam/">Try Seam &rarr;</a>
+        <a class="btn-top" href="/seam/">Try Thimble &rarr;</a>
       </div>
     </div>
     <div class="hero-visual">
@@ -259,7 +286,7 @@
       <div class="more-body">
         <p>And specifics take detail. They take nuance. That&rsquo;s the part that&rsquo;s genuinely boring to bring to your own manager: they&rsquo;ve got a lot on their plate, and most of the time they don&rsquo;t need to hear it, and honestly shouldn&rsquo;t have to.</p>
         <p>What I needed was a confidant. Someone I could lay out the whole situation for, in as much detail as it actually took, and just get a gut check from. Not a verdict, not a script, just someone to think out loud with before I had to go handle it for real.</p>
-        <p>That&rsquo;s the gap Mend is built to fill. Somewhere to work through the specifics, off the record, before the hard conversation, instead of guessing your way through it alone.</p>
+        <p>That&rsquo;s the gap Thimble is built to fill. Somewhere to work through the specifics, off the record, before the hard conversation, instead of guessing your way through it alone.</p>
       </div>
     </details>
   </section>
@@ -372,12 +399,28 @@
     </div>
   </section>
 
-  <div class="cta">
-    <div class="cta-avatar" id="ctaAvatar"></div>
-    <h3 class="section-headline">See What Seam Actually Does</h3>
-    <p>The modes, a real walkthrough, and exactly what happens to what you type.</p>
-    <a class="btn" href="seam-story.html">See How It Works &rarr;</a>
-  </div>
+  <section class="block">
+    <h2>Find your page</h2>
+    <h3 class="section-headline">Thimble looks different depending on where you sit.</h3>
+    <p class="section-sub">Pick the one that's you &mdash; each page goes into exactly what Thimble does for that seat.</p>
+    <div class="info-grid">
+      <a class="info-card link honey" href="for-workers.html">
+        <div class="k">I'm a worker</div>
+        <div class="v">Figure out what's actually bothering you before you say something you can't walk back.</div>
+        <div class="go">For workers &rarr;</div>
+      </a>
+      <a class="info-card link pink" href="for-managers.html">
+        <div class="k">I'm a manager</div>
+        <div class="v">Walk into a hard conversation with your team already knowing what's really going on.</div>
+        <div class="go">For managers &rarr;</div>
+      </a>
+      <a class="info-card link soft" href="for-hr.html">
+        <div class="k">I'm in HR</div>
+        <div class="v">Why conflict that resolves itself, without a case file, is the outcome you actually want.</div>
+        <div class="go">For HR &rarr;</div>
+      </a>
+    </div>
+  </section>
 
   <footer>
     <div class="footer-note">Internal draft, pre-legal review. This is a prototype being tested, not a finished product. &middot; <a href="founder.html">About the founder</a></div>
@@ -645,16 +688,34 @@
 </script>
 <script>
 (function(){
+  var dd = document.getElementById('audienceDropdown');
+  if (!dd) return;
+  var ddToggle = dd.querySelector('.nav-dropdown-toggle');
+  ddToggle.addEventListener('click', function(e){
+    e.stopPropagation();
+    var open = dd.classList.toggle('open');
+    ddToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  document.addEventListener('click', function(e){
+    if (!dd.contains(e.target)) {
+      dd.classList.remove('open');
+      ddToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+})();
+</script>
+<script>
+(function(){
   // Nav CTA stays hidden on load and only appears once the page's own
   // in-hero CTA button has scrolled out of view -- avoids showing two
   // identical "do this" buttons on screen at once. Pages with no hero CTA
   // of their own (nothing to be redundant with) just show it immediately.
-  var navCta = document.querySelector('.nav-cta');
-  if (!navCta) return;
+  var navCtas = document.querySelectorAll('.nav-cta');
+  if (!navCtas.length) return;
   var heroCta = document.querySelector('.hero .btn-top, .hero-ctas .btn-top');
-  if (!heroCta) { navCta.classList.add('visible'); return; }
+  if (!heroCta) { navCtas.forEach(function(el){ el.classList.add('visible'); }); return; }
   var observer = new IntersectionObserver(function(entries){
-    navCta.classList.toggle('visible', !entries[0].isIntersecting);
+    navCtas.forEach(function(el){ el.classList.toggle('visible', !entries[0].isIntersecting); });
   }, { threshold: 0, rootMargin: '-' + (document.querySelector('.topnav').offsetHeight + 4) + 'px 0px 0px 0px' });
   observer.observe(heroCta);
 })();

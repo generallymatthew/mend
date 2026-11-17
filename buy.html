@@ -39,6 +39,12 @@
   .no-login-note{display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--muted); margin-top:18px;}
   .no-login-note .dot{width:6px; height:6px; border-radius:50%; background:var(--honey); flex-shrink:0;}
 
+  .why-no-login{background:var(--card); border:1px solid var(--card-border); border-radius:22px; padding:28px 26px; margin-top:40px;}
+  .why-no-login h2{font-size:15px; font-weight:800; color:#fff; text-transform:none; letter-spacing:-0.01em; margin:0 0 14px;}
+  .why-no-login p{font-size:13.5px; color:var(--ink-soft); line-height:1.7; margin:0 0 12px;}
+  .why-no-login p:last-child{margin-bottom:0;}
+  .why-no-login strong{color:#fff;}
+
   .tiers{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:48px;}
   @media (max-width:680px){ .tiers{grid-template-columns:1fr;} }
 
@@ -88,6 +94,13 @@
     <h1>Pick a seat pool. Pay through Stripe. We take it from there by email.</h1>
     <p class="lede">There's no account to create here, no dashboard to log into afterward, and no form on this page that touches payment details &mdash; that part happens entirely on Stripe's own checkout page.</p>
     <div class="no-login-note"><span class="dot"></span>After checkout: you'll get a thank-you page, then an email with your access code and rollout kit. Nothing else.</div>
+  </div>
+
+  <div class="why-no-login">
+    <h2>Why there's no login &mdash; not laziness, the actual proof</h2>
+    <p>It would be easy to build a login. We didn't skip it to save time; we left it out on purpose, because a login is exactly the thing that would let this promise be broken later.</p>
+    <p>The moment a company account exists, something somewhere has to store who's in it, who's using it, and what they said &mdash; even if nobody looks at it today, the capability to look is sitting there, waiting for a subpoena, a curious admin, or a policy change next year. A privacy policy can promise not to look. It can't prove there's nothing to find.</p>
+    <p>So instead of promising, we removed the thing that would need promising. There's no admin portal, no employee account, no database row anywhere that ties a name to a session &mdash; which means there is nothing we could hand over, nothing we could be compelled to produce, and nothing an employee has to simply trust us about. <strong>No login isn't a missing feature. It's how you can tell, from the outside, that there's no way for us to show anyone information about anyone.</strong></p>
   </div>
 
   <div class="tiers">
