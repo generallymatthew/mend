@@ -33,6 +33,7 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 
 | [32_HR_AND_INVESTOR_PITCH_STRATEGY.md](32_HR_AND_INVESTOR_PITCH_STRATEGY.md) | The "Four Undeniable Truths" opener for pitching both investors and HR buyers, the "why now" explanation (conversational AI just made this behavior possible), retiring "the middle space" in favor of a password-manager analogy, and the litigation-avoidance ROI math (not yet source-verified) |
 | [33_EVIDENCE_STRATEGY_AND_BUYER_PERSONAS.md](33_EVIDENCE_STRATEGY_AND_BUYER_PERSONAS.md) | Macro Shadow-AI evidence + a 3-experiment plan to prove employees switch from personal AI to Mend, the "paving the cowpaths" precedent list (Ombuds offices, password managers, Slack, bug bounties), the blunt pro-worker brand stance, and a buyer-persona breakdown of who pays (HR/Legal/IT) |
+| [34_STRIPE_CHECKOUT_SETUP.md](34_STRIPE_CHECKOUT_SETUP.md) | Step-by-step Stripe dashboard setup (products, prices, adjustable-quantity Payment Links, redirect) behind the real `buy.html`/`buy-thanks.html` checkout pages at the repo root |
 
 ## Status
 

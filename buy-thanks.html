@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thanks &middot; check your inbox</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#EFE7D8; --ink-soft:#C9D6CE; --muted:#8FA399;
+    --card:rgba(255,255,255,0.045); --card-border:rgba(255,255,255,0.12); --border:rgba(255,255,255,0.14);
+    --accent:linear-gradient(135deg,#F3829A,#E9B949); --accent-ink:#17372E;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#0E2119 0%,#0A1813 40%,#0B1A14 100%); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  .card{max-width:480px; margin:24px; padding:40px 32px; background:var(--card); border:1px solid var(--card-border); border-radius:24px; text-align:center;}
+  .badge{display:inline-flex; align-items:center; gap:8px; font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); background:rgba(201,214,206,0.1); border:1px solid rgba(201,214,206,0.3); padding:8px 18px; border-radius:999px; margin-bottom:20px;}
+  h1{font-size:1.5rem; font-weight:800; color:#fff; margin:0 0 14px;}
+  p{font-size:14.5px; color:var(--ink-soft); margin:0 0 10px;}
+  .steps{text-align:left; font-size:13px; color:var(--ink-soft); margin:22px 0 0; padding:0; list-style:none; border-top:1px solid var(--border); padding-top:20px;}
+  .steps li{display:flex; gap:10px; margin-bottom:10px;}
+  .steps b{color:#fff;}
+  a.back{display:inline-block; margin-top:24px; font-size:13px; font-weight:700; color:var(--ink-soft); text-decoration:none;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">Payment confirmed</div>
+    <h1>You're set. Check your inbox.</h1>
+    <p>There's no dashboard or login to go to from here &mdash; there isn't one. We'll email your billing contact directly with everything needed to roll this out.</p>
+    <ul class="steps">
+      <li><b>Within 1 business day:</b> an email with your team's access code and a short rollout note you can forward internally.</li>
+      <li><b>After that:</b> invoices, support, and your monthly usage digest all arrive the same way &mdash; by email, from one address.</li>
+      <li><b>Questions before then?</b> Reply to your Stripe receipt or reach us directly &mdash; the email you get will say exactly where.</li>
+    </ul>
+    <a class="back" href="index.html">&larr; Back to the site</a>
+  </div>
+</body>
+</html>
