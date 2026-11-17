@@ -108,6 +108,114 @@ assistant structurally cannot, not just "do it with better prompts"?
    collects each party's agreement independently, so neither side is
    forced into a face-losing concession in front of an audience.
 
+## Headless Enterprise Architecture: No Portal, No Accounts, Email-Only
+
+Captured 2026-11-17 from a brainstorm on removing every piece of infrastructure
+that could ever be expanded into a surveillance surface. The rule: **no admin
+portal, no user accounts, no backdoor** — not a policy promise, an absence of
+the infrastructure that a promise would otherwise be protecting.
+
+### Why this matters more than a privacy policy
+
+Employees already assume that any vendor with a customer/admin login either
+has, or will eventually add, manager-facing analytics, sentiment tracking, or
+usage logs tied to a name. A privacy policy can't disprove that fear — it's
+just a promise about infrastructure the employee can't see. Removing the
+infrastructure is the only claim that's actually verifiable: "there is no
+manager login, not even a hidden one" is true because the login doesn't
+exist, not because Mend chose not to build it.
+
+### The one-way pipeline
+
+```
+[ 1. THIRD-PARTY BILLING ]  Stripe Checkout / Payment Link
+          │                 (Company funds a flat seat pool; Mend never
+          │                  builds or stores a payment form)
+          ▼
+[ 2. BLIND ACCESS ]         Rotating access codes / blind claim tokens
+          │                 (No SSO, no usernames, no per-employee profile
+          │                  rows — only a company-level billing record)
+          ▼
+[ 3. EPHEMERAL SESSION ]    Volatile-memory enclave (see TEE section above)
+          │                 wiped on close, nothing written to any database
+          ▼
+[ 4. ONE-WAY DIGEST ]       Scheduled monthly email to HR/Risk contact:
+                             "42 sessions run | ~118 hrs reclaimed |
+                              0 statutory escalations"
+                             No login portal, no queryable database,
+                             no drill-down.
+```
+
+### Component by component
+
+- **No customer or admin website.** There is no `admin.mend.app` to log
+  into. Nothing to compromise, nothing to quietly extend into an analytics
+  dashboard later.
+- **No user accounts.** Only the paying company has a billing relationship,
+  held by the third-party processor (Stripe), not by Mend. Employees enter
+  with a blind access token or rotating team code — no database row ever
+  ties a person to a session.
+- **Payment handled entirely by Stripe.** Marketing site is a static
+  brochure with zero login buttons and zero session cookies. A buyer
+  selects a seat tier, clicks checkout, and is handed to Stripe's hosted
+  checkout (Stripe Payment Link with a quantity/tier selector — no backend
+  code required on Mend's side, no payment form Mend ever builds or
+  touches). On completion, Stripe redirects to a static thank-you page
+  ("Check your inbox — we're sending your team access code"), and Mend
+  never sees or stores card data.
+- **Relationship management by email only.** Onboarding, invoicing,
+  support, and the monthly digest all run through a single inbox
+  (e.g. `founder@mend.work`). No ticketing system, no customer dashboard.
+  This is a deliberate "Zero-UI" / email-native go-to-market: it cuts the
+  months of engineering that SSO, RBAC, and a billing portal would cost,
+  and it keeps the "no backdoor" claim literally true because there is no
+  web surface to question.
+- **Seat hygiene without a portal.** The one legitimate operational ask a
+  buyer will raise — "how do we revoke a seat when someone leaves?" —
+  is handled without a login system: time-boxed rotating access codes
+  (reissued on a cadence, e.g. quarterly, via the company's own internal
+  channel) or individual blind tokens that expire automatically (e.g. every
+  90 days).
+- **Client-side free-tier counter.** For the public free front door (see
+  below), session counts that gate the "do you have an employer code"
+  prompt are kept in client-side storage only (e.g. `localStorage` /
+  IndexedDB on the user's device), never server-side — so the free-tier
+  mechanic doesn't require tracking users to work.
+
+### Public front door / free-tier flywheel
+
+A second, intentionally separate entry point: a public URL (no login,
+no code required) that opens straight to a blank session, free to use,
+installable as a PWA. This is pitched internally as a "public utility"
+feel (the historical comparison used: Firefox) rather than a funnel.
+
+- First several sessions (e.g. 3) are free and uncounted server-side —
+  the counter lives in the user's own browser storage, not in a Mend
+  database, preserving the same zero-account guarantee as the paid product.
+- After the free allotment, a soft, non-blocking prompt surfaces: "does
+  your employer already have a code for this? It's usually pinned in
+  #general or your onboarding doc." This converts organic, bottom-up
+  usage into either an employer-code redemption or a nudge for the
+  employee to ask their own People team to buy it.
+- Cost basis: a solo coaching/prep session runs roughly $0.09 (or
+  $0.01-$0.02 on a cheaper model tier), so giving away 3 sessions per
+  person costs roughly $0.05-$0.27 all-in — compared to $8-$15 for a
+  single paid-ad click with no guaranteed product usage. This is the
+  number to use when justifying the free tier as a marketing-budget line
+  item, not a cost-of-goods risk.
+- Guardrails against abuse of the public, loginless surface: invisible
+  bot-check (e.g. Cloudflare Turnstile) plus a lightweight anonymous
+  daily request cap per browser session, so the lack of accounts doesn't
+  become an open API-cost spigot.
+
+### What this ties back to
+
+This section is the technical/operational backbone for the brand
+positioning and buyer-persona material in
+[33_EVIDENCE_STRATEGY_AND_BUYER_PERSONAS.md](33_EVIDENCE_STRATEGY_AND_BUYER_PERSONAS.md)
+and the pricing/ROI material in
+[02_COMMERCIAL_PRICING_STRATEGY.md](02_COMMERCIAL_PRICING_STRATEGY.md).
+
 ## Unit Economics & Cost Analysis (100 conflict pairs / 10,000 turns)
 
 - Intake side conversation (40 turns) + joint session (20 turns) + decoupled agreement (40 turns) = 100 turns per pair.
