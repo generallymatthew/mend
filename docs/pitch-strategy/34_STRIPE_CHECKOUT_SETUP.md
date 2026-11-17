@@ -30,16 +30,14 @@ payout bank account. This is a one-time step.
 In the Stripe dashboard, **Product catalog → Add product**, create:
 
 **Product A — "Mend — Company-wide Access"**
-- Pricing model: Standard pricing
-- Price: $750.00 / month, billed **annually in advance** (Stripe calls
-  this a recurring price with a 12-month billing cycle, or you can model
-  it as a one-time annual price of $9,000 if you'd rather not deal with
-  Stripe's subscription billing cycle options yet — simpler to start with
-  a one-time annual charge and move to a true subscription once renewals
-  matter).
-- This is the per-100-FTE benchmark from
-  [02_COMMERCIAL_PRICING_STRATEGY.md](02_COMMERCIAL_PRICING_STRATEGY.md).
-  Stripe Payment Links support an **adjustable quantity**, so you don't
+- Pricing model: Standard pricing, recurring **monthly**
+- Price: $5.00 / employee / month (so $500/month covers 100 employees) —
+  updated 2026-11-17 down from an earlier $9k/yr ($7.50/seat) figure,
+  since most companies won't come close to full simultaneous usage and
+  the price should track actual expected load, not a per-seat enterprise
+  rate. See [02_COMMERCIAL_PRICING_STRATEGY.md](02_COMMERCIAL_PRICING_STRATEGY.md)
+  for the current numbers.
+- Stripe Payment Links support an **adjustable quantity**, so you don't
   need a separate product per company size — see step 3.
 
 **Product B — "Mend — Single-Team Pilot"**

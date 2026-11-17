@@ -95,8 +95,8 @@
     <div class="tier" id="tier-company">
       <div class="tag">Company-wide</div>
       <h3>All-hands flat tier</h3>
-      <div class="price" id="company-price">$9,000<small> / yr</small></div>
-      <div class="desc">Every employee gets access, nothing seat-gated, so having a seat is never itself a signal. Priced at $7.50/employee/month, billed annually.</div>
+      <div class="price" id="company-price">$500<small> / mo</small></div>
+      <div class="desc">Every employee gets access, nothing seat-gated, so having a seat is never itself a signal. $500/month covers 100 employees ($5/employee/month), billed monthly &mdash; most companies won't have anywhere near full usage at once, so this is priced against actual expected load, not per-seat enterprise rates.</div>
       <div class="seat-row">
         <label for="seat-count">Employees</label>
         <input type="number" id="seat-count" value="100" min="1" step="1">
@@ -111,7 +111,7 @@
          href="#"
          data-stripe-payment-link="REPLACE_WITH_STRIPE_PAYMENT_LINK_COMPANY"
          target="_blank" rel="noopener">Continue to checkout &rarr;</a>
-      <div class="fine">Billed annually via Stripe. Seat count only sets the price shown here &mdash; confirm the final quantity on Stripe's own checkout page.</div>
+      <div class="fine">Billed monthly via Stripe. Seat count only sets the price shown here &mdash; confirm the final quantity on Stripe's own checkout page.</div>
     </div>
 
     <div class="tier">
@@ -152,12 +152,12 @@
 (function(){
   var seatInput = document.getElementById('seat-count');
   var priceEl = document.getElementById('company-price');
-  var PRICE_PER_SEAT_PER_MONTH = 7.5;
+  var PRICE_PER_SEAT_PER_MONTH = 5.0;
   function render(){
     var seats = parseInt(seatInput.value, 10);
     if (!seats || seats < 1) seats = 1;
-    var annual = Math.round(seats * PRICE_PER_SEAT_PER_MONTH * 12);
-    priceEl.innerHTML = '$' + annual.toLocaleString('en-US') + '<small> / yr</small>';
+    var monthly = Math.round(seats * PRICE_PER_SEAT_PER_MONTH);
+    priceEl.innerHTML = '$' + monthly.toLocaleString('en-US') + '<small> / mo</small>';
   }
   seatInput.addEventListener('input', render);
   render();

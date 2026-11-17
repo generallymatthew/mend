@@ -6,9 +6,17 @@ Standard per-seat B2B SaaS pricing fails for conflict resolution. When access is
 
 ### Recommended Enterprise Architecture: All-Hands Flat Tier (100 FTE benchmark)
 
-- **Pricing:** $7.50 / employee / month (billed annually at $750/mo).
-- **Annual Contract Value (ACV):** $9,000 / year.
-- **Access model:** company-wide SSO, zero seat-gating — every employee has confidential, friction-free access.
+- **Pricing:** $5.00 / employee / month, billed monthly ($500/mo for 100
+  employees) — revised 2026-11-17, down from an earlier $7.50/seat
+  ($9,000/yr) figure. Rationale: most companies won't have anywhere near
+  full simultaneous usage at any given time, so the price should track
+  realistic expected load rather than a per-seat enterprise rate — a
+  lower, monthly, easy-to-cancel price is also a better fit for the
+  headless, no-contract buying flow in
+  [34_STRIPE_CHECKOUT_SETUP.md](34_STRIPE_CHECKOUT_SETUP.md) than a large
+  annual commitment would be.
+- **Annual Contract Value (ACV) at 100 FTE:** $6,000 / year ($500/mo × 12).
+- **Access model:** company-wide, zero-login, zero seat-gating — every employee has confidential, friction-free access.
 
 ## ROI Model & Financial Justification
 
@@ -18,7 +26,7 @@ Standard per-seat B2B SaaS pricing fails for conflict resolution. When access is
 | Manager capacity restored | 3.0 hrs/wk of frontline manager time freed from informal dispute counseling | **$18,720/yr** |
 | Turnover prevention | Preempting a single mid-level resignation (Gallup benchmark: 1.5-2.0x salary) | **$45,000+** |
 | **Gross total value** | Total estimated drag prevented | **$132,152+/yr** |
-| **Net enterprise payback** | $132,152 value − $9,000 Mend license | **+$123,152 (14.6x ROI)** |
+| **Net enterprise payback** | $132,152 value − $6,000 Mend license (100 FTE, at $5/employee/month) | **+$126,152 (~22x ROI)** |
 
 ## Alternative Market Opportunities & Pricing Models
 
