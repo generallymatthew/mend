@@ -25,6 +25,13 @@ that account exists.
 Sign up at `stripe.com`, complete business verification, and set your
 payout bank account. This is a one-time step.
 
+**Legal/business name to use:** "Thimble" (Thimble LLC) — per the
+2026-11-18 decision to register the LLC under that name rather than
+"Mend." Use the same name on the business bank account so it matches
+what you enter on Stripe; a mismatch between the Stripe account's legal
+name and the receiving bank account's name is a common cause of delayed
+or held payouts.
+
 ## 2. Create two Products
 
 In the Stripe dashboard, **Product catalog → Add product**, create:
