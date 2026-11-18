@@ -128,29 +128,61 @@ MAIL_FROM = os.environ.get("MAIL_FROM", SMTP_USER)
 app = FastAPI()
 client = Anthropic() if os.environ.get("ANTHROPIC_API_KEY") else None
 
-# --- Tester access gate ----------------------------------------------------
+# --- Access gate ------------------------------------------------------------
 # The live deploy had no wall at all in front of these paid LLM/voice
 # endpoints -- anyone with the URL could run up the API bill, scraped or
-# not. A real per-customer login is out of scope for a blind-tester
-# prototype; one shared passcode, same trust level as Spool's
-# ORG_ACCESS_CODE, is enough to keep this off random crawlers/bots while
-# staying a one-time step for an invited tester. Unset by default so local
-# dev keeps working with zero setup.
-TESTER_ACCESS_CODE = os.environ.get("TESTER_ACCESS_CODE", "")
+# not. A real per-customer login is out of scope for the "no accounts, ever"
+# architecture (see docs/pitch-strategy/03_TECHNICAL_ARCHITECTURE_AND_WATCHER.md),
+# so each paying company gets its own rotating code instead -- same trust
+# level as Spool's ORG_ACCESS_CODE, but one code per company so a leaked or
+# revoked code doesn't take down every other customer, and the digest script
+# (digest.py) can attribute sessions to a company without ever storing who
+# the individual employee was.
+#
+# ACCESS_CODES is a JSON object, {"<code>": "<company name>", ...}, set as
+# one env var so adding/revoking a company's code is an env var edit + one
+# restart, no deploy/rebuild and no database. Falls back to the old single
+# TESTER_ACCESS_CODE for whatever's already set in an existing deploy.
+def _load_access_codes() -> dict[str, str]:
+    raw = os.environ.get("ACCESS_CODES", "")
+    if raw:
+        try:
+            codes = json.loads(raw)
+            if isinstance(codes, dict) and all(isinstance(k, str) and isinstance(v, str) for k, v in codes.items()):
+                return codes
+            print("[access] ACCESS_CODES is set but isn't a {code: company} JSON object -- ignoring it", flush=True)
+        except json.JSONDecodeError as e:
+            print(f"[access] ACCESS_CODES isn't valid JSON ({e}) -- ignoring it", flush=True)
+    legacy = os.environ.get("TESTER_ACCESS_CODE", "")
+    if legacy:
+        return {legacy: os.environ.get("TESTER_COMPANY_NAME", "tester")}
+    return {}
+
+
+ACCESS_CODES = _load_access_codes()
 ACCESS_COOKIE = "mend_access"
 # The gate page and its own submit endpoint must stay reachable with no
 # cookie yet, or nobody could ever pass the gate in the first place.
 ACCESS_EXEMPT_PATHS = {"/gate", "/api/access", "/sw.js"}
 
 
+def company_for_code(code: str | None) -> str | None:
+    """Looks up the company name for an access code, or None for no/unknown
+    code. Used only to attribute aggregate analytics (digest.py) -- never
+    stored against a session_id or any conversation content."""
+    if not code:
+        return None
+    return ACCESS_CODES.get(code)
+
+
 @app.middleware("http")
 async def tester_gate(request: Request, call_next):
-    if not TESTER_ACCESS_CODE:
+    if not ACCESS_CODES:
         return await call_next(request)
     path = request.url.path
     if path in ACCESS_EXEMPT_PATHS or path.startswith("/static/"):
         return await call_next(request)
-    if request.cookies.get(ACCESS_COOKIE) == TESTER_ACCESS_CODE:
+    if request.cookies.get(ACCESS_COOKIE) in ACCESS_CODES:
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "access code required"}, status_code=401)
@@ -166,12 +198,14 @@ async def gate_page():
 async def submit_access(request: Request):
     data = await request.json()
     code = str(data.get("code") or "")
-    if not TESTER_ACCESS_CODE or code != TESTER_ACCESS_CODE:
+    if not ACCESS_CODES or code not in ACCESS_CODES:
         return JSONResponse({"error": "wrong code"}, status_code=403)
     resp = JSONResponse({"ok": True})
     # httponly: the page never needs to read this back itself, only send it
     # along automatically on the next request, same as any session cookie.
-    resp.set_cookie(ACCESS_COOKIE, TESTER_ACCESS_CODE, max_age=60 * 60 * 24 * 30, httponly=True, samesite="lax")
+    # The cookie holds the code itself (not a separate session id), so which
+    # company a request belongs to is a dict lookup, not a database row.
+    resp.set_cookie(ACCESS_COOKIE, code, max_age=60 * 60 * 24 * 30, httponly=True, samesite="lax")
     return resp
 
 
@@ -1643,7 +1677,12 @@ async def submit_analytics_event(request: Request):
     reason = data.get("reason")
     if reason is not None and reason not in VALID_FEEDBACK_REASONS:
         return JSONResponse({"error": "invalid reason"}, status_code=400)
-    record = {"ts": time.time(), "session_id": session_id, "tester_id": tester_id, "event": event, "mode": mode, "turn": turn, "flag": flag, "reason": reason}
+    # Attributed server-side from the access-code cookie, never from
+    # anything the client claims -- this is the one field digest.py needs
+    # to roll session_start/session_end counts up to a company without a
+    # database. A tester with no code (ACCESS_CODES unset) just gets None.
+    company = company_for_code(request.cookies.get(ACCESS_COOKIE))
+    record = {"ts": time.time(), "session_id": session_id, "tester_id": tester_id, "event": event, "mode": mode, "turn": turn, "flag": flag, "reason": reason, "company": company}
     sheet = get_events_sheet()
     if sheet is not None:
         try:

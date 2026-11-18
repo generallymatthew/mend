@@ -9,6 +9,9 @@ apps/thimble/survey_responses.jsonl
 apps/thimble/analytics_events.jsonl
 apps/thimble/feedback_alert_state.json
 apps/thimble/feedback_alert_log.jsonl
+apps/thimble/screen_signal_log.jsonl
+apps/thimble/support_reply_state.json
+apps/thimble/support_reply_flags.jsonl
 apps/thimble/tests/benchmark_results_*.json
 apps/seam/cases.db
 apps/seam/cases.db.bak.*
