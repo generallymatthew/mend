@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mend — Voice + transcript</title>
+<title>Thimble — Voice + transcript</title>
 <link rel="manifest" href="/static/manifest.json">
 <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
@@ -1001,7 +1001,7 @@
     <div class="checkin-ring">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </div>
-    <h2>Welcome to Mend</h2>
+    <h2>Welcome to Thimble</h2>
     <p>It's simple: explain the situation, answer some follow-up questions, and work out with <span class="checkin-thimble" tabindex="0">Thimble<span class="info-dot">i</span><span class="tip">Thimble is your conflict resolution facilitator.</span></span> what to do next.</p>
     <div class="checkin-privacy">Nothing is recorded or saved. Not the audio, not the transcript, not a summary.</div>
     <button class="checkin-ready-btn" id="checkinReadyBtn" type="button">I'm ready</button>
@@ -1023,7 +1023,7 @@
   <div class="top-nav">
     <div class="top-bar-brand">
       <svg class="brand-logo-mark" width="29" height="21" viewBox="0 0 871 616" fill="#F3829A" aria-hidden="true"><path d="M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z"/></svg>
-      <span class="brand-mark">mend</span>
+      <span class="brand-mark">thimble</span>
       <span class="privacy-chip">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
         Private
@@ -1036,7 +1036,7 @@
       <button id="disclaimerBtn" class="lock-btn" type="button" aria-label="Important information">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><circle cx="12" cy="8" r=".25" fill="currentColor" stroke-width="0"></circle></svg>
       </button>
-      <div class="lock-tooltip disclaimer-tooltip">Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
+      <div class="lock-tooltip disclaimer-tooltip">Not legal or HR advice. Thimble is a prototype and an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
     </div>
     <div class="top-nav-actions">
       <!-- Option C from the design review (claude.ai/artifact/W6yD3DFWppFzt79cfvhNqJ),
@@ -1306,7 +1306,7 @@
 
 
   <div id="videoMode" class="video-area" hidden>
-    <iframe id="videoFrame" allow="camera; microphone; autoplay; display-capture" title="Mend facilitator video call"></iframe>
+    <iframe id="videoFrame" allow="camera; microphone; autoplay; display-capture" title="Thimble facilitator video call"></iframe>
     <button id="videoEndBtn">End video call</button>
   </div>
 
@@ -1323,7 +1323,7 @@
        the same real text now lives in the disclaimerBtn tooltip next to
        the Private chip above, read on interaction instead of always on
        screen. -->
-  <div class="disclaimer-footer" hidden>Not legal or HR advice. Mend is a prototype. Thimble is an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
+  <div class="disclaimer-footer" hidden>Not legal or HR advice. Thimble is a prototype and an AI facilitator, not a lawyer, therapist, or HR professional, and nothing here is reviewed by a human before you see it. If something is urgent or unsafe, contact your actual HR department, a lawyer, or emergency services.</div>
 </div>
 
 <!-- Custom confirm modal, replacing the browser-native confirm() End

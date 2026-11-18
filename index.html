@@ -47,7 +47,8 @@
   .nav-dropdown-menu a:hover{background:rgba(255,255,255,0.07); color:#fff;}
   .nav-dropdown-menu a.active{color:#fff;}
   .nav-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;}
-  .nav-cta{font-size:12.5px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:8px 16px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(243,130,154,0.25);}
+  .nav-cta{font-size:13px; font-weight:800; color:var(--accent-ink); background:var(--accent); padding:10px 20px; border-radius:999px; text-decoration:none; white-space:nowrap; box-shadow:0 8px 22px rgba(243,130,154,0.45), 0 2px 8px rgba(0,0,0,0.25); transition:transform .15s ease, box-shadow .15s ease;}
+  .nav-cta:not(.secondary):hover{transform:translateY(-1px) scale(1.03); box-shadow:0 10px 26px rgba(243,130,154,0.55), 0 2px 8px rgba(0,0,0,0.25);}
   .nav-cta.secondary{color:var(--ink-soft); background:none; border:1px solid var(--border); box-shadow:none;}
   @media (max-width:680px){ .nav-links{display:none;} }
 
@@ -103,7 +104,7 @@
 
   @media (max-width:600px){
     .hero{gap:0;}
-    /* Try Seam needs to clear the fold on a phone, so the CTA moves
+    /* Try a demo needs to clear the fold on a phone, so the CTA moves
        ahead of the long lede paragraph (DOM order stays the same, for
        reading order / SEO) and the space above it gets tightened. */
     .topnav{margin-bottom:20px;}
@@ -237,7 +238,7 @@
       <a href="index.html#manifesto" onclick="event.preventDefault(); document.getElementById('manifestoModal').classList.add('open');">Approach</a>
     </nav>
     <div class="nav-right">
-      <a class="nav-cta secondary" href="/seam/">Try a demo</a>
+      <a class="nav-cta" href="/seam/">Try a demo</a>
       <!-- Buy now: hidden until the business has an EIN -- <a class="nav-cta" href="buy.html">Buy now &rarr;</a> -->
     </div>
   </div>
@@ -429,7 +430,7 @@
 <div class="modal-overlay" id="manifestoModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="manifestoTitle">
     <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('manifestoModal').classList.remove('open')">&times;</button>
-    <h2 class="modal-title" id="manifestoTitle">The Mend Approach to Workplace Friction</h2>
+    <h2 class="modal-title" id="manifestoTitle">The Thimble Approach to Workplace Friction</h2>
     <p class="modal-sub">Stated simply, we value people over:</p>
     <ul>
       <li><b>Structural clarity over litigating blame.</b> Workplace friction stems from colliding incentives, competing KPIs, and overloaded schedules, not malice or "bad people." We solve the system, not the personality.</li>
@@ -462,7 +463,7 @@
     <ul>
       <li><b>A purpose-built system prompt, not a persona bolted onto a general assistant.</b> Thimble's entire conduct &mdash; short, spoken-style turns instead of essays, never taking either side, pushing back on a plan that's vague or likely to blindside someone &mdash; comes from a system prompt written and iterated specifically for workplace conflict conversations, not a generic "be helpful" instruction.</li>
       <li><b>Harassment &amp; safety floor recognition.</b> Every turn, in every phase, gets continuously screened against a fixed set of categories &mdash; harassment or discrimination based on a protected characteristic, threats, illegal activity, immediate safety risk, retaliation for something someone had a legitimate right to do. This isn't a keyword filter: it re-weighs the whole conversation as new detail comes in, and a vague warning or a sudden cold shoulder can meet the floor just as much as an explicit threat.</li>
-      <li><b>Deterministic rules on top of the model, not just a vibe.</b> Once the floor is met, what happens next isn't up for interpretation: the session stops coaching toward a plan, the person is told plainly and never silently, and Mend sends nothing to HR without their explicit, informed yes &mdash; no silent reports, ever.</li>
+      <li><b>Deterministic rules on top of the model, not just a vibe.</b> Once the floor is met, what happens next isn't up for interpretation: the session stops coaching toward a plan, the person is told plainly and never silently, and Thimble sends nothing to HR without their explicit, informed yes &mdash; no silent reports, ever.</li>
       <li><b>A second opinion on genuinely ambiguous cases.</b> When a disclosure is a real toss-up, not just sensitive, Thimble doesn't settle it alone on a single pass &mdash; it runs an any-of-k self-consistency check (several independent reads voting) before the floor decision is finalized, instead of trusting one read of one conversation.</li>
     </ul>
   </div>

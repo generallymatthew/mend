@@ -27,22 +27,22 @@ for the checkout flow this follows from. This is the only message a buyer
 gets; there's no portal or login to follow up with afterward, so it has
 to carry everything they need in one email.
 
-**Subject: Your Mend access code — you're set up**
+**Subject: Your Thimble access code — you're set up**
 
 Hi [first name],
 
-Thanks for setting Mend up for [company name]. Payment's confirmed — here's
+Thanks for setting Thimble up for [company name]. Payment's confirmed — here's
 everything your team needs.
 
 **Your access code: `[ROTATING-CODE]`**
 
 Share this however you'd normally share something company-wide — pinned in
 your all-hands Slack channel, in your onboarding doc, in a benefits email.
-Anyone at [company name] can use it to open Mend with no separate login
+Anyone at [company name] can use it to open Thimble with no separate login
 and no account tied to their name.
 
 **What to tell people, if you want a one-line version:**
-"We've set up Mend, a private place to think through a work conflict
+"We've set up Thimble, a private place to think through a work conflict
 before it escalates. No login, no company record of who uses it or what
 they say — not even we can see it."
 

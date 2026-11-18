@@ -2,7 +2,7 @@
 
 Implements the "headless enterprise" commercial model from
 [03_TECHNICAL_ARCHITECTURE_AND_WATCHER.md](03_TECHNICAL_ARCHITECTURE_AND_WATCHER.md#headless-enterprise-architecture-no-portal-no-accounts-email-only):
-a buyer never creates an account or logs into anything Mend operates.
+a buyer never creates an account or logs into anything Thimble operates.
 They pick a tier on the static marketing site, pay on Stripe's own hosted
 checkout, land on a static thank-you page, and everything after that —
 access code, invoicing, support, the monthly digest — happens by email.
@@ -36,7 +36,7 @@ or held payouts.
 
 In the Stripe dashboard, **Product catalog → Add product**, create:
 
-**Product A — "Mend — Company-wide Access"**
+**Product A — "Thimble — Company-wide Access"**
 - Pricing model: Standard pricing, recurring **monthly**
 - Price: $5.00 / employee / month (so $500/month covers 100 employees) —
   updated 2026-11-17 down from an earlier $9k/yr ($7.50/seat) figure,
@@ -47,7 +47,7 @@ In the Stripe dashboard, **Product catalog → Add product**, create:
 - Stripe Payment Links support an **adjustable quantity**, so you don't
   need a separate product per company size — see step 3.
 
-**Product B — "Mend — Single-Team Pilot"**
+**Product B — "Thimble — Single-Team Pilot"**
 - Pricing model: Standard pricing, recurring
 - Price: $20.00 / month
 
