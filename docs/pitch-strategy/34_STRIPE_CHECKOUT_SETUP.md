@@ -93,7 +93,8 @@ whatever the buyer sets on Stripe's own checkout page.
 
 In Stripe, **Settings → Notifications**, make sure "Successful payments"
 emails go to the inbox you'll be running the email-only relationship
-from (e.g. `founder@mend.work` — see
+from (`support@withthimble.com` — decided 2026-11-18 as the real support
+address, not yet set up to receive mail anywhere; see
 [33_EVIDENCE_STRATEGY_AND_BUYER_PERSONAS.md](33_EVIDENCE_STRATEGY_AND_BUYER_PERSONAS.md)
 for why that inbox, not a ticketing system, is the whole support surface
 for now). That email is your trigger to manually send the welcome/rollout

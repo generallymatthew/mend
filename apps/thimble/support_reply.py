@@ -15,16 +15,18 @@ drafts, the founder decides and hits send from their own mail client.
 
 Needs IMAP (to read the inbox and file drafts) and SMTP (only to know
 the From/Reply-To address to put on the draft, no sending happens here).
-Works against any IMAP mailbox -- the founder@mend.work inbox as of
-2026-11 is receive-only via forwarding (see FUNDING.md), so point this
-at wherever that forwards to until a real mailbox exists at that domain.
+Works against any IMAP mailbox -- the real support inbox is
+support@withthimble.com, which doesn't exist as a reachable mailbox yet
+(decided 2026-11-18, not yet set up to receive mail anywhere). Point
+SUPPORT_IMAP_* at wherever it ends up forwarding to, or at a real
+mailbox at that address, once it exists.
 
 Env vars (.env, same file server.py/digest.py already load):
     SUPPORT_IMAP_HOST, SUPPORT_IMAP_USER, SUPPORT_IMAP_PASS
     SUPPORT_IMAP_FOLDER        default "INBOX"
     SUPPORT_DRAFTS_FOLDER      default "Drafts"
-    SUPPORT_FROM_ADDRESS       what the draft's From/Reply-To header says,
-                                e.g. founder@mend.work
+    SUPPORT_FROM_ADDRESS       what the draft's From/Reply-To header says
+                                -- support@withthimble.com
     ANTHROPIC_API_KEY          same key server.py uses
 
 Run (e.g. from cron, every 15 min):
@@ -56,7 +58,12 @@ SUPPORT_IMAP_USER = os.environ.get("SUPPORT_IMAP_USER", "")
 SUPPORT_IMAP_PASS = os.environ.get("SUPPORT_IMAP_PASS", "")
 SUPPORT_IMAP_FOLDER = os.environ.get("SUPPORT_IMAP_FOLDER", "INBOX")
 SUPPORT_DRAFTS_FOLDER = os.environ.get("SUPPORT_DRAFTS_FOLDER", "Drafts")
-SUPPORT_FROM_ADDRESS = os.environ.get("SUPPORT_FROM_ADDRESS", SUPPORT_IMAP_USER)
+# Defaults to the real support address even if SUPPORT_IMAP_USER (the
+# mailbox login, which may be a forwarding target, not this address
+# itself) is set to something else -- the draft's From header should
+# always read support@withthimble.com regardless of where it's actually
+# filed.
+SUPPORT_FROM_ADDRESS = os.environ.get("SUPPORT_FROM_ADDRESS", "support@withthimble.com")
 
 SYSTEM_PROMPT_FILE = ROOT / "support-reply-system-prompt.md"
 MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
