@@ -485,8 +485,30 @@ def with_cache_breakpoint(conversation: list[dict]) -> list[dict]:
 DEFAULT_SESSION_ID = "default"
 conversations: dict[str, list[dict]] = {}
 
+# How long a session can sit idle before the sweep below drops it -- the
+# backstop for tabs that never signal close (crash, sleep, force-quit).
+# A normal tab close is handled immediately instead, via pagehide calling
+# /api/reset (see session.html), so this is only how long leftover content
+# can linger when that signal never arrives.
+SESSION_IDLE_TIMEOUT_SECONDS = 30 * 60
+_session_last_touched: dict[str, float] = {}
+
 def get_conversation(session_id: str | None) -> list[dict]:
-    return conversations.setdefault(session_id or DEFAULT_SESSION_ID, [])
+    sid = session_id or DEFAULT_SESSION_ID
+    _session_last_touched[sid] = time.time()
+    return conversations.setdefault(sid, [])
+
+
+async def _sweep_idle_conversations():
+    """Runs for the life of the process, dropping any session's
+    conversation once it's gone quiet for SESSION_IDLE_TIMEOUT_SECONDS."""
+    while True:
+        await asyncio.sleep(60)
+        cutoff = time.time() - SESSION_IDLE_TIMEOUT_SECONDS
+        stale = [sid for sid, touched in _session_last_touched.items() if touched < cutoff]
+        for sid in stale:
+            conversations.pop(sid, None)
+            _session_last_touched.pop(sid, None)
 
 
 def strip_signal(reply_text: str) -> tuple[str, str | None]:
@@ -1416,7 +1438,9 @@ async def speak_aura(payload: dict):
 @app.post("/api/reset")
 async def reset(payload: dict = None):
     payload = payload or {}
-    get_conversation(payload.get("session_id")).clear()
+    sid = payload.get("session_id") or DEFAULT_SESSION_ID
+    get_conversation(sid).clear()
+    _session_last_touched.pop(sid, None)
     # Audio files aren't namespaced per session (random uuid filenames,
     # see synthesize_speech) -- clearing them here is harmless for the real
     # single-session frontend (the only caller that ever uses synthesize
@@ -1831,6 +1855,11 @@ async def preload_whisper():
     # the first voice message of a session isn't the one that eats this cost
     # -- that's what made live mode feel stuck on "transcribing..." before.
     get_whisper()
+
+
+@app.on_event("startup")
+async def start_idle_sweep():
+    asyncio.create_task(_sweep_idle_conversations())
 
 
 @app.get("/")

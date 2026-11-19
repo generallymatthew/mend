@@ -1435,7 +1435,18 @@ function logEvent(event, extra) {
     keepalive: true, // lets session_end's fetch survive the page actually unloading
   }).catch(() => {}); // best-effort -- never blocks or breaks the real conversation flow
 }
-window.addEventListener('pagehide', () => logEvent('session_end', {turn: analyticsTurnCount}), {once: true});
+window.addEventListener('pagehide', () => {
+  logEvent('session_end', {turn: analyticsTurnCount});
+  // Best-effort: clears this session's conversation out of the server's
+  // memory right away on a normal tab close, instead of waiting for the
+  // idle sweep (see SESSION_IDLE_TIMEOUT_SECONDS in server.py) to catch it.
+  fetch(apiPath('/api/reset'), {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({session_id: sessionId}),
+    keepalive: true,
+  }).catch(() => {});
+}, {once: true});
 
 const thread = document.getElementById('thread');
 const statusEl = document.getElementById('status');
