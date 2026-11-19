@@ -1,7 +1,7 @@
 {
-  "name": "Thimble, by Mend",
+  "name": "Thimble",
   "short_name": "Thimble",
-  "description": "Private voice session with Thimble, Mend's listening AI.",
+  "description": "Private voice session with Thimble, your listening AI.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
