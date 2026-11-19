@@ -26,6 +26,12 @@
       "port": 8421
     },
     {
+      "name": "swatch",
+      "runtimeExecutable": "apps/swatch/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8426", "--app-dir", "apps/swatch"],
+      "port": 8426
+    },
+    {
       "name": "conflict-test",
       "runtimeExecutable": "pitch/conflict-test/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--port", "8480", "--app-dir", "pitch/conflict-test"],

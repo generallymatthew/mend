@@ -34,7 +34,7 @@ MODES = {
         "escalation": "toxic_dynamic",
     },
     "critique": {
-        "intake_prompt": ROOT / "facilitator-loom-intake-system-prompt.md",
+        "intake_prompt": ROOT / "facilitator-swatch-intake-system-prompt.md",
         "escalation": "toxic_dynamic",
     },
 }

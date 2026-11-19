@@ -1256,6 +1256,86 @@ question per mode.
 
 ---
 
+## Swatch design-crit workflow resolved (2026-11-18)
+Closes out the open questions left at the end of the 2026-11-10 entry above
+(whether design critique is a Swatch feature, a Loom feature, or a fourth
+thing; cadence). Still entirely conceptual — no prompts, no code.
+
+### Shape: Loom-shaped (async, no live session), one-off per artifact
+Explicitly **not** a live Suture-style joint session — async end to end, like
+Loom's retro flow, not Suture's. Triggered per design artifact/milestone, not
+a recurring per-sprint cadence the way Loom's retro is.
+
+### Two separate channels, with different attribution rules
+1. **Private reframing, reusing Loom's existing intake engine as-is.**
+   Reviewer vents a raw gut reaction to Thimble privately ("I hate this
+   design"); Thimble probes "why" until it resolves into an objective
+   heuristic (cognitive load, visual hierarchy, etc.); the reframed note
+   posts to the group **attributed** — unlike Loom's retro output, which is
+   anonymized/pooled. Reasoning: a retro's threat model is retaliation for
+   naming a structural cause, which crit feedback doesn't carry — a crit's
+   value depends on the designer being able to follow up with the actual
+   person who made the point. Loom's corroboration floor (4-contributor
+   minimum, singleton findings dropped) does **not** carry over either, for
+   the same reason: a single reviewer's catch is often the most valuable
+   thing in a crit, not a liability to be dropped for lack of a second
+   source.
+2. **Anonymous clarification layer, new — not present in Loom at all.**
+   Anyone (the designer being reviewed, or another reviewer) can route a
+   follow-up question through Thimble privately instead of asking it in the
+   open, covering both "uncomfortable giving feedback/questions directly"
+   and "don't want to look stupid asking." Thimble either answers directly
+   when it's a general knowledge question ("what does progressive disclosure
+   mean"), or relays it to whoever made the original comment when it's a
+   question about their specific intent — grounded in the actual private
+   reframing transcript, which already contains far more of the reviewer's
+   real reasoning than the one-line note that got posted. Thimble must never
+   fabricate what a real person would say past what that transcript actually
+   supports (same posture as `support_reply.py`'s refusal to confirm an
+   action it can't see happened) — if a question goes beyond what the
+   transcript covers, it says so and offers to relay for real rather than
+   inventing an answer.
+   - **Deniability requires two real properties, not just "ask
+     anonymously":** (a) Thimble needs a genuine baseline rate of
+     self-initiated clarifying questions when it independently notices
+     missing context, not only questions triggered by someone's private
+     follow-up — otherwise timing alone outs a relay even though identity
+     doesn't; (b) relayed questions need their phrasing normalized to
+     Thimble's own register, since an unusually specific/targeted question
+     reads as coming from someone with real stake in the answer.
+   - **Answers post publicly to the whole group**, not back privately to the
+     asker alone — there's nothing to silo since the asker was never
+     attached to the question in the first place, and a public answer raises
+     the whole crit's discussion rather than helping only one person.
+- Source: conversation 2026-11-18, user-initiated.
+- Where it could plug in: channel 1 reuses `apps/loom/server.py`'s intake
+  path and `apps/facilitator-loom-intake-system-prompt.md`'s reframing
+  mechanic directly, minus the distillation/anonymization step. Channel 2 is
+  genuinely new — no existing app has a relay-with-cover mechanism; closest
+  precedent in this repo is Suture's two-safety-floor live facilitation, but
+  that's synchronous and bidirectional in real time, not an async anonymous
+  relay with deniability as a first-class requirement.
+- Why not active: conceptual only, same as the rest of Swatch. The
+  self-initiated-baseline-rate requirement in particular needs real design
+  work before this is buildable — "ask real questions often enough that
+  relays don't stand out" isn't a parameter, it's a tuning problem with no
+  obvious default.
+
+**Build note, same conversation:** this reconciles with Swatch's
+pre-existing roadmap (`apps/swatch/swatch-product-roadmap.md`, 2026-10-21's
+"preflight collaboration for designers who don't know each other" /
+six-step live "Workflow") rather than being a separate app — same two
+people confirmed: it's the same app, the only real difference is headcount,
+with a private intake pass per person followed by a live group session
+either way. That also supersedes the old platform plan (Zoom-Apps-SDK
+companion panel) with the 2026-11-11 owned-audio decision above — Thimble
+runs the live session's audio itself, video stays bring-your-own/muted,
+same as Suture. The intake phase (channel 1, attributed reframing) is now
+built — see `apps/swatch/README.md` and the roadmap's Phase 1. The live
+session and the anonymous clarification relay are not.
+
+---
+
 ## Open design questions
 
 ### Safety-floor tone must branch on whether the user already knew it was harassment
@@ -1576,3 +1656,89 @@ claim — not a detail to defer to a later engineering phase.
   real thing against, same "no real pilot yet" caveat as the aggregate
   org-level usage dashboard idea above — this is its distribution-layer
   prerequisite.
+
+## Story shape: the 6-minute founder story (charger, paternity leave, buyer resolution)
+
+A reusable narrative arc built for a storytelling event with local
+entrepreneurs/investors (not a pitch, no ask, no numbers), in case it gets
+reused or adapted for a different room, length, or format later.
+
+The arc, in order:
+1. **Open on the charger fight** — a real, funny, low-stakes anecdote
+   (two sons arguing over a phone charger for forty minutes) that hooks
+   the room with humor and relatability before anything about the
+   business. Establishes the founder stumbled into this sideways, not
+   from a market-sizing exercise.
+2. **The realization** — the AI prototype built to handle the charger
+   fight found that the charger wasn't the real fight; one kid felt like
+   he never got asked first for anything. This is the turn: "it was never
+   about the charger."
+3. **Ground the thesis in a real, higher-stakes memory** — originally
+   drafted as a generic "HR disaster" paragraph, replaced with a real
+   anecdote (a manager going on paternity leave, telling each of his
+   three direct reports separately that he was looking for someone to
+   run the team in his absence; none of them called it a competition,
+   but the three became defensive and siloed within a week, one got
+   picked, the other two stayed resentful for months). The generic version
+   was weaker because it asserted the thesis; the real anecdote proves it.
+   Lands on: "most conflict is a structural problem wearing a person's
+   face."
+4. **What the product actually does** — three words, not a feature list:
+   private, understood, forgotten.
+5. **Why nobody big has built this** — the trust-moat argument
+   ([[project_mend_moat_strategy]]): companies who could build this run
+   their business on keeping records, so "no paper trail" is the point,
+   not a limitation.
+6. **Vision beat, with one concrete anchor** — where this goes broadly
+   (institutions putting structural pressure on people, not a people
+   problem), plus one line naming that the HR/insurance buyer question is
+   now resolved ("I know what I'm building next, and I know who's paying
+   for it") rather than left as open vision. Ends on a bridge line, not
+   the close: "I still haven't fully solved the charger thing, by the
+   way. But there's one more thing I want to show you."
+7. **The actual close: turn the product back on your own story.** Revised
+   from an earlier draft that put this right after the paternity-leave
+   anecdote (as the proof of what the product does) — moved to the very
+   end instead, as a reveal: what you'd have done differently with
+   Thimble (talked it through instead of going quiet for six months),
+   and the concrete advice Thimble would have given your manager if he'd
+   asked how to pick a replacement (tell all three together, same
+   timeline, and tell the two who don't get it directly that it isn't a
+   verdict on them). Lands on the final line: "Nobody in that building
+   was positioned to tell him that. It wasn't a secret. It just needed
+   saying." This closes on the personal/emotional register, not a
+   product or business one — deliberately not a callback to the charger
+   line, which now only serves as the bridge into this.
+
+Decisions made while shaping it, worth keeping if this gets reused:
+- A personal "I'm not greedy / I don't want to sell user data" line was
+  explicitly cut from the talk — it's an internal business-model
+  commitment to self, not a claim that survives being said out loud to
+  investors (every founder says this; it's not a moat because it depends
+  on the founder staying virtuous). The architectural version of the same
+  point (zero-trace, nothing to sell) already carries this in beat 5 and
+  is the only version that belongs in front of a room.
+- Heavier, higher-stakes personal stories (like the paternity-leave one)
+  work better as the proof *inside* the thesis beat than as the opener —
+  the funny/relatable story should still open, to earn the room's
+  attention before asking it to trust something painful as evidence.
+- The buyer-resolution line in the vision beat was deliberately kept to
+  one sentence, not a slide, to avoid tipping a storytelling talk into
+  pitch territory.
+- The counterfactual/advice reveal (beat 7) was first drafted as a
+  mid-talk demo right after the paternity-leave story, then explicitly
+  moved to the close on reflection — ending on "what this would have
+  changed for me personally" lands better than ending on vision or
+  business mechanics, for a *storytelling* talk specifically (a pitch
+  might want the opposite order).
+- Source: this conversation, 2026-11-13/14, building
+  `pitch/pitch-scripts/mend-story-6min-script.md` and its matching
+  Slides artifact.
+- Where it could plug in: any future founder-story talk, a "why I built
+  this" blog post or About page, or an investor one-pager's narrative
+  opening, if one gets written.
+- Why not active: this is a record of a talk's structure, not a feature
+  or positioning decision — nothing to build. Revisit if the talk gets
+  reused for a different audience/length, or if the paternity-leave
+  anecdote's details need re-checking against the actual event before
+  reuse somewhere more public than a community storytelling night.
