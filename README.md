@@ -19,9 +19,11 @@ Working names for the apps in the shipped codebase, so references to them can us
 - **Swatch** — preflight design collaboration and design critique, same app
   distinguished mainly by headcount: a private per-person intake pass
   (attributed, unlike Loom's) followed by a live audio-only group session
-  (Thimble-owned, video bring-your-own). Maps to `apps/swatch`. Only the
-  design-critique intake phase is built so far; the live session and the
-  anonymous clarification relay are not.
+  (Thimble-owned, video bring-your-own). Maps to `apps/swatch`. The
+  design-critique intake phase and a text-first version of the crit-side
+  live group session (presents each confirmed note, opens the floor) are
+  built; real audio and the preflight-collaboration side's full "Workflow"
+  are not, nor is the anonymous clarification relay.
 - **Hem** — not yet built; see `IDEAS.md` for the concept.
 
 Note the naming layers don't collapse to one meaning: Seam is the user-facing app, Thimble is also the AI persona discovered inside the app (not just the app name), and Mend is the company name, currently invisible to users since there's no LLC or revenue yet.
@@ -53,7 +55,7 @@ Local FastAPI apps, all under `apps/`, each its own venv and `.env` (see each `R
 | `apps/seam/` | — | Case management for a manager working through conflict between two of their team members — a persisted, role-anonymized running action plan, distinct from `thimble`'s manager-coaching path above (that's solo rehearsal; this is an ongoing case). Can hand off into a real `suture` room. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
 | `apps/splice/` | — | Live group consensus-building over a real Zoom call (companion panel via the Zoom Apps SDK): shared room, chat, proposals, voting, Thimble as a visible named participant. Opposite trust model from the apps above — no safety floor, no confidentiality, driving an explicit visible group decision instead. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
 | `apps/loom/` | 8425 | Private 1:1 retro interview, one team member at a time, text only. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
-| `apps/swatch/` | 8426 | Private design-crit intake, one reviewer at a time, text only — raw gut reaction reframed into an attributed, confirmed heuristic note. No live group session yet. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
+| `apps/swatch/` | 8426 | Private design-crit intake (one reviewer at a time, raw gut reaction reframed into an attributed, confirmed heuristic note) plus a text-first live group session that presents each confirmed note and opens the floor. No real audio yet. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
 | `apps/classifier/` | — | Fine-tuned toxic-bert model for the real-time hard-cut tier of the joint session; not a web app, see its own `README.md`. |
 
 **Run the core four at once:** `./run_all.sh` from the repo root starts `spool`, `thimble`, `suture`, and `post-session-app` (each in its own venv) plus a local Caddy reverse proxy, and puts the whole walkthrough behind one address: **http://localhost:8080/**. Requires `caddy` (`brew install caddy`) and each app's own venv/dependencies already set up per its `README.md`. Ctrl-C stops everything together. `seam` and `splice` aren't part of this walkthrough yet — run them standalone.

@@ -1,18 +1,28 @@
 #!/usr/bin/env python3
 """
-Local prototype of Swatch's first phase: a private, one-on-one conversation
-with one reviewer about one specific design artifact
+Local prototype of Swatch's design-crit side: a private, one-on-one
+conversation with one reviewer about one specific design artifact
 (../facilitator-swatch-intake-system-prompt.md), turning a raw gut reaction
-into a confirmed, attributed note. Text only, no voice.
+into a confirmed, attributed note; then a live, audio-only-in-the-real-
+version (text-only here) group session where those confirmed notes
+actually get presented and discussed
+(../facilitator-swatch-live-system-prompt.md).
 
 Unlike Loom, Swatch's output is NOT anonymized -- each confirmed note is
 shown with the reviewer's own name, no minimum-contributor floor, no
 distillation step. See the intake prompt and
 ../swatch-product-roadmap.md for why.
 
-Later phases (live audio-only group session, anonymous clarification
-relay) are not built -- this is intake only, same scope cut Loom started
-with.
+The live session here is text-first over a WebSocket, same incremental
+scope cut Suture itself started with before real LiveKit audio
+(../joint-session-audio/) became a separate follow-on -- no LiveKit, no
+TTS, no turn-taking classifier in this pass. Any participant name can
+join a room keyed by artifact name; there's no fixed role count the way
+Suture has employee_a/employee_b, since a crit's headcount varies.
+
+The anonymous clarification-relay layer (routing a question through
+Thimble so nobody can tell whether it's a relay or Thimble's own) is a
+separate, later phase and still not built.
 
 Multi-session, in-memory only, nothing persisted to disk, lost on restart.
 
@@ -21,6 +31,7 @@ Run:
     cp ../thimble/.env .env
     uvicorn server:app --reload --port 8426
 """
+import asyncio
 import logging
 import os
 import re
@@ -31,7 +42,7 @@ from pathlib import Path
 
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -47,6 +58,7 @@ sys.path.insert(0, str(ROOT.parent))
 from mend_intake import call_facilitator, parse_signal_json
 
 INTAKE_PROMPT_FILE = ROOT.parent / "facilitator-swatch-intake-system-prompt.md"
+LIVE_PROMPT_FILE = ROOT.parent / "facilitator-swatch-live-system-prompt.md"
 MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
 
 load_dotenv(ROOT / ".env")
@@ -77,6 +89,7 @@ async def rate_limit(request: Request, call_next):
 
 
 INTAKE_PROMPT = INTAKE_PROMPT_FILE.read_text()
+LIVE_PROMPT = LIVE_PROMPT_FILE.read_text()
 
 # One entry per in-progress or finished reviewer session, keyed by a
 # server-issued session_id -- lets several reviewers work on the same
@@ -87,6 +100,129 @@ sessions: dict[str, dict] = {}
 # {"reviewer_name": str, "note": str, "heuristic": str | None}. Shown to
 # the group as-is -- no anonymization, no corroboration floor, unlike Loom.
 notes_by_artifact: dict[str, list[dict]] = {}
+
+# --- Live group session ----------------------------------------------------
+# One room per artifact name -- no fixed role slots (unlike Suture's
+# employee_a/employee_b), since a crit's headcount varies. Any number of
+# named participants can join; the room only actually starts once someone
+# sends {"type": "start"} (idempotent -- see handle_live_start), so
+# everyone has a chance to join before the facilitator presents the first
+# note.
+WS_RATE_MAX = int(os.environ.get("WS_RATE_MAX", "20"))
+WS_RATE_WINDOW = int(os.environ.get("WS_RATE_WINDOW", "60"))
+_ws_rate_hits: dict[str, list[float]] = {}
+
+
+def ws_rate_limited(ip: str) -> bool:
+    now = time.time()
+    hits = [t for t in _ws_rate_hits.get(ip, []) if now - t < WS_RATE_WINDOW]
+    if len(hits) >= WS_RATE_MAX:
+        _ws_rate_hits[ip] = hits
+        return True
+    hits.append(now)
+    _ws_rate_hits[ip] = hits
+    return False
+
+
+class LiveSession:
+    """One live crit room, keyed by artifact name. A prototype's worth of
+    state, not a persistence layer -- lost on process restart."""
+
+    def __init__(self, artifact: str):
+        self.artifact = artifact
+        self.conversation: list[dict] = []
+        self.state: dict = {}
+        self.sockets: dict[str, WebSocket] = {}
+        self.lock = asyncio.Lock()
+        self.started = False
+        self.ended = False
+        # Snapshot of notes_by_artifact[artifact] taken the moment the room
+        # starts -- current_note_index in the model's signal indexes into
+        # this list, so a note confirmed mid-session (a reviewer still
+        # finishing their private pass) doesn't shift indices out from
+        # under an already-open room.
+        self.notes: list[dict] = []
+
+
+LIVE_SESSIONS: dict[str, LiveSession] = {}
+
+
+def get_live_session(artifact: str) -> LiveSession:
+    return LIVE_SESSIONS.setdefault(artifact, LiveSession(artifact))
+
+
+def live_facilitator_reply(session: LiveSession) -> dict:
+    result = call_facilitator(
+        client, MODEL, LIVE_PROMPT, session.conversation,
+        tag="swatch_live_signal", app="swatch", reply_kind="live_facilitator_reply",
+        max_tokens=4096,
+    )
+    result["signal"] = parse_signal_json(result["signal"])
+    return result
+
+
+def build_live_kickoff_turn(session: LiveSession) -> str:
+    if not session.notes:
+        lines = "(No confirmed notes exist for this artifact yet.)"
+    else:
+        lines = "\n".join(
+            f"- {n['reviewer_name']}: {n['note']}" + (f" [heuristic: {n['heuristic']}]" if n.get("heuristic") else "")
+            for n in session.notes
+        )
+    return (
+        f"(The live crit session for \"{session.artifact}\" is starting. "
+        f"There are {len(session.notes)} confirmed note(s):\n{lines}\n"
+        "Open the session now per your instructions: name the artifact and "
+        "how many notes are in, then present the first one.)"
+    )
+
+
+async def send_to_live(session: LiveSession, name: str, payload: dict) -> None:
+    ws = session.sockets.get(name)
+    if ws is None:
+        return
+    try:
+        await ws.send_json(payload)
+    except Exception:
+        if session.sockets.get(name) is ws:
+            del session.sockets[name]
+
+
+async def broadcast_live(session: LiveSession, payload: dict) -> None:
+    for name in list(session.sockets):
+        await send_to_live(session, name, payload)
+
+
+async def handle_live_start(session: LiveSession) -> None:
+    if session.started:
+        return
+    session.started = True
+    session.notes = list(notes_by_artifact.get(session.artifact, []))
+    await broadcast_live(session, {"type": "thinking"})
+    async with session.lock:
+        session.conversation.append({"role": "user", "content": build_live_kickoff_turn(session)})
+        result = await run_in_threadpool(live_facilitator_reply, session)
+    await broadcast_live_result(session, result)
+
+
+async def handle_live_message(session: LiveSession, name: str, text: str) -> None:
+    await broadcast_live(session, {"type": "thinking"})
+    async with session.lock:
+        session.conversation.append({"role": "user", "content": f"[{name}]: {text}"})
+        result = await run_in_threadpool(live_facilitator_reply, session)
+    await broadcast_live_result(session, result, sender=name, sender_text=text)
+
+
+async def broadcast_live_result(session: LiveSession, result: dict, sender: str | None = None, sender_text: str | None = None) -> None:
+    if sender is not None:
+        await broadcast_live(session, {"type": "message", "from": sender, "text": sender_text})
+    signal = result.get("signal") or {}
+    await broadcast_live(session, {
+        "type": "message", "from": "facilitator", "text": result.get("reply"), "signal": signal,
+    })
+    if signal.get("session_state") == "ended" and not session.ended:
+        session.ended = True
+        await broadcast_live(session, {"type": "ended"})
 
 
 def facilitator_reply_blocking(session: dict) -> dict:
@@ -173,7 +309,53 @@ async def get_notes(artifact: str):
 async def reset():
     sessions.clear()
     notes_by_artifact.clear()
+    LIVE_SESSIONS.clear()
     return {"ok": True}
+
+
+@app.websocket("/ws/live/{artifact}/{participant_name}")
+async def live_session_ws(websocket: WebSocket, artifact: str, participant_name: str):
+    session = get_live_session(artifact)
+    await websocket.accept()
+    session.sockets[participant_name] = websocket
+    await send_to_live(session, participant_name, {
+        "type": "joined", "started": session.started, "ended": session.ended,
+        "participants": list(session.sockets),
+    })
+
+    try:
+        while True:
+            payload = await websocket.receive_json()
+            msg_type = payload.get("type")
+
+            ip = websocket.client.host if websocket.client else "unknown"
+            if msg_type in ("start", "message") and ws_rate_limited(ip):
+                await send_to_live(session, participant_name, {
+                    "type": "error", "error": "too many messages -- slow down and try again shortly",
+                })
+                continue
+
+            if msg_type == "start":
+                await handle_live_start(session)
+                continue
+
+            if msg_type != "message":
+                continue
+
+            text = (payload.get("text") or "").strip()
+            if not text:
+                continue
+            if not session.started:
+                await send_to_live(session, participant_name, {"type": "error", "error": "session hasn't started yet"})
+                continue
+            if session.ended:
+                await send_to_live(session, participant_name, {"type": "error", "error": "session has ended"})
+                continue
+
+            await handle_live_message(session, participant_name, text)
+    except WebSocketDisconnect:
+        if session.sockets.get(participant_name) is websocket:
+            del session.sockets[participant_name]
 
 
 @app.get("/")

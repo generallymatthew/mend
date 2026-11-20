@@ -1334,6 +1334,17 @@ same as Suture. The intake phase (channel 1, attributed reframing) is now
 built — see `apps/swatch/README.md` and the roadmap's Phase 1. The live
 session and the anonymous clarification relay are not.
 
+**Build note (2026-11-20):** the crit side's live group session is now
+also built, text-first — any number of named participants join a room
+keyed by artifact name, and once someone sends `start`, Thimble presents
+each confirmed note in turn (attributed, with its heuristic) and opens the
+floor before advancing, per `apps/facilitator-swatch-live-system-prompt.md`.
+Same incremental scope cut Suture took before real LiveKit audio became a
+separate follow-on — no audio, no TTS, no turn-taking classifier yet, just
+a broadcast WebSocket. Verified live against the real Anthropic API. Real
+audio and the preflight-collaboration side's full six-step "Workflow" are
+still not built — see `apps/swatch/swatch-product-roadmap.md`'s Phase 1.
+
 ---
 
 ## Open design questions

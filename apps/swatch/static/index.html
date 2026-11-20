@@ -94,6 +94,29 @@
     <button class="primary" id="sendBtn">Send</button>
   </div>
   <div class="status" id="status"></div>
+
+  <div class="setup" id="liveSetup" hidden>
+    <div style="font-weight:700; font-size:13.5px;">Live crit session</div>
+    <div style="font-size:12.5px; color:var(--ink-soft);">Everyone's confirmed notes get presented and discussed together. Text only for now -- no audio yet.</div>
+    <div>
+      <label>Your name (as shown to the room)</label>
+      <input id="liveParticipantName" placeholder="e.g. Sam">
+    </div>
+    <button class="start" id="liveJoinBtn">Join live session</button>
+  </div>
+
+  <div id="liveRoom" hidden>
+    <div class="signal" id="liveSignal" hidden></div>
+    <div class="thread" id="liveThread"></div>
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      <button id="liveStartBtn">Start session</button>
+    </div>
+    <div class="composer" id="liveComposer">
+      <textarea id="liveInput" rows="1" placeholder="Type your message to the room..."></textarea>
+      <button class="primary" id="liveSendBtn">Send</button>
+    </div>
+    <div class="status" id="liveStatus"></div>
+  </div>
 </div>
 
 <script>
@@ -178,6 +201,7 @@ startBtn.addEventListener('click', async () => {
   setup.hidden = true;
   composer.hidden = false;
   notesToggle.hidden = false;
+  liveSetup.hidden = false;
   await send('/api/start', {
     artifact_name: artifactName.value.trim(),
     reviewer_name: reviewerName.value.trim(),
@@ -205,6 +229,92 @@ input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendBtn.click();
+  }
+});
+
+// --- Live crit session (text-only group room, keyed by artifact name) ----
+const liveSetup = document.getElementById('liveSetup');
+const liveParticipantName = document.getElementById('liveParticipantName');
+const liveJoinBtn = document.getElementById('liveJoinBtn');
+const liveRoom = document.getElementById('liveRoom');
+const liveThread = document.getElementById('liveThread');
+const liveSignal = document.getElementById('liveSignal');
+const liveStartBtn = document.getElementById('liveStartBtn');
+const liveComposer = document.getElementById('liveComposer');
+const liveInput = document.getElementById('liveInput');
+const liveSendBtn = document.getElementById('liveSendBtn');
+const liveStatus = document.getElementById('liveStatus');
+let liveSocket = null;
+
+function appendLiveMsg(sender, name, text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap ' + sender;
+  const label = document.createElement('div');
+  label.className = 'msg-sender';
+  label.textContent = sender === 'facilitator' ? 'Thimble' : name;
+  const bubble = document.createElement('div');
+  bubble.className = 'msg ' + sender;
+  bubble.textContent = text;
+  wrap.appendChild(label);
+  wrap.appendChild(bubble);
+  liveThread.appendChild(wrap);
+  liveThread.scrollTop = liveThread.scrollHeight;
+}
+
+liveJoinBtn.addEventListener('click', () => {
+  const artifact = artifactName.value.trim();
+  const name = liveParticipantName.value.trim();
+  if (!artifact || !name) {
+    liveStatus.textContent = 'enter both an artifact name (above) and your name first';
+    return;
+  }
+  liveSetup.hidden = true;
+  liveRoom.hidden = false;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  liveSocket = new WebSocket(proto + '//' + location.host + '/ws/live/' + encodeURIComponent(artifact) + '/' + encodeURIComponent(name));
+  liveSocket.addEventListener('message', (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'joined') {
+      liveStatus.textContent = data.started ? 'session already in progress' : 'joined -- waiting to start';
+      if (data.started) liveStartBtn.hidden = true;
+    } else if (data.type === 'thinking') {
+      liveStatus.textContent = 'thinking...';
+    } else if (data.type === 'message') {
+      liveStatus.textContent = '';
+      appendLiveMsg(data.from === 'facilitator' ? 'facilitator' : 'person', data.from, data.text);
+      if (data.signal) {
+        liveSignal.hidden = false;
+        liveSignal.textContent = JSON.stringify(data.signal);
+      }
+      liveStartBtn.hidden = true;
+    } else if (data.type === 'ended') {
+      liveStatus.textContent = 'session ended';
+      liveComposer.hidden = true;
+    } else if (data.type === 'error') {
+      liveStatus.textContent = 'error: ' + data.error;
+    }
+  });
+  liveSocket.addEventListener('close', () => {
+    liveStatus.textContent = 'disconnected';
+  });
+});
+
+liveStartBtn.addEventListener('click', () => {
+  if (!liveSocket) return;
+  liveSocket.send(JSON.stringify({type: 'start'}));
+});
+
+liveSendBtn.addEventListener('click', () => {
+  const text = liveInput.value.trim();
+  if (!text || !liveSocket) return;
+  liveSocket.send(JSON.stringify({type: 'message', text}));
+  liveInput.value = '';
+});
+
+liveInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    liveSendBtn.click();
   }
 });
 </script>

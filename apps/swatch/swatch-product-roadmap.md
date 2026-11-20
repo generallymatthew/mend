@@ -76,12 +76,29 @@ domain, real platform risk (Figma could ship this natively).
 - [ ] Anonymous clarification relay (channel 2 above) — not started. Needs
       the baseline-self-initiated-question-rate design work flagged in
       Phase 0 before it's buildable, not just a parameter to add.
-- [ ] Live audio-only group session (preflight collaboration's "Workflow",
-      and the live half of a crit) — not started. Reuse
-      `../joint-session-audio`'s LiveKit + streaming-STT prototype and
-      Suture's `speak_in_room`/facilitator-speak pattern for Thimble's own
-      voice in the room, per the Phase 0 platform decision, rather than
-      Splice's companion-panel/Zoom-Apps-SDK infrastructure.
+- [x] **Live crit-side group session built, text-first (2026-11-20)**
+      (`server.py`'s `LiveSession`/`/ws/live/{artifact}/{participant_name}`,
+      `static/index.html`'s "Live crit session" view,
+      `../facilitator-swatch-live-system-prompt.md`). Any number of named
+      participants join a room keyed by artifact name; once anyone sends
+      `start`, Thimble presents each of that artifact's confirmed notes in
+      turn (reviewer name, note, heuristic) and opens the floor before
+      advancing. Same incremental scope cut Suture itself took before real
+      LiveKit audio became a separate follow-on: no audio, no TTS, no
+      turn-taking classifier yet — text broadcast to everyone in the room.
+      Verified live against the real Anthropic API in-browser: joined,
+      started, the confirmed "CTA competes with search bar" note was
+      presented attributed with its heuristic, a reply from "Sam" broadcast
+      and got a facilitator follow-up. No console errors (besides a stale
+      connection error from before `websockets` was added to
+      `requirements.txt` — confirmed harmless, see commit).
+      **Still needed before this is the real thing:** real audio (reuse
+      `../joint-session-audio`'s LiveKit prototype and Suture's
+      `speak_in_room`/facilitator-speak pattern, per the Phase 0 platform
+      decision) instead of Splice's companion-panel/Zoom-Apps-SDK
+      infrastructure, and the preflight-collaboration side's full six-step
+      "Workflow" (warm-up, solo work, consensus/reaction aggregation) —
+      this build only covers the crit side's "present notes, discuss" shape.
 - [ ] Resolve open design question: does the consensus step (preflight
       collaboration side) output a ranked winner, a merged direction, or
       just a heatmap of reactions for humans to decide from
