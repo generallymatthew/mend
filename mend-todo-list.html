@@ -83,6 +83,7 @@
   .tag.seam{background:var(--sage-soft); color:var(--sage);}
   .tag.pilot{background:var(--accent-soft); color:var(--ink);}
   .tag.conf{background:var(--pink-soft); color:var(--pink-ink);}
+  .tag.thimble{background:var(--accent-soft); color:var(--ink);}
   .sub{display:block; text-align:left; font-size:13.5px; color:var(--ink-soft); margin-top:1px; font-weight:500;}
   code{font-family:'Manrope',sans-serif; background:var(--accent-soft); padding:1px 5px; border-radius:4px; font-size:14.5px;}
   .links{display:flex; gap:7px; flex-wrap:wrap; margin-top:5px;}
@@ -187,11 +188,16 @@
     {id:'t54', tag:'triangle', label:'Go to a Triangle Developers / Raleigh Hack Night', sub:'Biweekly/monthly Thu 6:00-8:30pm, rotates breweries — R&D Brewing (Raleigh), Hi-Wire/Boxcar (Durham)'},
     {id:'t55', tag:'triangle', label:"Drop into American Underground's hallway track", sub:'Mon-Fri, peak Mon/Wed 10:30am-2:30pm, 324 Blackwell St, Durham — meet pre-seed SaaS founders'},
     {id:'t56', tag:'triangle', label:'Attend Innovate Carolina Junction free coworking day or founder mixer', sub:'1st Friday of the month 8:30am-5:00pm, plus evening mixers, 136 E Rosemary St, Chapel Hill — bridges UNC researchers, designers, and founders'},
-    {id:'t57', tag:'triangle', label:'Check Third Friday Durham and Triangle UXPA / AIGA Raleigh dates', sub:'3rd Friday 6:00-9:00pm, Golden Belt/The Fruit, Durham — portfolio nights in front of local Design Directors and UX Managers hiring in Q1'}
+    {id:'t57', tag:'triangle', label:'Check Third Friday Durham and Triangle UXPA / AIGA Raleigh dates', sub:'3rd Friday 6:00-9:00pm, Golden Belt/The Fruit, Durham — portfolio nights in front of local Design Directors and UX Managers hiring in Q1'},
+    {id:'t58', tag:'thimble', label:"Capture the retro initiator's email at Thimble Retro's /api/start", sub:"New field, doesn't exist yet — prerequisite for the email-send step below. Decided 2026-11-21: the distilled pattern report is emailed, nothing persisted server-side (see apps/thimble-retro/thimble-retro-roadmap.md)"},
+    {id:'t59', tag:'thimble', label:"Wire the email-send step into Thimble Retro's /api/distill", sub:'Reuse the existing smtplib pattern from thimble-resolve/digest.py and feedback_alert.py — no new infrastructure needed'},
+    {id:'t60', tag:'thimble', label:"Decide whether Thimble Retro's live group session (not yet built) produces a decisions/action-items list, or stays pattern-report-only", sub:'Open roadmap item as of 2026-11-21 — distillation currently only extracts structural patterns, not commitments going forward'},
+    {id:'t61', tag:'thimble', label:'Review the 15 flagged batch4 disagreements from the classifier triage run', sub:'apps/classifier/data/review_triage_disagreements.jsonl — lowest-disagreement batch (8%), most likely to contain real labeling errors worth reviewing, not just an untrained-model gap like batch5/6'},
+    {id:'t62', tag:'thimble', label:'Try a gentler per-class loss weighting curve on the conflict classifier', sub:'sqrt(neg/pos) instead of the raw ratio, or weight only immediate_safety_risk — next experiment flagged in apps/classifier/README.md’s Results section; raw-ratio weighting fixed recall but hurt cut_trigger precision (0.81→0.76)'}
   ];
 
-  var TAG_LABELS = {domain:'Domain', managers:'Managers', grant:'Grants', incubator:'Incubators', mvp:'MVP', epli:'EPLI', seam:'Seam', pilot:'Manager User Test', conf:'Conferences', linkedin:'LinkedIn & Teardowns', triangle:'Triangle Rooms'};
-  var GROUP_ORDER = ['domain','mvp','pilot','seam','epli','managers','grant','incubator','conf','linkedin','triangle'];
+  var TAG_LABELS = {domain:'Domain', managers:'Managers', grant:'Grants', incubator:'Incubators', mvp:'MVP', epli:'EPLI', seam:'Seam', pilot:'Manager User Test', conf:'Conferences', linkedin:'LinkedIn & Teardowns', triangle:'Triangle Rooms', thimble:'Thimble'};
+  var GROUP_ORDER = ['domain','mvp','pilot','seam','thimble','epli','managers','grant','incubator','conf','linkedin','triangle'];
 
   function isDone(id){
     try { return localStorage.getItem('mend-todo-' + id) === '1'; } catch(e){ return false; }
