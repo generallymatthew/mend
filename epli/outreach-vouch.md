@@ -1,5 +1,5 @@
 To: hello@vouch.us
-From: [your trymend.solutions / Zoho address]
+From: [your withthimble.com / Zoho address]
 Subject: EPLI risk-control question — 15 min?
 
 Hi there,

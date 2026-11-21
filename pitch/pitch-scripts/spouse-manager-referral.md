@@ -13,10 +13,10 @@ My husband's been building Seam, a private tool for managers to work through fri
 
 Nothing you say or enter is saved, so feel free to be honest.
 
-Marketing site: https://trymend.solutions/
+Marketing site: https://withthimble.com/
 
-Try it: https://trymend.solutions/seam/
+Try it: https://withthimble.com/seam/
 
-He'd really value your honest feedback, email him directly at matthewbarton@trymend.solutions.
+He'd really value your honest feedback, email him directly at matthewbarton@withthimble.com.
 
 Thanks for giving it a look!

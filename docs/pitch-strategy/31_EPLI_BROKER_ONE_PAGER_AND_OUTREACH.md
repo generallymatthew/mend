@@ -31,7 +31,7 @@ Companion to [28_GTM_EPLI_EAP_AND_ADJACENT_DISTRIBUTION.md](28_GTM_EPLI_EAP_AND_
 ## Final outreach email — sent to Vouch (2026-10-28)
 
 To: hello@vouch.us
-From: [your trymend.solutions / Zoho address]
+From: [your withthimble.com / Zoho address]
 Subject: EPLI risk-control question — 15 min?
 
 Hi there,

@@ -54,7 +54,7 @@ Over the next few weeks, I’m going to share 10 lessons and counter-intuitive i
 
 If you're a founder, design leader, or someone who's ever lost sleep over an awkward Slack dynamic, I'd love to connect[cite: 12].
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 **Source: [S1]** CPP Inc., *"Workplace Conflict and How Businesses Can Harness It to Thrive"* (2008 global human capital report, 5,000 full-time employees across 9 countries): https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf
 
@@ -89,7 +89,7 @@ That felt great for an hour[cite: 8, 19]. But it came with a steep hidden tax:
 
 When you're dealing with acute workplace friction, you don't need someone to validate your anger[cite: 3, 8]. You need a neutral, private mirror that lets you drop the filter, reality-check the situation, and map out your next move before stepping back into the room[cite: 8].
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 ---
 
@@ -126,7 +126,7 @@ Start asking: *"What metric does their boss chew them out for if it slips?"*[cit
 
 The moment you map the opposing metrics, the malice disappears[cite: 3, 4, 10].
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 **Sources: [S2]** Edward E. Jones & Richard E. Nisbett, *"The Actor and the Observer: Divergent Perceptions of the Causes of Behavior"* (General Learning Press, 1971); related Fundamental Attribution Error work, Lee Ross (1977): https://explore.psychsafety.com/n/ross-1977/. **[S3]** Structural (not personal) roots of intergroup conflict: Richard E. Walton & John M. Dutton, *"The Management of Interdepartmental Conflict"* (Administrative Science Quarterly, 1969): https://doi.org/10.2307/2391364
 
@@ -161,7 +161,7 @@ People default to blaming personality because human beings are visible, while in
 
 And organizations gladly accept that conclusion[cite: 4]. Blaming an individual's "attitude" allows a company to preserve its org chart, stack-ranking policies, and opposing quotas[cite: 4]. Treating operational friction as an individual moral flaw isn't leadership—it’s abdication[cite: 4, 6].
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 **Sources: [S1]** CPP Inc., *"Workplace Conflict and How Businesses Can Harness It to Thrive"* (2008): https://shop.themyersbriggs.com/Pdfs/CPP_Global_Human_Capital_Report_Workplace_Conflict.pdf. **[S4]** Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (Administrative Science Quarterly, 1995): https://doi.org/10.2307/2393638
 
@@ -196,7 +196,7 @@ Friction is simply the kinetic energy of people who give a damn. High-performing
 
 Stop trying to build frictionless teams. Start building resilient teams that know how to disagree, align, and execute.
 
-This is why I'm building Mend. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 **Source: [S4]** Karen A. Jehn, *"A Multimethod Examination of the Benefits and Detriments of Intragroup Conflict"* (Administrative Science Quarterly, 1995): https://doi.org/10.2307/2393638
 
@@ -233,7 +233,7 @@ Being professional shouldn't mean turning into an appliance. Adults have bad day
 
 True professionalism means having a safe, off-the-record outlet to be messy, angry, or petty in private; that way, you can process the emotional charge, uncover the root issue, and step back into the room focused on the work.
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 **Sources: [S5]** Arlie R. Hochschild, *The Managed Heart: Commercialization of Human Feeling* (1983): https://www.ucpress.edu/books/the-managed-heart/paper. **[S6]** Alicia A. Grandey, *"Emotion Regulation in the Workplace"* (Journal of Occupational Health Psychology, 2000): https://doi.org/10.1037/1076-8998.5.1.95
 
@@ -267,7 +267,7 @@ The thesis behind Mend is simple: Outcomes Over Surveillance.
 
 If companies want high-performing, resilient squads, they have to give up the need to police every interaction. Radical privacy is not about hiding bad behavior; it is the baseline precondition for honest alignment.
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 **Source: [S7]** Edward L. Deci & Richard M. Ryan, *"The 'What' and 'Why' of Goal Pursuits: Human Needs and the Self-Determination of Behavior"* (Psychological Inquiry, 2000): https://doi.org/10.1207/S15327965PLI1104_01
 
@@ -303,7 +303,7 @@ To solve this, Mend uses Confidential Computing and volatile memory enclaves. Co
 
 The tool holds the team together while it heals, then gets out of the way.
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 **Source: [S8]** Danielle M. Ravid et al., *"A Meta-Analysis of the Effects of Electronic Performance Monitoring on Work Outcomes"* (Personnel Psychology, 2023): https://gwern.net/doc/sociology/technology/2022-ravid.pdf
 
@@ -342,7 +342,7 @@ To solve this adoption hurdle, Mend is built solo-first:
 
 Software shouldn't demand bravery from vulnerable users; it should provide scaffolding that builds agency safely.
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 ---
 
@@ -374,6 +374,6 @@ At Mend, we reframe the entire conversation around Operational Calibration:
 
 Teams do not need another HR compliance policy. They need private operational scaffolding to turn friction into clarity, reclaim their sprint focus, and stay human in modern workplaces.
 
-This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [trymend.solutions](https://trymend.solutions)
+This is why I'm building Mend. I've lived the "Missing Middle" myself, the hours lost to friction that never gets named, let alone resolved, and the two bad options everyone defaults to instead. Mend is the off-the-record space I wish I'd had. Follow along, or try it yourself: [withthimble.com](https://withthimble.com)
 
 **Source: [S9]** Michael I. Norton, Daniel Mochon, & Dan Ariely, *"The IKEA Effect: When Labor Leads to Love"* (Journal of Consumer Psychology, 2012): https://people.duke.edu/~dandan/webfiles/PapersUpside/Ikea%20Effect.pdf

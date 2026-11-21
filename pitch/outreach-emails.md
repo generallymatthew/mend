@@ -12,7 +12,7 @@ I need your help. I've been building a tool called Seam, a way to talk through a
 
 What I need help with:
 
-1. Testing it: https://trymend.solutions. Try it out and tell me what's wrong, what's confusing, or what doesn't feel accurate.
+1. Testing it: https://withthimble.com. Try it out and tell me what's wrong, what's confusing, or what doesn't feel accurate.
 2. Forward it to anyone you think might benefit from it.
 
 Thanks in advance,

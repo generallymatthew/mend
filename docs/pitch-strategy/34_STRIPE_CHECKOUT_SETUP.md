@@ -67,7 +67,7 @@ In the Stripe dashboard, **Product catalog → Add product**, create:
   **billing email** (on by default) — the billing email is the only
   identifier you need; there's no account behind it.
 - After payment, under "After payment," choose **"Redirect to a website"**
-  and set it to `https://trymend.solutions/buy-thanks.html` (or whatever
+  and set it to `https://withthimble.com/buy-thanks.html` (or whatever
   the live domain is once `buy.html`/`buy-thanks.html` are deployed there
   — see [project_trymend_domain.md] in memory for the domain status).
 - Save, and copy the resulting Payment Link URL (looks like
