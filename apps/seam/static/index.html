@@ -2865,6 +2865,14 @@ function closeResetTool() {
   window.removeEventListener("resize", dockResetOverlay);
   if (resetToolRaf != null) cancelAnimationFrame(resetToolRaf);
   resetToolRaf = null;
+  // Without this, reopening after a first Body/Mind pick skips the picker
+  // entirely and silently resumes mid-exercise -- confirmed live on
+  // withthimble.com/seam/: second open landed straight on "Breathe out"
+  // instead of asking "What do you want to reset?" again.
+  const statePicker = document.getElementById("statePicker");
+  const stage = document.getElementById("stage");
+  if (statePicker) statePicker.classList.remove("hidden");
+  if (stage) stage.classList.add("picker-open");
 }
 
 document.getElementById("reset-tool-btn").onclick = openResetTool;
