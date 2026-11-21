@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "thimble",
-      "runtimeExecutable": "apps/thimble/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8420", "--app-dir", "apps/thimble"],
+      "name": "thimble-resolve",
+      "runtimeExecutable": "apps/thimble-resolve/.venv/bin/python3",
+      "runtimeArgs": ["-m", "uvicorn", "server:app", "--port", "8420", "--app-dir", "apps/thimble-resolve"],
       "port": 8420
     },
     {
@@ -20,16 +20,22 @@
       "port": 8460
     },
     {
-      "name": "suture",
-      "runtimeExecutable": "apps/suture/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8421", "--app-dir", "apps/suture"],
+      "name": "thimble-resolve-live",
+      "runtimeExecutable": "apps/thimble-resolve-live/.venv/bin/python3",
+      "runtimeArgs": ["-m", "uvicorn", "server:app", "--port", "8421", "--app-dir", "apps/thimble-resolve-live"],
       "port": 8421
     },
     {
-      "name": "swatch",
-      "runtimeExecutable": "apps/swatch/.venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--port", "8426", "--app-dir", "apps/swatch"],
+      "name": "thimble-critique",
+      "runtimeExecutable": "apps/thimble-critique/.venv/bin/python3",
+      "runtimeArgs": ["-m", "uvicorn", "server:app", "--port", "8426", "--app-dir", "apps/thimble-critique"],
       "port": 8426
+    },
+    {
+      "name": "thimble-retro",
+      "runtimeExecutable": "apps/thimble-retro/.venv/bin/python3",
+      "runtimeArgs": ["-m", "uvicorn", "server:app", "--port", "8425", "--app-dir", "apps/thimble-retro"],
+      "port": 8425
     },
     {
       "name": "live-spike",

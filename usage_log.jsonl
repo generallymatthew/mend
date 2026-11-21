@@ -1214,3 +1214,7 @@
 {"ts": 1795282310.960284, "app": "swatch", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 3315, "output_tokens": 179, "chars": null, "seconds": null, "cost_usd": 0.01263}
 {"ts": 1795282331.488415, "app": "swatch", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "live_facilitator_reply", "input_tokens": 2196, "output_tokens": 205, "chars": null, "seconds": null, "cost_usd": 0.009663}
 {"ts": 1795282342.114688, "app": "swatch", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "live_facilitator_reply", "input_tokens": 3658, "output_tokens": 139, "chars": null, "seconds": null, "cost_usd": 0.013059000000000001}
+{"ts": 1795284808.338565, "app": "thimble", "provider": "anthropic", "model": "claude-sonnet-5", "kind": "facilitator_reply", "input_tokens": 29, "output_tokens": 282, "chars": null, "seconds": null, "cost_usd": 0.0043170000000000005}
+{"ts": 1795284812.1778328, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 19, "seconds": null, "cost_usd": 0.000285}
+{"ts": 1795284812.5824032, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 152, "seconds": null, "cost_usd": 0.00228}
+{"ts": 1795284812.841652, "app": "thimble", "provider": "openai", "model": "tts-1", "kind": "tts", "input_tokens": null, "output_tokens": null, "chars": 70, "seconds": null, "cost_usd": 0.00105}

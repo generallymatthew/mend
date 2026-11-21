@@ -17,7 +17,7 @@ frames it -- this is a direct test of that claim, not just of whether the
 model can parse explicit language.)
 
 Same exploratory-sweep pattern as safety_floor_sweep.py and
-apps/thimble/tests/safety_floor_sweep.py: trip rate per scenario across
+apps/thimble-resolve/tests/safety_floor_sweep.py: trip rate per scenario across
 repeats, not pass/fail, since the model's judgment isn't literally
 deterministic run to run.
 

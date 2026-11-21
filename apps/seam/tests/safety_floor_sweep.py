@@ -4,7 +4,7 @@ Safety-floor sweep for Seam (facilitator-case-plan-system-prompt.md), the
 manager-facing app -- Seam has no tests at all before this file, even
 though its prompt carries its own copy of the same mandatory-floor
 language `apps/thimble`'s already-tested facilitator-intake-system-prompt.md
-has (see `apps/thimble/tests/safety_floor_sweep.py`, which this mirrors).
+has (see `apps/thimble-resolve/tests/safety_floor_sweep.py`, which this mirrors).
 
 Not a pass/fail regression test: an exploratory sweep that reports a trip
 rate per scenario (e.g. "3/5 tripped the floor") rather than asserting a

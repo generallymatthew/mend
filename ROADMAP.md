@@ -6,17 +6,19 @@ This file now covers only cross-app and repo-level work. Each of the seven
 app names (see `README.md`'s "App names" section) has its own
 phase-level checklist, living in that app's folder:
 
-- [Thimble](apps/thimble/thimble-product-roadmap.md) — solo intake, the
-  main conflict-mediation pipeline
-- [Suture](apps/suture/suture-product-roadmap.md) — the live
-  two-person joint session inside Thimble
+- [Thimble Resolve](apps/thimble-resolve/thimble-resolve-roadmap.md) —
+  solo intake, the main conflict-mediation pipeline (codename Thimble)
+- [Thimble Resolve Live](apps/thimble-resolve-live/thimble-resolve-live-roadmap.md) —
+  the live two-person joint session inside Thimble Resolve (codename Suture)
 - [Seam](apps/seam/seam-product-roadmap.md) — the manager app
 - [Splice](apps/splice/splice-product-roadmap.md) — group
   consensus-building as a Zoom plugin
-- [Swatch](apps/swatch/swatch-product-roadmap.md) — designer preflight
-  collaboration (not yet built)
-- [Loom](apps/loom/loom-product-roadmap.md) — pattern-only project retro
-  (not yet built)
+- [Thimble Critique](apps/thimble-critique/thimble-critique-roadmap.md) —
+  design critique; Thimble Collab (preflight collaboration) is the other
+  mode of this same app, not yet built (codename Swatch)
+- [Thimble Retro](apps/thimble-retro/thimble-retro-roadmap.md) —
+  pattern-only project retro; intake and team-level distillation are
+  built, there's no live group session yet (codename Loom)
 - [Hem](apps/hem/hem-product-roadmap.md) — cross-platform writing assistant
   (not yet built)
 
@@ -24,7 +26,7 @@ phase-level checklist, living in that app's folder:
 
 Not phase-bound; apply to every phase's feature and pricing decisions.
 
-- **Trust moat over tech moat.** A corporate/HR-suite incumbent (Microsoft, Workday, Slack, Google) cannot credibly build this: their business model runs on compliance/eDiscovery and employer-controlled tenant keys, so employees would rationally assume surveillance. Mend's neutrality (zero-trace, ephemeral memory, no durable transcripts) is an architectural requirement, not branding. Never add a feature that creates a durable, attributable dispute record a manager or IT admin could read (e.g. a PM-tool ticket titled after the dispute) — see Thimble's roadmap (`apps/thimble/thimble-product-roadmap.md`) HR-escalation design for the pattern (anonymized payload only, no transcript either way).
+- **Trust moat over tech moat.** A corporate/HR-suite incumbent (Microsoft, Workday, Slack, Google) cannot credibly build this: their business model runs on compliance/eDiscovery and employer-controlled tenant keys, so employees would rationally assume surveillance. Mend's neutrality (zero-trace, ephemeral memory, no durable transcripts) is an architectural requirement, not branding. Never add a feature that creates a durable, attributable dispute record a manager or IT admin could read (e.g. a PM-tool ticket titled after the dispute) — see Thimble Resolve's roadmap (`apps/thimble-resolve/thimble-resolve-roadmap.md`) HR-escalation design for the pattern (anonymized payload only, no transcript either way).
 - **Price below the enterprise sales floor, on purpose.** Target an accessible flat tier (e.g. $7k-9k/year per ~100-person org, or ~$10-15 per episodic session) — small enough that a legacy enterprise sales force won't bother chasing it, while still high-margin (near-zero storage cost, fractions of a cent per model turn). Anchor price against the cost of friction (hours lost to conflict, cost of a resignation), not the cost of building the software. Don't propose enterprise-tier pricing or large-deal-size features.
 - **"No paper trail" is the feature, not a limitation.** Market the intentional forgetting as the differentiator in a world where every Slack DM and Jira comment is kept forever.
 

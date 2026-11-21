@@ -37,7 +37,7 @@
     /* Paler oat than --chat-bg, so Thimble's avatar stage (split layout,
        Bobbin/seam_thimble_split_mockup.html) reads as its own "stage"
        instead of just more chat background. Ported from
-       apps/thimble/static/session.html's --stage-bg. */
+       apps/thimble-resolve/static/session.html's --stage-bg. */
     --stage-bg: #FBF8F3;
   }
   * { box-sizing: border-box; }
@@ -755,11 +755,11 @@
   .mic-btn.conflicts-mic { background: #E8F0E9; color: #5F8569; }
   /* Pressed, but getUserMedia hasn't actually opened the mic yet -- without
      this the button gives zero feedback during that gap (same bug fixed in
-     Thimble's own composer mic, apps/thimble/static/session.html). */
+     Thimble's own composer mic, apps/thimble-resolve/static/session.html). */
   .mic-btn.starting { animation: mic-btn-starting-pulse 1s ease-in-out infinite; }
   @keyframes mic-btn-starting-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
   /* Hold/release affordance, ported from Thimble's composer mic
-     (apps/thimble/static/session.html, composerMicBtn) per explicit
+     (apps/thimble-resolve/static/session.html, composerMicBtn) per explicit
      request after a tester couldn't tell whether this was hold-to-talk
      or tap-to-toggle. Everything here anchors ABOVE the button, not to
      its side -- a side position collided with Send on narrow composers,
@@ -826,7 +826,7 @@
     padding: 40px 36px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 28px;
   }
   /* Thimble reads as a real presence for this first-run moment only, sized
-     to match the thimble app's own call-stage avatar (apps/thimble/static/
+     to match the thimble app's own call-stage avatar (apps/thimble-resolve/static/
      session.html's .thimble-avatar, 150px) -- not the 28px scale the
      permanent empty-state avatar keeps (see the scoping note above).
      .blob already fills its parent via inset:0, so only the avatar box and
@@ -844,7 +844,7 @@
      (see revealReply) and the split layout's stage avatar above. */
   .avatar.talking .mouth { animation: onboard-mouth-talk .32s ease-in-out infinite; }
   /* "Four-Color Bloom" fill -- the real thimble app's own current avatar
-     style (apps/thimble/static/session.html, ported 2026-10-24: idle,
+     style (apps/thimble-resolve/static/session.html, ported 2026-10-24: idle,
      listening, thinking and talking each own a fixed corner, blended by
      weight). This is a frozen, CSS-only snapshot of that system's *idle*
      weights (session.html's own THIMBLE_BLOOM_WEIGHTS.idle), not the live
@@ -1117,7 +1117,7 @@
   .stage-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-pink); animation: stage-dot-pulse 2.4s ease-in-out infinite; }
   @keyframes stage-dot-pulse { 0%,100%{ transform: scale(1); opacity:.9; } 50%{ transform: scale(1.3); opacity:.5; } }
   .stage-avatar { position: relative; width: 260px; height: 260px; }
-  /* "Four-Color Bloom" fill, same system as apps/thimble/static/session.html
+  /* "Four-Color Bloom" fill, same system as apps/thimble-resolve/static/session.html
      (THIMBLE_BLOOM_WEIGHTS/COLOR/POS there): idle-blue, listening-teal,
      thinking-honey and talking-pink each sit at a fixed corner and are
      always present -- a state change only shifts each one's *weight*
@@ -1813,7 +1813,7 @@ function closeEmployeeTooltipOnOutsideClick(e) {
 // field, never auto-sends.
 // ---------------------------------------------------------------------
 // Beep tones + the first-time "hold to record, release to stop" tip are
-// ported from Thimble's own composer mic (apps/thimble/static/session.html,
+// ported from Thimble's own composer mic (apps/thimble-resolve/static/session.html,
 // playRecordStartBeep/playRecordStopBeep + #micTip), per explicit request:
 // a tester pressed Seam's mic, saw it change color, got the permission
 // prompt, and had no way to tell whether this was hold-to-talk or
@@ -3224,7 +3224,7 @@ scrimEl.onclick = () => {
 };
 // ---------------------------------------------------------------------
 // Thimble engagement state: idle / listening / thinking / talking. Same
-// four-color-bloom weight table as apps/thimble/static/session.html's
+// four-color-bloom weight table as apps/thimble-resolve/static/session.html's
 // THIMBLE_BLOOM_WEIGHTS (idle-blue/listening-teal/thinking-honey/talking-
 // pink, each state gets 46% of its own color, its two neighbors 20% each,
 // the opposite 14%) -- just applied as a CSS opacity on four fixed divs

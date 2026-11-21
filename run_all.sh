@@ -19,11 +19,15 @@ PIDS=()
 
 start_app() {
   local name="$1" dir="$2" port="$3"
-  if [ ! -x "$dir/.venv/bin/uvicorn" ]; then
-    echo "!! $dir/.venv/bin/uvicorn not found -- see $dir/README.md for setup" >&2
+  if [ ! -x "$dir/.venv/bin/python3" ]; then
+    echo "!! $dir/.venv/bin/python3 not found -- see $dir/README.md for setup" >&2
     exit 1
   fi
-  ( cd "$dir" && exec .venv/bin/uvicorn server:app --port "$port" ) \
+  # python3 -m uvicorn, not the .venv/bin/uvicorn console script directly --
+  # that script's shebang hardcodes its venv's path at creation time, so it
+  # breaks the moment the app's directory is renamed or moved. python3 -m
+  # doesn't have that problem.
+  ( cd "$dir" && exec .venv/bin/python3 -m uvicorn server:app --port "$port" ) \
     >"$LOG_DIR/$name.log" 2>&1 &
   PIDS+=("$!")
   echo "-> $name on :$port (log: $LOG_DIR/$name.log)"
@@ -41,8 +45,8 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 start_app spool            apps/spool             8423
-start_app thimble         apps/thimble           8420
-start_app suture          apps/suture            8421
+start_app thimble-resolve      apps/thimble-resolve      8420
+start_app thimble-resolve-live apps/thimble-resolve-live 8421
 start_app post-session    apps/post-session-app  8422
 start_app seam            apps/seam              8460
 

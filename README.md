@@ -6,28 +6,31 @@ A confidential, AI-facilitated conflict resolution tool for workplace teams. See
 
 Working names for the apps in the shipped codebase, so references to them can use a name instead of a description:
 
-- **Thimble** — the solo conflict-resolution app overall (intake → joint session), the main focus so far. Maps to `apps/thimble` + `apps/suture`/`apps/joint-session-audio`.
-- **Suture** — the two-person facilitated conversation itself, inside Thimble (the live joint session specifically, not the intake step before it).
-- **Seam** — the manager app: solo coaching/practice for a manager preparing for or rehearsing a hard conversation with a direct report, or a case-management space for a manager working through conflict between two members of their team. Maps to `apps/seam`. The standalone `manager-coaching-app` prototype that used to cover the rehearsal half of this was removed as redundant; that path is folded into Thimble's own system prompt instead (see `facilitator-intake-system-prompt.md`).
-- **Spool** — the sign-up/invite entry point, where a visitor picks a flow and gets routed into Thimble, Suture, or Seam. Maps to `apps/spool` (renamed from `apps/demo-app` on 2026-10-23).
+- **Thimble Resolve** (codename Thimble) — the solo conflict-resolution app overall (intake → joint session), the main focus so far. Maps to `apps/thimble-resolve` + `apps/thimble-resolve-live`/`apps/joint-session-audio`.
+- **Thimble Resolve Live** (codename Suture) — the two-person facilitated conversation itself, inside Thimble Resolve (the live joint session specifically, not the intake step before it).
+- **Seam** — the manager app: solo coaching/practice for a manager preparing for or rehearsing a hard conversation with a direct report, or a case-management space for a manager working through conflict between two members of their team. Maps to `apps/seam`. The standalone `manager-coaching-app` prototype that used to cover the rehearsal half of this was removed as redundant; that path is folded into Thimble Resolve's own system prompt instead (see `facilitator-thimble-resolve-intake-system-prompt.md`).
+- **Spool** — the sign-up/invite entry point, where a visitor picks a flow and gets routed into Thimble Resolve, Thimble Resolve Live, or Seam. Maps to `apps/spool` (renamed from `apps/demo-app` on 2026-10-23).
 - **Splice** — live group consensus-building over a real Zoom call. Maps to `apps/splice`.
-- **Loom** — pattern-only project retro: a private 1:1 interview with each
-  team member after a sprint/project wraps, distilled across the whole team
-  into structural patterns, never individual names or call-outs. Maps to
-  `apps/loom`. Only the per-person interview phase is built so far; the
-  across-the-team distillation step is not yet built.
-- **Swatch** — preflight design collaboration and design critique, same app
-  distinguished mainly by headcount: a private per-person intake pass
-  (attributed, unlike Loom's) followed by a live audio-only group session
-  (Thimble-owned, video bring-your-own). Maps to `apps/swatch`. The
-  design-critique intake phase, a text-first version of the crit-side live
-  group session (presents each confirmed note, opens the floor), and an
-  anonymous clarification relay (private question in, answered or relayed
-  publicly, timing correlation knowingly unsolved) are built; real audio
-  and the preflight-collaboration side's full "Workflow" are not.
+- **Thimble Retro** (codename Loom) — pattern-only project retro: a
+  private 1:1 interview with each team member after a sprint/project
+  wraps, distilled across the whole team into structural patterns, never
+  individual names or call-outs. Maps to `apps/thimble-retro`. The
+  per-person interview phase and the across-the-team distillation step
+  are both built; there's no live group session yet.
+- **Thimble Critique** and **Thimble Collab** (codename Swatch) — design
+  critique and preflight design collaboration, same app distinguished
+  mainly by headcount: a private per-person intake pass (attributed,
+  unlike Thimble Retro's) followed by a live audio-only group session
+  (Thimble-owned, video bring-your-own). Maps to `apps/thimble-critique`.
+  Thimble Critique's intake phase, a text-first version of the crit-side
+  live group session (presents each confirmed note, opens the floor), and
+  an anonymous clarification relay (private question in, answered or
+  relayed publicly, timing correlation knowingly unsolved) are built;
+  real audio and Thimble Collab's side of the app (the preflight-
+  collaboration "Workflow") are not.
 - **Hem** — not yet built; see `IDEAS.md` for the concept.
 
-Note the naming layers don't collapse to one meaning: Seam is the user-facing app, Thimble is also the AI persona discovered inside the app (not just the app name), and Mend is the company name, currently invisible to users since there's no LLC or revenue yet.
+Note the naming layers don't collapse to one meaning: Seam is the user-facing app, Thimble is also the AI persona discovered inside the app (not just the app name), and Mend is the company name, currently invisible to users since there's no LLC or revenue yet. The product-facing names above (Thimble Resolve, Thimble Resolve Live, Thimble Retro, Thimble Critique, Thimble Collab) were set 2026-11-21; the parenthetical codenames are what the directories and internal identifiers (loggers, signal tags) still use, and probably always will — renaming those isn't worth the churn.
 
 ## What's here
 
@@ -49,21 +52,21 @@ Local FastAPI apps, all under `apps/`, each its own venv and `.env` (see each `R
 | App | Port | What it tests |
 |---|---|---|
 | `apps/spool/` | 8423 | Sign-up + anonymous-invite UX, links through the three below in order |
-| `apps/thimble/` | 8420 | Private processing conversation, text + voice memo. Covers both the employee-conflict path and the manager-coaching path (a manager rehearsing a hard conversation with a direct report) — the latter used to be a separate `manager-coaching-app`, since removed as redundant once it was folded into this app's own system prompt |
-| `apps/suture/` | 8421 | The joint session, two real participants (each connects with their own role link) |
+| `apps/thimble-resolve/` | 8420 | Private processing conversation, text + voice memo. Covers both the employee-conflict path and the manager-coaching path (a manager rehearsing a hard conversation with a direct report) — the latter used to be a separate `manager-coaching-app`, since removed as redundant once it was folded into this app's own system prompt |
+| `apps/thimble-resolve-live/` | 8421 | The joint session, two real participants (each connects with their own role link) |
 | `apps/post-session-app/` | 8422 | Post-session follow-up, with a scenario picker since it doesn't chain from a real joint session |
-| `apps/joint-session-audio/` | 8424 | Standalone proof of the real audio delay buffer (LiveKit + streaming STT + the real hard-cut classifier) — not yet integrated with `suture/`'s conversational logic. Needs `brew install livekit` and its own `agent.py` worker in addition to uvicorn; see its `README.md`. |
-| `apps/seam/` | — | Case management for a manager working through conflict between two of their team members — a persisted, role-anonymized running action plan, distinct from `thimble`'s manager-coaching path above (that's solo rehearsal; this is an ongoing case). Can hand off into a real `suture` room. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
-| `apps/splice/` | — | Live group consensus-building over a real Zoom call (companion panel via the Zoom Apps SDK): shared room, chat, proposals, voting, Thimble as a visible named participant. Opposite trust model from the apps above — no safety floor, no confidentiality, driving an explicit visible group decision instead. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
-| `apps/loom/` | 8425 | Private 1:1 retro interview, one team member at a time, text only. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
-| `apps/swatch/` | 8426 | Private design-crit intake (one reviewer at a time, raw gut reaction reframed into an attributed, confirmed heuristic note) plus a text-first live group session that presents each confirmed note, opens the floor, and lets anyone route a follow-up question through Thimble privately instead of asking in the open. No real audio yet. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
+| `apps/joint-session-audio/` | 8424 | Standalone proof of the real audio delay buffer (LiveKit + streaming STT + the real hard-cut classifier) — not yet integrated with `thimble-resolve-live/`'s conversational logic. Needs `brew install livekit` and its own `agent.py` worker in addition to uvicorn; see its `README.md`. |
+| `apps/seam/` | 8460 | Case management for a manager working through conflict between two of their team members — a persisted, role-anonymized running action plan, distinct from `thimble-resolve`'s manager-coaching path above (that's solo rehearsal; this is an ongoing case). Can hand off into a real `thimble-resolve-live` room. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
+| `apps/splice/` | 8440 | Live group consensus-building over a real Zoom call (companion panel via the Zoom Apps SDK): shared room, chat, proposals, voting, Thimble as a visible named participant. Opposite trust model from the apps above — no safety floor, no confidentiality, driving an explicit visible group decision instead. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
+| `apps/thimble-retro/` | 8425 | Thimble Retro: private 1:1 retro interview, one team member at a time, text only, plus team-level distillation into a pattern report once enough interviews are in. No live group session yet. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
+| `apps/thimble-critique/` | 8426 | Thimble Critique: private design-crit intake (one reviewer at a time, raw gut reaction reframed into an attributed, confirmed heuristic note) plus a text-first live group session that presents each confirmed note, opens the floor, and lets anyone route a follow-up question through Thimble privately instead of asking in the open. No real audio yet; Thimble Collab (the preflight-collaboration mode of this same app) isn't built. Not yet wired into `run_all.sh`/`Caddyfile` — run standalone per its own `README.md`. |
 | `apps/classifier/` | — | Fine-tuned toxic-bert model for the real-time hard-cut tier of the joint session; not a web app, see its own `README.md`. |
 
-**Run the core four at once:** `./run_all.sh` from the repo root starts `spool`, `thimble`, `suture`, and `post-session-app` (each in its own venv) plus a local Caddy reverse proxy, and puts the whole walkthrough behind one address: **http://localhost:8080/**. Requires `caddy` (`brew install caddy`) and each app's own venv/dependencies already set up per its `README.md`. Ctrl-C stops everything together. `seam` and `splice` aren't part of this walkthrough yet — run them standalone.
+**Run the core four at once:** `./run_all.sh` from the repo root starts `spool`, `thimble-resolve`, `thimble-resolve-live`, and `post-session-app` (each in its own venv) plus a local Caddy reverse proxy, and puts the whole walkthrough behind one address: **http://localhost:8080/**. Requires `caddy` (`brew install caddy`) and each app's own venv/dependencies already set up per its `README.md`. Ctrl-C stops everything together. `seam` and `splice` aren't part of this walkthrough yet — run them standalone.
 
 Prefer running one app in isolation to debug it (e.g. while iterating on its system prompt)? Each app still works standalone on its own port from the table above — just note that cross-app links (Spool's buttons, the "continue" banners) point at the proxy's paths (`/intake/`, `/joint/`, `/post/`) and only resolve correctly when browsing through `run_all.sh`'s `:8080`, not when an app is opened directly on its own port.
 
-`thimble` and `suture` each show a "continue" banner once the facilitator's own signal says the next step is ready — you don't have to guess when to move on. None of these run in GitHub Pages; they need a local server and your own Anthropic API key.
+`thimble-resolve` and `thimble-resolve-live` each show a "continue" banner once the facilitator's own signal says the next step is ready — you don't have to guess when to move on. None of these run in GitHub Pages; they need a local server and your own Anthropic API key.
 
 ## Status
 

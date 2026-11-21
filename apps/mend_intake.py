@@ -1,16 +1,18 @@
 """
-Shared conversation-with-a-facilitator primitive, used by both suture and
-loom (and, going forward, any new mode built on the same intake
-mechanism). See IDEAS.md's "Suture/Loom convergence..." entry
-(2026-11-11): both apps already implemented this near-identically --
-this module is that consolidation, not a merge of either app's own
-topology (suture keeps its fixed two-role joint room, loom keeps its
+Shared conversation-with-a-facilitator primitive, used by both Thimble
+Resolve Live (codename suture) and Thimble Retro (codename loom) -- and,
+going forward, any new mode built on the same intake mechanism. See
+IDEAS.md's "Suture/Loom convergence..." entry (2026-11-11): both apps
+already implemented this near-identically -- this module is that
+consolidation, not a merge of either app's own topology (Thimble Resolve
+Live keeps its fixed two-role joint room, Thimble Retro keeps its
 many-independent-threads-pooled-by-sprint shape).
 
 Each caller is still responsible for appending the latest user turn to
 its own `conversation` list before calling `call_facilitator`, and for
 parsing/acting on the returned raw `signal` string itself (its shape
-differs per prompt -- suture's <mend_signal>, loom's <loom_signal>).
+differs per prompt -- Thimble Resolve Live's <mend_signal>, Thimble
+Retro's <loom_signal>).
 """
 import json
 import re
@@ -26,15 +28,15 @@ ROOT = __import__("pathlib").Path(__file__).parent
 # IDEAS.md 2026-11-11.
 MODES = {
     "conflict": {
-        "intake_prompt": ROOT / "facilitator-suture-intake-system-prompt.md",
+        "intake_prompt": ROOT / "facilitator-thimble-resolve-live-intake-system-prompt.md",
         "escalation": "harassment",
     },
     "retro": {
-        "intake_prompt": ROOT / "facilitator-loom-intake-system-prompt.md",
+        "intake_prompt": ROOT / "facilitator-thimble-retro-intake-system-prompt.md",
         "escalation": "toxic_dynamic",
     },
     "critique": {
-        "intake_prompt": ROOT / "facilitator-swatch-intake-system-prompt.md",
+        "intake_prompt": ROOT / "facilitator-thimble-critique-intake-system-prompt.md",
         "escalation": "toxic_dynamic",
     },
 }
@@ -65,7 +67,8 @@ def call_facilitator(
     be the new user turn the caller just appended. Rolls that turn back
     out of `conversation` on any failure or empty reply, so `conversation`
     always ends on a complete assistant turn or is left unchanged -- same
-    convention suture and loom each implemented separately before this.
+    convention Thimble Resolve Live and Thimble Retro each implemented
+    separately before this.
     On success, strips the <tag> control block out of the visible text and
     appends the raw assistant turn (signal included) back onto
     `conversation`, so the model sees its own prior signal next turn.

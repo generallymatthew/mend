@@ -7,6 +7,14 @@ backlog with commitments, not a roadmap phase — just raw material. When asked
 Each entry: what it is, where it could plug in, why it's not active yet.
 Every entry also names its source file so the original writeup can be found.
 
+**Naming note (2026-11-21):** entries below predate a rename and still use
+the old names, as the historical record of what was actually discussed at
+the time. Current product names: Swatch → **Thimble Critique** (design
+critique) / **Thimble Collab** (preflight collaboration, not built), Loom
+→ **Thimble Retro**, Suture → **Thimble Resolve Live**, Thimble (the old
+solo-intake app name) → **Thimble Resolve**. See `README.md`'s "App
+names" section.
+
 ---
 
 ## Process: how to know if Thimble's conflict-management approach is actually right
