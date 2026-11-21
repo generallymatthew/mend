@@ -1,0 +1,166 @@
+<title>Spring Retro Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* layout: three swimlanes (Manager / Team member / Thimble) feeding into one shared live-session band */
+  :root{
+    --bg:#F7F5F0; --fg:#20201B; --fg-soft:#5C584E; --line:#D8D3C6;
+    --accent:#A8431F; --accent-soft:#A8431F1A;
+    --lane-manager:#EFE9DC; --lane-member:#E3E8E1; --lane-thimble:#E6E1EC;
+    --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',-apple-system,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1B1A16; --fg:#EDEAE2; --fg-soft:#A39D8C; --line:#3A372E;
+      --accent:#E07A4E; --accent-soft:#E07A4E26;
+      --lane-manager:#2A2820; --lane-member:#20261F; --lane-thimble:#272232;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1B1A16; --fg:#EDEAE2; --fg-soft:#A39D8C; --line:#3A372E;
+    --accent:#E07A4E; --accent-soft:#E07A4E26;
+    --lane-manager:#2A2820; --lane-member:#20261F; --lane-thimble:#272232;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--fg); font-family:var(--font-body); margin:0; padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));}
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+  .wrap{max-width:900px; margin:0 auto; padding-block:36px 56px;}
+  h1{font-family:var(--font-display); font-weight:700; font-size:clamp(22px,4vw,30px); letter-spacing:-0.01em; margin:0 0 6px; text-wrap:balance;}
+  .sub{color:var(--fg-soft); font-size:14.5px; margin:0 0 30px; max-width:62ch; line-height:1.55;}
+  figure{margin:0;}
+  svg{display:block; width:100%; height:auto;}
+  figcaption{margin-top:16px; font-size:13px; color:var(--fg-soft); line-height:1.6; max-width:68ch;}
+  figcaption b{color:var(--fg); font-weight:600;}
+  .legend{display:flex; flex-wrap:wrap; gap:18px; margin-top:22px; padding-top:18px; border-top:1px solid var(--line);}
+  .legend-item{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--fg-soft);}
+  .swatch{width:12px; height:12px; border-radius:3px; flex-shrink:0;}
+</style>
+
+<div class="wrap">
+  <h1>Spring retro: from invite to live session</h1>
+  <p class="sub">Who does what, in order: the manager starts the retro, each team member works through a private intake with Thimble, and once someone's done talking they move into the shared audio room — where a text line stays open to the whole group, to Thimble, or to one teammate.</p>
+
+  <figure>
+    <svg viewBox="0 0 900 960" role="img" aria-label="Flow diagram: the manager initiates and invites the team; each team member privately exchanges turns with Thimble during intake; finished members move into a shared audio-only group session that keeps a text channel open to the group, to Thimble, or to one teammate.">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+
+      <!-- lane labels -->
+      <text x="150" y="28" text-anchor="middle" font-family="var(--font-mono)" font-size="11" letter-spacing="0.08em" fill="var(--fg-soft)">MANAGER</text>
+      <text x="450" y="28" text-anchor="middle" font-family="var(--font-mono)" font-size="11" letter-spacing="0.08em" fill="var(--fg-soft)">TEAM MEMBER</text>
+      <text x="750" y="28" text-anchor="middle" font-family="var(--font-mono)" font-size="11" letter-spacing="0.08em" fill="var(--fg-soft)">THIMBLE</text>
+
+      <!-- step 1: manager initiates -->
+      <rect x="55" y="46" width="190" height="64" rx="10" fill="var(--lane-manager)" stroke="var(--line)"/>
+      <text x="150" y="72" text-anchor="middle" font-size="13" font-weight="600" fill="var(--fg)">Start spring retro</text>
+      <text x="150" y="90" text-anchor="middle" font-size="11.5" fill="var(--fg-soft)">names the sprint/project</text>
+
+      <!-- arrow manager -> invite -->
+      <line x1="150" y1="110" x2="150" y2="150" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- step 2: invites team -->
+      <rect x="55" y="152" width="190" height="56" rx="10" fill="var(--lane-manager)" stroke="var(--line)"/>
+      <text x="150" y="176" text-anchor="middle" font-size="13" font-weight="600" fill="var(--fg)">Invites the team</text>
+      <text x="150" y="193" text-anchor="middle" font-size="11.5" fill="var(--fg-soft)">each member gets a link</text>
+
+      <!-- arrow manager invite -> member receives (diagonal) -->
+      <line x1="245" y1="180" x2="400" y2="180" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- member receives invite -->
+      <rect x="350" y="152" width="200" height="56" rx="10" fill="var(--lane-member)" stroke="var(--line)"/>
+      <text x="450" y="176" text-anchor="middle" font-size="13" font-weight="600" fill="var(--fg)">Receives invite, joins</text>
+      <text x="450" y="193" text-anchor="middle" font-size="11.5" fill="var(--fg-soft)">on their own time</text>
+
+      <!-- arrow down to private intake -->
+      <line x1="450" y1="208" x2="450" y2="250" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+      <!-- Private intake zone: a real exchange between the member and Thimble columns -->
+      <rect x="330" y="258" width="540" height="330" rx="14" fill="none" stroke="var(--line)" stroke-dasharray="4 4"/>
+      <text x="600" y="282" text-anchor="middle" font-family="var(--font-mono)" font-size="11" letter-spacing="0.06em" fill="var(--fg-soft)">PRIVATE INTAKE — one-on-one, repeats per member</text>
+
+      <!-- row 1: member -> thimble -->
+      <rect x="360" y="298" width="180" height="52" rx="9" fill="var(--lane-member)" stroke="var(--line)"/>
+      <text x="450" y="321" text-anchor="middle" font-size="12" fill="var(--fg)">Gives raw,</text>
+      <text x="450" y="337" text-anchor="middle" font-size="12" fill="var(--fg)">unfiltered reaction</text>
+
+      <line x1="540" y1="324" x2="660" y2="324" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+      <rect x="660" y="298" width="180" height="52" rx="9" fill="var(--lane-thimble)" stroke="var(--line)"/>
+      <text x="750" y="321" text-anchor="middle" font-size="12" fill="var(--fg)">Probes toward a</text>
+      <text x="750" y="337" text-anchor="middle" font-size="12" fill="var(--fg)">concrete heuristic</text>
+
+      <!-- loop: thimble <-> member, back and forth until it lands -->
+      <path d="M 750 350 Q 750 388 540 388" fill="none" stroke="var(--fg-soft)" stroke-width="1.2" marker-end="url(#arrow)"/>
+      <text x="645" y="380" text-anchor="middle" font-size="10.5" fill="var(--fg-soft)">asks again, back and forth, until it's on point</text>
+
+      <!-- row 2: thimble -> member (read-back) -->
+      <rect x="660" y="396" width="180" height="52" rx="9" fill="var(--lane-thimble)" stroke="var(--line)"/>
+      <text x="750" y="419" text-anchor="middle" font-size="12" fill="var(--fg)">Reads back the</text>
+      <text x="750" y="435" text-anchor="middle" font-size="12" fill="var(--fg)">exact note proposed</text>
+
+      <line x1="660" y1="422" x2="540" y2="422" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+      <rect x="360" y="396" width="180" height="52" rx="9" fill="var(--lane-member)" stroke="var(--line)"/>
+      <text x="450" y="419" text-anchor="middle" font-size="12" fill="var(--fg)">Reviews it,</text>
+      <text x="450" y="435" text-anchor="middle" font-size="12" fill="var(--fg)">adjusts if needed</text>
+
+      <!-- row 3: member -> thimble (confirms) -->
+      <line x1="450" y1="448" x2="450" y2="494" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+      <rect x="360" y="494" width="180" height="52" rx="9" fill="var(--lane-member)" stroke="var(--line)"/>
+      <text x="450" y="524" text-anchor="middle" font-size="12.5" fill="var(--fg)">Confirms wording</text>
+
+      <line x1="540" y1="520" x2="660" y2="520" stroke="currentColor" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+      <rect x="660" y="494" width="180" height="52" rx="9" fill="var(--lane-thimble)" stroke="var(--line)"/>
+      <text x="750" y="517" text-anchor="middle" font-size="12" fill="var(--fg)">Records it,</text>
+      <text x="750" y="533" text-anchor="middle" font-size="12" fill="var(--fg)">attributed to them</text>
+
+      <!-- arrow from intake zone down to the live session band -->
+      <path d="M 750 546 L 750 630 L 450 630 L 450 654" fill="none" stroke="currentColor" stroke-width="1.8" marker-end="url(#arrow)"/>
+      <text x="600" y="620" text-anchor="middle" font-size="11" fill="var(--accent)" font-weight="600">once they're done talking</text>
+
+      <!-- Live audio group session band -->
+      <rect x="90" y="654" width="720" height="180" rx="16" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="450" y="684" text-anchor="middle" font-size="15" font-weight="700" fill="var(--fg)" font-family="var(--font-display)">Live group session — audio only</text>
+      <text x="450" y="704" text-anchor="middle" font-size="12" fill="var(--fg-soft)">voice carried by Thimble; video is bring-your-own (Zoom/Teams), muted</text>
+
+      <!-- participants row inside the band -->
+      <circle cx="190" cy="756" r="22" fill="var(--lane-member)" stroke="var(--line)"/>
+      <text x="190" y="761" text-anchor="middle" font-size="11" fill="var(--fg)">member</text>
+      <circle cx="270" cy="756" r="22" fill="var(--lane-member)" stroke="var(--line)"/>
+      <text x="270" y="761" text-anchor="middle" font-size="11" fill="var(--fg)">member</text>
+      <circle cx="350" cy="756" r="22" fill="var(--lane-thimble)" stroke="var(--line)"/>
+      <text x="350" y="761" text-anchor="middle" font-size="11" fill="var(--fg)">Thimble</text>
+      <text x="270" y="800" text-anchor="middle" font-size="11" fill="var(--fg-soft)">one shared call — everyone on mic</text>
+
+      <!-- text channel box, inside the band, on the right -->
+      <rect x="470" y="730" width="310" height="86" rx="10" fill="var(--bg)" stroke="var(--line)"/>
+      <text x="485" y="750" font-size="11.5" font-weight="600" fill="var(--fg)">text, running alongside the call</text>
+      <text x="485" y="770" font-size="11" fill="var(--fg-soft)">→ the whole group</text>
+      <text x="485" y="787" font-size="11" fill="var(--fg-soft)">→ Thimble privately</text>
+      <text x="485" y="804" font-size="11" fill="var(--fg-soft)">→ one teammate directly</text>
+
+      <!-- arrow from participants to text box -->
+      <line x1="394" y1="756" x2="464" y2="756" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+
+      <!-- outcome -->
+      <line x1="450" y1="834" x2="450" y2="866" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <rect x="300" y="874" width="300" height="56" rx="10" fill="none" stroke="var(--line)"/>
+      <text x="450" y="898" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--fg)">Session closes</text>
+      <text x="450" y="915" text-anchor="middle" font-size="11" fill="var(--fg-soft)">once every note's had the floor</text>
+    </svg>
+    <figcaption><b>Three lanes, one shared room.</b> The manager's two steps happen once, up front. Each team member's private intake is a real back-and-forth with Thimble (raw reaction, probing, a read-back, a confirmation) that runs independently and repeats per person — it's not a group step. Only once a member has confirmed their note do they move into the shared audio room; that room is one voice channel for everyone, with a separate text line that can be aimed at the group, at Thimble, or at a specific teammate without anyone else seeing it.</figcaption>
+  </figure>
+
+  <div class="legend">
+    <div class="legend-item"><span class="swatch" style="background:var(--lane-manager)"></span>Manager step</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--lane-member)"></span>Team member step</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--lane-thimble)"></span>Thimble step</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--accent-soft); border:1px solid var(--accent)"></span>Shared live session</div>
+  </div>
+</div>
