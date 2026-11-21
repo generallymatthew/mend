@@ -1345,6 +1345,27 @@ a broadcast WebSocket. Verified live against the real Anthropic API. Real
 audio and the preflight-collaboration side's full six-step "Workflow" are
 still not built — see `apps/swatch/swatch-product-roadmap.md`'s Phase 1.
 
+**Build note (2026-11-21):** the anonymous clarification relay (channel 2
+above) is now built too, but **rescoped from the deniability requirement
+this entry originally flagged.** Discussed in-session before writing any
+code: a forced baseline rate of Thimble's own self-initiated questions
+conflicts with the house style every other facilitator prompt in this repo
+already follows (don't manufacture turns that aren't genuinely warranted),
+and normalized phrasing alone can't fully hide a relayed question's
+specificity either. Decided to build for **plausible deniability, not
+statistical indistinguishability**: Thimble answers a privately submitted
+question directly when the asking reviewer's own private intake transcript
+actually grounds a real answer, or poses it to the note's author otherwise
+— either way posting to the whole room in its own voice, never mentioning
+that a question "came in" or through what channel. The timing correlation
+(a question visibly lands right after someone privately asked something)
+is an acknowledged, documented limit now, not a solved guarantee — see
+`apps/facilitator-swatch-live-system-prompt.md`'s relay section and
+`apps/swatch/README.md`. Verified live against the real Anthropic API:
+answered a private question correctly and directly from the grounding
+transcript, with no identity or channel leak. The self-initiated-baseline-
+rate idea this entry originally called for is deliberately **not** pursued.
+
 ---
 
 ## Open design questions

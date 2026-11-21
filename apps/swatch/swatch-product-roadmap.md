@@ -73,9 +73,30 @@ domain, real platform risk (Figma could ship this natively).
       after an explicit confirming yes to that exact wording, correctly
       attributed to the reviewer's name in the notes view. No console
       errors. Text only, no voice, in-memory only (see `README.md`).
-- [ ] Anonymous clarification relay (channel 2 above) — not started. Needs
-      the baseline-self-initiated-question-rate design work flagged in
-      Phase 0 before it's buildable, not just a parameter to add.
+- [x] **Anonymous clarification relay built (2026-11-21)** (`server.py`'s
+      `handle_live_ask`/`find_grounding_transcript`/`build_relay_turn`,
+      the `ws_private` message type on the live WebSocket, the new "Ask
+      Thimble privately" box in `static/index.html`'s live-session view,
+      the relay section added to `../facilitator-swatch-live-system-
+      prompt.md`). Rescoped from Phase 0's framing before building: a
+      forced baseline rate of self-initiated questions would fight the
+      house style (every other facilitator prompt explicitly avoids
+      manufactured turns), and phrasing alone can't hide a relay's
+      specificity either. Built for **plausible deniability, not
+      statistical indistinguishability** — Thimble answers a privately
+      submitted question directly when the asking reviewer's own private
+      intake transcript grounds a real answer, or poses it to the note's
+      author otherwise, either way posting to the whole room in its own
+      voice with no "a question came in" framing. The timing correlation
+      (a question lands right after someone privately asked something) is
+      an acknowledged, documented limit, not something this build claims
+      to solve. Verified live against the real Anthropic API in-browser:
+      Jordan's confirmed note ("checkout/promo/save/back-to-cart all
+      styled identically") was on the floor; a private question from
+      "Sam" asking whether Jordan meant the promo field specifically or
+      the whole button row got answered directly and correctly from
+      Jordan's grounding transcript, posted to the room with no mention of
+      Sam or of a private channel. No console errors.
 - [x] **Live crit-side group session built, text-first (2026-11-20)**
       (`server.py`'s `LiveSession`/`/ws/live/{artifact}/{participant_name}`,
       `static/index.html`'s "Live crit session" view,

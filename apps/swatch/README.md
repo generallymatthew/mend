@@ -18,11 +18,17 @@ prompt and `swatch-product-roadmap.md` for why.
 The live session is text-first in this build -- any number of named
 participants join a room keyed by artifact name, and once someone sends
 `start`, Thimble presents each confirmed note in turn and opens the floor.
-Not yet built: real audio (the "Workflow" six-step preflight-collaboration
-process, audio-only through Thimble, video bring-your-own via Zoom/Teams
-and muted -- see the roadmap), and the anonymous clarification-relay layer
-(anyone routing a follow-up question through Thimble instead of asking in
-the open).
+Anyone in the room can also send a private question instead of asking in
+the open; Thimble answers it directly from the real private intake
+transcript when that grounds a real answer, or poses it to the note's
+author otherwise -- either way the result posts publicly to the whole
+room, never back to the asker alone. This hides the question's content
+and authorship, not the fact that *a* question landed right then -- an
+accepted, documented limit (see `../facilitator-swatch-live-system-
+prompt.md`), not a solved guarantee. Not yet built: real audio (the
+"Workflow" six-step preflight-collaboration process, audio-only through
+Thimble, video bring-your-own via Zoom/Teams and muted -- see the
+roadmap).
 
 ## Setup
 
@@ -66,6 +72,13 @@ Open http://localhost:8426.
   with its heuristic and asked for the designer's reaction; a reply from
   "Sam" broadcast to the room and got a facilitator follow-up. No console
   errors.
+- The anonymous clarification relay, verified live: with Jordan's note (on
+  checkout/promo/save/back-to-cart all being styled identically) on the
+  floor, a private question from "Sam" asking whether Jordan meant the
+  promo field specifically or the whole button row got answered correctly
+  and directly, grounded in Jordan's own private intake transcript, posted
+  to the room in Thimble's normal voice with no mention of Sam or of a
+  private channel. No console errors.
 
 ## What's not real / not built
 
@@ -74,6 +87,8 @@ Open http://localhost:8426.
 - No preflight-collaboration "Workflow" (warm-up, solo work,
   consensus/reaction aggregation) -- the live session only covers the
   crit side's "present notes, discuss" shape.
-- No anonymous clarification relay.
+- The clarification relay hides a question's content and authorship, not
+  the timing correlation of a question landing right after a private ask
+  -- an accepted limit, not something this build claims to solve.
 - No persistence -- a server restart loses every session, note, and live
   room.

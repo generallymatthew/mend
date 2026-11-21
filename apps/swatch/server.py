@@ -20,9 +20,15 @@ TTS, no turn-taking classifier in this pass. Any participant name can
 join a room keyed by artifact name; there's no fixed role count the way
 Suture has employee_a/employee_b, since a crit's headcount varies.
 
-The anonymous clarification-relay layer (routing a question through
-Thimble so nobody can tell whether it's a relay or Thimble's own) is a
-separate, later phase and still not built.
+The anonymous clarification relay lets any live-session participant send
+Thimble a private question (tied to whichever note is currently on the
+floor) instead of asking it in the open; Thimble answers it directly from
+that reviewer's private intake transcript when it grounds a real answer,
+or poses it to the note's author otherwise -- either way the result posts
+publicly to the whole room, never back to the asker alone, since there's
+no asker identity to protect once it's out. This hides the question's
+content and authorship, not the fact that *a* question landed right then
+-- an accepted, documented limit, not a solved guarantee.
 
 Multi-session, in-memory only, nothing persisted to disk, lost on restart.
 
@@ -142,6 +148,10 @@ class LiveSession:
         # finishing their private pass) doesn't shift indices out from
         # under an already-open room.
         self.notes: list[dict] = []
+        # Updated from the model's own signal after every public turn --
+        # lets a relay question default to "about whatever's on the floor
+        # right now" without the asker having to say which note.
+        self.current_note_index: int | None = None
 
 
 LIVE_SESSIONS: dict[str, LiveSession] = {}
@@ -217,12 +227,73 @@ async def broadcast_live_result(session: LiveSession, result: dict, sender: str 
     if sender is not None:
         await broadcast_live(session, {"type": "message", "from": sender, "text": sender_text})
     signal = result.get("signal") or {}
+    if signal.get("current_note_index") is not None:
+        session.current_note_index = signal.get("current_note_index")
     await broadcast_live(session, {
         "type": "message", "from": "facilitator", "text": result.get("reply"), "signal": signal,
     })
     if signal.get("session_state") == "ended" and not session.ended:
         session.ended = True
         await broadcast_live(session, {"type": "ended"})
+
+
+def find_grounding_transcript(artifact: str, reviewer_name: str) -> str | None:
+    """The reviewer's own private reframing conversation for this artifact,
+    if it's still in memory -- what grounds a relayed question's direct
+    answer. Last confirmed match wins; a prototype's worth of lookup, not
+    an index."""
+    match = None
+    for s in sessions.values():
+        if s.get("artifact_name") == artifact and s.get("reviewer_name") == reviewer_name and s.get("recorded"):
+            match = s
+    if match is None:
+        return None
+    lines = [
+        f"[{turn.get('role')}] {turn.get('content')}"
+        for turn in match["conversation"]
+        if isinstance(turn.get("content"), str)
+    ]
+    return "\n".join(lines)
+
+
+def build_relay_turn(session: LiveSession, text: str) -> str:
+    note = None
+    if session.current_note_index is not None and 0 <= session.current_note_index < len(session.notes):
+        note = session.notes[session.current_note_index]
+
+    header = (
+        "(RELAY -- a private question came in through the anonymous relay, not for "
+        "broadcast as-is. Decide whether you can answer it yourself, grounded in the "
+        "record below, or whether it needs the note's author. Post your decision to "
+        "the whole room now as a normal facilitator turn, in your own voice.)"
+    )
+    if note:
+        header += f"\n\nIt concerns {note['reviewer_name']}'s note: \"{note['note']}\"."
+    header += f"\n\nPrivate question: \"{text}\""
+
+    grounding = find_grounding_transcript(session.artifact, note["reviewer_name"]) if note else None
+    if grounding:
+        header += (
+            f"\n\n{note['reviewer_name']}'s private reframing conversation about this "
+            "artifact, for grounding only -- don't quote it verbatim or reveal anything "
+            "beyond what's needed to answer:\n" + grounding
+        )
+    else:
+        header += (
+            "\n\n(No private record is available to ground a direct answer -- if you "
+            "can't answer confidently, pose the question to the room or to the note's "
+            "author instead of guessing.)"
+        )
+    return header
+
+
+async def handle_live_ask(session: LiveSession, asker: str, text: str) -> None:
+    await send_to_live(session, asker, {"type": "ask_received"})
+    await broadcast_live(session, {"type": "thinking"})
+    async with session.lock:
+        session.conversation.append({"role": "user", "content": build_relay_turn(session, text)})
+        result = await run_in_threadpool(live_facilitator_reply, session)
+    await broadcast_live_result(session, result)
 
 
 def facilitator_reply_blocking(session: dict) -> dict:
@@ -329,7 +400,7 @@ async def live_session_ws(websocket: WebSocket, artifact: str, participant_name:
             msg_type = payload.get("type")
 
             ip = websocket.client.host if websocket.client else "unknown"
-            if msg_type in ("start", "message") and ws_rate_limited(ip):
+            if msg_type in ("start", "message", "ask_private") and ws_rate_limited(ip):
                 await send_to_live(session, participant_name, {
                     "type": "error", "error": "too many messages -- slow down and try again shortly",
                 })
@@ -339,7 +410,7 @@ async def live_session_ws(websocket: WebSocket, artifact: str, participant_name:
                 await handle_live_start(session)
                 continue
 
-            if msg_type != "message":
+            if msg_type not in ("message", "ask_private"):
                 continue
 
             text = (payload.get("text") or "").strip()
@@ -352,7 +423,10 @@ async def live_session_ws(websocket: WebSocket, artifact: str, participant_name:
                 await send_to_live(session, participant_name, {"type": "error", "error": "session has ended"})
                 continue
 
-            await handle_live_message(session, participant_name, text)
+            if msg_type == "ask_private":
+                await handle_live_ask(session, participant_name, text)
+            else:
+                await handle_live_message(session, participant_name, text)
     except WebSocketDisconnect:
         if session.sockets.get(participant_name) is websocket:
             del session.sockets[participant_name]

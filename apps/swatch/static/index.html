@@ -115,6 +115,10 @@
       <textarea id="liveInput" rows="1" placeholder="Type your message to the room..."></textarea>
       <button class="primary" id="liveSendBtn">Send</button>
     </div>
+    <div class="composer" id="liveAskComposer" style="margin-top:8px;">
+      <textarea id="liveAskInput" rows="1" placeholder="Ask Thimble privately about the note on the floor..."></textarea>
+      <button id="liveAskBtn">Ask privately</button>
+    </div>
     <div class="status" id="liveStatus"></div>
   </div>
 </div>
@@ -243,6 +247,8 @@ const liveStartBtn = document.getElementById('liveStartBtn');
 const liveComposer = document.getElementById('liveComposer');
 const liveInput = document.getElementById('liveInput');
 const liveSendBtn = document.getElementById('liveSendBtn');
+const liveAskInput = document.getElementById('liveAskInput');
+const liveAskBtn = document.getElementById('liveAskBtn');
 const liveStatus = document.getElementById('liveStatus');
 let liveSocket = null;
 
@@ -290,6 +296,8 @@ liveJoinBtn.addEventListener('click', () => {
     } else if (data.type === 'ended') {
       liveStatus.textContent = 'session ended';
       liveComposer.hidden = true;
+    } else if (data.type === 'ask_received') {
+      liveStatus.textContent = 'sent privately -- Thimble will answer or relay it to the room';
     } else if (data.type === 'error') {
       liveStatus.textContent = 'error: ' + data.error;
     }
@@ -315,6 +323,21 @@ liveInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     liveSendBtn.click();
+  }
+});
+
+liveAskBtn.addEventListener('click', () => {
+  const text = liveAskInput.value.trim();
+  if (!text || !liveSocket) return;
+  liveSocket.send(JSON.stringify({type: 'ask_private', text}));
+  liveAskInput.value = '';
+  liveStatus.textContent = 'sending privately...';
+});
+
+liveAskInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    liveAskBtn.click();
   }
 });
 </script>
