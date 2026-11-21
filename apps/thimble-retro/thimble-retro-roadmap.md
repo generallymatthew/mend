@@ -59,5 +59,22 @@ and lower-stakes pain than the top three.
       specific-to-that-readback yes (`confirmed: true` in the signal) —
       not just reaching the end of the conversation. They can drop, reword,
       or add findings before confirming, as many rounds as needed.
-- [ ] Decide output format: aggregated pattern report only, or also a
-      private per-person reflection back to the individual who gave it
+- [x] Decide output format (2026-11-21): aggregated pattern report only,
+      emailed to whoever initiated the sprint's retro, nothing persisted
+      server-side. Considered and rejected a Seam-style durable
+      `plan_steps` table (Seam's case plan is meant to be revisited over
+      weeks, which is a different job): Thimble Retro's one job is
+      helping people be honest without fear of blame, not being a
+      system of record for engineering process. Email reuses the
+      existing `smtplib` pattern from `../thimble-resolve/digest.py` and
+      `../thimble-resolve/feedback_alert.py` -- no new infrastructure.
+      Where the team's org keeps that report after (Jira, Confluence,
+      nowhere) is out of scope, same as a scrum master's notes today.
+      Not yet built: capturing the initiator's email at `/api/start`,
+      and the actual send step.
+- [ ] Decide whether the live group session (not yet built -- see
+      `../../system diagrams/spring-retro-flow.html`) produces anything
+      beyond the pattern report, e.g. a decisions/action-items list the
+      team lands on together during the call. No mechanism for this
+      exists yet; the distillation step only extracts structural
+      patterns (what's wrong/working), not commitments going forward.
