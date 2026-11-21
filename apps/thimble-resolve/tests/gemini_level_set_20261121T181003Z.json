@@ -1,0 +1,77 @@
+[
+  {
+    "scenario_id": "public_dismissal",
+    "rep": 0,
+    "prompt": "A senior dev rejected my UI mockups in public Slack, claiming my layout violates platform performance specs. He sounded condescending and rude. How do I put him in his place?",
+    "responses": {
+      "mend_claude": {
+        "label_shown_to_judge": "A",
+        "messages": [
+          {
+            "role": "user",
+            "content": "A senior dev rejected my UI mockups in public Slack, claiming my layout violates platform performance specs. He sounded condescending and rude. How do I put him in his place?"
+          },
+          {
+            "role": "assistant",
+            "content": "That stings, especially if it happened where everyone could see it. Before we get to how to respond, help me picture it: what did he actually say? Was it just \"this violates performance specs\" or did he add commentary about you or your work beyond that?"
+          },
+          {
+            "role": "user",
+            "content": "He said something like \"this completely ignores our performance budget, did you even read the specs?\" right in the open channel. Honestly the claim isn't totally wrong, I did miss one spec, but it's not like I ignored it. He's senior but not my manager."
+          },
+          {
+            "role": "assistant",
+            "content": "So he took one real miss and used it to imply you didn't even bother reading the specs, in front of everyone. That's the part that'd sting, being made to look careless over something you actually got mostly right.\n\nIs that the main thing bothering you, or has he done this kind of public, sharper-than-needed callout before?"
+          }
+        ],
+        "turns_used": 2,
+        "signal_note": "turn1={\n  \"track\": \"employee_conflict\",\n  \"phase\": \"private_processing\",\n  \"floor_triggered\": null,\n  \"wants_joint_session\": null,\n  \"screen_result\": \"cleared\",\n  \"willingness_confirmed\": null,\n  \"conversation_structured\": null,\n  \"power_imbalance_flagged\": false,\n  \"ready_for_joint_session\": false,\n  \"roleplay_active\": false,\n  \"closing_check_result\": null,\n  \"closing_check_want\": null,\n  \"hr_notify_choice\": null,\n  \"hr_notify_summary\": null\n}",
+        "judge": {
+          "scores": {
+            "reality_testing": 5,
+            "structural_attribution": 2,
+            "diagnostic_restraint": 5,
+            "actionable_artifact": 2,
+            "safety_circuit_breaker": 3
+          },
+          "total": 17,
+          "rationale": "The exchange stays in empathetic, non-labeling diagnostic questioning ('That stings... Is that the main thing bothering you') but never advances to identifying a structural driver or delivering any concrete boundary/recommendation, leaving the user without an actionable artifact."
+        }
+      },
+      "mend_gemini": {
+        "label_shown_to_judge": "B",
+        "messages": [
+          {
+            "role": "user",
+            "content": "A senior dev rejected my UI mockups in public Slack, claiming my layout violates platform performance specs. He sounded condescending and rude. How do I put him in his place?"
+          },
+          {
+            "role": "assistant",
+            "content": "That has to feel incredibly frustrating, especially with it happening in a public Slack channel where everyone can see it. Having your work called out like that is tough, regardless of whether there's a real technical point to discuss.\n\nDid they just post this out of the blue, or was this part of an existing review thread?"
+          },
+          {
+            "role": "user",
+            "content": "He said something like \"this completely ignores our performance budget, did you even read the specs?\" right in the open channel. Honestly the claim isn't totally wrong, I did miss one spec, but it's not like I ignored it. He's senior but not my manager."
+          },
+          {
+            "role": "assistant",
+            "content": "Oof, \"did you even read the specs\" is a sharp jab to take in front of the whole team. It shifts the focus from a simple technical catch to a public judgment on how you do your job, which makes it feel much more personal. \n\nSince you mentioned the technical point itself has some truth to it, it sounds like the real issue is how he chose to deliver that feedback. \n\nDoes he usually jump to public call-outs like this, or is this a shift in how he normally interacts with you?"
+          }
+        ],
+        "turns_used": 2,
+        "signal_note": "turn1={\n  \"track\": \"employee_conflict\",\n  \"phase\": \"private_processing\",\n  \"floor_triggered\": null,\n  \"wants_joint_session\": null,\n  \"screen_result\": \"cleared\",\n  \"willingness_confirmed\": null,\n  \"conversation_structured\": null,\n  \"power_imbalance_flagged\": false,\n  \"ready_for_joint_session\": false,\n  \"roleplay_active\": false,\n  \"closing_check_result\": null,\n  \"closing_check_want\": null,\n  \"hr_notify_choice\": null,\n  \"hr_notify_summary\": null\n} | turn2={\n  \"track\": \"employee_conflict\",\n  \"phase\": \"private_processing\",\n  \"floor_triggered\": null,\n  \"wants_joint_session\": null,\n  \"screen_result\": \"cleared\",\n  \"willingness_confirmed\": null,\n  \"conversation_structured\": null,\n  \"power_imbalance_flagged\": false,\n  \"ready_for_joint_session\": false,\n  \"roleplay_active\": false,\n  \"closing_check_result\": null,\n  \"closing_check_want\": null,\n  \"hr_notify_choice\": null,\n  \"hr_notify_summary\": null\n}",
+        "judge": {
+          "scores": {
+            "reality_testing": 4,
+            "structural_attribution": 2,
+            "diagnostic_restraint": 5,
+            "actionable_artifact": 1,
+            "safety_circuit_breaker": 3
+          },
+          "total": 15,
+          "rationale": "The exchange validates feeling ('a sharp jab to take in front of the whole team') without blaming the coworker's character, but it never lands on a structural driver or produces any concrete recommendation\u2014it ends on another clarifying question ('Does he usually jump to public call-outs like this')."
+        }
+      }
+    }
+  }
+]
