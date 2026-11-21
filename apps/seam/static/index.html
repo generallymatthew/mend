@@ -86,20 +86,7 @@
     opacity: 1; visibility: visible;
   }
   .top-nav-actions { display: flex; align-items: center; gap: 8px; }
-  #install-btn {
-    display: none; align-items: center; gap: 6px;
-    font-size: 12px; font-weight: 700; color: var(--ink);
-    background: var(--accent-pink-bg); border: none; border-radius: 999px;
-    padding: 7px 14px; cursor: pointer; white-space: nowrap;
-  }
-  #install-btn:hover { background: #F9DFE5; }
-  #feedback-link {
-    font-size: 12px; font-weight: 700; color: var(--ink);
-    text-decoration: none; background: var(--panel-bg); border-radius: 999px;
-    padding: 7px 14px; white-space: nowrap;
-  }
-  #feedback-link:hover { background: var(--rail-border); }
-  #help-btn, #reset-tool-btn {
+  #help-btn {
     width: 28px; height: 28px; border-radius: 999px;
     background: var(--panel-bg); color: var(--muted);
     display: flex; align-items: center; justify-content: center;
@@ -111,18 +98,33 @@
     display: none; align-items: center; justify-content: center;
     font-size: 15px; cursor: pointer; border: none;
   }
-  /* Split-layout toggle: switches #app's data-layout between the classic
-     single-column chat and the Thimble-avatar-stage layout prototyped in
-     Bobbin/seam_thimble_split_mockup.html. Both stay fully functional --
-     this just flips which one renders. */
-  #layout-toggle {
+  /* Overflow menu: install and feedback are both rare/one-time actions, so
+     they share one kebab instead of each claiming a permanent spot in the
+     bar. Help stays a direct icon since it's reached for often enough to
+     earn one, even with the room desktop has. */
+  #nav-kebab-wrap { position: relative; }
+  #nav-kebab-btn {
     width: 28px; height: 28px; border-radius: 999px; flex-shrink: 0;
-    background: var(--panel-bg); color: var(--ink);
+    background: var(--panel-bg); color: var(--muted);
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; border: none;
+    font-size: 14px; font-weight: 700; cursor: pointer; border: none;
   }
-  #layout-toggle:hover { background: var(--rail-border); }
-  #layout-toggle.active { background: var(--accent-pink-active); color: var(--ink); }
+  #nav-kebab-btn:hover, #nav-kebab-btn.open { background: var(--rail-border); color: var(--ink); }
+  #nav-kebab-menu {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 40;
+    min-width: 170px; background: var(--app-bg); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 8px 24px rgba(23,55,46,0.16); padding: 6px;
+  }
+  #nav-kebab-menu.open { display: flex; flex-direction: column; gap: 2px; }
+  #nav-kebab-menu #install-btn, #nav-kebab-menu #feedback-link {
+    display: none; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    background: none; border: none; border-radius: 8px;
+    padding: 9px 10px; cursor: pointer; white-space: nowrap; text-decoration: none;
+    width: 100%; text-align: left;
+  }
+  #nav-kebab-menu #feedback-link { display: flex; }
+  #nav-kebab-menu #install-btn:hover, #nav-kebab-menu #feedback-link:hover { background: var(--panel-bg); }
   .panel-scrim { display: none; }
 
   /* Sidebar: one shared column, section-specific content swapped inside */
@@ -1025,7 +1027,6 @@
     .top-nav { padding: 10px 12px; gap: 8px; }
     .top-bar-brand .brand-name { font-size: 18px; }
     .top-nav-actions { gap: 6px; }
-    #feedback-link { padding: 7px 10px; }
     .privacy-chip-label { display: none; }
     .privacy-chip { padding: 8px; }
     .privacy-tooltip { right: -8px; width: 200px; }
@@ -1042,18 +1043,64 @@
   }
 
   /* ---- Split layout (Bobbin/seam_thimble_split_mockup.html wired in) ----
-     Opt-in via #layout-toggle; persisted in localStorage. Thimble's avatar
-     stage takes the space the sidebar used to sit in, the sidebar becomes
-     an off-canvas drawer at every width (not just mobile), and the thread
-     column narrows to a fixed side panel. The composer's existing mic
-     button is the one real push-to-talk control; #stage-mic-btn is a
-     second control wired to the same handler (see wirePushToTalk), not a
-     separate recorder. */
+     The only layout now (the classic single-column chat and its toggle
+     are gone). Thimble's avatar stage takes the space the sidebar used
+     to sit in, the sidebar becomes an off-canvas drawer at every width
+     (not just mobile), and the thread column narrows to a fixed side
+     panel. The composer's existing mic button is the one real
+     push-to-talk control; #stage-mic-btn is a second control wired to
+     the same handler (see wirePushToTalk), not a separate recorder. */
   .avatar-stage { display: none; }
   body[data-layout="split"] .avatar-stage {
     flex: 1 1 auto; min-width: 0; background: var(--stage-bg);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 18px; position: relative;
+  }
+  /* New-conversation trigger lives in the stage now too, top-left, so
+     starting over doesn't require opening the sidebar drawer first.
+     Collapsed to just the "+" circle at rest; on hover/focus it slides
+     out into a full pill with the label, instead of permanently taking
+     the width of the text. */
+  .stage-newconvo-btn {
+    position: absolute; top: 16px; left: 16px; z-index: 2;
+    display: flex; align-items: center; gap: 0;
+    font-size: 12px; font-weight: 700; color: var(--ink);
+    background: var(--accent-pink-bg); border: none; border-radius: 999px;
+    height: 32px; width: 32px; padding: 0; cursor: pointer; overflow: hidden;
+    transition: width .22s ease, padding .22s ease;
+  }
+  .stage-newconvo-btn .plus { width: 32px; height: 32px; flex: none; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .stage-newconvo-btn .label {
+    max-width: 0; opacity: 0; white-space: nowrap; overflow: hidden;
+    transition: max-width .22s ease, opacity .18s ease;
+  }
+  .stage-newconvo-btn:hover, .stage-newconvo-btn:focus-visible {
+    width: 164px; padding-right: 14px; background: var(--accent-pink-active);
+  }
+  .stage-newconvo-btn:hover .label, .stage-newconvo-btn:focus-visible .label {
+    max-width: 140px; opacity: 1;
+  }
+  /* Reset-exercise trigger moved to the bottom of the stage -- it's the
+     same box the reset overlay already docks onto on desktop (see
+     dockResetOverlay()), so the trigger and its destination are finally
+     the same place. #reset-tool-btn stays as the fallback for the
+     <=860px width where the stage itself is hidden. */
+  .stage-reset-btn {
+    position: absolute; bottom: 16px; left: 16px; z-index: 2;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: var(--ink);
+    background: var(--accent-pink-bg); border: none; border-radius: 999px;
+    padding: 7px 13px; cursor: pointer; white-space: nowrap;
+  }
+  .stage-reset-btn:hover { background: var(--accent-pink-active); }
+  #reset-tool-btn {
+    width: 28px; height: 28px; border-radius: 999px; display: none;
+    background: var(--panel-bg); color: var(--muted);
+    align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; cursor: pointer; border: none;
+  }
+  @media (max-width: 860px) {
+    #reset-tool-btn { display: flex; }
   }
   .stage-state {
     position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
@@ -1163,7 +1210,7 @@
   }
 </style>
 </head>
-<body>
+<body data-layout="split">
 <div class="top-nav">
   <div class="top-bar-brand">
     <button id="sidebar-toggle" title="Menu">
@@ -1173,15 +1220,17 @@
     <span class="brand-name">Thimble</span>
   </div>
   <div class="top-nav-actions">
-    <button id="install-btn" title="Install Thimble as an app">Install app</button>
-    <a id="feedback-link" href="survey/post" title="Done testing? Leave feedback">Give feedback</a>
     <button id="help-btn" title="How this works">?</button>
     <button id="reset-tool-btn" title="Reset: a guided body/mind regulation exercise">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36"/><path d="M3 4v5h5"/></svg>
     </button>
-    <button id="layout-toggle" title="Switch layout" aria-label="Switch between classic and split layout" aria-pressed="false">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="14" y1="4" x2="14" y2="20"/></svg>
-    </button>
+    <div id="nav-kebab-wrap">
+      <button id="nav-kebab-btn" title="More" aria-label="More options" aria-haspopup="true" aria-expanded="false">⋯</button>
+      <div id="nav-kebab-menu" role="menu">
+        <button id="install-btn" title="Install Thimble as an app">Install app</button>
+        <a id="feedback-link" href="survey/post" title="Done testing? Leave feedback">Give feedback</a>
+      </div>
+    </div>
     <button class="privacy-chip" id="privacy-chip" type="button" aria-describedby="privacy-tooltip" aria-label="Anonymity enforced">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
       <span class="privacy-chip-label">Anonymity enforced</span>
@@ -1209,6 +1258,10 @@
   <div class="panel-scrim" id="panel-scrim"></div>
 
   <div class="avatar-stage" id="avatar-stage">
+    <button class="stage-newconvo-btn" id="stage-newconvo-btn" title="New conversation">
+      <span class="plus">+</span>
+      <span class="label">New conversation</span>
+    </button>
     <div class="stage-state"><span class="dot"></span> <span id="stage-state-label">Thimble</span></div>
     <div class="stage-avatar" id="stage-avatar">
       <div class="blob">
@@ -1220,6 +1273,10 @@
       <div class="mouth"></div>
     </div>
     <div class="stage-shadow"></div>
+    <button class="stage-reset-btn" id="stage-reset-btn" title="Reset: a guided body/mind regulation exercise">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36"/><path d="M3 4v5h5"/></svg>
+      Try Thimble reset
+    </button>
     <div class="hold-dock">
       <div class="hold-wrap">
         <svg class="hold-ring" width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
@@ -2589,6 +2646,7 @@ function closeHelp() {
 
 document.getElementById("new-convo-btn").onclick = newConversation;
 document.getElementById("convo-empty-new-btn").onclick = newConversation;
+document.getElementById("stage-newconvo-btn").onclick = newConversation;
 document.getElementById("close-case-btn").onclick = closeCase;
 document.getElementById("send-btn").onclick = sendMessage;
 document.getElementById("add-step-btn").onclick = addStep;
@@ -2803,6 +2861,7 @@ function closeResetTool() {
 }
 
 document.getElementById("reset-tool-btn").onclick = openResetTool;
+document.getElementById("stage-reset-btn").onclick = openResetTool;
 document.getElementById("reset-close-btn").addEventListener("click", closeResetTool);
 document.getElementById("reset-overlay").addEventListener("click", (e) => {
   if (e.target.id === "reset-overlay") closeResetTool();
@@ -3073,6 +3132,24 @@ document.addEventListener("click", () => {
   document.getElementById("privacy-tooltip").classList.remove("show");
 });
 
+// Overflow menu: install app + give feedback are both rare/one-time, so
+// they share one kebab instead of each sitting permanently in the bar.
+const navKebabBtn = document.getElementById("nav-kebab-btn");
+const navKebabMenu = document.getElementById("nav-kebab-menu");
+function closeNavKebab() {
+  navKebabMenu.classList.remove("open");
+  navKebabBtn.classList.remove("open");
+  navKebabBtn.setAttribute("aria-expanded", "false");
+}
+navKebabBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const nowOpen = !navKebabMenu.classList.contains("open");
+  navKebabMenu.classList.toggle("open", nowOpen);
+  navKebabBtn.classList.toggle("open", nowOpen);
+  navKebabBtn.setAttribute("aria-expanded", String(nowOpen));
+});
+document.addEventListener("click", closeNavKebab);
+
 const MOBILE_QUERY = "(max-width: 860px)";
 const sidebarEl = document.getElementById("sidebar");
 const planPanelEl = document.getElementById("plan-panel");
@@ -3138,34 +3215,6 @@ scrimEl.onclick = () => {
   sidebarEl.classList.add("closed");
   updateScrim();
 };
-// ---------------------------------------------------------------------
-// Split layout toggle: flips #app's data-layout between the classic
-// single-column chat and the Thimble-avatar-stage layout prototyped in
-// Bobbin/seam_thimble_split_mockup.html. Both stay fully wired -- this
-// only changes which one is visible. Persisted per-browser so the choice
-// survives a reload.
-// ---------------------------------------------------------------------
-const LAYOUT_PREF_KEY = "seam_layout_pref";
-const layoutToggleBtn = document.getElementById("layout-toggle");
-
-function applyLayout(mode) {
-  document.body.dataset.layout = mode;
-  layoutToggleBtn.classList.toggle("active", mode === "split");
-  layoutToggleBtn.setAttribute("aria-pressed", mode === "split" ? "true" : "false");
-  if (mode === "split") sidebarEl.classList.add("closed");
-  updateScrim();
-}
-
-let savedLayout = "classic";
-try { savedLayout = localStorage.getItem(LAYOUT_PREF_KEY) || "classic"; } catch (e) {}
-applyLayout(savedLayout);
-
-layoutToggleBtn.onclick = () => {
-  const next = document.body.dataset.layout === "split" ? "classic" : "split";
-  try { localStorage.setItem(LAYOUT_PREF_KEY, next); } catch (e) {}
-  applyLayout(next);
-};
-
 // ---------------------------------------------------------------------
 // Thimble engagement state: idle / listening / thinking / talking. Same
 // four-color-bloom weight table as apps/thimble/static/session.html's

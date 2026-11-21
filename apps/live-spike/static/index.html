@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Gemini Live spike</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  button { font-size: 16px; padding: 10px 20px; cursor: pointer; }
+  #status { margin: 16px 0; color: #555; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 13px; background: #f4f4f4; padding: 12px; border-radius: 8px; height: 300px; overflow-y: auto; }
+</style>
+</head>
+<body>
+  <h1>Gemini Live spike</h1>
+  <p>Throwaway comparison harness, not Thimble. Talk, it listens continuously
+  (no push-to-talk, no client VAD -- that's the point), and speaks back.</p>
+  <button id="startBtn">Start talking</button>
+  <button id="stopBtn" disabled>Stop</button>
+  <div id="status">idle</div>
+  <div id="log"></div>
+
+<script>
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const statusEl = document.getElementById('status');
+const logEl = document.getElementById('log');
+
+function log(line) {
+  logEl.textContent += line + "\n";
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+let ws, audioCtx, micStream, micSource, micProcessor;
+let playCtx, nextPlayTime = 0;
+
+// Gemini Live's realtime input expects 16-bit PCM mono at 16kHz. The mic
+// always gives us whatever the device's native rate is (commonly 48kHz), so
+// every captured block gets linearly resampled down before it's sent.
+function downsampleTo16k(float32Input, inputRate) {
+  const ratio = inputRate / 16000;
+  const outLength = Math.floor(float32Input.length / ratio);
+  const out = new Int16Array(outLength);
+  for (let i = 0; i < outLength; i++) {
+    const srcIndex = i * ratio;
+    const i0 = Math.floor(srcIndex);
+    const i1 = Math.min(i0 + 1, float32Input.length - 1);
+    const frac = srcIndex - i0;
+    const sample = float32Input[i0] * (1 - frac) + float32Input[i1] * frac;
+    out[i] = Math.max(-32768, Math.min(32767, Math.round(sample * 32768)));
+  }
+  return out;
+}
+
+// Gemini's audio output arrives as raw 16-bit PCM too (24kHz mono) --
+// queued back-to-back onto one AudioContext timeline so chunks play
+// gaplessly instead of each one restarting from "now".
+function playPcm16(bytes, sampleRate) {
+  if (!playCtx) playCtx = new AudioContext({sampleRate});
+  const int16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / 2);
+  const float32 = new Float32Array(int16.length);
+  for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+  const buffer = playCtx.createBuffer(1, float32.length, sampleRate);
+  buffer.copyToChannel(float32, 0);
+  const source = playCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(playCtx.destination);
+  const startAt = Math.max(playCtx.currentTime, nextPlayTime);
+  source.start(startAt);
+  nextPlayTime = startAt + buffer.duration;
+}
+
+async function start() {
+  startBtn.disabled = true;
+  statusEl.textContent = 'connecting...';
+
+  ws = new WebSocket(`ws://${location.host}/ws/live`);
+  ws.binaryType = 'arraybuffer';
+
+  ws.onopen = async () => {
+    statusEl.textContent = 'listening (talk anytime)';
+    stopBtn.disabled = false;
+
+    micStream = await navigator.mediaDevices.getUserMedia({audio: true});
+    audioCtx = new AudioContext();
+    micSource = audioCtx.createMediaStreamSource(micStream);
+    // ScriptProcessorNode is deprecated but simplest for a throwaway spike;
+    // an AudioWorklet would be the real version if this graduates past "spike".
+    micProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+    micProcessor.onaudioprocess = (e) => {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      const input = e.inputBuffer.getChannelData(0);
+      const pcm16 = downsampleTo16k(input, audioCtx.sampleRate);
+      ws.send(pcm16.buffer);
+    };
+    micSource.connect(micProcessor);
+    micProcessor.connect(audioCtx.destination); // required by some browsers to keep the node pumping; output is silent (we don't play mic locally)
+  };
+
+  ws.onmessage = (event) => {
+    if (typeof event.data === 'string') {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'error') { log(`[error] ${msg.message}`); statusEl.textContent = 'error'; }
+      if (msg.type === 'transcript_in') log(`you: ${msg.text}`);
+      if (msg.type === 'transcript_out') log(`gemini: ${msg.text}`);
+      if (msg.type === 'interrupted') log('[interrupted]');
+      return;
+    }
+    playPcm16(new Uint8Array(event.data), 24000);
+  };
+
+  ws.onclose = () => { statusEl.textContent = 'disconnected'; stop(); };
+}
+
+function stop() {
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+  if (micProcessor) micProcessor.disconnect();
+  if (micSource) micSource.disconnect();
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (audioCtx) audioCtx.close();
+  if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+  statusEl.textContent = 'idle';
+}
+
+startBtn.onclick = start;
+stopBtn.onclick = stop;
+</script>
+</body>
+</html>

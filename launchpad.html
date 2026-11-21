@@ -202,12 +202,16 @@
     <!-- Thimble demos -->
     <div class="card">
       <details open>
-        <summary class="cat"><span><span class="dot" style="background:var(--pink);"></span><span class="arrow">▸</span>Thimble (demos)</span><span class="count" style="color:var(--pink-ink);">4</span></summary>
-        <div class="sub-desc" style="margin:0 0 7px;">The real pages the running app actually serves. (The older avatar-design exploration pages that used to be listed here -- states/gradient/3D/onboarding demos -- were retired; they were superseded by session.html's current design and kept causing confusion about which one was current.)</div>
-        <a class="row" href="apps/thimble/static/gate.html" target="_blank">Gate <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/session.html" target="_blank">Session <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/survey.html" target="_blank">Survey <span class="tag">local file</span></a>
-        <a class="row" href="apps/thimble/static/conversation_history.html" target="_blank">Conversation history <span class="tag">local file</span></a>
+        <summary class="cat"><span><span class="dot" style="background:var(--pink);"></span><span class="arrow">▸</span>Thimble (demos)</span><span class="count" style="color:var(--pink-ink);">8</span></summary>
+        <div class="sub-desc" style="margin:0 0 7px;">The real pages the running app actually serves. (The older avatar-design exploration pages that used to be listed here -- states/gradient/3D/onboarding demos -- were retired; they were superseded by session.html's current design and kept causing confusion about which one was current.) Use the <code>:8420</code> links below, not the raw files -- session.html's API calls resolve relative to its own URL, so opening it as a static file (including via this repo's root <code>:8000</code> server) 404s every call and leaves it stuck on "Thinking...".</div>
+        <a class="row" href="http://localhost:8420/gate" target="_blank" rel="noopener">Gate <span class="tag">:8420</span></a>
+        <a class="row" href="http://localhost:8420/session" target="_blank" rel="noopener">Session <span class="tag">:8420</span></a>
+        <a class="row" href="http://localhost:8420/survey" target="_blank" rel="noopener">Survey <span class="tag">:8420</span></a>
+        <a class="row" href="http://localhost:8420/conversation-history" target="_blank" rel="noopener">Conversation history <span class="tag">:8420</span></a>
+        <a class="row" href="apps/thimble/static/gate.html" target="_blank">Raw file — gate <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/session.html" target="_blank">Raw file — session <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/survey.html" target="_blank">Raw file — survey <span class="tag">local file</span></a>
+        <a class="row" href="apps/thimble/static/conversation_history.html" target="_blank">Raw file — conversation history <span class="tag">local file</span></a>
       </details>
     </div>
 

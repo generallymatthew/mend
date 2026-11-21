@@ -32,6 +32,12 @@
       "port": 8426
     },
     {
+      "name": "live-spike",
+      "runtimeExecutable": "apps/live-spike/.venv/bin/uvicorn",
+      "runtimeArgs": ["server:app", "--port", "8500", "--app-dir", "apps/live-spike"],
+      "port": 8500
+    },
+    {
       "name": "conflict-test",
       "runtimeExecutable": "pitch/conflict-test/.venv/bin/uvicorn",
       "runtimeArgs": ["server:app", "--port", "8480", "--app-dir", "pitch/conflict-test"],

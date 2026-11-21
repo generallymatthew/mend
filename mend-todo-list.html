@@ -262,6 +262,12 @@
     return {done: done, total: tasks.length};
   }
 
+  function sortDoneLast(items){
+    var notDone = items.filter(function(t){ return !isDone(t.id); });
+    var done = items.filter(function(t){ return isDone(t.id); });
+    return notDone.concat(done);
+  }
+
   function renderGrouped(){
     var p = overallProgress();
     var pct = p.total ? Math.round(100 * p.done / p.total) : 0;
@@ -275,7 +281,7 @@
       var doneCount = items.filter(function(t){ return isDone(t.id); }).length;
       html += '<div class="group" data-group-tag="' + tag + '">' +
         '<div class="group-head"><h2>' + TAG_LABELS[tag] + '</h2><span class="group-count">' + doneCount + ' / ' + items.length + '</span></div>' +
-        '<ol class="items">' + items.map(itemHtml).join('') + '</ol></div>';
+        '<ol class="items">' + sortDoneLast(items).map(itemHtml).join('') + '</ol></div>';
     });
     document.getElementById('view-grouped').innerHTML = html;
   }
@@ -291,7 +297,7 @@
       html += '<div class="col" data-group-tag="' + tag + '">' +
         '<div class="col-head"><span class="name">' + TAG_LABELS[tag] + '</span><span class="count">' + doneCount + ' / ' + items.length + '</span></div>' +
         '<div class="col-bar"><i style="width:' + pct + '%"></i></div>' +
-        '<ol class="items">' + items.map(itemHtml).join('') + '</ol></div>';
+        '<ol class="items">' + sortDoneLast(items).map(itemHtml).join('') + '</ol></div>';
     });
     html += '</div>';
     document.getElementById('view-board').innerHTML = html;
@@ -318,12 +324,12 @@
       var urgent = isUrgent(b.date) ? ' urgent' : '';
       html += '<div class="rail-group">' +
         '<div class="rail-date' + urgent + '">' + b.verb + ' ' + b.date + '</div>' +
-        '<ol class="items">' + b.items.map(itemHtml).join('') + '</ol></div>';
+        '<ol class="items">' + sortDoneLast(b.items).map(itemHtml).join('') + '</ol></div>';
     });
     if (undated.length) {
       html += '<div class="rail-group">' +
         '<div class="rail-date">No date</div>' +
-        '<ol class="items">' + undated.map(itemHtml).join('') + '</ol></div>';
+        '<ol class="items">' + sortDoneLast(undated).map(itemHtml).join('') + '</ol></div>';
     }
     html += '</div>';
     document.getElementById('view-timeline').innerHTML = html;
@@ -338,31 +344,7 @@
 
   function onCheckboxChange(id, checked){
     setDone(id, checked);
-    document.querySelectorAll('[data-id="' + id + '"]').forEach(function(cb){
-      cb.checked = checked;
-    });
-    document.querySelectorAll('[data-item-id="' + id + '"]').forEach(function(li){
-      li.classList.toggle('done', checked);
-    });
-    var p = overallProgress();
-    var pct = Math.round(100 * p.done / p.total);
-    var wrap = document.querySelector('[data-progress-overall]');
-    if (wrap) {
-      wrap.querySelector('.n').textContent = p.done + ' / ' + p.total;
-      wrap.querySelector('.bar i').style.width = pct + '%';
-    }
-    GROUP_ORDER.forEach(function(tag){
-      var items = TASKS.filter(function(t){ return t.tag === tag; });
-      if (!items.length) return;
-      var doneCount = items.filter(function(t){ return isDone(t.id); }).length;
-      var tagPct = Math.round(100 * doneCount / items.length);
-      document.querySelectorAll('[data-group-tag="' + tag + '"]').forEach(function(group){
-        var countEl = group.querySelector('.group-count, .count');
-        if (countEl) countEl.textContent = doneCount + ' / ' + items.length;
-        var barI = group.querySelector('.col-bar i');
-        if (barI) barI.style.width = tagPct + '%';
-      });
-    });
+    renderAll();
   }
 
   document.addEventListener('change', function(e){
