@@ -2,12 +2,12 @@
 
 **Renamed 2026-11-21** (codename `Suture` stays as the directory/internal name; dated entries below predate the rename and keep using the old name, as the historical record of what was actually built at the time).
 
-Suture is the two-person facilitated conversation itself, inside Thimble —
-the live joint session specifically, not the intake step before it. Maps to
-`suture` (the current typed-chat prototype) and
-`joint-session-audio/` (the real-time audio prototype these items merge
-into). Thimble's solo intake half has its own roadmap at
-`../thimble/thimble-product-roadmap.md`.
+Suture is the two-person facilitated conversation itself, inside Thimble
+Resolve — the live joint session specifically, not the intake step before
+it. Maps to `thimble-resolve-live` (the current typed-chat prototype, codename
+`suture`) and `joint-session-audio/` (the real-time audio prototype these
+items merge into). Thimble Resolve's solo intake half has its own roadmap at
+`../thimble-resolve/thimble-resolve-roadmap.md`.
 
 For shared, cross-app positioning principles, see the root
 `../../ROADMAP.md`. Per the 2026-10-17 app-concept ranking in

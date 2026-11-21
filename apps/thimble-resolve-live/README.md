@@ -64,7 +64,7 @@ cd thimble-resolve-live
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt   # includes torch + transformers for the classifier below -- a real, sizable one-time download
-cp ../thimble/.env .env   # reuse the same key, or create a fresh .env with your own
+cp ../thimble-resolve/.env .env   # reuse the same key, or create a fresh .env with your own
 ```
 
 ## Run
