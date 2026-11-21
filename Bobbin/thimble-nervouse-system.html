@@ -152,6 +152,13 @@
      question bubble sits -- hide that facet's content while the picker's
      up so the two don't visually stack. */
   #stage.picker-open .facet { visibility: hidden; }
+  /* .drum itself keeps z-index:2 even while its .facet children above go
+     invisible, so without this it still sits in front of the Body/Mind
+     buttons underneath and eats every tap (confirmed live on the ported
+     copy in apps/seam/static/index.html via elementFromPoint: a real
+     click on "Body" hit the drum, not the button) -- taps call its own
+     drag handlers instead, visibly doing nothing. */
+  #stage.picker-open .drum { pointer-events: none; }
   /* The footer's exercise name/pips are meaningless before a choice is
      made -- collapsing it hands that space to the stage (flex:1), which
      is what actually gives Thimble more room to sit lower. */
