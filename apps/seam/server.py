@@ -48,6 +48,7 @@ from fastapi import FastAPI, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials as GoogleCredentials
 from pydantic import BaseModel
 
@@ -260,14 +261,28 @@ def backup_db_once() -> Path | None:
     return dest
 
 
+async def run_backup_cycle() -> None:
+    """Local backup, then (independently -- one failing shouldn't block the
+    other) a copy of it up to Drive, since Render's own disk is wiped on
+    redeploy and a local-only backup wouldn't survive that."""
+    dest = None
+    try:
+        dest = await run_in_threadpool(backup_db_once)
+    except Exception:
+        print("[backup] local cases.db backup failed:", flush=True)
+        traceback.print_exc()
+    if dest is not None:
+        try:
+            await run_in_threadpool(upload_backup_to_drive, dest)
+        except Exception:
+            print("[backup] Drive upload failed:", flush=True)
+            traceback.print_exc()
+
+
 async def backup_db_loop() -> None:
     while True:
         await asyncio.sleep(BACKUP_INTERVAL_SECONDS)
-        try:
-            await run_in_threadpool(backup_db_once)
-        except Exception:
-            print("[backup] cases.db backup failed:", flush=True)
-            traceback.print_exc()
+        await run_backup_cycle()
 
 
 def db() -> sqlite3.Connection:
@@ -574,7 +589,7 @@ async def warm_whisper_model():
     # the wait. Loading it here instead pays that cost once at boot, before
     # Render routes any traffic to this container.
     await run_in_threadpool(get_whisper)
-    await run_in_threadpool(backup_db_once)
+    await run_backup_cycle()
     asyncio.create_task(backup_db_loop())
 
 
@@ -1463,6 +1478,16 @@ async def post_written_message(session_id: str, body: Message):
 SURVEY_FILE = ROOT / "survey_responses.jsonl"
 GOOGLE_SHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
 GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+# Separate from the Sheet above: cases.db backups (see backup_db_once() up
+# in the Storage section) are a real SQLite file, not tabular rows, so they
+# go to a Drive folder instead of a Sheet. Same service account, narrower
+# "drive.file" scope (only files/folders this app itself created or was
+# handed), since nothing else here needs broader Drive access. One-time
+# setup: create a Drive folder, share it with the service account's
+# client_email as Editor (same as the Sheet above), then set
+# GOOGLE_DRIVE_BACKUP_FOLDER_ID to that folder's id (the segment after
+# /folders/ in its URL) in Render's env and in this app's own .env.
+GOOGLE_DRIVE_BACKUP_FOLDER_ID = os.environ.get("GOOGLE_DRIVE_BACKUP_FOLDER_ID", "")
 SURVEY_WORKSHEET_TITLE = "Seam"
 SURVEY_SHEET_HEADER = [
     "Timestamp", "Conflict frequency", "First move", "Confidence (1-5)",
@@ -1509,6 +1534,50 @@ def get_survey_sheet():
         _sheet_init_failed = True
         return None
     return _sheet
+
+
+def _drive_session() -> AuthorizedSession | None:
+    if not GOOGLE_DRIVE_BACKUP_FOLDER_ID or not GOOGLE_SERVICE_ACCOUNT_JSON:
+        return None
+    info = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+    creds = GoogleCredentials.from_service_account_info(
+        info, scopes=["https://www.googleapis.com/auth/drive.file"]
+    )
+    return AuthorizedSession(creds)
+
+
+def upload_backup_to_drive(path: Path) -> None:
+    """Uploads one cases.db backup file to GOOGLE_DRIVE_BACKUP_FOLDER_ID, then
+    prunes that folder to BACKUP_KEEP -- the Drive-side mirror of what
+    backup_db_once() already does to apps/seam/backups/ on local disk, so a
+    Render redeploy (which wipes local disk, see STATUS.md) doesn't also
+    wipe the only copy of recent backups."""
+    session = _drive_session()
+    if session is None:
+        return
+    metadata = {"name": path.name, "parents": [GOOGLE_DRIVE_BACKUP_FOLDER_ID]}
+    resp = session.post(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        files={
+            "metadata": (None, json.dumps(metadata), "application/json"),
+            "file": (path.name, path.read_bytes(), "application/x-sqlite3"),
+        },
+    )
+    resp.raise_for_status()
+
+    listing = session.get(
+        "https://www.googleapis.com/drive/v3/files",
+        params={
+            "q": f"'{GOOGLE_DRIVE_BACKUP_FOLDER_ID}' in parents and trashed = false",
+            "fields": "files(id, name, createdTime)",
+            "orderBy": "createdTime",
+            "pageSize": 1000,
+        },
+    )
+    listing.raise_for_status()
+    files = listing.json().get("files", [])
+    for old in files[:-BACKUP_KEEP]:
+        session.delete(f"https://www.googleapis.com/drive/v3/files/{old['id']}").raise_for_status()
 
 
 SURVEY_RADIO_FIELDS = {
