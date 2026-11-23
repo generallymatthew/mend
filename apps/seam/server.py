@@ -29,6 +29,7 @@ Run:
     export ANTHROPIC_API_KEY=...   # your own key, set in your shell/.env, never pasted into chat
     uvicorn server:app --reload --port 8426
 """
+import asyncio
 import json
 import os
 import re
@@ -230,6 +231,44 @@ def roster_for_case(case_id: str) -> dict:
 
 
 # --- Storage ---------------------------------------------------------------
+
+BACKUP_DIR = ROOT / "backups"
+BACKUP_INTERVAL_SECONDS = 6 * 60 * 60
+BACKUP_KEEP = 28  # ~1 week at the 6h interval
+
+
+def backup_db_once() -> Path | None:
+    """Copy cases.db to backups/ via sqlite3's own backup API (safe to run
+    against a live db, unlike a plain file copy) and prune to BACKUP_KEEP.
+    No-op in TEST_MODE, where cases.db is an in-memory db with nothing on
+    disk to copy."""
+    if TEST_MODE or not DB_FILE.exists():
+        return None
+    BACKUP_DIR.mkdir(exist_ok=True)
+    dest = BACKUP_DIR / f"cases_{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}.db"
+    src_conn = sqlite3.connect(DB_FILE)
+    try:
+        dest_conn = sqlite3.connect(dest)
+        try:
+            src_conn.backup(dest_conn)
+        finally:
+            dest_conn.close()
+    finally:
+        src_conn.close()
+    for old in sorted(BACKUP_DIR.glob("cases_*.db"))[:-BACKUP_KEEP]:
+        old.unlink()
+    return dest
+
+
+async def backup_db_loop() -> None:
+    while True:
+        await asyncio.sleep(BACKUP_INTERVAL_SECONDS)
+        try:
+            await run_in_threadpool(backup_db_once)
+        except Exception:
+            print("[backup] cases.db backup failed:", flush=True)
+            traceback.print_exc()
+
 
 def db() -> sqlite3.Connection:
     if TEST_MODE:
@@ -535,6 +574,8 @@ async def warm_whisper_model():
     # the wait. Loading it here instead pays that cost once at boot, before
     # Render routes any traffic to this container.
     await run_in_threadpool(get_whisper)
+    await run_in_threadpool(backup_db_once)
+    asyncio.create_task(backup_db_loop())
 
 
 @app.exception_handler(Exception)

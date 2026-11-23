@@ -15,5 +15,6 @@ apps/thimble-resolve/support_reply_flags.jsonl
 apps/thimble-resolve/tests/benchmark_results_*.json
 apps/seam/cases.db
 apps/seam/cases.db.bak.*
+apps/seam/backups/
 apps/seam/survey_responses.jsonl
 .obsidian/

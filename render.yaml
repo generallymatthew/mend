@@ -2,13 +2,41 @@
 # Caddy, one container, mirroring run_all.sh's path-prefix scheme for local
 # dev (see Caddyfile's own "production note"). Deploy: connect this repo in
 # the Render dashboard -> New -> Blueprint, or `render blueprint launch`.
+#
+# Two services share this one Dockerfile/start.sh: `mend-mvp` tracks `main`
+# and is the live tester-facing deploy; `mend-mvp-staging` tracks the
+# `staging` branch and exists so a change can be pushed and clicked through
+# there first. Push to `staging` to test a deploy, merge to `main` (then
+# push) once it looks right -- never push straight to `main` for anything
+# risky. `mend-mvp-staging` runs on Render's free plan since nothing paid
+# depends on it being always-on.
 services:
   - type: web
     name: mend-mvp
     runtime: docker
+    branch: main
     dockerfilePath: ./deploy/Dockerfile
     dockerContext: .
     plan: starter
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ORG_ACCESS_CODE
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: SEAM_TEST_MODE
+        value: "true"
+
+  - type: web
+    name: mend-mvp-staging
+    runtime: docker
+    branch: staging
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    plan: free
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
