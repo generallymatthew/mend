@@ -285,10 +285,8 @@
     return {done: done, total: tasks.length};
   }
 
-  function sortDoneLast(items){
-    var notDone = items.filter(function(t){ return !isDone(t.id); });
-    var done = items.filter(function(t){ return isDone(t.id); });
-    return notDone.concat(done);
+  function hideDone(items){
+    return items.filter(function(t){ return !isDone(t.id); });
   }
 
   function renderGrouped(){
@@ -304,7 +302,7 @@
       var doneCount = items.filter(function(t){ return isDone(t.id); }).length;
       html += '<div class="group" data-group-tag="' + tag + '">' +
         '<div class="group-head"><h2>' + TAG_LABELS[tag] + '</h2><span class="group-count">' + doneCount + ' / ' + items.length + '</span></div>' +
-        '<ol class="items">' + sortDoneLast(items).map(itemHtml).join('') + '</ol></div>';
+        '<ol class="items">' + hideDone(items).map(itemHtml).join('') + '</ol></div>';
     });
     document.getElementById('view-grouped').innerHTML = html;
   }
@@ -320,7 +318,7 @@
       html += '<div class="col" data-group-tag="' + tag + '">' +
         '<div class="col-head"><span class="name">' + TAG_LABELS[tag] + '</span><span class="count">' + doneCount + ' / ' + items.length + '</span></div>' +
         '<div class="col-bar"><i style="width:' + pct + '%"></i></div>' +
-        '<ol class="items">' + sortDoneLast(items).map(itemHtml).join('') + '</ol></div>';
+        '<ol class="items">' + hideDone(items).map(itemHtml).join('') + '</ol></div>';
     });
     html += '</div>';
     document.getElementById('view-board').innerHTML = html;
@@ -344,15 +342,18 @@
 
     var html = '<div class="rail">';
     buckets.forEach(function(b){
+      var visible = hideDone(b.items);
+      if (!visible.length) return;
       var urgent = isUrgent(b.date) ? ' urgent' : '';
       html += '<div class="rail-group">' +
         '<div class="rail-date' + urgent + '">' + b.verb + ' ' + b.date + '</div>' +
-        '<ol class="items">' + sortDoneLast(b.items).map(itemHtml).join('') + '</ol></div>';
+        '<ol class="items">' + visible.map(itemHtml).join('') + '</ol></div>';
     });
-    if (undated.length) {
+    var visibleUndated = hideDone(undated);
+    if (visibleUndated.length) {
       html += '<div class="rail-group">' +
         '<div class="rail-date">No date</div>' +
-        '<ol class="items">' + sortDoneLast(undated).map(itemHtml).join('') + '</ol></div>';
+        '<ol class="items">' + visibleUndated.map(itemHtml).join('') + '</ol></div>';
     }
     html += '</div>';
     document.getElementById('view-timeline').innerHTML = html;
