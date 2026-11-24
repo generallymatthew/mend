@@ -1120,57 +1120,44 @@
   }
   .stage-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-pink); animation: stage-dot-pulse 2.4s ease-in-out infinite; }
   @keyframes stage-dot-pulse { 0%,100%{ transform: scale(1); opacity:.9; } 50%{ transform: scale(1.3); opacity:.5; } }
-  .stage-avatar { position: relative; width: 260px; height: 260px; }
-  /* "Four-Color Bloom" fill, same system as apps/thimble-resolve/static/session.html
-     (THIMBLE_BLOOM_WEIGHTS/COLOR/POS there): idle-blue, listening-teal,
-     thinking-honey and talking-pink each sit at a fixed corner and are
-     always present -- a state change only shifts each one's *weight*
-     (opacity here, since Seam has no per-frame render loop to lerp a
-     canvas/SVG fill), not which colors exist. setStageState below drives
-     the four .bloom opacities; this is the idle resting weight (.46/.20/
-     .14/.20), same as the old frozen single-background-image snapshot. */
-  @keyframes stage-avatar-idle-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5%); } }
+  /* Direct port of apps/thimble-resolve/static/session.html's real
+     thimble-avatar/core/ring/body/mouth engine (THIMBLE_SHAPES,
+     THIMBLE_BLOOM_*, domeWobbleRadius, applyThimbleState,
+     updateThimbleMotion) -- see applyStageState/stageAvatarTick in the
+     JS below, which replace the earlier flat-gray
+     CSS-only approximation this file used before (reported live as
+     washed-out, static, and not matching the real app at all). Dropped
+     from the port: .thimble-blend (dead in session.html itself, never
+     painted by any JS there), the backchannel "mhm" nod (needs a
+     mid-pause detector Seam's push-to-talk flow has no equivalent of),
+     and the second 48px mini instance (Seam only has the one stage
+     avatar). Everything else -- shadow, lean, ripple, listen-glow,
+     ring nod/breathe/wiggle, brain dots, mouth envelope -- is the same
+     engine, same constants, same per-frame math. */
+  .stage-avatar { position: relative; width: 260px; height: 260px; isolation: isolate; }
+  .stage-avatar.muted { opacity: .5; }
+  .stage-avatar .core { position: absolute; inset: 0; transition: transform .7s cubic-bezier(.3,1.4,.5,1); }
+  .stage-avatar .ripple { position: absolute; inset: 0; border-radius: 50%; background: #F3829A; filter: blur(18px); z-index: -1; }
+  .stage-avatar .listen-glow { position: absolute; inset: 0; border-radius: 50%; background: #b0ded1; filter: blur(16px); opacity: 0; z-index: -1; pointer-events: none; }
+  @keyframes stage-listen-pulse { 0%{ transform: scale(1); opacity: 0; } 18%{ opacity: .5; } 100%{ transform: scale(1.55); opacity: 0; } }
+  .stage-avatar .listen-glow.pulse { animation: stage-listen-pulse 1.1s ease-out; }
+  @keyframes stage-squash-pulse { 0%{ transform: scale(1,1); } 28%{ transform: scale(1.05,.93); } 58%{ transform: scale(.97,1.035); } 100%{ transform: scale(1,1); } }
+  .stage-avatar.squash-pulse { animation: stage-squash-pulse .42s cubic-bezier(.32,.9,.38,1); }
+  @keyframes stage-anticipate { 0%{ transform: scale(1); } 100%{ transform: scale(.95); } }
+  .stage-avatar.anticipating { animation: stage-anticipate .16s ease-out forwards; }
+  .stage-avatar .ring { position: absolute; inset: 0; transform-origin: 50% 90%; transition: transform .18s ease-out; }
   .stage-avatar .blob {
-    position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%;
-    /* border-radius (wobble) and background-color (bloom blend) are now
-       driven every frame by stageWobbleTick/paintStageBloomColor below --
-       matches Thimble-game/client/mockups/thimble-states-demo.html's real
-       per-frame engine instead of this flat-gray/fixed-opacity
-       approximation, which read as washed-out and static once compared
-       against that canonical reference. Idle alone keeps a CSS-only
-       bounce (no wobble), same split the reference makes. */
-    transition: background-color .6s ease;
-    background-color: rgb(191,192,186);
-    box-shadow: inset -15px -17px 20px -10px rgba(0,0,0,.22), inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
-    overflow: hidden;
+    position: absolute; inset: 0; border-radius: 50%;
+    background-image: radial-gradient(circle at 30% 24%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 55%);
+    background-color: #FF8CA3;
+    overflow: hidden; transition: border-radius .6s ease;
   }
-  .stage-avatar:not(.listening):not(.thinking):not(.talking) .blob { animation: stage-avatar-idle-bounce 2.6s ease-in-out infinite; }
-  .stage-avatar .blob::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    background: radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%);
-  }
-  .stage-avatar .bloom {
-    position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    transition: opacity .6s ease;
-  }
-  .stage-avatar .bloom-idle      { background: radial-gradient(circle at 15% 15%, rgba(163,207,224,.95) 0%, transparent 66.6%); opacity: .46; }
-  .stage-avatar .bloom-listening { background: radial-gradient(circle at 85% 15%, rgba(176,222,209,.95) 0%, transparent 60%);   opacity: .20; }
-  .stage-avatar .bloom-thinking  { background: radial-gradient(circle at 80% 85%, rgba(233,185,73,.95) 0%, transparent 55%);    opacity: .14; }
-  .stage-avatar .bloom-talking   { background: radial-gradient(circle at 20% 85%, rgba(243,130,154,.95) 0%, transparent 60%);   opacity: .20; }
-  .stage-avatar .mouth { position: absolute; left: 50%; top: 60%; width: 36px; height: 22px; transform: translate(-50%,-50%); background: var(--stage-bg); border-radius: 50%; z-index: 1; }
-  /* Listening: mic is open and recording -- a brisk pulse on the whole
-     avatar reads as "I'm hearing you" without needing a live mic-level
-     feed (Seam's recording is push-to-talk-to-text, not a continuous
-     stream Thimble could meter). */
-  @keyframes stage-avatar-listen-pulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.035); } }
-  .stage-avatar.listening .blob { animation: stage-avatar-listen-pulse 1.1s ease-in-out infinite; }
-  /* Thinking: mouth rests instead of flapping, dimmed slightly -- paired
-     with the thinking-weighted honey bloom above. */
-  .stage-avatar.thinking .mouth { opacity: .55; }
-  /* Talking: same mouth-flap keyframe the per-message/onboard avatars use
-     (see .avatar.talking .mouth below) while a reply is being revealed. */
-  .stage-avatar.talking .mouth { animation: onboard-mouth-talk .32s ease-in-out infinite; }
+  .stage-avatar .brain-dot { position: absolute; left: 0; top: 0; border-radius: 50%; mix-blend-mode: multiply; opacity: .5; pointer-events: none; }
+  @keyframes stage-idle-bounce { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-5%); } }
+  @keyframes stage-idle-shadow { 0%,100%{ transform: scale(1); opacity: 1; } 50%{ transform: scale(.7); opacity: .55; } }
+  .stage-avatar .mouth { position: absolute; left: 50%; transform: translate(-50%,-50%); background: #F6F1E7; box-sizing: border-box; transition: top .35s ease, left .35s ease, width .35s ease, height .35s ease, border-radius .35s ease; z-index: 1; }
   .stage-shadow {
+    transition: transform .4s ease-in-out, opacity .4s ease-in-out;
     width: 150px; height: 20px; border-radius: 50%;
     background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,.22) 0%, rgba(23,55,46,.1) 55%, rgba(23,55,46,0) 100%);
     margin-top: -8px;
@@ -1284,13 +1271,18 @@
     </button>
     <div class="stage-state"><span class="dot"></span> <span id="stage-state-label">Thimble</span></div>
     <div class="stage-avatar" id="stage-avatar">
-      <div class="blob">
-        <div class="bloom bloom-idle" id="stage-bloom-idle"></div>
-        <div class="bloom bloom-listening" id="stage-bloom-listening"></div>
-        <div class="bloom bloom-thinking" id="stage-bloom-thinking"></div>
-        <div class="bloom bloom-talking" id="stage-bloom-talking"></div>
+      <div class="core" id="stage-core">
+        <div class="ripple" id="stage-ripple" hidden></div>
+        <div class="listen-glow" id="stage-listen-glow"></div>
+        <div class="ring" id="stage-ring">
+          <div class="blob" id="stage-blob">
+            <div class="brain-dot" id="stage-dot-a" style="background:#F3829A;" hidden></div>
+            <div class="brain-dot" id="stage-dot-b" style="background:#b0ded1;" hidden></div>
+            <div class="brain-dot" id="stage-dot-c" style="background:#A3CFE0;" hidden></div>
+            <div class="mouth" id="stage-mouth"></div>
+          </div>
+        </div>
       </div>
-      <div class="mouth"></div>
     </div>
     <div class="stage-shadow"></div>
     <button class="stage-reset-btn" id="stage-reset-btn" title="Reset: a guided body/mind regulation exercise">
@@ -3244,85 +3236,74 @@ scrimEl.onclick = () => {
   updateScrim();
 };
 // ---------------------------------------------------------------------
-// Canonical source of truth for the Thimble avatar's shape/motion:
-// Thimble-game/client/mockups/thimble-states-demo.html -- keep this in
-// sync with that reference, not the other way around. Was previously a
-// flat-gray base + fixed-opacity divs with no per-frame loop (no live
-// mic-level/TTS-amplitude feed to drive one off of, since Seam's
-// recording is push-to-talk, not continuous) -- reported live as
-// washed-out and static once compared against the reference, so this
-// now runs the same per-frame color-blend + border-radius wobble that
-// reference uses, just without a real amplitude input (thinking/idle
-// don't have one in the reference either).
-//
-// Thimble engagement state: idle / listening / thinking / talking. Same
-// four-color-bloom weight table as apps/thimble-resolve/static/session.html's
-// THIMBLE_BLOOM_WEIGHTS (idle-blue/listening-teal/thinking-honey/talking-
-// pink, each state gets 46% of its own color, its two neighbors 20% each,
-// the opposite 14%). The four bloom divs still carry the corner
-// highlight gradients; paintStageBloomColor additionally blends the same
-// weights into the blob's own base color, and stageWobbleTick drives its
-// border-radius every frame, instead of the old flat-gray base + static
-// CSS keyframe. Drives the stage avatar's bloom + mouth (only visible in
-// split layout) and the status line underneath it.
-// ---------------------------------------------------------------------
-const STAGE_BLOOM_WEIGHTS = {
-  idle:      { idle: .46, listening: .20, thinking: .14, talking: .20 },
-  listening: { idle: .20, listening: .46, thinking: .20, talking: .14 },
-  thinking:  { idle: .14, listening: .20, thinking: .46, talking: .20 },
-  talking:   { idle: .20, listening: .14, thinking: .20, talking: .46 },
+// Direct port of apps/thimble-resolve/static/session.html's real avatar
+// engine (THIMBLE_SHAPES, THIMBLE_BLOOM_*, domeWobbleRadius,
+// applyThimbleState/renderThimbleMouth -> setStageState/renderStageMouth,
+// updateThimbleMotion -> stageAvatarTick) -- same constants, same
+// per-frame math, not a hand-approximated version of it. The one real gap
+// from the source: Seam has no TTS audio to read a real speech amplitude
+// off of, so stageTtsLevel is a synthesized envelope (same technique
+// Thimble-game/client/mockups/thimble-states-demo.html uses for its own
+// demo, since it has no real audio either) instead of session.html's
+// rmsLevel(analyser, avatarData). See STATUS.md for the full writeup of
+// what got ported vs. deliberately dropped (dead .thimble-blend element,
+// the backchannel "mhm" nod, the 48px mini instance).
+const STAGE_DOME_RADIUS = "50% 50% 50% 50% / 58% 58% 42% 42%";
+const STAGE_SHAPES = {
+  listening: { radius: "50% 50% 48% 52% / 58% 58% 42% 42%", anim: "none", lean: "rotate(-10deg) translate(2%,1%)", mouthTop: 60, mouthW: .11, mouthH: .028 },
+  idle:      { radius: "50% 50% 48% 52% / 58% 58% 42% 42%", anim: "stage-idle-bounce 2.6s ease-in-out infinite", lean: "rotate(-10deg) translate(2%,1%)", mouthTop: 60, mouthW: .11, mouthH: .028 },
+  thinking:  { radius: STAGE_DOME_RADIUS, anim: "none", lean: "none", mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58 },
+  talking:   { radius: STAGE_DOME_RADIUS, anim: "none", lean: "none", mouthTop: 63, mouthW: .19, mouthH: .12 },
 };
+const STAGE_BLOOM_ORDER = ["idle", "listening", "thinking", "talking"];
 const STAGE_BLOOM_RGB = {
   idle:      { r: 163, g: 207, b: 224 },
   listening: { r: 176, g: 222, b: 209 },
   thinking:  { r: 233, g: 185, b: 73 },
   talking:   { r: 243, g: 130, b: 154 },
 };
-const STAGE_BLOOM_ORDER = ["idle", "listening", "thinking", "talking"];
+const STAGE_BLOOM_POS = {
+  idle:      { hx: 15, hy: 15 },
+  listening: { hx: 85, hy: 15 },
+  thinking:  { hx: 80, hy: 85 },
+  talking:   { hx: 20, hy: 85 },
+};
+const STAGE_BLOOM_WEIGHTS = {
+  idle:      { idle: .46, listening: .20, thinking: .14, talking: .20 },
+  listening: { idle: .20, listening: .46, thinking: .20, talking: .14 },
+  thinking:  { idle: .14, listening: .20, thinking: .46, talking: .20 },
+  talking:   { idle: .20, listening: .14, thinking: .20, talking: .46 },
+};
+const STAGE_DOTS_TIGHT = [
+  { el: "dotA", r: 7, speed: 4.6, phase: 0 },
+  { el: "dotB", r: 5, speed: -3.6, phase: 2.1 },
+  { el: "dotC", r: 8, speed: 3.1, phase: 4.2 },
+];
 const STAGE_STATE_VERB = { listening: "listening", thinking: "thinking", talking: "responding" };
 const stageAvatarEl = document.getElementById("stage-avatar");
-const stageBlobEl = stageAvatarEl.querySelector(".blob");
-const stageBlooms = {
-  idle: document.getElementById("stage-bloom-idle"),
-  listening: document.getElementById("stage-bloom-listening"),
-  thinking: document.getElementById("stage-bloom-thinking"),
-  talking: document.getElementById("stage-bloom-talking"),
-};
+const stageCoreEl = document.getElementById("stage-core");
+const stageRingEl = document.getElementById("stage-ring");
+const stageBlobEl = document.getElementById("stage-blob");
+const stageMouthEl = document.getElementById("stage-mouth");
+const stageRippleEl = document.getElementById("stage-ripple");
+const stageListenGlowEl = document.getElementById("stage-listen-glow");
+const stageShadowEl = document.querySelector(".stage-shadow");
+const stageDots = { dotA: document.getElementById("stage-dot-a"), dotB: document.getElementById("stage-dot-b"), dotC: document.getElementById("stage-dot-c") };
+const stageInst = { size: 260, bloomCurrent: null, bloomTarget: null, mouthLevel: 0, lvl: 0, wobblePhase: 0, breathePhase: 0, lastT: null, hearingLoud: false };
 const stageStateLabel = document.getElementById("stage-state-label");
 let stageState = "idle";
 let stageThreadTitle = "";
+let stageRenderedState = null;
 
-function paintStageBloomColor(weights) {
-  let r = 0, g = 0, b = 0;
-  STAGE_BLOOM_ORDER.forEach((k) => {
-    const c = STAGE_BLOOM_RGB[k];
-    r += c.r * weights[k]; g += c.g * weights[k]; b += c.b * weights[k];
-  });
-  stageBlobEl.style.backgroundColor = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+function renderStageMouth(state) {
+  const shape = STAGE_SHAPES[state] || STAGE_SHAPES.listening;
+  const s = stageInst.size;
+  stageMouthEl.style.top = shape.mouthTop + "%";
+  stageMouthEl.style.left = (shape.mouthX || 50) + "%";
+  stageMouthEl.style.width = (shape.mouthW * s) + "px";
+  stageMouthEl.style.height = (shape.mouthH * s) + "px";
+  stageMouthEl.style.borderRadius = (state === "talking" || state === "thinking") ? "50%" : "999px";
 }
-paintStageBloomColor(STAGE_BLOOM_WEIGHTS.idle);
-
-// Continuous dome<->circle border-radius wobble, same formula and periods
-// as the canonical reference's domeWobbleRadius/tick (just without a real
-// mic/TTS amplitude input -- see comment above). Idle is excluded: it
-// keeps the fixed shape + CSS-only bounce set in the stylesheet, same
-// split the reference makes.
-const STAGE_DOME_RADIUS_CAP = 12, STAGE_DOME_RADIUS_RIM = 14;
-let stageWobblePhase = 0, stageWobbleLastT = null;
-function stageWobbleTick(now) {
-  const dt = Math.min(0.1, stageWobbleLastT == null ? 0 : (now - stageWobbleLastT) / 1000);
-  stageWobbleLastT = now;
-  if (stageState !== "idle") {
-    const wobblePeriod = stageState === "thinking" ? 3.4 : 1.6;
-    stageWobblePhase = (stageWobblePhase + dt / wobblePeriod) % 1;
-    const domeFactor = (1 + Math.cos(stageWobblePhase * 2 * Math.PI)) / 2;
-    const capY = 50 + STAGE_DOME_RADIUS_CAP * domeFactor;
-    const rimY = 50 - STAGE_DOME_RADIUS_RIM * domeFactor;
-    stageBlobEl.style.borderRadius = `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
-  }
-  requestAnimationFrame(stageWobbleTick);
-}
-requestAnimationFrame(stageWobbleTick);
 
 function renderStageLabel() {
   const verb = STAGE_STATE_VERB[stageState];
@@ -3331,20 +3312,128 @@ function renderStageLabel() {
 }
 
 function setStageState(state) {
-  if (state === stageState) return;
   stageState = state;
-  const weights = STAGE_BLOOM_WEIGHTS[state] || STAGE_BLOOM_WEIGHTS.idle;
-  Object.keys(stageBlooms).forEach((k) => { stageBlooms[k].style.opacity = weights[k]; });
-  paintStageBloomColor(weights);
-  // Idle has no wobble (see stageWobbleTick) -- drop back to the
-  // stylesheet's own fixed border-radius instead of freezing on whatever
-  // mid-wobble shape the last active state left as an inline style.
-  if (state === "idle") stageBlobEl.style.borderRadius = "";
-  stageAvatarEl.classList.toggle("listening", state === "listening");
-  stageAvatarEl.classList.toggle("thinking", state === "thinking");
-  stageAvatarEl.classList.toggle("talking", state === "talking");
   renderStageLabel();
 }
+
+// Everything below is applyThimbleState + updateThimbleMotion from
+// session.html, ported onto the one stage instance instead of iterating
+// thimbleBig/thimbleMini.
+function applyStageState(state) {
+  if (state === stageRenderedState) return;
+  const prevState = stageRenderedState;
+  stageRenderedState = state;
+  if (prevState === "listening" && state === "thinking") {
+    stageAvatarEl.classList.remove("anticipating");
+    void stageAvatarEl.offsetWidth;
+    stageAvatarEl.classList.add("anticipating");
+  }
+  const shape = STAGE_SHAPES[state] || STAGE_SHAPES.listening;
+  stageCoreEl.style.transform = shape.lean;
+  stageBlobEl.style.animation = shape.anim;
+  stageBlobEl.style.borderRadius = shape.radius;
+  stageShadowEl.style.animation = state === "idle" ? "stage-idle-shadow 2.6s ease-in-out infinite" : "none";
+  stageInst.bloomTarget = STAGE_BLOOM_WEIGHTS[state] || STAGE_BLOOM_WEIGHTS.listening;
+  if (!stageInst.bloomCurrent) stageInst.bloomCurrent = { ...stageInst.bloomTarget };
+  const talking = state === "talking";
+  stageRippleEl.hidden = !talking;
+  const thinkingNow = state === "thinking";
+  const dotSize = stageInst.size * 0.065;
+  Object.values(stageDots).forEach((d) => { d.hidden = !thinkingNow; d.style.width = d.style.height = dotSize + "px"; });
+  renderStageMouth(state);
+  stageAvatarEl.classList.remove("squash-pulse");
+  void stageAvatarEl.offsetWidth;
+  stageAvatarEl.classList.add("squash-pulse");
+}
+
+function stageAvatarTick(now) {
+  requestAnimationFrame(stageAvatarTick);
+  applyStageState(stageState);
+  const dt = Math.min(0.1, stageInst.lastT == null ? 0 : (now - stageInst.lastT) / 1000);
+  stageInst.lastT = now;
+
+  const colorRate = 1 - Math.pow(0.000001, dt);
+  if (stageInst.bloomCurrent) {
+    const cur = stageInst.bloomCurrent, tgt = stageInst.bloomTarget;
+    let r = 0, g = 0, b = 0;
+    STAGE_BLOOM_ORDER.forEach((k) => {
+      cur[k] += (tgt[k] - cur[k]) * colorRate;
+      const c = STAGE_BLOOM_RGB[k];
+      r += c.r * cur[k]; g += c.g * cur[k]; b += c.b * cur[k];
+    });
+    stageBlobEl.style.backgroundColor = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+    const blobs = STAGE_BLOOM_ORDER.map((k) => {
+      const w = cur[k], c = STAGE_BLOOM_RGB[k], pos = STAGE_BLOOM_POS[k];
+      const radius = (16 + w * 110).toFixed(1);
+      const alpha = Math.min(1, 0.3 + w * 1.1).toFixed(2);
+      return `radial-gradient(circle at ${pos.hx}% ${pos.hy}%, rgba(${c.r},${c.g},${c.b},${alpha}) 0%, transparent ${radius}%)`;
+    }).join(",");
+    const ap = STAGE_BLOOM_POS[stageState] || STAGE_BLOOM_POS.idle;
+    const sx = ap.hx < 50 ? -15 : 15, sy = ap.hy < 50 ? -17 : 17;
+    stageBlobEl.style.backgroundImage = `radial-gradient(circle at ${ap.hx}% ${ap.hy}%, rgba(255,255,255,.7) 0%, transparent 16%),` + blobs;
+    stageBlobEl.style.boxShadow = `inset ${sx}px ${sy}px 20px -10px rgba(0,0,0,.22), inset ${(-0.7 * sx).toFixed(1)}px ${(-0.7 * sy).toFixed(1)}px 18px -10px rgba(255,255,255,.35)`;
+  }
+
+  const speaking = stageState === "talking";
+  const thinkingState = stageState === "thinking";
+  const nodding = stageState === "listening";
+  const listening = stageState === "listening" || stageState === "idle";
+  // No real TTS amplitude or live mic level in Seam (text + push-to-talk,
+  // see the comment at the top of this block) -- a synthesized envelope
+  // stands in while talking, same shape thimble-states-demo.html's own
+  // demo input uses; listening/thinking have no real input in session.html
+  // either (listening's own mic level only matters during an actual
+  // recording, which Seam doesn't tie this avatar to).
+  const t = now / 1000;
+  const simLevel = speaking ? Math.max(0, Math.sin(t * 3)) * Math.max(0, Math.sin(t * 1.1 + 1)) : 0;
+  const ttsLevel = speaking ? simLevel : 0;
+  const active = listening || speaking || thinkingState;
+  if (!active) {
+    stageRingEl.style.transform = "none";
+    stageInst.lvl = 0;
+  } else {
+    const y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * t) / 2.6)), 1.5) : 0;
+    const wiggle = thinkingState ? (-10 + 2 * Math.sin(t * 1.2)) : 0;
+    if (thinkingState) {
+      const cx = stageInst.size * (59 / 118), cy = stageInst.size * (36 / 118);
+      STAGE_DOTS_TIGHT.forEach((d) => {
+        const ang = t * d.speed + d.phase;
+        const r = stageInst.size * (d.r / 118);
+        const half = (stageInst.size * 0.065) / 2;
+        const x = cx + Math.cos(ang) * r - half;
+        const y2 = cy + Math.sin(ang) * r * 0.8 - half;
+        stageDots[d.el].style.transform = `translate(${x.toFixed(1)}px, ${y2.toFixed(1)}px)`;
+      });
+    }
+    const breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
+    stageInst.breathePhase = (stageInst.breathePhase + dt / breathePeriod) % 1;
+    const breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * stageInst.breathePhase));
+    stageRingEl.style.transform = `translateY(${y.toFixed(2)}%) rotate(${wiggle.toFixed(2)}deg) scale(${breathe.toFixed(4)})`;
+    const input = speaking ? ttsLevel : thinkingState ? 0.15 : 0;
+    stageInst.lvl += (input - stageInst.lvl) * (speaking ? 0.45 : 0.3);
+    const wobblePeriod = thinkingState ? 3.4 : 1.6;
+    stageInst.wobblePhase = (stageInst.wobblePhase + dt / wobblePeriod) % 1;
+    const domeFactor = (1 + Math.cos(stageInst.wobblePhase * 2 * Math.PI)) / 2;
+    const capY = 50 + (12 + 3 * stageInst.lvl) * domeFactor;
+    const rimY = 50 - (14 + 3 * stageInst.lvl) * domeFactor;
+    stageBlobEl.style.borderRadius = `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+    if (speaking) {
+      stageRippleEl.style.borderRadius = stageBlobEl.style.borderRadius;
+      stageRippleEl.style.transform = `${stageRingEl.style.transform} scale(${(1.04 + 0.05 * domeFactor).toFixed(3)})`;
+      stageRippleEl.style.opacity = (0.22 + 0.16 * domeFactor).toFixed(3);
+    }
+  }
+  if (speaking) {
+    const rate = ttsLevel > stageInst.mouthLevel ? 0.7 : 0.25;
+    stageInst.mouthLevel += (ttsLevel - stageInst.mouthLevel) * rate;
+    const minH = stageInst.size * 0.03;
+    const maxH = STAGE_SHAPES[stageState].mouthW * stageInst.size * 0.7;
+    stageMouthEl.style.height = (minH + (maxH - minH) * stageInst.mouthLevel) + "px";
+  } else {
+    stageInst.mouthLevel = 0;
+  }
+}
+requestAnimationFrame(stageAvatarTick);
 
 // Mirrors the active conversation's title onto the status line (matches
 // the mockup's "Thimble · <what we're doing>" line) without touching the
