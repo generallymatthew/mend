@@ -100,6 +100,7 @@
   .typing-dot:nth-child(2){animation-delay:.15s;}
   .typing-dot:nth-child(3){animation-delay:.3s;}
   @keyframes typing-bounce{0%,60%,100%{transform:translateY(0); opacity:.4;} 30%{transform:translateY(-3px); opacity:1;}}
+  @keyframes thimbleIdleBounce{0%,100%{transform:translateY(0);} 50%{transform:translateY(-5%);}}
   @media (prefers-reduced-motion: reduce){ .typing-dot{animation:none; opacity:.7;} }
 
   @media (max-width:600px){
@@ -497,11 +498,18 @@
   // keep the same call shape the old design-handoff ThimbleAvatar used, so
   // the cycling loop below didn't need to change.
   var DOME_RADIUS_CAP = 12, DOME_RADIUS_RIM = 14;
+  // Matches Thimble-game/client/mockups/thimble-states-demo.html, the
+  // canonical reference for these states: idle is a FIXED soft-dome shape
+  // with just a slow translateY bounce (no border-radius wobble, no
+  // rotation "lean" -- that rotate(-10deg) lean this used to carry read as
+  // a lopsided/deformed blob once combined with the dome wobble, and isn't
+  // in the reference at all). Only listening/thinking/talking wobble.
+  var DOME_RADIUS = '50% 50% 50% 50% / 58% 58% 42% 42%';
   var THIMBLE_SHAPES = {
-    idle:      {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
-    listening: {lean:'rotate(-10deg) translate(2%,1%)', mouthTop:60, mouthW:.11, mouthH:.028},
-    thinking:  {lean:'none', mouthTop:62, mouthW:.12, mouthH:.07, mouthX:58},
-    talking:   {lean:'none', mouthTop:63, mouthW:.19, mouthH:.12}
+    idle:      {radius:'50% 50% 48% 52% / 58% 58% 42% 42%', bounce:true,  mouthTop:60, mouthW:.11, mouthH:.028},
+    listening: {radius:'50% 50% 48% 52% / 58% 58% 42% 42%', bounce:false, mouthTop:60, mouthW:.11, mouthH:.028},
+    thinking:  {radius:DOME_RADIUS, bounce:false, mouthTop:62, mouthW:.12, mouthH:.07, mouthX:58},
+    talking:   {radius:DOME_RADIUS, bounce:false, mouthTop:63, mouthW:.19, mouthH:.12}
   };
   // Per-state body colors, matching the live app's THIMBLE_COLORS
   // (apps/thimble-resolve/static/session.html). Now ports the app's actual current
@@ -556,7 +564,14 @@
     if (state === inst.renderedState) return;
     inst.renderedState = state;
     var shape = THIMBLE_SHAPES[state] || THIMBLE_SHAPES.listening;
-    inst.el.style.transform = shape.lean;
+    inst.active = state !== 'idle';
+    if (!inst.active) {
+      inst.body.style.borderRadius = shape.radius;
+      inst.body.style.animation = shape.bounce ? 'thimbleIdleBounce 2.6s ease-in-out infinite' : 'none';
+      inst.ring.style.transform = 'none';
+    } else {
+      inst.body.style.animation = 'none';
+    }
     inst.blend.style.opacity = '0';
     inst.bloomTarget = THIMBLE_BLOOM_WEIGHTS[state] || THIMBLE_BLOOM_WEIGHTS.listening;
     if (!inst.bloomCurrent) {
@@ -596,25 +611,27 @@
     var ap = THIMBLE_BLOOM_POS[inst.state] || THIMBLE_BLOOM_POS.idle;
     inst.body.style.backgroundImage =
       'radial-gradient(circle at ' + ap.hx + '% ' + ap.hy + '%, rgba(255,255,255,.7) 0%, transparent 16%),' + blobs;
-    var speaking = inst.state === 'talking';
-    var thinkingState = inst.state === 'thinking';
-    var nodding = inst.state === 'listening';
-    var y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
-    var wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
-    var breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
-    inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
-    var breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
-    inst.ring.style.transform = 'translateY(' + y.toFixed(2) + '%) rotate(' + wiggle.toFixed(2) + 'deg) scale(' + breathe.toFixed(4) + ')';
-    var input = thinkingState ? 0.15 : inst.level;
-    inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
-    var wobblePeriod = thinkingState ? 3.4 : 1.6;
-    inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
-    var domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
-    inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
-    if (speaking) {
-      inst.ripple.style.borderRadius = inst.body.style.borderRadius;
-      inst.ripple.style.transform = inst.ring.style.transform + ' scale(' + (1.04 + 0.05 * domeFactor).toFixed(3) + ')';
-      inst.ripple.style.opacity = (0.22 + 0.16 * domeFactor).toFixed(3);
+    if (inst.active) {
+      var speaking = inst.state === 'talking';
+      var thinkingState = inst.state === 'thinking';
+      var nodding = inst.state === 'listening';
+      var y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * (now / 1000)) / 2.6)), 1.5) : 0;
+      var wiggle = thinkingState ? (-10 + 2 * Math.sin((now / 1000) * 1.2)) : 0;
+      var breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
+      inst.breathePhase = (inst.breathePhase + dt / breathePeriod) % 1;
+      var breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * inst.breathePhase));
+      inst.ring.style.transform = 'translateY(' + y.toFixed(2) + '%) rotate(' + wiggle.toFixed(2) + 'deg) scale(' + breathe.toFixed(4) + ')';
+      var input = thinkingState ? 0.15 : inst.level;
+      inst.lvl += (input - inst.lvl) * (speaking ? 0.45 : 0.3);
+      var wobblePeriod = thinkingState ? 3.4 : 1.6;
+      inst.wobblePhase = (inst.wobblePhase + dt / wobblePeriod) % 1;
+      var domeFactor = (1 + Math.cos(inst.wobblePhase * 2 * Math.PI)) / 2;
+      inst.body.style.borderRadius = domeWobbleRadius(domeFactor, inst.lvl);
+      if (speaking) {
+        inst.ripple.style.borderRadius = inst.body.style.borderRadius;
+        inst.ripple.style.transform = inst.ring.style.transform + ' scale(' + (1.04 + 0.05 * domeFactor).toFixed(3) + ')';
+        inst.ripple.style.opacity = (0.22 + 0.16 * domeFactor).toFixed(3);
+      }
     }
     requestAnimationFrame(function(t){ tick(inst, t); });
   }
