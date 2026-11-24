@@ -2580,6 +2580,16 @@ async function maybeSendPartial(now) {
   await partialInFlightPromise;
 }
 
+// Canonical source of truth for the Thimble avatar's shape/motion:
+// Thimble-game/client/mockups/thimble-states-demo.html -- keep this
+// engine in sync with that reference, not the other way around.
+// NOT yet in sync as of 2026-11-24: that reference drops the
+// rotate(-10deg) "lean" below entirely (it read as a lopsided/deformed
+// blob once combined with the dome wobble on index.html, fixed there)
+// and keeps idle/ready as a fixed shape with only a translateY bounce,
+// no border-radius wobble. This file still carries both on idle/
+// listening/ready -- not fixed here yet, flagged as a follow-up.
+//
 // Direct port of the design handoff's avatar(st,...) shape table: body
 // border-radius + CSS animation name, outer lean, and mouth box per state.
 // mouthW/mouthH are fractions of the avatar's own size (handoff's s),

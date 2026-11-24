@@ -17,6 +17,10 @@
   .pulse{animation:pulse 2.2s ease-in-out infinite}
   @keyframes eqBar{0%,100%{height:6px}50%{height:20px}}
   .eq{width:4px;border-radius:2px;background:#F3829A;animation:eqBar 1.1s ease-in-out infinite;display:block}
+  /* Canonical source of truth for the Thimble avatar's shape/motion:
+     Thimble-game/client/mockups/thimble-states-demo.html -- keep this
+     in sync with that reference, not the other way around. Already
+     matches it as of 2026-11-24 (no rotation lean, subtle wobble only). */
   @keyframes wobble{0%,100%{border-radius:50% 50% 48% 52% / 58% 58% 42% 42%}50%{border-radius:48% 52% 50% 50% / 55% 55% 45% 45%}}
   .avatar-body{animation:wobble 3.6s ease-in-out infinite}
 </style>

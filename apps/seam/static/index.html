@@ -654,7 +654,11 @@
      MeetingVoice.dc.html (the source this file's own palette comment
      above points to) -- not a hand-approximated blob. Same wobble
      keyframes, same thin mouth proportions, just scaled down to chat-
-     row size. */
+     row size.
+     Canonical source of truth for the Thimble avatar's shape/motion:
+     Thimble-game/client/mockups/thimble-states-demo.html -- keep this
+     in sync with that reference, not the other way around. Already
+     matches it as of 2026-11-24 (no rotation lean, subtle wobble only). */
   @keyframes avatar-wobble { 0%, 100% { border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%; } 50% { border-radius: 48% 52% 50% 50% / 55% 55% 45% 45%; } }
   .avatar { position: relative; width: 28px; height: 28px; flex: 0 0 auto; }
   .avatar .blob {

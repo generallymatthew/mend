@@ -352,6 +352,13 @@ if (!code || !role) {
 }
 
 // --- Thimble avatar engine -------------------------------------------
+// Canonical source of truth for the Thimble avatar's shape/motion:
+// Thimble-game/client/mockups/thimble-states-demo.html -- keep this
+// engine in sync with that reference, not the other way around.
+// NOT yet in sync as of 2026-11-24: idle below still carries a
+// rotate(-10deg) "lean" the reference dropped entirely -- see
+// session.html's own copy of this note for the fuller writeup.
+//
 // Ported from thimble's static/session.html (the real, live-tuned
 // Thimble character) rather than approximated here. Trimmed to the
 // states this text-only app actually uses (idle/thinking/talking/

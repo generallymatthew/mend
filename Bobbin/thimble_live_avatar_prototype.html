@@ -189,6 +189,11 @@ const rippleShapeTune = { amplitude: 0, count: 6, speed: 3 };
 
 // ================= direct port of session.html below (unmodified) =================
 
+// Canonical source of truth for the Thimble avatar's shape/motion (added
+// 2026-11-24): Thimble-game/client/mockups/thimble-states-demo.html.
+// This prototype predates that reference and still carries the
+// rotate(-10deg) "lean" it later dropped -- left as-is, a historical
+// snapshot of this prototype's own exploration, not updated to match.
 const DOME_RADIUS = '50% 50% 50% 50% / 58% 58% 42% 42%';
 const THIMBLE_SHAPES = {
   listening:   {radius: '50% 50% 48% 52% / 58% 58% 42% 42%', anim: 'none', lean: 'rotate(-10deg) translate(2%,1%)', mouthTop: 60, mouthW: .11, mouthH: .028},
