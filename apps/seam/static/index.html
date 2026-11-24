@@ -1129,13 +1129,22 @@
      canvas/SVG fill), not which colors exist. setStageState below drives
      the four .bloom opacities; this is the idle resting weight (.46/.20/
      .14/.20), same as the old frozen single-background-image snapshot. */
+  @keyframes stage-avatar-idle-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5%); } }
   .stage-avatar .blob {
     position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%;
-    animation: avatar-wobble 3.6s ease-in-out infinite;
+    /* border-radius (wobble) and background-color (bloom blend) are now
+       driven every frame by stageWobbleTick/paintStageBloomColor below --
+       matches Thimble-game/client/mockups/thimble-states-demo.html's real
+       per-frame engine instead of this flat-gray/fixed-opacity
+       approximation, which read as washed-out and static once compared
+       against that canonical reference. Idle alone keeps a CSS-only
+       bounce (no wobble), same split the reference makes. */
+    transition: background-color .6s ease;
     background-color: rgb(191,192,186);
     box-shadow: inset -15px -17px 20px -10px rgba(0,0,0,.22), inset 10.5px 11.9px 18px -10px rgba(255,255,255,.35);
     overflow: hidden;
   }
+  .stage-avatar:not(.listening):not(.thinking):not(.talking) .blob { animation: stage-avatar-idle-bounce 2.6s ease-in-out infinite; }
   .stage-avatar .blob::before {
     content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
     background: radial-gradient(circle at 15% 15%, rgba(255,255,255,.7) 0%, transparent 16%);
@@ -1154,7 +1163,7 @@
      feed (Seam's recording is push-to-talk-to-text, not a continuous
      stream Thimble could meter). */
   @keyframes stage-avatar-listen-pulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.035); } }
-  .stage-avatar.listening .blob { animation: avatar-wobble 3.6s ease-in-out infinite, stage-avatar-listen-pulse 1.1s ease-in-out infinite; }
+  .stage-avatar.listening .blob { animation: stage-avatar-listen-pulse 1.1s ease-in-out infinite; }
   /* Thinking: mouth rests instead of flapping, dimmed slightly -- paired
      with the thinking-weighted honey bloom above. */
   .stage-avatar.thinking .mouth { opacity: .55; }
@@ -3235,16 +3244,27 @@ scrimEl.onclick = () => {
   updateScrim();
 };
 // ---------------------------------------------------------------------
+// Canonical source of truth for the Thimble avatar's shape/motion:
+// Thimble-game/client/mockups/thimble-states-demo.html -- keep this in
+// sync with that reference, not the other way around. Was previously a
+// flat-gray base + fixed-opacity divs with no per-frame loop (no live
+// mic-level/TTS-amplitude feed to drive one off of, since Seam's
+// recording is push-to-talk, not continuous) -- reported live as
+// washed-out and static once compared against the reference, so this
+// now runs the same per-frame color-blend + border-radius wobble that
+// reference uses, just without a real amplitude input (thinking/idle
+// don't have one in the reference either).
+//
 // Thimble engagement state: idle / listening / thinking / talking. Same
 // four-color-bloom weight table as apps/thimble-resolve/static/session.html's
 // THIMBLE_BLOOM_WEIGHTS (idle-blue/listening-teal/thinking-honey/talking-
 // pink, each state gets 46% of its own color, its two neighbors 20% each,
-// the opposite 14%) -- just applied as a CSS opacity on four fixed divs
-// instead of that engine's per-frame canvas/SVG lerp, since Seam has no
-// live mic-level or TTS-amplitude feed to drive a continuous animation
-// off of; push-to-talk and request/response are the only real engagement
-// signals available here. Drives the stage avatar's bloom + mouth (only
-// visible in split layout) and the status line underneath it.
+// the opposite 14%). The four bloom divs still carry the corner
+// highlight gradients; paintStageBloomColor additionally blends the same
+// weights into the blob's own base color, and stageWobbleTick drives its
+// border-radius every frame, instead of the old flat-gray base + static
+// CSS keyframe. Drives the stage avatar's bloom + mouth (only visible in
+// split layout) and the status line underneath it.
 // ---------------------------------------------------------------------
 const STAGE_BLOOM_WEIGHTS = {
   idle:      { idle: .46, listening: .20, thinking: .14, talking: .20 },
@@ -3252,8 +3272,16 @@ const STAGE_BLOOM_WEIGHTS = {
   thinking:  { idle: .14, listening: .20, thinking: .46, talking: .20 },
   talking:   { idle: .20, listening: .14, thinking: .20, talking: .46 },
 };
+const STAGE_BLOOM_RGB = {
+  idle:      { r: 163, g: 207, b: 224 },
+  listening: { r: 176, g: 222, b: 209 },
+  thinking:  { r: 233, g: 185, b: 73 },
+  talking:   { r: 243, g: 130, b: 154 },
+};
+const STAGE_BLOOM_ORDER = ["idle", "listening", "thinking", "talking"];
 const STAGE_STATE_VERB = { listening: "listening", thinking: "thinking", talking: "responding" };
 const stageAvatarEl = document.getElementById("stage-avatar");
+const stageBlobEl = stageAvatarEl.querySelector(".blob");
 const stageBlooms = {
   idle: document.getElementById("stage-bloom-idle"),
   listening: document.getElementById("stage-bloom-listening"),
@@ -3263,6 +3291,38 @@ const stageBlooms = {
 const stageStateLabel = document.getElementById("stage-state-label");
 let stageState = "idle";
 let stageThreadTitle = "";
+
+function paintStageBloomColor(weights) {
+  let r = 0, g = 0, b = 0;
+  STAGE_BLOOM_ORDER.forEach((k) => {
+    const c = STAGE_BLOOM_RGB[k];
+    r += c.r * weights[k]; g += c.g * weights[k]; b += c.b * weights[k];
+  });
+  stageBlobEl.style.backgroundColor = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+}
+paintStageBloomColor(STAGE_BLOOM_WEIGHTS.idle);
+
+// Continuous dome<->circle border-radius wobble, same formula and periods
+// as the canonical reference's domeWobbleRadius/tick (just without a real
+// mic/TTS amplitude input -- see comment above). Idle is excluded: it
+// keeps the fixed shape + CSS-only bounce set in the stylesheet, same
+// split the reference makes.
+const STAGE_DOME_RADIUS_CAP = 12, STAGE_DOME_RADIUS_RIM = 14;
+let stageWobblePhase = 0, stageWobbleLastT = null;
+function stageWobbleTick(now) {
+  const dt = Math.min(0.1, stageWobbleLastT == null ? 0 : (now - stageWobbleLastT) / 1000);
+  stageWobbleLastT = now;
+  if (stageState !== "idle") {
+    const wobblePeriod = stageState === "thinking" ? 3.4 : 1.6;
+    stageWobblePhase = (stageWobblePhase + dt / wobblePeriod) % 1;
+    const domeFactor = (1 + Math.cos(stageWobblePhase * 2 * Math.PI)) / 2;
+    const capY = 50 + STAGE_DOME_RADIUS_CAP * domeFactor;
+    const rimY = 50 - STAGE_DOME_RADIUS_RIM * domeFactor;
+    stageBlobEl.style.borderRadius = `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+  }
+  requestAnimationFrame(stageWobbleTick);
+}
+requestAnimationFrame(stageWobbleTick);
 
 function renderStageLabel() {
   const verb = STAGE_STATE_VERB[stageState];
@@ -3275,6 +3335,11 @@ function setStageState(state) {
   stageState = state;
   const weights = STAGE_BLOOM_WEIGHTS[state] || STAGE_BLOOM_WEIGHTS.idle;
   Object.keys(stageBlooms).forEach((k) => { stageBlooms[k].style.opacity = weights[k]; });
+  paintStageBloomColor(weights);
+  // Idle has no wobble (see stageWobbleTick) -- drop back to the
+  // stylesheet's own fixed border-radius instead of freezing on whatever
+  // mid-wobble shape the last active state left as an inline style.
+  if (state === "idle") stageBlobEl.style.borderRadius = "";
   stageAvatarEl.classList.toggle("listening", state === "listening");
   stageAvatarEl.classList.toggle("thinking", state === "thinking");
   stageAvatarEl.classList.toggle("talking", state === "talking");
