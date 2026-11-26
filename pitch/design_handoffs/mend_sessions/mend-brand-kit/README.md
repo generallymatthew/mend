@@ -9,6 +9,8 @@ Files in `logo/`:
 - mend-mark-oat.svg: on Evergreen or photography
 - mend-app-icon-pink.svg / mend-app-icon-evergreen.svg: 1024×1024 app icons
 
+- thimble-wordmark-evergreen.svg: the Thimble product wordmark (script "thimble" whose "i" dot is the Thimble avatar), solid Evergreen, transparent background. Use on Oat or white, on its own without the Mend mark.
+
 Wordmark: "mend", all lowercase, Manrope ExtraBold (800), letter-spacing -0.05em. Place it to the right of the mark, vertically centered, with a gap of about 1/6 of the mark's width.
 
 ## Colors
