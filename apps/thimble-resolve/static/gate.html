@@ -13,7 +13,9 @@
   *{box-sizing:border-box}
   body{margin:0; background:var(--paper); color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh;}
   .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:32px 28px; max-width:360px; width:100%; margin:20px; box-shadow:0 1px 2px rgba(23,55,46,0.04);}
-  h1{font-size:1.3rem; margin:0 0 8px;}
+  /* Bukhari Script for headings, same face as session.html's. */
+  @font-face{font-family:'Bukhari Script'; src:url('/static/assets/fonts/BukhariScript.ttf') format('truetype'); font-display:swap;}
+  h1{font-family:'Bukhari Script','Manrope',sans-serif; font-weight:400; font-size:1.8rem; margin:0 0 8px;}
   p{color:var(--ink-soft); font-size:14px; margin:0 0 18px; line-height:1.5;}
   input{width:100%; border:1.5px solid var(--border); border-radius:10px; padding:11px 14px; font:inherit; font-size:15px; margin-bottom:12px;}
   button{width:100%; background:var(--pink); color:#fff; border:none; border-radius:999px; padding:12px 0; font:inherit; font-weight:700; font-size:14.5px; cursor:pointer;}
