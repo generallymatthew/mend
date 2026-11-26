@@ -32,6 +32,22 @@
   .mg-logo-tile { border-radius: 16px; padding: 28px; display: flex; align-items: center; justify-content: center; gap: 14px; }
   .mg-radius-box { border: 2px solid #17372E; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
   .mg-tag { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 999px; background: #eef7f4; color: #214f42; }
+  /* Thimble avatar states (see the Thimble section's source note) */
+  .tm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
+  .tm-card { background: #fff; border: 1px solid rgba(23,55,46,0.12); border-radius: 20px; padding: 22px 14px 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .tm-stage { position: relative; width: 140px; height: 150px; display: flex; align-items: center; justify-content: center; }
+  .tm-shadow { position: absolute; left: 50%; bottom: 2px; width: 72%; height: 16px; transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,.34) 0%, rgba(23,55,46,.2) 50%, rgba(23,55,46,.07) 78%, rgba(23,55,46,0) 100%); }
+  .tm-ring { position: relative; width: 110px; height: 110px; }
+  .tm-body { position: absolute; inset: 0; overflow: visible; }
+  .tm-mouth { position: absolute; transform: translate(-50%, -50%); }
+  .tm-dot { position: absolute; left: 0; top: 0; border-radius: 50%; background: rgba(246,241,231,.85); }
+  .tm-desc { font-size: 12px; line-height: 1.5; opacity: 0.75; text-align: center; margin: 0; }
+  .tm-swatch { font-size: 12px; line-height: 1.5; }
+  .tm-swatch span { display: block; width: 56px; height: 40px; border-radius: 10px; margin-bottom: 6px; }
+  .tm-swatch code { font-size: 11px; opacity: 0.7; }
+  @keyframes thimbleIdleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5%); } }
+  @media (prefers-reduced-motion: reduce) { .tm-body { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -173,28 +189,59 @@
   </div>
 
   <!-- Thimble -->
+  <!-- Avatar states and engine below are ported from the canonical
+       reference, Thimble-game/client/mockups/thimble-states-demo.html
+       (itself ported from apps/thimble-resolve/static/session.html).
+       Sync against that file, not this one. -->
   <div class="mg-section">
     <p class="mg-kicker">Mascot</p>
     <h2 class="mg-h2">Thimble</h2>
-    <p style="font-size: 13px; line-height: 1.6; opacity: 0.8; max-width: 640px; margin: 0 0 24px;">The AI facilitator's on-screen presence: a soft pink blob, not a face or a character. Idle shape is a near-circle with a slight organic wobble, a single soft highlight for dimension, a pill mouth, and a faint shadow pooled on the floor beneath it &mdash; it reads as sitting ON the surface, not pasted on top.</p>
-    <div class="mg-row">
-      <div class="mg-col" style="flex-basis: 200px; flex-grow: 0;">
-        <div style="width: 180px; height: 180px; position: relative; margin: 0 auto;">
-          <div style="position: absolute; left: 50%; top: calc(100% - 14px); width: 64%; height: 16px; transform: translateX(-50%); background: radial-gradient(ellipse closest-side at center, rgba(23,55,46,0.34) 0%, rgba(23,55,46,0.2) 50%, rgba(23,55,46,0.07) 78%, rgba(23,55,46,0) 100%); border-radius: 50%;"></div>
-          <div style="position: absolute; inset: 0; border-radius: 50% 50% 48% 52% / 58% 58% 42% 42%; background: radial-gradient(circle at 30% 24%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 55%), #FF8CA3;">
-            <div style="position: absolute; left: 50%; top: 60%; width: 20px; height: 5px; transform: translate(-50%, -50%); background: #F6F1E7; border-radius: 999px;"></div>
-          </div>
+    <p style="font-size: 13px; line-height: 1.6; opacity: 0.8; max-width: 640px; margin: 0 0 24px;">The AI facilitator's on-screen presence: a soft dome, not a face or a character. Its color is a bloom of four state colors that are always present together; each state only shifts their weights so its own color leads. A faint shadow pools on the floor beneath it, so it reads as sitting on the surface.</p>
+    <div class="tm-grid">
+      <div class="tm-card">
+        <div class="tm-stage"><div class="tm-shadow"></div><div class="tm-ring" id="tm-r-idle"><div class="tm-body" id="tm-b-idle"><div class="tm-mouth" id="tm-m-idle"></div></div></div></div>
+        <p class="mg-mini-label" style="margin: 0;">Idle / Ready</p>
+        <p class="tm-desc">Fixed soft-dome shape, slow 2.6s bounce. Blue leads the bloom.</p>
+      </div>
+      <div class="tm-card">
+        <div class="tm-stage"><div class="tm-shadow"></div><div class="tm-ring" id="tm-r-listening"><div class="tm-body" id="tm-b-listening"><div class="tm-mouth" id="tm-m-listening"></div></div></div></div>
+        <p class="mg-mini-label" style="margin: 0;">Listening</p>
+        <p class="tm-desc">Dome to circle wobble, continuous nod, fast attack to mic level. Mint leads.</p>
+      </div>
+      <div class="tm-card">
+        <div class="tm-stage"><div class="tm-shadow"></div><div class="tm-ring" id="tm-r-thinking"><div class="tm-body" id="tm-b-thinking"><div class="tm-mouth" id="tm-m-thinking"></div><div class="tm-dot" id="tm-d1-thinking"></div><div class="tm-dot" id="tm-d2-thinking"></div><div class="tm-dot" id="tm-d3-thinking"></div></div></div></div>
+        <p class="mg-mini-label" style="margin: 0;">Thinking</p>
+        <p class="tm-desc">Slower wobble, head-tilt wiggle, off-center mouth, three orbiting dots. Honey leads.</p>
+      </div>
+      <div class="tm-card">
+        <div class="tm-stage"><div class="tm-shadow"></div><div class="tm-ring" id="tm-r-talking"><div class="tm-body" id="tm-b-talking"><div class="tm-mouth" id="tm-m-talking"></div></div></div></div>
+        <p class="mg-mini-label" style="margin: 0;">Talking</p>
+        <p class="tm-desc">Faster wobble and breathe, mouth height driven by voice amplitude. Pink leads.</p>
+      </div>
+      <div class="tm-card">
+        <div class="tm-stage"><div class="tm-shadow"></div><div class="tm-ring" id="tm-r-paused"><div class="tm-body" id="tm-b-paused"><div class="tm-mouth" id="tm-m-paused"></div></div></div></div>
+        <p class="mg-mini-label" style="margin: 0;">Paused</p>
+        <p class="tm-desc">Frozen: no breathing, no wobble. The bloom settles to an even four-way blend.</p>
+      </div>
+    </div>
+    <div class="mg-row" style="margin-top: 28px;">
+      <div class="mg-col">
+        <p class="mg-mini-label">State colors</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 14px;">
+          <div class="tm-swatch"><span style="background: #A3CFE0;"></span>Idle blue<br><code>#A3CFE0</code></div>
+          <div class="tm-swatch"><span style="background: #B0DED1;"></span>Listening mint<br><code>#B0DED1</code></div>
+          <div class="tm-swatch"><span style="background: #E9B949;"></span>Thinking honey<br><code>#E9B949</code></div>
+          <div class="tm-swatch"><span style="background: #F3829A;"></span>Talking pink<br><code>#F3829A</code></div>
         </div>
-        <p class="mg-mini-label" style="margin-top: 14px; text-align: center;">Idle</p>
       </div>
       <div class="mg-col">
         <p class="mg-mini-label">Build notes</p>
         <ul style="font-size: 13px; line-height: 1.7; opacity: 0.85; margin: 0; padding-left: 18px;">
-          <li>Fill #FF8CA3 (the production on-screen shade; brand kit's flat Mend Pink #F3829A for all static/print use).</li>
-          <li>One highlight only &mdash; <code style="font-size: 12px;">radial-gradient(circle at 30% 24%, rgba(255,255,255,.5), rgba(255,255,255,0) 55%)</code> &mdash; never a second specular dot.</li>
+          <li>Bloom: a weighted base color plus one radial gradient per state color, each anchored to its own corner (idle top-left, listening top-right, thinking bottom-right, talking bottom-left). The leading color gets weight .46, its neighbors .20, the opposite corner .14. Paused is .25 each, never grey.</li>
+          <li>One white highlight at the leading color's corner, plus a soft inset shadow on the opposite side.</li>
+          <li>Shape: idle and listening rest at <code style="font-size: 12px;">50% 50% 48% 52% / 58% 58% 42% 42%</code>. Active states wobble between that dome and a circle; never a hexagon or a polygon ripple.</li>
           <li>Mouth is Oat (#F6F1E7), a pill at rest; it only goes fully round while thinking or talking.</li>
           <li>Floor shadow: a flattened dark-ink ellipse directly under the body, soft-edged, never a hard drop shadow.</li>
-          <li>Outline is a near-circle, never a perfect one &mdash; asymmetric corner radii keep it feeling alive even at rest.</li>
         </ul>
       </div>
     </div>
@@ -255,5 +302,168 @@
   </div>
 
 </div>
+<script>
+// Ported from the live app's own motion code (apps/thimble-resolve/static/
+// session.html: THIMBLE_SHAPES, THIMBLE_BLOOM_*, domeWobbleRadius,
+// updateThimbleMotion). The hexagon clip-path engine from the older
+// thimble-avatar.js reference was dropped there ("reported live as reading
+// weird") in favor of this single dome<->circle border-radius wobble used
+// by every active state — this demo intentionally does not reintroduce it.
+const DOME_RADIUS = '50% 50% 50% 50% / 58% 58% 42% 42%';
+const THIMBLE_SHAPES = {
+  idle:      { radius: '50% 50% 48% 52% / 58% 58% 42% 42%', bounce: true,  mouthTop: 60, mouthW: .11, mouthH: .028 },
+  listening: { radius: '50% 50% 48% 52% / 58% 58% 42% 42%', bounce: false, mouthTop: 60, mouthW: .11, mouthH: .028 },
+  thinking:  { radius: DOME_RADIUS, bounce: false, mouthTop: 62, mouthW: .12, mouthH: .07, mouthX: 58, mouthRound: '50%' },
+  talking:   { radius: DOME_RADIUS, bounce: false, mouthTop: 63, mouthW: .19, mouthH: .12, mouthRound: '50%' },
+  paused:    { radius: DOME_RADIUS, bounce: false, mouthTop: 60, mouthW: .14, mouthH: .03 }
+};
+const BLOOM_RGB = {
+  idle:      { r: 163, g: 207, b: 224 },
+  listening: { r: 176, g: 222, b: 209 },
+  thinking:  { r: 233, g: 185, b: 73 },
+  talking:   { r: 243, g: 130, b: 154 }
+};
+const BLOOM_POS = {
+  idle:      { hx: 15, hy: 15 },
+  listening: { hx: 85, hy: 15 },
+  thinking:  { hx: 80, hy: 85 },
+  talking:   { hx: 20, hy: 85 }
+};
+const BLOOM_WEIGHTS = {
+  idle:      { idle: .46, listening: .20, thinking: .14, talking: .20 },
+  listening: { idle: .20, listening: .46, thinking: .20, talking: .14 },
+  thinking:  { idle: .14, listening: .20, thinking: .46, talking: .20 },
+  talking:   { idle: .20, listening: .14, thinking: .20, talking: .46 },
+  paused:    { idle: .25, listening: .25, thinking: .25, talking: .25 }
+};
+const BLOOM_ACTIVE_POS = { idle: 'idle', listening: 'listening', thinking: 'thinking', talking: 'talking', paused: 'idle' };
+const BLOOM_ORDER = ['idle', 'listening', 'thinking', 'talking'];
+
+function domeWobbleRadius(domeFactor, lvl) {
+  const capY = 50 + (12 + 3 * lvl) * domeFactor;
+  const rimY = 50 - (14 + 3 * lvl) * domeFactor;
+  return `50% 50% 50% 50% / ${capY.toFixed(1)}% ${capY.toFixed(1)}% ${rimY.toFixed(1)}% ${rimY.toFixed(1)}%`;
+}
+
+function paintBloom(bodyEl, state) {
+  const w = BLOOM_WEIGHTS[state];
+  let r = 0, g = 0, b = 0;
+  BLOOM_ORDER.forEach(k => { const c = BLOOM_RGB[k]; r += c.r * w[k]; g += c.g * w[k]; b += c.b * w[k]; });
+  bodyEl.style.backgroundColor = `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+  const blobs = BLOOM_ORDER.map(k => {
+    const weight = w[k], c = BLOOM_RGB[k], pos = BLOOM_POS[k];
+    const radius = (16 + weight * 110).toFixed(1);
+    const alpha = Math.min(1, 0.3 + weight * 1.1).toFixed(2);
+    return `radial-gradient(circle at ${pos.hx}% ${pos.hy}%, rgba(${c.r},${c.g},${c.b},${alpha}) 0%, transparent ${radius}%)`;
+  }).join(',');
+  const ap = BLOOM_POS[BLOOM_ACTIVE_POS[state]];
+  bodyEl.style.backgroundImage = `radial-gradient(circle at ${ap.hx}% ${ap.hy}%, rgba(255,255,255,.7) 0%, transparent 16%),` + blobs;
+  const sx = ap.hx < 50 ? -15 : 15, sy = ap.hy < 50 ? -17 : 17;
+  bodyEl.style.boxShadow = `inset ${sx}px ${sy}px 20px -10px rgba(0,0,0,.22), inset ${(-0.7 * sx).toFixed(1)}px ${(-0.7 * sy).toFixed(1)}px 18px -10px rgba(255,255,255,.35)`;
+}
+
+function setupMouth(el, shape, size) {
+  el.style.top = shape.mouthTop + '%';
+  el.style.left = (shape.mouthX || 50) + '%';
+  el.style.width = (shape.mouthW * size) + 'px';
+  el.style.height = (shape.mouthH * size) + 'px';
+  el.style.background = '#F6F1E7';
+  el.style.borderRadius = shape.mouthRound || '999px';
+}
+
+class ThimbleCard {
+  constructor(state, size) {
+    this.state = state;
+    this.size = size;
+    this.shape = THIMBLE_SHAPES[state];
+    this.ring = document.getElementById('tm-r-' + state);
+    this.body = document.getElementById('tm-b-' + state);
+    this.mouth = document.getElementById('tm-m-' + state);
+    this.active = state === 'listening' || state === 'thinking' || state === 'talking';
+    this.lvl = 0;
+    this.mouthLevel = 0;
+    this.breathePhase = 0;
+    this.wobblePhase = 0;
+    this.lastT = null;
+
+    this.body.style.borderRadius = this.shape.radius;
+    this.body.style.animation = this.shape.bounce ? 'thimbleIdleBounce 2.6s ease-in-out infinite' : 'none';
+    setupMouth(this.mouth, this.shape, size);
+    paintBloom(this.body, state);
+
+    if (state === 'thinking') {
+      this.dots = [
+        { el: document.getElementById('tm-d1-thinking'), r: 7, speed: 4.6, phase: 0 },
+        { el: document.getElementById('tm-d2-thinking'), r: 5, speed: -3.6, phase: 2.1 },
+        { el: document.getElementById('tm-d3-thinking'), r: 8, speed: 3.1, phase: 4.2 }
+      ];
+      const dotSize = size * 0.065;
+      this.dots.forEach(d => { d.el.style.width = d.el.style.height = dotSize + 'px'; });
+    }
+
+    if (!this.active) { this.ring.style.transform = 'none'; }
+  }
+
+  tick(now) {
+    const dt = Math.min(0.1, this.lastT == null ? 0 : (now - this.lastT) / 1000);
+    this.lastT = now;
+    const t = now / 1000;
+
+    if (!this.active) return; // idle/paused: fixed shape, no wobble, bloom already painted once
+
+    const nodding = this.state === 'listening';
+    const thinkingState = this.state === 'thinking';
+    const speaking = this.state === 'talking';
+
+    const y = nodding ? 4 * Math.pow(Math.max(0, Math.sin((2 * Math.PI * t) / 2.6)), 1.5) : 0;
+    const wiggle = thinkingState ? (-10 + 2 * Math.sin(t * 1.2)) : 0;
+
+    const breathePeriod = nodding ? 3 : speaking ? 2.2 : thinkingState ? 3 : 4.5;
+    this.breathePhase = (this.breathePhase + dt / breathePeriod) % 1;
+    const breathe = 1 + 0.035 * (1 - Math.cos(2 * Math.PI * this.breathePhase));
+    this.ring.style.transform = `translateY(${y.toFixed(2)}%) rotate(${wiggle.toFixed(2)}deg) scale(${breathe.toFixed(4)})`;
+
+    // Synthesized input in place of real mic/TTS level, just to show motion.
+    const simInput = speaking
+      ? Math.max(0, Math.sin(t * 3)) * Math.max(0, Math.sin(t * 1.1 + 1))
+      : nodding ? 0.5 + 0.5 * Math.sin(t * 0.7)
+      : 0.15; // thinking has no real input
+    const rate = speaking ? 0.45 : nodding ? (simInput > this.lvl ? 0.6 : 0.12) : 0.3;
+    this.lvl += (simInput - this.lvl) * rate;
+
+    const wobblePeriod = thinkingState ? 3.4 : 1.6;
+    this.wobblePhase = (this.wobblePhase + dt / wobblePeriod) % 1;
+    const domeFactor = (1 + Math.cos(this.wobblePhase * 2 * Math.PI)) / 2;
+    this.body.style.borderRadius = domeWobbleRadius(domeFactor, this.lvl);
+
+    if (thinkingState) {
+      const cx = this.size * (59 / 118), cy = this.size * (36 / 118);
+      this.dots.forEach(d => {
+        const ang = t * d.speed + d.phase;
+        const r = this.size * (d.r / 118);
+        const half = (this.size * 0.065) / 2;
+        const x = cx + Math.cos(ang) * r - half;
+        const y2 = cy + Math.sin(ang) * r * 0.8 - half;
+        d.el.style.transform = `translate(${x.toFixed(1)}px, ${y2.toFixed(1)}px)`;
+      });
+    }
+
+    if (speaking) {
+      const rate2 = simInput > this.mouthLevel ? 0.7 : 0.25;
+      this.mouthLevel += (simInput - this.mouthLevel) * rate2;
+      const minH = this.size * 0.03;
+      const maxH = this.shape.mouthW * this.size * 0.7;
+      this.mouth.style.height = (minH + (maxH - minH) * this.mouthLevel) + 'px';
+    }
+  }
+}
+
+const cards = ['idle', 'listening', 'thinking', 'talking', 'paused'].map(s => new ThimbleCard(s, 110));
+function loop(now) {
+  cards.forEach(c => c.tick(now));
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
 </body>
 </html>
