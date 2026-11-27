@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refund &amp; Cancellation Policy &middot; Thimble</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#EFE7D8; --ink-soft:#C9D6CE; --muted:#8FA399;
+    --card:rgba(255,255,255,0.045); --card-border:rgba(255,255,255,0.12); --border:rgba(255,255,255,0.14);
+    --accent:linear-gradient(135deg,#F3829A,#E9B949); --accent-ink:#17372E; --accent-solid:#F3829A;
+    --pink:#F3829A; --honey:#E9B949;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; overflow-x:hidden;}
+  body{margin:0; background:linear-gradient(180deg,#0E2119 0%,#0A1813 40%,#0B1A14 100%); background-attachment:fixed; color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+
+  .topnav{position:sticky; top:0; z-index:30; background:rgba(10,24,19,0.78); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); margin-bottom:40px;}
+  .topnav-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:22px;}
+  .topnav-brand{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .topnav-brand .wordmark{font-size:1.1rem; font-weight:800; letter-spacing:-0.02em; color:#fff;}
+  .topnav-brand .brand-wordmark{height:30px; width:auto; display:block;}
+  .nav-links{display:flex; gap:18px; font-size:13.5px; font-weight:700; color:var(--muted); margin-left:14px; padding-left:22px; border-left:1px solid var(--border);}
+  .nav-links a{text-decoration:none; color:var(--muted); padding:6px 0; white-space:nowrap;}
+  .nav-links a:hover{color:#fff;}
+  .nav-links a.active{color:#fff;}
+  @media (max-width:680px){ .nav-links{display:none;} }
+  .legal-head{margin-bottom:28px;}
+  .legal-head h1{font-size:2rem; line-height:1.25; letter-spacing:-0.015em; margin:0 0 8px; font-weight:800; color:#fff;}
+  .legal-head .meta{font-size:13px; font-weight:700; color:var(--muted); margin:0;}
+  .plain{background:var(--card); border:1px solid var(--card-border); border-radius:22px; padding:24px 26px; margin-bottom:36px;}
+  .plain h2{margin-top:0 !important;}
+  .plain ul{margin-bottom:0;}
+  .wrap h2{font-size:1.05rem; font-weight:800; color:#fff; letter-spacing:-0.01em; margin:36px 0 10px;}
+  .wrap p, .wrap li{font-size:14.5px; color:var(--ink-soft); line-height:1.75;}
+  .wrap p{margin:0 0 12px;}
+  .wrap ul{margin:0 0 14px; padding-left:22px;}
+  .wrap li{margin-bottom:6px;}
+  .wrap strong{color:#fff;}
+  .wrap a{color:var(--pink); text-underline-offset:2px;}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="topnav-brand" href="index.html"><img class="brand-wordmark" src="assets/thimble-wordmark-pink.svg" alt="Thimble"></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="for-hr.html">for HR</a>
+      <a href="buy.html">Buy</a>
+      <a href="founder.html">Founder</a>
+    </nav>
+  </div>
+</header>
+<div class="wrap">
+
+<div class="legal-head">
+  <h1>Refund &amp; Cancellation Policy</h1>
+  <p class="meta">Effective November 27, 2026 &middot; Thimble LLC</p>
+</div>
+
+<div class="plain">
+  <h2>The short version</h2>
+  <ul>
+    <li>Cancel any time. There are no contracts or cancellation fees.</li>
+    <li>Access continues until the end of the month you've already paid for.</li>
+    <li>Your first month comes with a 14-day money-back guarantee.</li>
+  </ul>
+</div>
+
+<h2>How to cancel</h2>
+<p>Email <a href="mailto:support@withthimble.com">support@withthimble.com</a> from your billing contact's address, or reply to any Stripe receipt, and say you'd like to cancel. We will confirm by email within one business day. Your subscription stops renewing, and your team keeps access until the end of the billing month you've already paid for.</p>
+
+<h2>Refunds</h2>
+<ul>
+  <li><strong>First month:</strong> if Thimble isn't right for your team, email us within 14 days of your first payment and we will refund that payment in full.</li>
+  <li><strong>After the first month:</strong> monthly payments are not refunded for partial months. Cancelling stops future charges.</li>
+  <li><strong>Charged by mistake:</strong> if you were charged twice, charged after cancelling, or charged the wrong amount, email us within 60 days and we will refund the incorrect amount.</li>
+  <li><strong>If we stop offering Thimble:</strong> we will refund the unused part of your current month.</li>
+</ul>
+<p>Approved refunds go back to the original payment method through Stripe. They usually appear within 5 to 10 business days, depending on your bank.</p>
+
+<h2>Changing your number of employees</h2>
+<p>To change the number of employees on a company-wide plan, email us. The new amount applies from your next billing date.</p>
+
+<h2>Questions</h2>
+<p>Thimble LLC &middot; <a href="mailto:support@withthimble.com">support@withthimble.com</a></p>
+
+  <footer>
+    <div class="footer-note">Thimble LLC &middot; <a href="terms.html">Terms</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="refunds.html">Refunds</a> &middot; <a href="mailto:support@withthimble.com">support@withthimble.com</a></div>
+  </footer>
+</div>
+</body>
+</html>

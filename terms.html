@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terms of Service &middot; Thimble</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#EFE7D8; --ink-soft:#C9D6CE; --muted:#8FA399;
+    --card:rgba(255,255,255,0.045); --card-border:rgba(255,255,255,0.12); --border:rgba(255,255,255,0.14);
+    --accent:linear-gradient(135deg,#F3829A,#E9B949); --accent-ink:#17372E; --accent-solid:#F3829A;
+    --pink:#F3829A; --honey:#E9B949;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; overflow-x:hidden;}
+  body{margin:0; background:linear-gradient(180deg,#0E2119 0%,#0A1813 40%,#0B1A14 100%); background-attachment:fixed; color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+
+  .topnav{position:sticky; top:0; z-index:30; background:rgba(10,24,19,0.78); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); margin-bottom:40px;}
+  .topnav-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:22px;}
+  .topnav-brand{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .topnav-brand .wordmark{font-size:1.1rem; font-weight:800; letter-spacing:-0.02em; color:#fff;}
+  .topnav-brand .brand-wordmark{height:30px; width:auto; display:block;}
+  .nav-links{display:flex; gap:18px; font-size:13.5px; font-weight:700; color:var(--muted); margin-left:14px; padding-left:22px; border-left:1px solid var(--border);}
+  .nav-links a{text-decoration:none; color:var(--muted); padding:6px 0; white-space:nowrap;}
+  .nav-links a:hover{color:#fff;}
+  .nav-links a.active{color:#fff;}
+  @media (max-width:680px){ .nav-links{display:none;} }
+  .legal-head{margin-bottom:28px;}
+  .legal-head h1{font-size:2rem; line-height:1.25; letter-spacing:-0.015em; margin:0 0 8px; font-weight:800; color:#fff;}
+  .legal-head .meta{font-size:13px; font-weight:700; color:var(--muted); margin:0;}
+  .plain{background:var(--card); border:1px solid var(--card-border); border-radius:22px; padding:24px 26px; margin-bottom:36px;}
+  .plain h2{margin-top:0 !important;}
+  .plain ul{margin-bottom:0;}
+  .wrap h2{font-size:1.05rem; font-weight:800; color:#fff; letter-spacing:-0.01em; margin:36px 0 10px;}
+  .wrap p, .wrap li{font-size:14.5px; color:var(--ink-soft); line-height:1.75;}
+  .wrap p{margin:0 0 12px;}
+  .wrap ul{margin:0 0 14px; padding-left:22px;}
+  .wrap li{margin-bottom:6px;}
+  .wrap strong{color:#fff;}
+  .wrap a{color:var(--pink); text-underline-offset:2px;}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="topnav-brand" href="index.html"><img class="brand-wordmark" src="assets/thimble-wordmark-pink.svg" alt="Thimble"></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="for-hr.html">for HR</a>
+      <a href="buy.html">Buy</a>
+      <a href="founder.html">Founder</a>
+    </nav>
+  </div>
+</header>
+<div class="wrap">
+
+<div class="legal-head">
+  <h1>Terms of Service</h1>
+  <p class="meta">Effective November 27, 2026 &middot; Thimble LLC</p>
+</div>
+
+<div class="plain">
+  <h2>The short version</h2>
+  <ul>
+    <li>Thimble is software that helps people at work think through a conflict privately with an AI guide.</li>
+    <li>Companies pay for it monthly. Their employees use it with an access code. Nobody creates an account.</li>
+    <li>Thimble is not therapy, legal advice, or an emergency service. If someone is in danger, call 911.</li>
+    <li>You can cancel any time. Our <a href="refunds.html">refund policy</a> explains what happens to the current month.</li>
+  </ul>
+</div>
+
+<h2>1. Who we are</h2>
+<p>These terms are an agreement between you and Thimble LLC, a North Carolina limited liability company ("Thimble," "we," "us"). They cover the Thimble website, the Thimble apps, and any related email support (together, "the Service"). By buying or using the Service, you agree to these terms. If you are agreeing on behalf of a company, you confirm you have the authority to do so, and "you" includes that company.</p>
+
+<h2>2. Two kinds of users</h2>
+<p><strong>Customers</strong> are the companies that buy Thimble for their people. <strong>Users</strong> are the employees and managers who use Thimble with an access code their company gives them. Some sections below apply mostly to one or the other, and they say so.</p>
+
+<h2>3. What Thimble is, and what it is not</h2>
+<p>Thimble uses AI to help a person reflect on a workplace disagreement, understand the pressures behind it, and prepare for a conversation. It is a reflection and preparation tool.</p>
+<p>Thimble is <strong>not</strong>:</p>
+<ul>
+  <li>therapy, counseling, or medical or mental health care;</li>
+  <li>legal advice, or a replacement for your company's HR process or a lawyer;</li>
+  <li>a way to file a formal complaint or report with your employer;</li>
+  <li>an emergency or crisis service.</li>
+</ul>
+<p>If you or someone else is in immediate danger, call <strong>911</strong>. If you are thinking about harming yourself, call or text <strong>988</strong> (the Suicide &amp; Crisis Lifeline in the US).</p>
+<p>AI responses can be wrong, incomplete, or a poor fit for your situation. Use your own judgment, and don't rely on Thimble alone for decisions about your job, your health, or your legal rights.</p>
+
+<h2>4. Safety notices to your company</h2>
+<p>Thimble watches for a small set of serious situations: threats of violence, immediate safety risks, harassment, discrimination, retaliation, and illegal activity. When one comes up, Thimble tells the user directly what it will and will not do. For threats of violence and immediate safety risks, it alerts the company's designated HR contact. For the other categories, it asks the user first and only sends an alert if they say yes. These alerts contain the category and general severity only, with no name, no session identifier, and no quotes from the conversation. Our <a href="privacy.html">Privacy Policy</a> has the details.</p>
+
+<h2>5. Access codes</h2>
+<p>After a Customer pays, we email its billing contact an access code to share with its people. The Customer is responsible for sharing the code only within its own organization. We may rotate or revoke a code at any time, for example if it appears to have been shared publicly, and we will send the Customer a replacement.</p>
+
+<h2>6. Acceptable use</h2>
+<p>You agree not to:</p>
+<ul>
+  <li>use Thimble to harass, threaten, or harm anyone;</li>
+  <li>try to identify, monitor, or discipline an employee based on their use of Thimble;</li>
+  <li>try to break, overload, reverse engineer, or get around the security of the Service;</li>
+  <li>resell the Service or share access codes outside the Customer's organization;</li>
+  <li>use the Service in a way that breaks the law.</li>
+</ul>
+
+<h2>7. Billing</h2>
+<p>Subscriptions are billed monthly in advance through Stripe, our payment processor, and renew automatically each month until cancelled. Prices are listed on our <a href="buy.html">pricing page</a>. For per-employee plans, the Customer sets the number of employees at checkout and is responsible for keeping it accurate. Prices do not include any sales or similar taxes that may apply. If we change a price, we will email the billing contact at least 30 days before the change takes effect. If a payment fails, we may pause access until it is resolved.</p>
+
+<h2>8. Cancellation and refunds</h2>
+<p>Customers can cancel at any time. See our <a href="refunds.html">Refund &amp; Cancellation Policy</a>, which is part of these terms.</p>
+
+<h2>9. Your content</h2>
+<p>What users type or say to Thimble belongs to them. Users give us permission to process it only for as long as needed to run their conversation, as described in our <a href="privacy.html">Privacy Policy</a>. We do not sell it, and we do not give it to the Customer.</p>
+<p>If you send us feedback or suggestions about Thimble, we may use them to improve the Service without owing you anything.</p>
+
+<h2>10. Our property</h2>
+<p>Thimble LLC owns the Service, including its software, design, name, and logo. These terms give Customers and their users a limited right to use the Service while a subscription is active. They do not transfer any ownership.</p>
+
+<h2>11. Early-stage product</h2>
+<p>Thimble is a young product that we are actively improving. Features may change, and the Service may sometimes be unavailable. We will try to give notice of major changes by email.</p>
+
+<h2>12. Disclaimers</h2>
+<p>The Service is provided "as is" and "as available." To the fullest extent the law allows, we disclaim all warranties, express or implied, including warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not promise that the Service will be uninterrupted, error-free, or that it will resolve any particular conflict.</p>
+
+<h2>13. Limitation of liability</h2>
+<p>To the fullest extent the law allows, Thimble LLC will not be liable for any indirect, incidental, special, consequential, or punitive damages, or for lost profits, revenue, or data. Our total liability for any claim relating to the Service is limited to the amount the Customer paid us in the 12 months before the claim arose.</p>
+
+<h2>14. Ending the agreement</h2>
+<p>A Customer can stop using Thimble at any time by cancelling. We may suspend or end access if these terms are broken, if payment is not made, or if we stop offering the Service. If we stop offering the Service entirely, we will refund any unused prepaid portion of the current month.</p>
+
+<h2>15. Changes to these terms</h2>
+<p>We may update these terms. If a change is significant, we will email Customers' billing contacts before it takes effect. Continuing to use the Service after that means you accept the new terms.</p>
+
+<h2>16. Governing law</h2>
+<p>These terms are governed by the laws of the State of North Carolina, without regard to its conflict of laws rules. Any dispute will be handled in the state or federal courts located in North Carolina.</p>
+
+<h2>17. Contact</h2>
+<p>Thimble LLC &middot; <a href="mailto:support@withthimble.com">support@withthimble.com</a></p>
+
+  <footer>
+    <div class="footer-note">Thimble LLC &middot; <a href="terms.html">Terms</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="refunds.html">Refunds</a> &middot; <a href="mailto:support@withthimble.com">support@withthimble.com</a></div>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy &middot; Thimble</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%2317372E'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#EFE7D8; --ink-soft:#C9D6CE; --muted:#8FA399;
+    --card:rgba(255,255,255,0.045); --card-border:rgba(255,255,255,0.12); --border:rgba(255,255,255,0.14);
+    --accent:linear-gradient(135deg,#F3829A,#E9B949); --accent-ink:#17372E; --accent-solid:#F3829A;
+    --pink:#F3829A; --honey:#E9B949;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; overflow-x:hidden;}
+  body{margin:0; background:linear-gradient(180deg,#0E2119 0%,#0A1813 40%,#0B1A14 100%); background-attachment:fixed; color:var(--ink); font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+  .wrap{max-width:760px; margin:0 auto; padding:56px 20px 80px;}
+
+  .mark{width:34px; height:24px; flex-shrink:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 871 616'%3E%3Cpath d='M611 0C754.594 0 871 116.406 871 260C871 374.199 797.374 471.201 695 506.13V260C695 213.608 657.392 176 611 176C564.608 176 527 213.608 527 260V506.13C526.335 505.903 525.672 505.672 525.009 505.439C526.312 511.588 527 517.964 527 524.5C527 575.034 486.034 616 435.5 616C384.966 616 344 575.034 344 524.5C344 517.964 344.687 511.588 345.99 505.439C345.328 505.672 344.665 505.903 344 506.13V260C344 213.608 306.392 176 260 176C213.608 176 176 213.608 176 260V506.13C73.6264 471.201 0 374.199 0 260C0 116.406 116.406 0 260 0C327.642 0 389.25 25.8309 435.5 68.166C481.75 25.8309 543.358 0 611 0Z' fill='%23F3829A'/%3E%3C/svg%3E") no-repeat center/contain;}
+
+  .topnav{position:sticky; top:0; z-index:30; background:rgba(10,24,19,0.78); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); margin-bottom:40px;}
+  .topnav-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:22px;}
+  .topnav-brand{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
+  .topnav-brand .wordmark{font-size:1.1rem; font-weight:800; letter-spacing:-0.02em; color:#fff;}
+  .topnav-brand .brand-wordmark{height:30px; width:auto; display:block;}
+  .nav-links{display:flex; gap:18px; font-size:13.5px; font-weight:700; color:var(--muted); margin-left:14px; padding-left:22px; border-left:1px solid var(--border);}
+  .nav-links a{text-decoration:none; color:var(--muted); padding:6px 0; white-space:nowrap;}
+  .nav-links a:hover{color:#fff;}
+  .nav-links a.active{color:#fff;}
+  @media (max-width:680px){ .nav-links{display:none;} }
+  .legal-head{margin-bottom:28px;}
+  .legal-head h1{font-size:2rem; line-height:1.25; letter-spacing:-0.015em; margin:0 0 8px; font-weight:800; color:#fff;}
+  .legal-head .meta{font-size:13px; font-weight:700; color:var(--muted); margin:0;}
+  .plain{background:var(--card); border:1px solid var(--card-border); border-radius:22px; padding:24px 26px; margin-bottom:36px;}
+  .plain h2{margin-top:0 !important;}
+  .plain ul{margin-bottom:0;}
+  .wrap h2{font-size:1.05rem; font-weight:800; color:#fff; letter-spacing:-0.01em; margin:36px 0 10px;}
+  .wrap p, .wrap li{font-size:14.5px; color:var(--ink-soft); line-height:1.75;}
+  .wrap p{margin:0 0 12px;}
+  .wrap ul{margin:0 0 14px; padding-left:22px;}
+  .wrap li{margin-bottom:6px;}
+  .wrap strong{color:#fff;}
+  .wrap a{color:var(--pink); text-underline-offset:2px;}
+
+  footer{margin-top:44px; border-top:1px solid var(--border); padding-top:28px;}
+  footer .footer-note{font-size:12px; color:var(--muted); line-height:1.6;}
+  footer a{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav-inner">
+    <a class="topnav-brand" href="index.html"><img class="brand-wordmark" src="assets/thimble-wordmark-pink.svg" alt="Thimble"></a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="for-hr.html">for HR</a>
+      <a href="buy.html">Buy</a>
+      <a href="founder.html">Founder</a>
+    </nav>
+  </div>
+</header>
+<div class="wrap">
+
+<div class="legal-head">
+  <h1>Privacy Policy</h1>
+  <p class="meta">Effective November 27, 2026 &middot; Thimble LLC</p>
+</div>
+
+<div class="plain">
+  <h2>The short version</h2>
+  <ul>
+    <li>We do not save your conversations. They are held in memory only while you are talking, then deleted.</li>
+    <li>Your employer does not see what you said. They get usage counts, never content.</li>
+    <li>To reply to you, your words pass through the AI and voice services listed below.</li>
+    <li>We do not sell data, and there are no advertising trackers.</li>
+  </ul>
+</div>
+
+<h2>1. Who this covers</h2>
+<p>This policy explains how Thimble LLC ("Thimble," "we," "us") handles information when you visit our website, use a Thimble app, buy a subscription, or email us. It applies to both <strong>Customers</strong> (companies that buy Thimble) and <strong>users</strong> (their employees and managers).</p>
+
+<h2>2. Your conversations</h2>
+<p>When you talk with Thimble by typing or by voice, here is what happens to what you say:</p>
+<ul>
+  <li><strong>Held in memory only.</strong> Your conversation is kept in our server's working memory so Thimble can follow along. We do not write it to a database, a file, or a backup.</li>
+  <li><strong>Deleted when you're done.</strong> Closing the tab tells our server to delete it straight away. If that signal never arrives (for example, your browser crashes), it is deleted automatically after 30 minutes of inactivity. A server restart also erases it.</li>
+  <li><strong>Sent to an AI model to write each reply.</strong> We send the conversation so far to Anthropic, which runs the Claude model that writes Thimble's replies. Anthropic does not use this data to train its models.</li>
+  <li><strong>Voice.</strong> If you use voice, your audio is streamed to Deepgram to turn it into text, and Thimble's replies are turned into speech by Deepgram or OpenAI. We do not record or store the audio.</li>
+  <li><strong>Video.</strong> If a video version of Thimble is turned on, the conversation also passes through Tavus, which generates the video.</li>
+</ul>
+<p>These providers may keep data for a short time under their own policies, for example to detect abuse.</p>
+
+<h2>3. What your employer sees</h2>
+<p>Your employer (our Customer) <strong>never</strong> sees your conversations. Once a month, their designated contact gets a digest with usage totals for their company, such as how many sessions took place. It contains no names, no conversation content, and nothing that identifies a single person's session.</p>
+
+<h2>4. Safety notices</h2>
+<p>Thimble watches for a small set of serious situations, and it will always tell you before anything is sent:</p>
+<ul>
+  <li><strong>Threats of violence or an immediate safety risk:</strong> Thimble tells you it is alerting your company's HR contact, and this happens whether or not you agree.</li>
+  <li><strong>Harassment, discrimination, retaliation, or illegal activity:</strong> Thimble asks whether you want your company's HR contact told. Nothing is sent unless you say yes.</li>
+</ul>
+<p>An alert contains the category and general severity only. It does not include your name, a session identifier, or quotes from your conversation. We keep a record that an alert was sent, along with its summary, so we can confirm it was delivered and prevent duplicates.</p>
+
+<h2>5. Information we do keep</h2>
+<p><strong>Usage events.</strong> To understand whether Thimble is working, we record events such as a session starting or ending, the number of turns, whether you used text or voice, and whether you tapped a button saying a reply wasn't helpful. Each event carries a random session ID, a random device ID stored in your browser, and the company your access code belongs to. These events never contain what you said. We store them in a Google Sheet that only we can access.</p>
+<p><strong>Safety-check records.</strong> For quality and safety reviews, we log technical flags about each turn (for example, whether a safety check ran and what category it chose), tied to a random session ID. These records never include what you said.</p>
+<p><strong>Surveys.</strong> If you choose to answer a feedback survey, we store your answers in the same Google Sheet. Surveys are optional.</p>
+<p><strong>Usage costs.</strong> We log how much each AI and voice request costs us (for example, word counts and seconds of audio). These logs contain no conversation content.</p>
+
+<h2>6. Customers who buy Thimble</h2>
+<p>Payments are handled by <strong>Stripe</strong>. Stripe collects your company name, billing contact, and payment details. We receive the name, email address, company, and payment status, but we never see or store full card numbers. We use the billing contact's email to send access codes, receipts, support replies, and the monthly digest. Our email is hosted by <strong>Zoho</strong>.</p>
+
+<h2>7. Cookies and browser storage</h2>
+<ul>
+  <li><strong>Access cookie.</strong> When you enter an access code, we set a cookie that remembers it for 30 days so you don't have to type it again.</li>
+  <li><strong>Browser storage.</strong> The app stores a random session ID for the current tab and a random device ID, which group your usage events together. Neither contains anything you said.</li>
+  <li><strong>Fonts.</strong> Our pages load fonts from Google Fonts, which means your browser contacts Google's servers.</li>
+</ul>
+<p>We do not use advertising cookies or sell information to advertisers.</p>
+
+<h2>8. Who we share information with</h2>
+<p>We share information only with the service providers that help us run Thimble: Anthropic (AI replies), Deepgram and OpenAI (voice), Tavus (video, when enabled), Render (hosting, in the United States), Google (usage and survey storage, fonts), Stripe (payments), and Zoho (email). We do not sell personal information. We may disclose information if the law requires it, but because we do not store conversations, there are none for us to hand over.</p>
+
+<h2>9. How long we keep things</h2>
+<ul>
+  <li>Conversations: until you close the tab, or 30 minutes of inactivity at most.</li>
+  <li>Usage events, safety-check records, and surveys: for as long as they help us improve Thimble. Ask us and we will delete them.</li>
+  <li>Billing records: as long as tax and accounting law requires.</li>
+</ul>
+
+<h2>10. Security</h2>
+<p>All traffic to Thimble is encrypted with HTTPS. Access to our systems is limited to the people who run Thimble. No system is perfectly secure, which is why we keep as little as possible.</p>
+
+<h2>11. Your choices and rights</h2>
+<p>You can ask us what information we hold about you, or ask us to correct or delete it, by emailing <a href="mailto:support@withthimble.com">support@withthimble.com</a>. Depending on where you live, you may have additional rights under laws such as the California Consumer Privacy Act, and we will honor them.</p>
+
+<h2>12. Children</h2>
+<p>Thimble is a workplace tool for adults. It is not meant for anyone under 18, and we do not knowingly collect information from children.</p>
+
+<h2>13. Changes</h2>
+<p>If we change this policy in a meaningful way, we will update the date at the top and email Customers' billing contacts before the change takes effect.</p>
+
+<h2>14. Contact</h2>
+<p>Thimble LLC &middot; <a href="mailto:support@withthimble.com">support@withthimble.com</a></p>
+
+  <footer>
+    <div class="footer-note">Thimble LLC &middot; <a href="terms.html">Terms</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="refunds.html">Refunds</a> &middot; <a href="mailto:support@withthimble.com">support@withthimble.com</a></div>
+  </footer>
+</div>
+</body>
+</html>
