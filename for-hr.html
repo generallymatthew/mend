@@ -24,6 +24,7 @@
   .topnav-inner{max-width:760px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:22px;}
   .topnav-brand{display:flex; align-items:center; gap:9px; text-decoration:none; flex-shrink:0;}
   .topnav-brand .wordmark{font-size:1.1rem; font-weight:800; letter-spacing:-0.02em; color:#fff;}
+  .topnav-brand .brand-wordmark{height:30px; width:auto; display:block;}
   .nav-links{display:flex; gap:18px; font-size:13.5px; font-weight:700; color:var(--muted); margin-left:14px; padding-left:22px; border-left:1px solid var(--border);}
   .nav-links a{text-decoration:none; color:var(--muted); padding:6px 0; white-space:nowrap; position:relative;}
   .nav-links a:hover{color:#fff;}
@@ -88,7 +89,7 @@
 <header class="topnav">
   <div class="topnav-inner">
     <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><span></span></button>
-    <a class="topnav-brand" href="index.html"><div class="mark"></div><div class="wordmark">Thimble</div></a>
+    <a class="topnav-brand" href="index.html"><img class="brand-wordmark" src="assets/thimble-wordmark-pink.svg" alt="Thimble"></a>
     <nav class="nav-links">
       <a href="index.html">Home</a>
       <div class="nav-dropdown active" id="audienceDropdown">
