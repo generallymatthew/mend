@@ -51,6 +51,8 @@
   .nav-toggle span::before{top:-6px;}
   .nav-toggle span::after{top:6px;}
   @media (max-width:680px){ .nav-toggle{display:flex;} }
+  /* Buy is in the mobile menu; two pills overflow the bar at phone width. */
+  @media (max-width:680px){ .nav-buy{display:none;} }
   .mobile-menu{display:none; flex-direction:column; background:rgba(10,24,19,0.96); border-bottom:1px solid var(--border); padding:6px 20px 14px;}
   .mobile-menu.open{display:flex;}
   .mobile-menu a{padding:11px 0; font-size:14px; font-weight:700; color:var(--muted); text-decoration:none; border-bottom:1px solid rgba(255,255,255,0.08);}
@@ -107,7 +109,7 @@
     </nav>
     <div class="nav-right">
       <a class="nav-cta" href="/seam/">Try a demo</a>
-      <!-- Buy now: hidden until the business has an EIN -- <a class="nav-cta" href="buy.html">Buy now &rarr;</a> -->
+      <a class="nav-cta nav-buy" href="buy.html">Buy now &rarr;</a>
     </div>
   </div>
   <nav class="mobile-menu" id="mobileMenu">
@@ -118,7 +120,7 @@
     <a href="founder.html">Founder</a>
     <a href="index.html#manifesto">Approach</a>
     <a href="/seam/">Try a demo</a>
-    <!-- Buy now: hidden until the business has an EIN -- <a href="buy.html">Buy now</a> -->
+    <a href="buy.html">Buy now</a>
   </nav>
 </header>
 <div class="wrap">
