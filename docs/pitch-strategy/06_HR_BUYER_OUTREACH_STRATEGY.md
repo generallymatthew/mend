@@ -56,4 +56,43 @@ The first fear any HR buyer will have: *"If employees use this in private, am I 
 - **Highlight the immutable safety floor.** Hardcoded, non-configurable triggers halt the private room and hand the issue to HR the moment harassment, discrimination, bullying, or safety concerns are detected.
 - **State the executive payoff.** Fewer petty complaints, faster sprint delivery, and a guaranteed escalation pipeline for true compliance risks.
 
+## 5. Pilot-to-Paid Conversion Path (Gemini-sourced, 2026-11-23)
+
+Once a fractional CPO, founder, VP Eng, or employment attorney leans in after a
+safety-floor tear-down conversation (Section 2), don't jump to quoting an annual
+contract. Run a structured three-step conversion instead:
+
+1. **Free, time-boxed "squad pilot."** Offer a free 30-day pilot for one 15-25
+   person engineering or product squad. Zero IT lift is the selling point: no SSO,
+   no database integration, no security audit, just a browser link running in
+   volatile memory. This also doubles as a credible answer to "what will HR buy?"
+   (the hardest open question as of this writing, also flagged in
+   [25_SEAM_SOLO_MANAGER_COHORT_AND_OUTREACH_STRATEGY.md](25_SEAM_SOLO_MANAGER_COHORT_AND_OUTREACH_STRATEGY.md)) —
+   it lets a buyer experience the product before being asked to defend a line item.
+2. **The trade.** In exchange for the free 30 days, the sponsor agrees up front to
+   a 15-minute debrief at Day 30 and a short quote or Letter of Intent (LOI) if it
+   actually deflected manager friction.
+3. **Convert on telemetry, not trust.** At Day 30, hand back an aggregate,
+   non-identifiable readout — e.g. "ran X sessions, shifted attribution from
+   character blame to structural workflow fixes in Y% of cases, deflected an
+   estimated Z hours of manager refereeing, zero statutory escalations." This
+   keeps the ask inside the zero-trace/aggregate-only reporting floor already
+   scoped for HR-funded orgs (see the moat-strategy memory's bare-minimum
+   reporting design). At that point the paid conversion (proposed anchor:
+   ~$500/month or ~$6,000/year starter license) is "pay to keep a relief valve
+   your managers are already using," not a cold ask.
+
+**Targets for the tear-down conversation specifically** (who to approach before
+step 1, not cold HR inboxes): fractional CPOs / boutique People Ops consultants
+(one win can unlock a multi-client rollout across their whole roster),
+management-side employment attorneys (validates legal boundaries, becomes a
+high-trust referral channel), and founders/VPs of Engineering at 50-150 person
+companies (can greenlight a 30-day squad test immediately, without a 6-month
+procurement review).
+
+This path is a hypothesis, not yet tested with a real prospect — next concrete
+step is finding one actual warm intro (a recruiter contact, local startup founder,
+employment lawyer, or fractional HR consultant) willing to do a 10-minute
+safety-floor tear-down.
+
 See [07_CULTURAL_POSITIONING_AND_ADOPTION.md](07_CULTURAL_POSITIONING_AND_ADOPTION.md) for how to frame Mend usage as a mark of professional maturity once it's inside a company, and [02_COMMERCIAL_PRICING_STRATEGY.md](02_COMMERCIAL_PRICING_STRATEGY.md) for the ROI case this outreach ultimately has to back up.
