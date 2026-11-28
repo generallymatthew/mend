@@ -35,6 +35,7 @@ Business/commercial strategy notes, distinct from the interactive pitch decks in
 | [33_EVIDENCE_STRATEGY_AND_BUYER_PERSONAS.md](33_EVIDENCE_STRATEGY_AND_BUYER_PERSONAS.md) | Macro Shadow-AI evidence + a 3-experiment plan to prove employees switch from personal AI to Mend, the "paving the cowpaths" precedent list (Ombuds offices, password managers, Slack, bug bounties), the blunt pro-worker brand stance, and a buyer-persona breakdown of who pays (HR/Legal/IT) |
 | [34_STRIPE_CHECKOUT_SETUP.md](34_STRIPE_CHECKOUT_SETUP.md) | Step-by-step Stripe dashboard setup (products, prices, adjustable-quantity Payment Links, redirect) behind the real `buy.html`/`buy-thanks.html` checkout pages at the repo root |
 | [35_FOUNDING_TEAM_AND_PARTNER_SEARCH.md](35_FOUNDING_TEAM_AND_PARTNER_SEARCH.md) | Founding-team shape (product, tech lead, HR specialist) with illustrative equity ranges and vesting guardrails, how to start with the SF startup VP of People as a design partner (outreach draft, call plan, questions to ask her), and how to approach a former dev colleague as tech lead (coffee invite draft, 4-week trial sprint) |
+| [36_SUCCESS_METRICS_AND_PILOT_READOUT.md](36_SUCCESS_METRICS_AND_PILOT_READOUT.md) | How to tell Thimble is working without breaking zero-trace: action-only metrics (did you have the conversation, return use, renewal), which content-derived metrics are ruled out and why, a pilot readout sized to the price, meeting-prep and Shadow AI positioning, and accurate rollout copy |
 
 ## Status
 

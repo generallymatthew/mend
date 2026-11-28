@@ -54,4 +54,5 @@ Tracked in more detail in `docs/pitch-strategy/`, not duplicated here:
 
 - [ ] HR/buyer outreach (`06_HR_BUYER_OUTREACH_STRATEGY.md`)
 - [ ] Pilot cohort selected and testing plan run (`05_USER_TESTING_AND_COHORT_STRATEGY.md`)
+- [ ] Action-only success metrics built (next-open "did you have the conversation?" check, return-use flag, plan-copied event) so a pilot has a readout (`36_SUCCESS_METRICS_AND_PILOT_READOUT.md`)
 - [ ] Pricing validated against a real deal, not just modeled (`02_COMMERCIAL_PRICING_STRATEGY.md`)

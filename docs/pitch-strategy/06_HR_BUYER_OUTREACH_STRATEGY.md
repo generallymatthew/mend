@@ -82,6 +82,14 @@ contract. Run a structured three-step conversion instead:
    ~$500/month or ~$6,000/year starter license) is "pay to keep a relief valve
    your managers are already using," not a cold ask.
 
+   **Update 2026-11-27:** the readout example above ("shifted attribution...
+   in Y% of cases") is content-derived and breaks zero-trace in a customer
+   deployment; use the action-only readout in
+   [36_SUCCESS_METRICS_AND_PILOT_READOUT.md](36_SUCCESS_METRICS_AND_PILOT_READOUT.md) §4
+   instead. The $500/month anchor also predates live pricing ($20/month team
+   pilot, $5/employee/month company-wide, see
+   [34_STRIPE_CHECKOUT_SETUP.md](34_STRIPE_CHECKOUT_SETUP.md)).
+
 **Targets for the tear-down conversation specifically** (who to approach before
 step 1, not cold HR inboxes): fractional CPOs / boutique People Ops consultants
 (one win can unlock a multi-client rollout across their whole roster),
