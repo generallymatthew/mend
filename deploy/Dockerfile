@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 WORKDIR /app
 COPY . .
 
-RUN pip install --no-cache-dir -r apps/spool/requirements.txt -r apps/thimble/requirements.txt -r apps/seam/requirements.txt -r pitch/manager-read-test/requirements.txt
+RUN pip install --no-cache-dir -r apps/spool/requirements.txt -r apps/thimble-resolve/requirements.txt -r apps/seam/requirements.txt -r pitch/manager-read-test/requirements.txt
 
 # Pre-download the Whisper model at build time, not on a tester's first
 # request -- avoids a slow, surprising first-reply latency in prod.
